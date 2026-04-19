@@ -621,10 +621,7 @@ app = FastAPI(
 )
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "https://satyanderkaushik2004.github.io",
-        "https://satyanderkaushik2004.github.io/classmind-frontend"
-    ],
+  allow_origins=["*"],  # TEMP FIX for testing,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

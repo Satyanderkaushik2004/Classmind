@@ -905,8 +905,25 @@ hr{border:none;border-top:1px solid var(--border);margin:16px 0}
 const { useState, useEffect, useRef, useCallback, createContext, useContext } = React;
 
 // ─────────────────────────── CONFIG ───────────────────────────────
-const API = window.CM_API || (window.location.protocol.startsWith('http') ? window.location.origin : 'http://localhost:8000');
-const WS_BASE = API.replace('http', 'ws');
+// Auto-detect backend URL - works locally and in production
+const BACKEND = (() => {
+  // If you manually set a backend URL via environment variable or query param
+  if (window.CM_API) return window.CM_API;
+  
+  const hostname = window.location.hostname;
+  
+  // Local development
+  if (hostname === 'localhost' || hostname === '127.0.0.1') {
+    return 'http://localhost:8000';
+  }
+  
+  // Production - use same origin as frontend (assuming backend is served from same domain/path)
+  // If your backend is on a different subdomain like api.yourdomain.com, change this
+  return window.location.origin;
+})();
+
+const API = BACKEND;
+const WS_BASE = BACKEND.replace('https://', 'wss://').replace('http://', 'ws://');
 
 // ─────────────────────────── CONTEXT ──────────────────────────────
 const AppCtx = createContext(null);

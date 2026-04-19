@@ -6,8 +6,9 @@ WebSocket endpoints
   ws://host/ws/teacher/{session_code}
   ws://host/ws/student/{session_code}/{student_id}
 """
-print("🔥 NEW DEPLOY ACTIVE")
+
 from __future__ import annotations
+print("🔥 NEW DEPLOY ACTIVE")  # can come after
 
 import asyncio
 import base64

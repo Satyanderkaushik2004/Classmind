@@ -8,7 +8,7 @@ WebSocket endpoints
 """
 
 from __future__ import annotations
-print("🔥 NEW DEPLOY ACTIVE")  # can come after
+print("🔥 NEW DEPLOY ACTIVE")
 
 import asyncio
 import base64
@@ -21,7 +21,8 @@ from contextlib import asynccontextmanager
 from io import StringIO
 from pathlib import Path
 from typing import Dict, List, Optional
-from fastapi.middleware.cors import CORSMiddleware
+
+# ── FIXED: removed duplicate CORSMiddleware / FileResponse / Path imports ──
 from fastapi import (
     Body, FastAPI, File, Form, HTTPException,
     Query, UploadFile, WebSocket, WebSocketDisconnect,
@@ -38,7 +39,6 @@ from store import (
 )
 
 # ── logging ───────────────────────────────────────────────────────
-
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s %(levelname)s %(name)s: %(message)s",
@@ -375,12 +375,9 @@ async def replay_unacked_tasks(s: dict, student_id: str):
 
 
 def student_can_submit_task(s: dict, student_id: str, task_id: str) -> bool:
-    # ✅ ALLOW QUIZ SUBMISSIONS — quiz questions are never in the task delivery
-    # pipeline, so delivery-based validation must be fully bypassed when a quiz
-    # is active (quiz_meta present) OR session is in test mode.
-    if s.get("quiz_meta"):          # quiz_start was sent via /quiz/send
+    if s.get("quiz_meta"):
         return True
-    if s.get("mode") == "test":     # legacy test mode
+    if s.get("mode") == "test":
         return True
     return any(
         student_id in d.get("recipients", []) and d.get("task_id") == task_id
@@ -524,8 +521,7 @@ class RunCodeReq(BaseModel):
 class SaveQuizReq(BaseModel):
     session_code: str
     quiz:         list
-    task_ids:     Optional[List[str]] = None   # preferred: ordered task IDs
-
+    task_ids:     Optional[List[str]] = None
 
 class SendQuizReq(BaseModel):
     task_ids:    Optional[List[str]] = None
@@ -595,7 +591,7 @@ async def code_worker():
 
 
 # ══════════════════════════════════════════════════════════════════
-#  APP SETUP
+#  APP SETUP  ← app is defined HERE, before any @app routes
 # ══════════════════════════════════════════════════════════════════
 
 @asynccontextmanager
@@ -621,7 +617,6 @@ app = FastAPI(
     redoc_url="/redoc",
 )
 
-
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -629,14 +624,16 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-FRONTEND_FILE = Path(__file__).with_name("classmind_enhanced.html")
+
+# ── FIXED: correct filename (was classmind_enhanced.html) ─────────
+FRONTEND_FILE = Path(__file__).with_name("classmind_v8.html")
 
 
-
+# ── FIXED: @app.get("/") is now AFTER app is created ─────────────
 @app.get("/")
 def serve_frontend():
     if not FRONTEND_FILE.exists():
-        raise HTTPException(404, "Frontend not found")
+        raise HTTPException(404, "Frontend not found — ensure classmind_v8.html is in the same folder")
     return FileResponse(FRONTEND_FILE)
 
 
@@ -886,8 +883,6 @@ async def attach_content(code: str, task_id: str, filename: str = Query(...)):
     task["content_file"] = filename
     return {"attached": True}
 
-
-# ── Task sending ───────────────────────────────────────────────────
 
 @app.post("/api/session/{code}/tasks/send_current")
 async def send_current_task(code: str):
@@ -1423,13 +1418,8 @@ def get_leaderboard(session_code: str):
 
 @app.post("/api/session/{code}/quiz/send")
 async def send_quiz(code: str, req: SendQuizReq = Body(default=SendQuizReq())):
-    """
-    Send quiz to all students as a SINGLE atomic quiz_start WS event.
-    Quiz is completely isolated from the task delivery pipeline.
-    """
     s = _S(code)
 
-    # Resolve ordered task ID list
     task_ids: List[str] = []
     if req.task_ids:
         task_ids = req.task_ids
@@ -1447,7 +1437,6 @@ async def send_quiz(code: str, req: SendQuizReq = Body(default=SendQuizReq())):
     if not task_ids:
         raise HTTPException(400, "Quiz has no questions")
 
-    # Build safe question payloads (correct_answer stripped)
     questions = [safe_task(t) for tid in task_ids
                  for t in [next((x for x in s["tasks"] if x["id"] == tid), None)] if t]
 
@@ -1455,8 +1444,6 @@ async def send_quiz(code: str, req: SendQuizReq = Body(default=SendQuizReq())):
         raise HTTPException(400, "None of the quiz task IDs exist in this session")
 
     quiz_id = gen_id("qz")
-
-    # Store quiz metadata for reconnect recovery and submission validation
     s["quiz_meta"] = {
         "id":       quiz_id,
         "task_ids": task_ids,
@@ -1492,10 +1479,6 @@ async def save_quiz(req: SaveQuizReq):
 # ══════════════════════════════════════════════════════════════════
 
 def evaluate_quiz(s: dict, quiz_questions: list) -> dict:
-    """
-    Evaluate all student answers against quiz_questions.
-    Returns { student_id -> { score, total, details, student_name } }
-    """
     results: dict = {}
     ts = s.get("test_state", {})
 
@@ -1507,12 +1490,9 @@ def evaluate_quiz(s: dict, quiz_questions: list) -> dict:
         for q in quiz_questions:
             task_id = str(q.get("id", ""))
             correct = str(q.get("correct_answer", "")).strip().upper()
-
-            # answers are keyed by task_id (sent from frontend as q.id)
             student_ans = student_answers.get(task_id) or student_answers.get(task_id.upper())
 
             if q.get("type", "mcq") == "coding":
-                # Coding questions: manual grading pending
                 is_correct = False
             else:
                 is_correct = bool(
@@ -1544,7 +1524,6 @@ def evaluate_quiz(s: dict, quiz_questions: list) -> dict:
 
 
 def _quiz_questions_for_session(s: dict) -> list:
-    """Resolve the ordered list of full task dicts for the session's active quiz."""
     meta = s.get("quiz_meta")
     if not meta:
         raise HTTPException(400, "No quiz has been sent in this session")
@@ -1561,12 +1540,10 @@ def _quiz_questions_for_session(s: dict) -> list:
 
 @app.get("/quiz/report/{code}")
 async def get_quiz_report(code: str):
-    """Teacher: full class-level quiz report, sorted by score descending."""
     s         = _S(code)
     questions = _quiz_questions_for_session(s)
     report    = evaluate_quiz(s, questions)
 
-    # Build sorted leaderboard-style list for teacher view
     rows = sorted(
         [
             {
@@ -1595,7 +1572,6 @@ async def get_quiz_report(code: str):
 
 @app.get("/quiz/report/{code}/{student_id}")
 async def get_student_quiz_report(code: str, student_id: str):
-    """Student: personal quiz report with per-question breakdown."""
     s         = _S(code)
     questions = _quiz_questions_for_session(s)
     report    = evaluate_quiz(s, questions)
@@ -1756,19 +1732,18 @@ async def student_ws_endpoint(ws: WebSocket, session_code: str, student_id: str)
         student["last_seen"] = now()
     log.info("Student %s connected: %s", student_id, session_code)
 
-    # Build connected payload
-    latest_delivery   = latest_delivery_for_student(s, student_id)
-    current           = None
+    latest_delivery     = latest_delivery_for_student(s, student_id)
+    current             = None
     current_delivery_id = ""
-    task_idx          = -1
+    task_idx            = -1
 
     if latest_delivery:
         current             = task_payload(s, latest_delivery)["task"]
         current_delivery_id = latest_delivery["id"]
         task_idx            = latest_delivery.get("task_index", -1)
     elif student.get("status") == "active":
-        idx     = s["current_task_idx"]
-        current = safe_task(s["tasks"][idx]) if 0 <= idx < len(s["tasks"]) else None
+        idx      = s["current_task_idx"]
+        current  = safe_task(s["tasks"][idx]) if 0 <= idx < len(s["tasks"]) else None
         task_idx = idx
 
     await ws_send(ws, {
@@ -1806,14 +1781,9 @@ async def student_ws_endpoint(ws: WebSocket, session_code: str, student_id: str)
                 await ws_send(ws, {"type": "pong", "ts": now()})
 
             elif cmd == "quiz_submit":
-                # ── Quiz submission handler ───────────────────────────────
-                # Answers arrive as { task_id: answer_value, ... } keyed by
-                # question id.  Stored under test_state["answers"][student_id]
-                # so the teacher dashboard can read them later.
                 answers: dict = data.get("answers") or {}
                 student = s["students"].get(student_id)
 
-                # Ensure storage bucket exists (safe for old sessions)
                 ts = s.setdefault("test_state", {})
                 ts.setdefault("answers", {})
                 ts.setdefault("submitted", set())
@@ -1826,7 +1796,6 @@ async def student_ws_endpoint(ws: WebSocket, session_code: str, student_id: str)
                 }
                 ts["submitted"].add(student_id)
 
-                # Basic scoring: compare against task correct_answer
                 score = 0
                 for task_id_key, ans_val in answers.items():
                     task = next(
@@ -1842,7 +1811,6 @@ async def student_ws_endpoint(ws: WebSocket, session_code: str, student_id: str)
                     student_id, session_code, len(answers), score,
                 )
 
-                # Acknowledge back to student
                 await ws_send(ws, {
                     "type":    "quiz_submit_ack",
                     "score":   score,
@@ -1850,7 +1818,6 @@ async def student_ws_endpoint(ws: WebSocket, session_code: str, student_id: str)
                     "message": "Quiz submitted successfully! Great work.",
                 })
 
-                # Notify teacher
                 await ws_teacher(s, {
                     "type":         "quiz_submitted",
                     "student_id":   student_id,

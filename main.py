@@ -627,15 +627,6 @@ app = FastAPI(
     docs_url="/docs",
     redoc_url="/redoc",
 )
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=[
-        "https://satyanderkaushik2004.github.io"
-    ],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
 
 FRONTEND_FILE = Path(__file__).with_name("classmind_enhanced.html")
 

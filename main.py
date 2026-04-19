@@ -20,7 +20,7 @@ from contextlib import asynccontextmanager
 from io import StringIO
 from pathlib import Path
 from typing import Dict, List, Optional
-
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi import (
     Body, FastAPI, File, Form, HTTPException,
     Query, UploadFile, WebSocket, WebSocketDisconnect,
@@ -621,8 +621,9 @@ app = FastAPI(
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-   "https://satyanderkaushik2004.github.io"
-],
+        "https://satyanderkaushik2004.github.io",
+        "https://satyanderkaushik2004.github.io/classmind-frontend"
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

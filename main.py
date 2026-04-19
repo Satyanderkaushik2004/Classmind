@@ -621,7 +621,9 @@ app = FastAPI(
 )
 app.add_middleware(
     CORSMiddleware,
-  allow_origins=["*"],  # TEMP FIX for testing,
+    allow_origins=[
+        "https://satyanderkaushik2004.github.io"
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

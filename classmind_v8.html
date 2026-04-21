@@ -897,6 +897,397 @@ hr{border:none;border-top:1px solid var(--border);margin:16px 0}
   font-size:0.8rem;transition:all 0.2s;line-height:1;
 }
 .theme-toggle-btn:hover{background:var(--surface3);color:var(--text)}
+
+/* ═══════════════════════════════════════════════════════════════════
+   MOBILE ENHANCEMENT LAYER — additive only, desktop unchanged
+   Breakpoints: 480px / 768px / 1024px
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ── Touch targets — globally enforced on mobile ── */
+@media(max-width:768px){
+  .btn{ min-height:44px; padding:10px 16px; }
+  .btn-sm{ min-height:36px; padding:7px 12px; font-size:0.82rem; }
+  .btn-lg{ min-height:52px; }
+  input, select, textarea{ min-height:44px; padding:11px 14px; font-size:1rem; }
+  .option-btn{ min-height:48px; padding:14px 16px; font-size:0.95rem; }
+  .nav-btn{ min-height:36px; }
+  .tab{ min-height:40px; padding:10px 14px; }
+}
+
+/* ── Active/tap feedback ── */
+@media(hover:none){
+  .btn:active:not(:disabled){ transform:scale(0.96); opacity:0.85; }
+  .option-btn:active{ transform:scale(0.98); }
+  .nav-btn:active{ background:var(--surface2); }
+  .role-card:active{ transform:scale(0.98); border-color:var(--accent); }
+}
+
+/* ─────────────────────────────────────────────────────────────────
+   1024px — small laptops / large tablets landscape
+   ───────────────────────────────────────────────────────────────── */
+@media(max-width:1024px){
+  .page{ padding:20px 18px; }
+  .grid-4{ grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); }
+}
+
+/* ─────────────────────────────────────────────────────────────────
+   768px — tablets / phablets
+   ───────────────────────────────────────────────────────────────── */
+@media(max-width:768px){
+  /* layout */
+  .page, .page-sm{ padding:16px 14px; }
+  .grid-2{ grid-template-columns:1fr 1fr; }
+  .grid-3{ grid-template-columns:1fr 1fr; }
+  .grid-4{ grid-template-columns:1fr 1fr; }
+
+  /* stat cards */
+  .stat-value{ font-size:1.7rem; }
+
+  /* landing */
+  .landing-logo{ font-size:2.6rem; }
+  .landing-sub{ font-size:1rem; margin-bottom:32px; }
+  .role-cards{ gap:14px; }
+  .role-card{ padding:24px 20px; }
+  .role-icon{ font-size:2.4rem; }
+
+  /* meter */
+  .meter-value{ font-size:3rem; }
+
+  /* chart */
+  .chart-container{ height:220px; }
+
+  /* chat area */
+  .chat-area{ height:360px; }
+
+  /* student HUD wrapping fix */
+  .student-hud{ padding:6px 14px; gap:10px; flex-wrap:wrap; }
+  .hud-sep{ display:none; }
+}
+
+/* ─────────────────────────────────────────────────────────────────
+   480px — phones
+   ───────────────────────────────────────────────────────────────── */
+@media(max-width:480px){
+  /* layout */
+  .page, .page-sm{ padding:12px 10px; }
+  .grid-2, .grid-3, .grid-4{ grid-template-columns:1fr; }
+  .role-cards{ grid-template-columns:1fr; gap:12px; }
+
+  /* typography scaling */
+  .landing-logo{ font-size:2rem; }
+  .landing-sub{ font-size:0.9rem; margin-bottom:24px; }
+  .meter-value{ font-size:2.4rem; }
+  .stat-value{ font-size:1.5rem; }
+  .section-title{ font-size:1rem; }
+  .card-title{ font-size:0.95rem; }
+  .timer{ font-size:1.8rem; }
+
+  /* cards */
+  .card{ padding:14px 12px; }
+  .card-sm{ padding:10px 10px; }
+
+  /* chat area */
+  .chat-area{ height:300px; }
+
+  /* chat messages */
+  .chat-msg{ max-width:90%; font-size:0.9rem; }
+
+  /* input rows */
+  .input-row{ flex-direction:column; }
+  .input-row input{ width:100%; }
+
+  /* tabs: horizontally scrollable on tiny screens */
+  .tabs{ overflow-x:auto; flex-wrap:nowrap; -webkit-overflow-scrolling:touch; gap:2px; padding-bottom:2px; }
+  .tab{ white-space:nowrap; flex-shrink:0; font-size:0.82rem; padding:8px 12px; }
+
+  /* perf panel */
+  .perf-stats{ flex-wrap:wrap; }
+  .perf-stat{ min-width:50%; }
+
+  /* HUD */
+  .student-hud{ flex-wrap:wrap; gap:8px; padding:6px 10px; top:56px; }
+  .hud-sep{ display:none; }
+  .hud-progress-track{ width:60px; }
+
+  /* intervention popup */
+  .intervention-popup{ left:12px; right:12px; width:auto; bottom:76px; }
+
+  /* section header stacking */
+  .section-header{ flex-direction:column; align-items:flex-start; gap:8px; }
+
+  /* leaderboard rows */
+  .leaderboard-row{ padding:8px 10px; gap:8px; }
+}
+
+/* ─────────────────────────────────────────────────────────────────
+   NAV — hamburger on mobile
+   ───────────────────────────────────────────────────────────────── */
+
+/* hamburger button — hidden on desktop */
+.nav-hamburger{
+  display:none;
+  background:none;border:none;cursor:pointer;
+  color:var(--text);font-size:1.4rem;padding:4px 6px;
+  border-radius:6px;transition:background 0.15s;
+  flex-shrink:0;
+}
+.nav-hamburger:hover{ background:var(--surface2); }
+
+/* mobile nav drawer container */
+.nav-mobile-drawer{
+  display:none; /* shown by JS class toggle */
+  flex-direction:column;
+  width:100%;
+  padding:8px 0 12px;
+  border-top:1px solid var(--border);
+  background:var(--surface);
+  gap:2px;
+}
+.nav-mobile-drawer.open{ display:flex; }
+
+/* mobile nav item styling */
+.nav-mobile-drawer .nav-btn{
+  width:100%;
+  text-align:left;
+  border-radius:8px;
+  padding:10px 14px;
+  font-size:0.9rem;
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+
+/* mobile nav-right row */
+.nav-mobile-right{
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  gap:8px;
+  padding:8px 14px 4px;
+  border-top:1px solid var(--border);
+  margin-top:4px;
+}
+
+@media(max-width:768px){
+  /* hide default desktop nav buttons and right area */
+  .nav > .nav-btn{ display:none; }
+  .nav > .nav-right{ display:none; }
+  /* show hamburger */
+  .nav-hamburger{ display:flex; align-items:center; justify-content:center; }
+  /* nav becomes a flex-col wrapper */
+  .nav{
+    flex-wrap:wrap;
+    height:auto;
+    padding:0 14px;
+    position:sticky;top:0;z-index:100;
+  }
+  /* brand + hamburger on same row */
+  .nav-brand{ padding:12px 0; flex:1; }
+  .nav-hamburger{ margin-left:auto; }
+}
+
+/* ─────────────────────────────────────────────────────────────────
+   FLOATING COMPONENTS — bottom sheets on mobile
+   ───────────────────────────────────────────────────────────────── */
+@media(max-width:768px){
+  /* Copilot FABs — move up to clear bottom nav */
+  .copilot-fab{ bottom:72px !important; right:14px !important; }
+  .student-copilot-fab{ bottom:72px !important; right:14px !important; }
+
+  /* Copilot windows — full-width bottom sheets */
+  .copilot-window{
+    width:100vw !important;
+    right:0 !important;
+    left:0 !important;
+    bottom:0 !important;
+    border-radius:20px 20px 0 0 !important;
+    max-height:75vh !important;
+    transform-origin:bottom center !important;
+  }
+  .student-copilot-panel{
+    width:100vw !important;
+    right:0 !important;
+    left:0 !important;
+    bottom:0 !important;
+    border-radius:20px 20px 0 0 !important;
+    max-height:80vh !important;
+    transform-origin:bottom center !important;
+  }
+
+  /* PDF modal — full-screen on small devices */
+  .pdf-modal-overlay{ padding:0; align-items:flex-end; }
+  .pdf-modal{
+    max-width:100vw;
+    border-radius:20px 20px 0 0;
+    max-height:92vh;
+    padding:20px 16px;
+  }
+
+  /* Intervention popup — bottom sheet */
+  .intervention-popup{
+    left:0 !important; right:0 !important;
+    bottom:0 !important; width:100% !important;
+    border-radius:20px 20px 0 0 !important;
+    max-width:100vw;
+  }
+
+  /* Tour tooltip — clamp to viewport */
+  .tour-tooltip{
+    max-width:calc(100vw - 24px) !important;
+    left:12px !important;
+  }
+
+  /* Toast — full-width on mobile */
+  .toasts{ right:8px; left:8px; top:64px; }
+  .toast{ min-width:unset; max-width:100%; width:100%; }
+
+  /* Task send dropdown */
+  .task-send-dropdown{
+    right:0 !important; left:0 !important;
+    width:100% !important;
+    border-radius:16px 16px 0 0 !important;
+    bottom:0 !important; top:auto !important;
+    position:fixed !important;
+    z-index:9999 !important;
+    padding-bottom:env(safe-area-inset-bottom,0px);
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────────
+   BOTTOM NAVIGATION BAR — mobile only
+   ───────────────────────────────────────────────────────────────── */
+.mobile-bottom-nav{
+  display:none;
+  position:fixed;
+  bottom:0;left:0;right:0;
+  z-index:999;
+  background:var(--surface);
+  border-top:1px solid var(--border);
+  padding:8px 0 calc(8px + env(safe-area-inset-bottom,0px));
+  justify-content:space-around;
+  align-items:center;
+}
+.mobile-bottom-nav-item{
+  display:flex;flex-direction:column;align-items:center;gap:3px;
+  background:none;border:none;cursor:pointer;
+  color:var(--text2);font-size:0.65rem;font-family:inherit;
+  padding:4px 8px;border-radius:8px;transition:all 0.15s;
+  min-width:52px;position:relative;
+}
+.mobile-bottom-nav-item span.icon{ font-size:1.35rem; line-height:1; }
+.mobile-bottom-nav-item.active{ color:var(--accent); }
+.mobile-bottom-nav-item .notif-dot{
+  position:absolute;top:2px;right:10px;
+  width:8px;height:8px;background:var(--red);
+  border-radius:50%;border:2px solid var(--surface);
+  animation:blink 1.5s infinite;
+}
+
+@media(max-width:768px){
+  .mobile-bottom-nav{ display:flex; }
+  /* push page content above bottom nav */
+  .main-content{ padding-bottom:68px; }
+  /* push student HUD below sticky nav on mobile */
+  .student-hud{ top:56px; }
+}
+
+/* ─────────────────────────────────────────────────────────────────
+   SCROLL & OVERFLOW FIXES
+   ───────────────────────────────────────────────────────────────── */
+@media(max-width:768px){
+  /* prevent body from having nested scroll traps */
+  body{ -webkit-overflow-scrolling:touch; overflow-x:hidden; }
+
+  /* chat scroll areas */
+  .chat-messages{ -webkit-overflow-scrolling:touch; overscroll-behavior:contain; }
+  .students-list{ -webkit-overflow-scrolling:touch; overscroll-behavior:contain; }
+  .copilot-messages{ -webkit-overflow-scrolling:touch; overscroll-behavior:contain; }
+
+  /* code editor */
+  .code-editor{ overflow:auto; -webkit-overflow-scrolling:touch; }
+  .code-output{ overflow:auto; -webkit-overflow-scrolling:touch; }
+
+  /* tables inside reports */
+  table{ display:block; overflow-x:auto; -webkit-overflow-scrolling:touch; width:100%; }
+
+  /* quiz navigation dots — scrollable */
+  .quiz-nav-dots-row{
+    overflow-x:auto; -webkit-overflow-scrolling:touch;
+    flex-wrap:nowrap !important; padding-bottom:4px;
+  }
+
+  /* content preview */
+  .content-preview-enhanced iframe{ height:200px; }
+}
+
+/* ─────────────────────────────────────────────────────────────────
+   WAITING ROOM — mobile centered layout
+   ───────────────────────────────────────────────────────────────── */
+@media(max-width:480px){
+  .page-sm{ padding:16px 12px; }
+  .waiting-pulse{ width:48px; height:48px; margin-bottom:12px; }
+}
+
+/* ─────────────────────────────────────────────────────────────────
+   UPLOAD ZONE — smaller on mobile
+   ───────────────────────────────────────────────────────────────── */
+@media(max-width:480px){
+  .upload-zone{ padding:20px 14px; }
+  .upload-icon{ font-size:2rem; }
+}
+
+/* ─────────────────────────────────────────────────────────────────
+   STICKY ACTION BUTTON (mobile FAB-style helper)
+   ───────────────────────────────────────────────────────────────── */
+.mobile-sticky-action{
+  display:none;
+}
+@media(max-width:480px){
+  .mobile-sticky-action{
+    display:block;
+    position:sticky;
+    bottom:76px;
+    z-index:200;
+    margin-top:12px;
+  }
+  .mobile-sticky-action .btn{
+    width:100%;
+    justify-content:center;
+    box-shadow:0 4px 16px rgba(0,0,0,0.3);
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────────
+   QUIZ REPORT GRID — single column on phones
+   ───────────────────────────────────────────────────────────────── */
+@media(max-width:480px){
+  .quiz-report-stat-row{ grid-template-columns:1fr 1fr; gap:8px; }
+}
+
+/* ─────────────────────────────────────────────────────────────────
+   AT-RISK PANEL — compact on mobile
+   ───────────────────────────────────────────────────────────────── */
+@media(max-width:480px){
+  .at-risk-bar{ width:40px; }
+  .at-risk-row{ flex-wrap:wrap; }
+}
+
+/* ─────────────────────────────────────────────────────────────────
+   SAFE AREA INSETS for notched phones
+   ───────────────────────────────────────────────────────────────── */
+@supports(padding:env(safe-area-inset-bottom)){
+  @media(max-width:768px){
+    .mobile-bottom-nav{
+      padding-bottom:calc(8px + env(safe-area-inset-bottom));
+    }
+    .copilot-window,
+    .student-copilot-panel,
+    .intervention-popup,
+    .task-send-dropdown{
+      padding-bottom:env(safe-area-inset-bottom,0px);
+    }
+  }
+}
 </style>
 </head>
 <body>
@@ -1371,6 +1762,7 @@ function TeacherShell({ sessionCode, teacherName, navigate: rootNavigate }) {
   const [forceTour, setForceTour] = useState(false);
   const [dashboardReady, setDashboardReady] = useState(false);
 const [lightMode, setLightMode] = useState(false);
+const [mobileNavOpen, setMobileNavOpen] = useState(false);
 const { add } = useContext(AppCtx);
 
 
@@ -1510,22 +1902,32 @@ useEffect(()=>{
     loadTasks, loadRoster, loadGroups
   };
 
+  /* ── bottom-nav pages (5 primary for mobile) ── */
+  const BOTTOM_NAV_PAGES = [
+    {id:'dashboard',label:'Dashboard',icon:'📊'},
+    {id:'tasks',label:'Tasks',icon:'📝'},
+    {id:'communication',label:'Chat',icon:'💬'},
+    {id:'reports',label:'Reports',icon:'📈'},
+    {id:'test',label:'Test',icon:'🧪'},
+  ];
+
+  function navTo(id) {
+    setPage(id);
+    setMobileNavOpen(false);
+    if(id==='communication'){ clearNotif('chat'); clearNotif('doubts'); }
+  }
+
   return (
     <div className="app">
       <nav className="nav">
         <span className="nav-brand">🧠 ClassMind</span>
 
+        {/* ── DESKTOP nav buttons (hidden on mobile via CSS) ── */}
         {PAGES.map(p => (
           <button key={p.id}
             id={`nav-btn-${p.id}`}
             className={`nav-btn ${page===p.id?'active':''}`}
-            onClick={()=>{
-              setPage(p.id);
-              if(p.id==='communication'){
-                clearNotif('chat');
-                clearNotif('doubts');
-              }
-            }}>
+            onClick={()=>navTo(p.id)}>
             {p.icon} {p.label}
             {p.id==='communication' &&
               (notifications.doubts+notifications.chat+notifications.hands)>0 &&
@@ -1533,27 +1935,49 @@ useEffect(()=>{
           </button>
         ))}
 
+        {/* ── DESKTOP right controls ── */}
         <div className="nav-right">
-
-          {/* 🔊 SOUND TOGGLE */}
-          <button className="btn btn-ghost btn-sm"
-            onClick={()=>setSoundOn(s=>!s)}>
+          <button className="btn btn-ghost btn-sm" onClick={()=>setSoundOn(s=>!s)}>
             {soundOn ? "🔊 ON" : "🔇 OFF"}
           </button>
-{/* 🌗 THEME TOGGLE */}
-<button 
-  className="btn btn-ghost btn-sm"
-  onClick={()=>setLightMode(m=>!m)}
->
-  {lightMode ? "🌙 Dark" : "🌞 Light"}
-</button>
-          <span className="session-badge">{sessionCode}</span>
-
-          <button className="btn btn-ghost btn-sm"
-            onClick={()=>rootNavigate('landing')}>
-            Exit
+          <button className="btn btn-ghost btn-sm" onClick={()=>setLightMode(m=>!m)}>
+            {lightMode ? "🌙 Dark" : "🌞 Light"}
           </button>
+          <span className="session-badge">{sessionCode}</span>
+          <button className="btn btn-ghost btn-sm" onClick={()=>rootNavigate('landing')}>Exit</button>
+        </div>
 
+        {/* ── MOBILE hamburger (visible only on ≤768px via CSS) ── */}
+        <button
+          className="nav-hamburger"
+          aria-label="Menu"
+          onClick={()=>setMobileNavOpen(o=>!o)}
+        >
+          {mobileNavOpen ? '✕' : '☰'}
+        </button>
+
+        {/* ── MOBILE drawer ── */}
+        <div className={`nav-mobile-drawer${mobileNavOpen?' open':''}`}>
+          {PAGES.map(p => (
+            <button key={p.id}
+              className={`nav-btn ${page===p.id?'active':''}`}
+              onClick={()=>navTo(p.id)}>
+              {p.icon} {p.label}
+              {p.id==='communication' &&
+                (notifications.doubts+notifications.chat+notifications.hands)>0 &&
+                <span className="notification-dot"/>}
+            </button>
+          ))}
+          <div className="nav-mobile-right">
+            <button className="btn btn-ghost btn-sm" onClick={()=>setSoundOn(s=>!s)}>
+              {soundOn ? "🔊 ON" : "🔇 OFF"}
+            </button>
+            <button className="btn btn-ghost btn-sm" onClick={()=>setLightMode(m=>!m)}>
+              {lightMode ? "🌙 Dark" : "🌞 Light"}
+            </button>
+            <span className="session-badge">{sessionCode}</span>
+            <button className="btn btn-ghost btn-sm" onClick={()=>rootNavigate('landing')}>Exit</button>
+          </div>
         </div>
       </nav>
 
@@ -1573,6 +1997,20 @@ useEffect(()=>{
         {page==='test' && <TestModePage {...sharedProps}/>}
         {page==='coding' && <CodingLabPage {...sharedProps} isTeacher={true}/>}
       </div>
+
+      {/* ── MOBILE bottom navigation bar ── */}
+      <nav className="mobile-bottom-nav" role="navigation" aria-label="Bottom navigation">
+        {BOTTOM_NAV_PAGES.map(p=>(
+          <button key={p.id} className={`mobile-bottom-nav-item${page===p.id?' active':''}`}
+            onClick={()=>navTo(p.id)}>
+            <span className="icon">{p.icon}</span>
+            <span>{p.label}</span>
+            {p.id==='communication' &&
+              (notifications.doubts+notifications.chat+notifications.hands)>0 &&
+              <span className="notif-dot"/>}
+          </button>
+        ))}
+      </nav>
 
       {/* ── Auto Intervention Engine ── */}
       <InterventionPopup
@@ -5729,6 +6167,8 @@ function StudentTaskView({ sessionCode, studentId, studentName, navigate }) {
     {id:'task',label:'📝 Task'},{id:'test',label:'🧪 Test'},{id:'chat',label:'💬 Chat'},{id:'myreport',label:'📊 Report'}
   ];
 
+  const [mobileStudentNavOpen, setMobileStudentNavOpen] = useState(false);
+
   const fmtSecs = (s) => `${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;
 
   return (
@@ -5736,6 +6176,8 @@ function StudentTaskView({ sessionCode, studentId, studentName, navigate }) {
       <nav className="nav">
         <span className="nav-brand">🧠 ClassMind</span>
         <span className="text-muted text-sm">{studentName}</span>
+
+        {/* ── DESKTOP nav buttons ── */}
         {NAV.map(n=>(
           <button key={n.id} id={`student-nav-${n.id}`}
             className={`nav-btn ${sPage===n.id?'active':''}`}
@@ -5756,6 +6198,39 @@ function StudentTaskView({ sessionCode, studentId, studentName, navigate }) {
             {handRaised?'✋ Hand Raised':'✋ Raise Hand'}
           </button>
           <span id="student-session-badge" className="session-badge">{sessionCode}</span>
+        </div>
+
+        {/* ── MOBILE hamburger ── */}
+        <button
+          className="nav-hamburger"
+          aria-label="Menu"
+          onClick={()=>setMobileStudentNavOpen(o=>!o)}
+        >
+          {mobileStudentNavOpen ? '✕' : '☰'}
+        </button>
+
+        {/* ── MOBILE drawer ── */}
+        <div className={`nav-mobile-drawer${mobileStudentNavOpen?' open':''}`}>
+          {NAV.map(n=>(
+            <button key={n.id}
+              className={`nav-btn ${sPage===n.id?'active':''}`}
+              onClick={()=>{ setSPage(n.id); if(n.id==='chat') setChatUnread(0); setMobileStudentNavOpen(false); }}>
+              {n.label}
+              {n.id==='chat' && chatUnread > 0 && <span className="chat-unread-dot"/>}
+            </button>
+          ))}
+          <div className="nav-mobile-right">
+            <button
+              className="theme-toggle-btn"
+              onClick={() => setIsLightTheme(v => !v)}
+            >
+              {isLightTheme ? '🌙 Dark' : '☀️ Light'}
+            </button>
+            <button id="student-hand-btn" className={`btn btn-sm ${handRaised?'btn-warn':'btn-ghost'}`} onClick={toggleHand}>
+              {handRaised?'✋ Raised':'✋ Raise Hand'}
+            </button>
+            <span id="student-session-badge" className="session-badge">{sessionCode}</span>
+          </div>
         </div>
       </nav>
 
@@ -6318,6 +6793,30 @@ function StudentTaskView({ sessionCode, studentId, studentName, navigate }) {
           : shortAnswer}
         timeSpent={timeSpent}
       />
+
+      {/* ── MOBILE bottom navigation bar (student) ── */}
+      <nav className="mobile-bottom-nav" role="navigation" aria-label="Student navigation">
+        {NAV.map(n=>(
+          <button key={n.id}
+            className={`mobile-bottom-nav-item${sPage===n.id?' active':''}`}
+            onClick={()=>{ setSPage(n.id); if(n.id==='chat') setChatUnread(0); }}>
+            <span className="icon">
+              {n.id==='task'?'📝':n.id==='test'?'🧪':n.id==='chat'?'💬':'📊'}
+            </span>
+            <span>{n.id==='task'?'Task':n.id==='test'?'Test':n.id==='chat'?'Chat':'Report'}</span>
+            {n.id==='chat' && chatUnread>0 && <span className="notif-dot"/>}
+          </button>
+        ))}
+        <button
+          id="student-hand-btn-mobile"
+          className={`mobile-bottom-nav-item${handRaised?' active':''}`}
+          onClick={toggleHand}
+          style={{color: handRaised ? 'var(--yellow)' : undefined}}
+        >
+          <span className="icon">✋</span>
+          <span>{handRaised ? 'Raised' : 'Hand'}</span>
+        </button>
+      </nav>
     </div>
   );
 }

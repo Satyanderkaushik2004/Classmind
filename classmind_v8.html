@@ -124,20 +124,147 @@ select option{background:var(--surface2)}
 .stat-label{font-size:0.8rem;color:var(--text2);margin-top:4px}
 
 /* ── Landing Page ── */
-.landing{min-height:100vh;display:flex;flex-direction:column;align-items:center;
-  justify-content:center;padding:24px;
-  background:radial-gradient(ellipse at top,rgba(99,102,241,0.15) 0%,var(--bg) 60%)}
+.landing{display:block;overflow-x:hidden;background:var(--bg)}
+.landing-hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;padding:40px 24px;
+  background:radial-gradient(ellipse at 50% -10%,rgba(99,102,241,0.22) 0%,rgba(139,92,246,0.08) 40%,var(--bg) 70%);
+  position:relative;overflow:hidden}
+.landing-hero::before{content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse at 80% 50%,rgba(236,72,153,0.06) 0%,transparent 60%);pointer-events:none}
+.landing-hero-grid{position:absolute;inset:0;pointer-events:none;
+  background-image:linear-gradient(rgba(99,102,241,0.04) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(99,102,241,0.04) 1px,transparent 1px);
+  background-size:48px 48px;mask-image:radial-gradient(ellipse 80% 60% at 50% 0%,black 0%,transparent 100%)}
 .landing-logo{font-size:3.5rem;font-weight:800;margin-bottom:8px;
   background:linear-gradient(135deg,var(--accent),var(--accent2),#ec4899);
-  -webkit-background-clip:text;-webkit-text-fill-color:transparent}
-.landing-sub{color:var(--text2);font-size:1.1rem;margin-bottom:48px;text-align:center}
-.role-cards{display:grid;grid-template-columns:1fr 1fr;gap:20px;max-width:600px;width:100%}
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;position:relative;z-index:1}
+.landing-eyebrow{font-size:0.78rem;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;
+  color:var(--accent);background:rgba(99,102,241,0.12);border:1px solid rgba(99,102,241,0.25);
+  padding:4px 14px;border-radius:20px;margin-bottom:16px;display:inline-block;position:relative;z-index:1}
+.landing-sub{color:var(--text2);font-size:1.1rem;margin-bottom:48px;text-align:center;
+  max-width:520px;line-height:1.6;position:relative;z-index:1}
+.role-cards{display:grid;grid-template-columns:1fr 1fr;gap:20px;max-width:600px;width:100%;position:relative;z-index:1}
 .role-card{background:var(--surface);border:2px solid var(--border);border-radius:16px;
   padding:32px;cursor:pointer;text-align:center;transition:all 0.25s}
 .role-card:hover{border-color:var(--accent);background:var(--surface2);transform:translateY(-2px)}
 .role-icon{font-size:3rem;margin-bottom:12px}
 .role-title{font-size:1.2rem;font-weight:700;margin-bottom:4px}
 .role-desc{font-size:0.85rem;color:var(--text2)}
+
+/* ── Landing sections shared ── */
+.lp-section{padding:88px 24px;max-width:1160px;margin:0 auto}
+.lp-section-full{padding:80px 0;width:100%}
+.lp-tag{font-size:0.75rem;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;
+  color:var(--accent);background:rgba(99,102,241,0.1);border:1px solid rgba(99,102,241,0.2);
+  padding:4px 12px;border-radius:20px;display:inline-block;margin-bottom:16px}
+.lp-h2{font-size:2.4rem;font-weight:800;line-height:1.2;margin-bottom:16px;letter-spacing:-0.02em}
+.lp-h2 span{background:linear-gradient(135deg,var(--accent),var(--accent2));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.lp-lead{font-size:1.1rem;color:var(--text2);line-height:1.7;max-width:600px}
+.lp-divider{width:100%;height:1px;background:linear-gradient(90deg,transparent,var(--border),transparent)}
+
+/* ── What is ClassMind section ── */
+.lp-what{display:grid;grid-template-columns:1fr 1fr;gap:64px;align-items:center}
+.lp-what-pills{display:flex;flex-wrap:wrap;gap:10px;margin-top:28px}
+.lp-pill{display:flex;align-items:center;gap:8px;padding:8px 14px;
+  background:var(--surface2);border:1px solid var(--border);border-radius:24px;
+  font-size:0.82rem;font-weight:600;color:var(--text)}
+.lp-pill-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.lp-visual-card{background:var(--surface);border:1px solid var(--border);border-radius:20px;
+  padding:28px;position:relative;overflow:hidden}
+.lp-visual-card::before{content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse at 70% 30%,rgba(99,102,241,0.08),transparent 60%);pointer-events:none}
+.lp-mock-bar{height:10px;border-radius:8px;margin-bottom:10px;background:var(--surface2)}
+.lp-mock-bar.accent{background:linear-gradient(90deg,var(--accent),var(--accent2));animation:bar-grow 2s ease infinite alternate}
+.lp-mock-bar.green{background:var(--green);width:72%}
+.lp-mock-bar.yellow{background:var(--yellow);width:45%}
+.lp-mock-bar.red{background:var(--red);width:28%}
+@keyframes bar-grow{from{opacity:0.7}to{opacity:1}}
+.lp-mock-metric{display:flex;align-items:center;justify-content:space-between;
+  padding:10px 14px;background:var(--surface2);border-radius:10px;margin-bottom:8px;font-size:0.82rem}
+.lp-mock-metric-val{font-weight:700;font-size:1rem}
+.lp-mock-metric-val.green{color:var(--green)}
+.lp-mock-metric-val.yellow{color:var(--yellow)}
+.lp-mock-metric-val.red{color:var(--red)}
+.lp-mock-metric-val.accent{color:var(--accent)}
+.lp-mock-students{display:flex;flex-wrap:wrap;gap:6px;margin-top:14px}
+.lp-mock-student{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;
+  justify-content:center;font-size:0.7rem;font-weight:700;color:#fff}
+
+/* ── Features ── */
+.lp-features-bg{background:var(--surface);border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
+.lp-features-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:20px;margin-top:48px}
+.lp-feat{background:var(--bg);border:1px solid var(--border);border-radius:16px;
+  padding:24px;transition:all 0.25s;position:relative;overflow:hidden;cursor:default}
+.lp-feat::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;
+  background:linear-gradient(90deg,var(--accent),var(--accent2));
+  transform:scaleX(0);transform-origin:left;transition:transform 0.3s ease}
+.lp-feat:hover{border-color:rgba(99,102,241,0.4);transform:translateY(-3px);
+  box-shadow:0 12px 40px rgba(0,0,0,0.3)}
+.lp-feat:hover::before{transform:scaleX(1)}
+.lp-feat-icon{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;
+  justify-content:center;font-size:1.3rem;margin-bottom:16px;flex-shrink:0}
+.lp-feat-title{font-size:1rem;font-weight:700;margin-bottom:6px;color:var(--text)}
+.lp-feat-desc{font-size:0.85rem;color:var(--text2);line-height:1.6}
+
+/* ── For Teachers / Students ── */
+.lp-roles{display:grid;grid-template-columns:1fr 1fr;gap:32px;margin-top:48px}
+.lp-role-block{border-radius:20px;padding:36px;border:1px solid var(--border);
+  background:var(--surface);position:relative;overflow:hidden}
+.lp-role-block.teacher{border-color:rgba(99,102,241,0.3)}
+.lp-role-block.student{border-color:rgba(34,197,94,0.3)}
+.lp-role-block::before{content:'';position:absolute;top:0;left:0;right:0;bottom:0;
+  border-radius:20px;pointer-events:none;opacity:0.04}
+.lp-role-block.teacher::before{background:var(--accent)}
+.lp-role-block.student::before{background:var(--green)}
+.lp-role-head{display:flex;align-items:center;gap:12px;margin-bottom:24px}
+.lp-role-emoji{font-size:2rem;width:52px;height:52px;border-radius:14px;display:flex;
+  align-items:center;justify-content:center;flex-shrink:0}
+.lp-role-name{font-size:1.25rem;font-weight:800}
+.lp-role-sub{font-size:0.82rem;color:var(--text2);margin-top:2px}
+.lp-role-list{list-style:none;display:flex;flex-direction:column;gap:12px}
+.lp-role-list li{display:flex;align-items:flex-start;gap:10px;font-size:0.9rem;color:var(--text2);line-height:1.5}
+.lp-role-list li::before{content:'→';color:var(--accent);font-weight:700;flex-shrink:0;margin-top:1px}
+.lp-role-block.student .lp-role-list li::before{color:var(--green)}
+
+/* ── (stats bar removed) ── */
+
+/* ── Carousel/Slideshow ── */
+.lp-carousel-wrap{width:100%;overflow:hidden;position:relative;padding:32px 0}
+.lp-carousel-track{display:flex;gap:20px;animation:lp-scroll 30s linear infinite;width:max-content}
+.lp-carousel-track:hover{animation-play-state:paused}
+.lp-slide{flex-shrink:0;width:320px;border-radius:16px;overflow:hidden;
+  background:var(--surface);border:1px solid var(--border);padding:20px;
+  position:relative}
+.lp-slide-header{display:flex;align-items:center;gap:8px;margin-bottom:14px}
+.lp-slide-dot{width:10px;height:10px;border-radius:50%}
+.lp-slide-title{font-size:0.78rem;font-weight:700;color:var(--text2)}
+@keyframes lp-scroll{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+
+/* ── CTA bottom ── */
+.lp-cta{text-align:center;padding:100px 24px;
+  background:radial-gradient(ellipse at 50% 0%,rgba(99,102,241,0.15),transparent 60%)}
+.lp-cta-h{font-size:2.2rem;font-weight:800;margin-bottom:12px;letter-spacing:-0.02em}
+.lp-cta-sub{color:var(--text2);margin-bottom:36px;font-size:1.05rem}
+
+/* ── Landing footer ── */
+.lp-footer{text-align:center;padding:24px;color:var(--text3);font-size:0.8rem;
+  border-top:1px solid var(--border)}
+
+/* ── Scroll animations ── */
+@keyframes lp-fadein{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
+.lp-animate{animation:lp-fadein 0.6s ease forwards;opacity:0}
+.lp-animate.d1{animation-delay:0.1s}
+.lp-animate.d2{animation-delay:0.2s}
+.lp-animate.d3{animation-delay:0.3s}
+.lp-animate.d4{animation-delay:0.4s}
+.lp-animate.d5{animation-delay:0.5s}
+.lp-animate.d6{animation-delay:0.6s}
+
+/* ── Light mode overrides for landing ── */
+.light .lp-feat{background:var(--surface2)}
+.light .lp-role-block{background:var(--surface)}
+.light .lp-slide{background:var(--surface)}
 
 /* ── Teacher Dashboard ── */
 .understanding-meter{background:var(--surface2);border-radius:var(--radius);
@@ -277,9 +404,18 @@ hr{border:none;border-top:1px solid var(--border);margin:16px 0}
   .grid-2,.grid-3,.grid-4{grid-template-columns:1fr}
   .nav{padding:0 12px;height:auto;flex-wrap:wrap;padding-top:8px;padding-bottom:8px}
   .page,.page-sm{padding:16px}
+  .lp-what{grid-template-columns:1fr;gap:32px}
+  .lp-roles{grid-template-columns:1fr}
+  .lp-stats{grid-template-columns:1fr 1fr}
+  .lp-stat-item{border-right:none;border-bottom:1px solid var(--border);padding:28px 16px}
+  .lp-h2{font-size:1.8rem}
+  .lp-section{padding:56px 20px}
+  .lp-features-grid{grid-template-columns:1fr}
 }
-
-/* ── Scrollbar ── */
+@media(max-width:900px){
+  .lp-what{grid-template-columns:1fr;gap:40px}
+  .lp-roles{grid-template-columns:1fr}
+}
 ::-webkit-scrollbar{width:6px;height:6px}
 ::-webkit-scrollbar-track{background:var(--surface)}
 ::-webkit-scrollbar-thumb{background:var(--surface3);border-radius:3px}
@@ -1639,100 +1775,434 @@ async function joinSession() {
   setLoading(false);
 }
 
+  // ── Scroll-triggered observer for lp-animate elements ───────────
+  React.useEffect(() => {
+    const els = document.querySelectorAll('.lp-animate-trigger');
+    if (!els.length) return;
+    const obs = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if (e.isIntersecting) { e.target.classList.add('lp-animate'); obs.unobserve(e.target); }
+      });
+    }, { threshold: 0.12 });
+    els.forEach(el => obs.observe(el));
+    return () => obs.disconnect();
+  }, []);
+
+  const features = [
+    { icon:'📊', bg:'rgba(99,102,241,0.12)', title:'Real-Time Understanding Tracker', desc:'See exactly how many students understand the topic right now — updated live, every second.' },
+    { icon:'🤖', bg:'rgba(139,92,246,0.12)', title:'AI Student Grouping', desc:'ClassMind automatically forms balanced groups based on performance, ensuring no one gets left behind.' },
+    { icon:'⚡', bg:'rgba(234,179,8,0.12)', title:'Instant Doubt Detection', desc:'Students submit doubts silently. AI categorizes them and surfaces the most critical ones first.' },
+    { icon:'🏆', bg:'rgba(34,197,94,0.12)', title:'Live Leaderboard', desc:'Gamified scoring keeps students engaged and motivated — real points, real competition, real time.' },
+    { icon:'🧑‍✈️', bg:'rgba(59,130,246,0.12)', title:'Teacher AI Copilot', desc:'Ask your AI assistant anything: "Which students are at risk?" or "Suggest a remediation task."' },
+    { icon:'📈', bg:'rgba(249,115,22,0.12)', title:'Classroom Analytics', desc:'Participation rate, average score, response times — every metric you need on one screen.' },
+    { icon:'✋', bg:'rgba(236,72,153,0.12)', title:'Raise Hand Signals', desc:'Students silently signal for help. You get notified instantly — no chaos, no interruptions.' },
+    { icon:'📋', bg:'rgba(20,184,166,0.12)', title:'Performance Reports', desc:'Export full session reports to PDF or Excel with one click for parent meetings or school records.' },
+  ];
+
+  const slides = [
+    { title:'Live Class Dashboard', color:'#6366f1', items:[
+      { label:'Understanding', val:'78%', color:'var(--green)' },
+      { label:'Participation', val:'92%', color:'var(--accent)' },
+      { label:'At-Risk Students', val:'3', color:'var(--red)' },
+    ]},
+    { title:'Student Leaderboard', color:'#f97316', items:[
+      { label:'🥇 Priya S.', val:'240 pts', color:'#fbbf24' },
+      { label:'🥈 Arjun K.', val:'210 pts', color:'#94a3b8' },
+      { label:'🥉 Riya M.', val:'195 pts', color:'#b45309' },
+    ]},
+    { title:'AI Copilot Insight', color:'#8b5cf6', items:[
+      { label:'Weak Topic', val:'Fractions', color:'var(--red)' },
+      { label:'Suggested Task', val:'Quiz Q3', color:'var(--accent)' },
+      { label:'Group Formed', val:'Yes', color:'var(--green)' },
+    ]},
+    { title:'Task Performance', color:'#22c55e', items:[
+      { label:'Correct', val:'68%', color:'var(--green)' },
+      { label:'Partial', val:'18%', color:'var(--yellow)' },
+      { label:'Incorrect', val:'14%', color:'var(--red)' },
+    ]},
+    { title:'Doubt Tracker', color:'#3b82f6', items:[
+      { label:'Open Doubts', val:'7', color:'var(--yellow)' },
+      { label:'Resolved', val:'23', color:'var(--green)' },
+      { label:'Pending', val:'4', color:'var(--red)' },
+    ]},
+    { title:'Session Summary', color:'#ec4899', items:[
+      { label:'Duration', val:'48 min', color:'var(--text)' },
+      { label:'Students', val:'34', color:'var(--accent)' },
+      { label:'Avg Score', val:'81%', color:'var(--green)' },
+    ]},
+  ];
+  // Duplicate for infinite scroll
+  const allSlides = [...slides, ...slides];
+
   return (
     <div className="landing">
-  <div className="landing-logo">🧠 ClassMind</div>
-  <div className="landing-sub">Real-time classroom intelligence system</div>
 
-  {!showTeacher && !showStudent && (
-    <div className="role-cards">
-      <div className="role-card" onClick={()=>setShowTeacher(true)}>
-        <div className="role-icon">👨‍🏫</div>
-        <div className="role-title">Start as Teacher</div>
-        <div className="role-desc">Create a session and manage your class</div>
+      {/* ═══════════════════════════════════════
+          HERO — existing content, unchanged logic
+      ═══════════════════════════════════════ */}
+      <div className="landing-hero">
+        <div className="landing-hero-grid"/>
+        <div className="landing-eyebrow">🚀 AI-Powered Classroom Intelligence</div>
+        <div className="landing-logo">🧠 ClassMind</div>
+        <div className="landing-sub">
+          The smartest way to run a classroom. Real-time insights, AI grouping,
+          live analytics — all in one place for teachers and students.
+        </div>
+
+        {!showTeacher && !showStudent && (
+          <div className="role-cards">
+            <div className="role-card" onClick={()=>setShowTeacher(true)}>
+              <div className="role-icon">👨‍🏫</div>
+              <div className="role-title">Start as Teacher</div>
+              <div className="role-desc">Create a session and manage your class</div>
+            </div>
+            <div className="role-card" onClick={()=>setShowStudent(true)}>
+              <div className="role-icon">👨‍🎓</div>
+              <div className="role-title">Join as Student</div>
+              <div className="role-desc">Enter a session code to join</div>
+            </div>
+          </div>
+        )}
+
+        {showTeacher && (
+          <div className="card" style={{width:'100%',maxWidth:400,position:'relative',zIndex:1}}>
+            <div className="card-title">👨‍🏫 Create Session</div>
+            <div className="form-group">
+              <label>Your Name</label>
+              <input
+                value={teacherName}
+                onChange={e=>setTeacherName(e.target.value)}
+                placeholder="e.g. Dr. Smith"
+                onKeyDown={e=>e.key==='Enter'&&createSession()}
+              />
+            </div>
+            <div className="flex gap-8">
+              <button className="btn btn-ghost" onClick={()=>setShowTeacher(false)}>Back</button>
+              <button className="btn btn-primary" style={{flex:1}} onClick={createSession} disabled={loading}>
+                {loading?'Creating…':'Create Session →'}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {showStudent && (
+          <div className="card" style={{width:'100%',maxWidth:400,position:'relative',zIndex:1}}>
+            <div className="card-title">👨‍🎓 Join Session</div>
+
+            <div className="form-group">
+              <label>Session Code</label>
+              <input
+                value={sessionCode}
+                onChange={e=>setSessionCode(e.target.value.replace(/\D/,'').slice(0,6))}
+                placeholder="6-digit code"
+                style={{textAlign:'center',fontSize:'1.5rem',letterSpacing:'6px',fontWeight:700}}
+              />
+            </div>
+
+            <div className="form-group">
+              <label>Your Name</label>
+              <input
+                value={studentName}
+                onChange={e=>setStudentName(e.target.value)}
+                placeholder="Enter your name"
+                onKeyDown={e=>e.key==='Enter'&&joinSession()}
+              />
+            </div>
+
+            {/* ✅ ADDED: Roll Number */}
+            <div className="form-group">
+              <label>Roll Number</label>
+              <input
+                value={roll}
+                onChange={e=>setRoll(e.target.value)}
+                placeholder="Enter your roll number"
+              />
+            </div>
+
+            {/* ✅ ADDED: Class */}
+            <div className="form-group">
+              <label>Class (e.g. 10A)</label>
+              <input
+                value={cls}
+                onChange={e=>setCls(e.target.value)}
+                placeholder="Enter your class"
+              />
+            </div>
+
+            <div className="flex gap-8">
+              <button className="btn btn-ghost" onClick={()=>setShowStudent(false)}>Back</button>
+              <button className="btn btn-primary" style={{flex:1}} onClick={joinSession} disabled={loading}>
+                {loading?'Joining…':'Join Session →'}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* scroll hint */}
+        {!showTeacher && !showStudent && (
+          <div style={{marginTop:48,display:'flex',flexDirection:'column',alignItems:'center',gap:6,
+            color:'var(--text3)',fontSize:'0.78rem',animation:'lp-fadein 1s ease 1s both'}}>
+            <span>Scroll to explore</span>
+            <div style={{width:1,height:32,background:'linear-gradient(var(--border),transparent)'}}/>
+          </div>
+        )}
       </div>
-      <div className="role-card" onClick={()=>setShowStudent(true)}>
-        <div className="role-icon">👨‍🎓</div>
-        <div className="role-title">Join as Student</div>
-        <div className="role-desc">Enter a session code to join</div>
+
+      {/* ═══════════════════════════════════════
+          TRUST / CAPABILITY STRIP
+      ═══════════════════════════════════════ */}
+      <div style={{background:'var(--surface)',borderTop:'1px solid var(--border)',borderBottom:'1px solid var(--border)'}}>
+        <div style={{maxWidth:1160,margin:'0 auto',padding:'0 24px',display:'flex',alignItems:'center',
+          justifyContent:'center',flexWrap:'wrap',gap:0}}>
+          {[
+            {icon:'⚡', label:'Real-Time WebSocket Sync'},
+            {icon:'🤖', label:'AI-Powered Analysis'},
+            {icon:'🔒', label:'Session-Scoped & Secure'},
+            {icon:'📊', label:'Live Charts & Analytics'},
+            {icon:'📱', label:'Works on Any Device'},
+          ].map((item, i, arr) => (
+            <React.Fragment key={i}>
+              <div style={{display:'flex',alignItems:'center',gap:8,padding:'22px 28px',
+                fontSize:'0.82rem',fontWeight:600,color:'var(--text2)',whiteSpace:'nowrap'}}>
+                <span style={{fontSize:'1.1rem'}}>{item.icon}</span>
+                {item.label}
+              </div>
+              {i < arr.length - 1 && (
+                <div style={{width:1,height:20,background:'var(--border)',flexShrink:0}}/>
+              )}
+            </React.Fragment>
+          ))}
+        </div>
       </div>
+
+      {/* ═══════════════════════════════════════
+          WHAT IS CLASSMIND
+      ═══════════════════════════════════════ */}
+      <div className="lp-section">
+        <div className="lp-what">
+          <div className="lp-animate-trigger">
+            <div className="lp-tag">What is ClassMind?</div>
+            <h2 className="lp-h2">
+              Your classroom,<br/><span>supercharged with AI</span>
+            </h2>
+            <p className="lp-lead">
+              ClassMind is a real-time classroom intelligence platform that bridges the gap between
+              teaching and understanding. While you teach, ClassMind listens, analyzes, and gives
+              you actionable insights — live.
+            </p>
+            <div className="lp-what-pills">
+              {[
+                {dot:'#6366f1', label:'AI-Powered Insights'},
+                {dot:'#22c55e', label:'Live Understanding Meter'},
+                {dot:'#f97316', label:'Smart Student Grouping'},
+                {dot:'#3b82f6', label:'Doubt Detection System'},
+                {dot:'#ec4899', label:'Real-Time Analytics'},
+                {dot:'#eab308', label:'Gamified Engagement'},
+              ].map((p,i)=>(
+                <div key={i} className="lp-pill">
+                  <div className="lp-pill-dot" style={{background:p.dot}}/>
+                  {p.label}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="lp-visual-card lp-animate-trigger" style={{animationDelay:'0.2s'}}>
+            <div style={{fontSize:'0.75rem',fontWeight:700,color:'var(--text3)',letterSpacing:'0.08em',
+              textTransform:'uppercase',marginBottom:16}}>
+              🔴 Live · Class 10A · 34 Students
+            </div>
+
+            {[
+              {label:'Understanding Score', val:'78%', color:'var(--green)'},
+              {label:'Participation Rate', val:'92%', color:'var(--accent)'},
+              {label:'At-Risk Students', val:'3', color:'var(--red)'},
+              {label:'Tasks Completed', val:'21/34', color:'var(--yellow)'},
+            ].map((m,i)=>(
+              <div key={i} className="lp-mock-metric">
+                <span style={{color:'var(--text2)'}}>{m.label}</span>
+                <span className="lp-mock-metric-val" style={{color:m.color}}>{m.val}</span>
+              </div>
+            ))}
+
+            <div style={{marginTop:16,marginBottom:8,fontSize:'0.75rem',fontWeight:700,color:'var(--text3)',letterSpacing:'0.06em',textTransform:'uppercase'}}>
+              Student Understanding
+            </div>
+            <div className="lp-mock-bar accent" style={{width:'78%'}}/>
+            <div style={{display:'flex',justifyContent:'space-between',fontSize:'0.72rem',color:'var(--text3)',marginTop:4}}>
+              <span>0%</span><span style={{color:'var(--green)',fontWeight:700}}>78%</span><span>100%</span>
+            </div>
+
+            <div className="lp-mock-students" style={{marginTop:16}}>
+              {['PK','AJ','RM','SK','VT','NP','DK','RG','MS','TL','AB','KC'].map((n,i)=>(
+                <div key={i} className="lp-mock-student" style={{
+                  background: i < 8 ? 'var(--green)' : i < 10 ? 'var(--yellow)' : 'var(--red)',
+                  fontSize:'0.65rem'
+                }}>{n}</div>
+              ))}
+              <div className="lp-mock-student" style={{background:'var(--surface3)',color:'var(--text2)',fontSize:'0.65rem'}}>+22</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ═══════════════════════════════════════
+          FEATURES GRID
+      ═══════════════════════════════════════ */}
+      <div className="lp-features-bg">
+        <div className="lp-section">
+          <div className="lp-animate-trigger" style={{textAlign:'center',marginBottom:0}}>
+            <div className="lp-tag" style={{margin:'0 auto 16px'}}>Features</div>
+            <h2 className="lp-h2" style={{textAlign:'center'}}>
+              Everything you need to <span>teach smarter</span>
+            </h2>
+            <p className="lp-lead" style={{margin:'0 auto',textAlign:'center'}}>
+              From the moment class starts to the final report — ClassMind handles the data
+              so you can focus on teaching.
+            </p>
+          </div>
+          <div className="lp-features-grid">
+            {features.map((f,i)=>(
+              <div key={i} className={`lp-feat lp-animate-trigger d${(i%6)+1}`}>
+                <div className="lp-feat-icon" style={{background:f.bg}}>
+                  {f.icon}
+                </div>
+                <div className="lp-feat-title">{f.title}</div>
+                <div className="lp-feat-desc">{f.desc}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* ═══════════════════════════════════════
+          CAROUSEL — Live Dashboard Previews
+      ═══════════════════════════════════════ */}
+      <div style={{background:'var(--bg)',padding:'64px 0',borderTop:'1px solid var(--border)'}}>
+        <div style={{textAlign:'center',marginBottom:32,padding:'0 24px'}}>
+          <div className="lp-tag" style={{display:'inline-block'}}>See it in action</div>
+          <h2 className="lp-h2" style={{textAlign:'center',marginTop:12}}>
+            <span>Live dashboards</span>, real results
+          </h2>
+        </div>
+        <div className="lp-carousel-wrap">
+          <div className="lp-carousel-track">
+            {allSlides.map((s,i)=>(
+              <div key={i} className="lp-slide">
+                <div className="lp-slide-header">
+                  <div className="lp-slide-dot" style={{background:'#ef4444'}}/>
+                  <div className="lp-slide-dot" style={{background:'#eab308'}}/>
+                  <div className="lp-slide-dot" style={{background:'#22c55e'}}/>
+                  <div className="lp-slide-title" style={{marginLeft:8}}>{s.title}</div>
+                </div>
+                <div style={{height:3,borderRadius:2,background:`linear-gradient(90deg,${s.color},transparent)`,marginBottom:16}}/>
+                {s.items.map((item,j)=>(
+                  <div key={j} style={{display:'flex',justifyContent:'space-between',alignItems:'center',
+                    padding:'9px 12px',background:'var(--surface2)',borderRadius:8,marginBottom:8,fontSize:'0.82rem'}}>
+                    <span style={{color:'var(--text2)'}}>{item.label}</span>
+                    <span style={{fontWeight:700,color:item.color}}>{item.val}</span>
+                  </div>
+                ))}
+                <div style={{marginTop:14,height:6,borderRadius:4,background:'var(--surface2)',overflow:'hidden'}}>
+                  <div style={{height:'100%',width:['68%','85%','72%','90%','60%','80%'][i%6],
+                    background:`linear-gradient(90deg,${s.color},${s.color}88)`,borderRadius:4,
+                    animation:'bar-grow 2s ease infinite alternate'}}/>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* ═══════════════════════════════════════
+          FOR TEACHERS & STUDENTS
+      ═══════════════════════════════════════ */}
+      <div className="lp-section">
+        <div className="lp-animate-trigger" style={{textAlign:'center',marginBottom:0}}>
+          <div className="lp-tag" style={{display:'inline-block'}}>Built for Everyone</div>
+          <h2 className="lp-h2" style={{textAlign:'center',marginTop:12}}>
+            What you can <span>do here</span>
+          </h2>
+        </div>
+        <div className="lp-roles">
+          <div className="lp-role-block teacher lp-animate-trigger d1">
+            <div className="lp-role-head">
+              <div className="lp-role-emoji" style={{background:'rgba(99,102,241,0.12)'}}>👨‍🏫</div>
+              <div>
+                <div className="lp-role-name">For Teachers</div>
+                <div className="lp-role-sub">Run smarter, data-driven classes</div>
+              </div>
+            </div>
+            <ul className="lp-role-list">
+              <li>Monitor class understanding in real-time with a live percentage meter</li>
+              <li>Instantly identify students who are struggling and need attention</li>
+              <li>Create AI-powered student groups balanced by performance level</li>
+              <li>Assign tasks, MCQs, or coding challenges and track responses live</li>
+              <li>Use your AI Copilot to ask questions and get classroom summaries</li>
+              <li>Export full session reports to PDF or Excel in one click</li>
+            </ul>
+          </div>
+          <div className="lp-role-block student lp-animate-trigger d2">
+            <div className="lp-role-head">
+              <div className="lp-role-emoji" style={{background:'rgba(34,197,94,0.12)'}}>👨‍🎓</div>
+              <div>
+                <div className="lp-role-name">For Students</div>
+                <div className="lp-role-sub">Learn actively, compete, and grow</div>
+              </div>
+            </div>
+            <ul className="lp-role-list" style={{listStyle:'none',display:'flex',flexDirection:'column',gap:12}}>
+              {[
+                'Receive tasks and answer in real-time — MCQs, text, or code',
+                'Get instant feedback: right answer, explanation, and your score',
+                'Climb the live leaderboard and compete with classmates',
+                'Raise your hand silently to signal confusion without disrupting class',
+                'Ask doubts through the chat and get answers from your teacher',
+                'Track your performance across tasks and see where to improve',
+              ].map((item,i)=>(
+                <li key={i} style={{display:'flex',alignItems:'flex-start',gap:10,fontSize:'0.9rem',color:'var(--text2)',lineHeight:1.5}}>
+                  <span style={{color:'var(--green)',fontWeight:700,flexShrink:0,marginTop:1}}>→</span>
+                  {item}
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      {/* ═══════════════════════════════════════
+          BOTTOM CTA
+      ═══════════════════════════════════════ */}
+      <div className="lp-cta">
+        <div className="lp-animate-trigger">
+          <div className="lp-tag" style={{display:'inline-block',marginBottom:20}}>Get Started Free</div>
+          <div className="lp-cta-h">
+            Ready to transform your<br/><span style={{background:'linear-gradient(135deg,var(--accent),var(--accent2))',WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent'}}>classroom experience?</span>
+          </div>
+          <div className="lp-cta-sub">
+            No setup required. Create a session in seconds.
+          </div>
+          <div style={{display:'flex',gap:16,justifyContent:'center',flexWrap:'wrap'}}>
+            <button className="btn btn-primary btn-lg"
+              onClick={()=>{window.scrollTo({top:0,behavior:'smooth'});setTimeout(()=>setShowTeacher(true),400)}}
+              style={{padding:'14px 36px',fontSize:'1rem',borderRadius:12,
+                background:'linear-gradient(135deg,var(--accent),var(--accent2))'}}>
+              👨‍🏫 Start as Teacher
+            </button>
+            <button className="btn btn-ghost btn-lg"
+              onClick={()=>{window.scrollTo({top:0,behavior:'smooth'});setTimeout(()=>setShowStudent(true),400)}}
+              style={{padding:'14px 36px',fontSize:'1rem',borderRadius:12}}>
+              👨‍🎓 Join as Student
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* footer */}
+      <div className="lp-footer">
+        <span>🧠 ClassMind</span> — Real-Time Classroom Intelligence &nbsp;·&nbsp; Built for teachers and students
+      </div>
+
     </div>
-  )}
-
-  {showTeacher && (
-    <div className="card" style={{width:'100%',maxWidth:400}}>
-      <div className="card-title">👨‍🏫 Create Session</div>
-      <div className="form-group">
-        <label>Your Name</label>
-        <input
-          value={teacherName}
-          onChange={e=>setTeacherName(e.target.value)}
-          placeholder="e.g. Dr. Smith"
-          onKeyDown={e=>e.key==='Enter'&&createSession()}
-        />
-      </div>
-      <div className="flex gap-8">
-        <button className="btn btn-ghost" onClick={()=>setShowTeacher(false)}>Back</button>
-        <button className="btn btn-primary" style={{flex:1}} onClick={createSession} disabled={loading}>
-          {loading?'Creating…':'Create Session →'}
-        </button>
-      </div>
-    </div>
-  )}
-
-  {showStudent && (
-    <div className="card" style={{width:'100%',maxWidth:400}}>
-      <div className="card-title">👨‍🎓 Join Session</div>
-
-      <div className="form-group">
-        <label>Session Code</label>
-        <input
-          value={sessionCode}
-          onChange={e=>setSessionCode(e.target.value.replace(/\D/,'').slice(0,6))}
-          placeholder="6-digit code"
-          style={{textAlign:'center',fontSize:'1.5rem',letterSpacing:'6px',fontWeight:700}}
-        />
-      </div>
-
-      <div className="form-group">
-        <label>Your Name</label>
-        <input
-          value={studentName}
-          onChange={e=>setStudentName(e.target.value)}
-          placeholder="Enter your name"
-          onKeyDown={e=>e.key==='Enter'&&joinSession()}
-        />
-      </div>
-
-      {/* ✅ ADDED: Roll Number */}
-      <div className="form-group">
-        <label>Roll Number</label>
-        <input
-          value={roll}
-          onChange={e=>setRoll(e.target.value)}
-          placeholder="Enter your roll number"
-        />
-      </div>
-
-      {/* ✅ ADDED: Class */}
-      <div className="form-group">
-        <label>Class (e.g. 10A)</label>
-        <input
-          value={cls}
-          onChange={e=>setCls(e.target.value)}
-          placeholder="Enter your class"
-        />
-      </div>
-
-      <div className="flex gap-8">
-        <button className="btn btn-ghost" onClick={()=>setShowStudent(false)}>Back</button>
-        <button className="btn btn-primary" style={{flex:1}} onClick={joinSession} disabled={loading}>
-          {loading?'Joining…':'Join Session →'}
-        </button>
-      </div>
-    </div>
-  )}
-</div>
   );
 }
 

@@ -1026,6 +1026,142 @@ hr{border:none;border-top:1px solid var(--border);margin:16px 0}
 .quiz-report-q-text{font-size:0.875rem;font-weight:600;margin-bottom:6px}
 .quiz-report-ans{font-size:0.8rem;margin-top:4px;color:var(--text2)}
 
+/* ── Profile Icon ── */
+.profile-icon-btn{
+  width:34px;height:34px;border-radius:50%;border:2px solid var(--border);
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  color:#fff;font-size:0.85rem;font-weight:700;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  transition:all 0.2s;flex-shrink:0;
+}
+.profile-icon-btn:hover{transform:scale(1.08);box-shadow:0 0 0 3px rgba(99,102,241,0.3)}
+
+/* ── Profile Drawer Overlay ── */
+.profile-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:9000;
+  opacity:0;pointer-events:none;transition:opacity 0.25s ease;
+}
+.profile-overlay.open{opacity:1;pointer-events:all;}
+
+/* ── Profile Drawer Panel ── */
+.profile-drawer{
+  position:fixed;top:0;right:-420px;width:420px;max-width:100vw;height:100vh;
+  background:var(--surface);border-left:1px solid var(--border);
+  z-index:9001;display:flex;flex-direction:column;
+  transition:right 0.3s cubic-bezier(0.34,1.1,0.64,1);
+  box-shadow:-8px 0 40px rgba(0,0,0,0.35);
+  overflow:hidden;
+}
+.profile-drawer.open{right:0;}
+
+/* ── Profile Drawer Header ── */
+.profile-drawer-header{
+  padding:20px 20px 0;
+  background:linear-gradient(135deg,rgba(99,102,241,0.12),rgba(139,92,246,0.08));
+  border-bottom:1px solid var(--border);flex-shrink:0;
+}
+.profile-drawer-close{
+  position:absolute;top:14px;right:14px;
+  background:var(--surface2);border:1px solid var(--border);
+  border-radius:8px;padding:5px 9px;cursor:pointer;
+  color:var(--text2);font-size:0.9rem;transition:all 0.15s;
+}
+.profile-drawer-close:hover{background:var(--surface3);color:var(--text)}
+.profile-avatar{
+  width:56px;height:56px;border-radius:50%;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  display:flex;align-items:center;justify-content:center;
+  font-size:1.5rem;font-weight:700;color:#fff;margin-bottom:10px;
+  box-shadow:0 4px 16px rgba(99,102,241,0.4);
+}
+.profile-name{font-size:1.1rem;font-weight:700;margin-bottom:2px}
+.profile-role-badge{
+  display:inline-flex;align-items:center;gap:5px;
+  padding:3px 10px;border-radius:20px;font-size:0.75rem;font-weight:600;
+  background:rgba(99,102,241,0.15);color:var(--accent);margin-bottom:14px;
+}
+
+/* ── Profile Tabs ── */
+.profile-tabs{display:flex;gap:0;border-bottom:1px solid var(--border);margin-top:4px;}
+.profile-tab{
+  flex:1;padding:10px 6px;border:none;background:transparent;
+  color:var(--text2);font-size:0.82rem;font-weight:600;cursor:pointer;
+  border-bottom:2px solid transparent;transition:all 0.15s;font-family:inherit;
+  display:flex;align-items:center;justify-content:center;gap:5px;
+}
+.profile-tab:hover{color:var(--text);background:rgba(99,102,241,0.05)}
+.profile-tab.active{color:var(--accent);border-bottom-color:var(--accent);}
+
+/* ── Profile Drawer Body ── */
+.profile-drawer-body{
+  flex:1;overflow-y:auto;padding:16px;
+  scrollbar-width:thin;scrollbar-color:var(--border) transparent;
+}
+
+/* ── Profile Stats Grid ── */
+.prof-stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;}
+.prof-stat{
+  background:var(--surface2);border:1px solid var(--border);border-radius:10px;
+  padding:14px;text-align:center;
+}
+.prof-stat-value{
+  font-size:1.6rem;font-weight:800;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+}
+.prof-stat-label{font-size:0.72rem;color:var(--text2);margin-top:3px;text-transform:uppercase;letter-spacing:0.06em;}
+
+/* ── Profile Section Title ── */
+.prof-section-title{
+  font-size:0.78rem;font-weight:700;color:var(--text3);
+  text-transform:uppercase;letter-spacing:0.1em;
+  margin:14px 0 8px;display:flex;align-items:center;gap:6px;
+}
+
+/* ── Session Row in profile ── */
+.prof-session-row{
+  background:var(--surface2);border:1px solid var(--border);border-radius:8px;
+  padding:12px 14px;margin-bottom:7px;
+  display:grid;grid-template-columns:1fr auto;gap:8px;align-items:start;
+}
+.prof-session-name{font-size:0.88rem;font-weight:600;margin-bottom:3px;}
+.prof-session-date{font-size:0.72rem;color:var(--text3);}
+.prof-session-stats{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px;}
+.prof-session-stat{
+  font-size:0.72rem;padding:2px 8px;border-radius:12px;font-weight:600;
+  background:rgba(99,102,241,0.1);color:var(--accent);
+}
+.prof-session-stat.green{background:rgba(34,197,94,0.1);color:var(--green);}
+.prof-session-stat.yellow{background:rgba(234,179,8,0.1);color:var(--yellow);}
+
+/* ── Profile Export Bar ── */
+.prof-export-bar{
+  display:flex;gap:8px;padding:14px 16px;
+  border-top:1px solid var(--border);flex-shrink:0;
+  background:var(--surface);
+}
+
+/* ── Empty state in profile ── */
+.prof-empty{
+  text-align:center;padding:32px 16px;color:var(--text3);
+  font-size:0.875rem;
+}
+.prof-empty-icon{font-size:2.5rem;margin-bottom:8px;}
+
+/* ── Profile trend mini-chart ── */
+.prof-trend-row{
+  display:flex;gap:3px;align-items:flex-end;height:40px;margin-bottom:10px;
+}
+.prof-trend-bar{
+  flex:1;border-radius:3px 3px 0 0;
+  background:linear-gradient(to top,var(--accent),var(--accent2));
+  opacity:0.8;min-width:6px;transition:all 0.3s ease;
+}
+
+@media(max-width:480px){
+  .profile-drawer{width:100vw;}
+}
+
 /* ── Student Theme Toggle ── */
 .theme-toggle-btn{
   padding:5px 10px;border-radius:6px;border:1px solid var(--border);
@@ -2497,6 +2633,8 @@ useEffect(()=>{
   const clearNotif = (type) =>
     setNotifications(n=>({...n,[type]:0}));
 
+  const [profileOpen, setProfileOpen] = useState(false);
+
   const PAGES = [
     {id:'dashboard',label:'Dashboard',icon:'📊'},
     {id:'tasks',label:'Tasks',icon:'📝'},
@@ -2506,7 +2644,6 @@ useEffect(()=>{
     {id:'communication',label:'Chat',icon:'💬'},
     {id:'test',label:'Test Mode',icon:'🧪'},
     {id:'coding',label:'Coding Lab',icon:'💻'},
-    {id:'weekly-report',label:'Weekly Report',icon:'📅'},
   ];
 
   const sharedProps = {
@@ -2562,6 +2699,14 @@ useEffect(()=>{
           </button>
           <span className="session-badge">{sessionCode}</span>
           <button className="btn btn-ghost btn-sm" onClick={()=>rootNavigate('landing')}>Exit</button>
+          <button
+            className="profile-icon-btn"
+            onClick={()=>setProfileOpen(true)}
+            title="My Profile"
+            style={{marginLeft:4}}
+          >
+            {(teacherName||'?')[0].toUpperCase()}
+          </button>
         </div>
 
         {/* ── MOBILE hamburger (visible only on ≤768px via CSS) ── */}
@@ -2594,6 +2739,13 @@ useEffect(()=>{
             </button>
             <span className="session-badge">{sessionCode}</span>
             <button className="btn btn-ghost btn-sm" onClick={()=>rootNavigate('landing')}>Exit</button>
+            <button
+              className="profile-icon-btn"
+              onClick={()=>{setProfileOpen(true);setMobileNavOpen(false);}}
+              title="My Profile"
+            >
+              {(teacherName||'?')[0].toUpperCase()}
+            </button>
           </div>
         </div>
       </nav>
@@ -2613,8 +2765,16 @@ useEffect(()=>{
         {page==='communication' && <CommunicationPage {...sharedProps}/>}
         {page==='test' && <TestModePage {...sharedProps}/>}
         {page==='coding' && <CodingLabPage {...sharedProps} isTeacher={true}/>}
-        {page==='weekly-report' && <WeeklyReportPage teacherName={teacherName} tasks={tasks} roster={roster} analytics={analytics} sessionCode={sessionCode}/>}
       </div>
+
+      {/* ── Profile Drawer (Teacher) ── */}
+      <ProfileDrawer
+        open={profileOpen}
+        onClose={()=>setProfileOpen(false)}
+        userName={teacherName}
+        role="teacher"
+        teacherData={{ tasks, totalStudents:(roster.active||[]).length }}
+      />
 
       {/* ── MOBILE bottom navigation bar ── */}
       <nav className="mobile-bottom-nav" role="navigation" aria-label="Bottom navigation">
@@ -6816,8 +6976,10 @@ function StudentTaskView({ sessionCode, studentId, studentName, navigate }) {
     try { localStorage.setItem('cm_student_theme', isLightTheme ? 'light' : 'dark'); } catch {}
   }, [isLightTheme]);
 
+  const [profileOpen, setProfileOpen] = useState(false);
+
   const NAV = [
-    {id:'task',label:'📝 Task'},{id:'test',label:'🧪 Test'},{id:'chat',label:'💬 Chat'},{id:'myreport',label:'📊 Report'},{id:'weekly',label:'📅 Weekly'}
+    {id:'task',label:'📝 Task'},{id:'test',label:'🧪 Test'},{id:'chat',label:'💬 Chat'},{id:'myreport',label:'📊 Report'}
   ];
 
   const [mobileStudentNavOpen, setMobileStudentNavOpen] = useState(false);
@@ -6851,6 +7013,14 @@ function StudentTaskView({ sessionCode, studentId, studentName, navigate }) {
             {handRaised?'✋ Hand Raised':'✋ Raise Hand'}
           </button>
           <span id="student-session-badge" className="session-badge">{sessionCode}</span>
+          <button
+            className="profile-icon-btn"
+            onClick={()=>setProfileOpen(true)}
+            title="My Profile"
+            style={{marginLeft:4}}
+          >
+            {(studentName||'?')[0].toUpperCase()}
+          </button>
         </div>
 
         {/* ── MOBILE hamburger ── */}
@@ -6883,6 +7053,13 @@ function StudentTaskView({ sessionCode, studentId, studentName, navigate }) {
               {handRaised?'✋ Raised':'✋ Raise Hand'}
             </button>
             <span id="student-session-badge" className="session-badge">{sessionCode}</span>
+            <button
+              className="profile-icon-btn"
+              onClick={()=>{setProfileOpen(true);setMobileStudentNavOpen(false);}}
+              title="My Profile"
+            >
+              {(studentName||'?')[0].toUpperCase()}
+            </button>
           </div>
         </div>
       </nav>
@@ -7401,11 +7578,6 @@ function StudentTaskView({ sessionCode, studentId, studentName, navigate }) {
           <StudentMyQuizReport sessionCode={sessionCode} studentId={studentId} studentName={studentName}/>
         )}
 
-        {/* WEEKLY REPORT PAGE — FEATURE 2 */}
-        {sPage==='weekly' && (
-          <StudentWeeklyReport studentId={studentId} studentName={studentName} answeredCount={answeredCount} correctCount={correctCount} timeSpent={timeSpent}/>
-        )}
-
         {/* RESULT PAGE */}
         {sPage==='result' && (
           <div className="page-sm text-center">
@@ -7439,6 +7611,15 @@ function StudentTaskView({ sessionCode, studentId, studentName, navigate }) {
       {/* ── Student Guided Tour (fires EVERY time student enters) ── */}
       <StudentGuidedTour ready={tourReady} />
 
+      {/* ── Profile Drawer (Student) ── */}
+      <ProfileDrawer
+        open={profileOpen}
+        onClose={()=>setProfileOpen(false)}
+        userName={studentName}
+        role="student"
+        studentData={{ studentId, studentName, answeredCount, correctCount, timeSpent }}
+      />
+
       {/* ── Student Copilot (context-aware, quiz-safe) ── */}
       <StudentCopilotLight
         currentTask={quizState.active
@@ -7468,12 +7649,20 @@ function StudentTaskView({ sessionCode, studentId, studentName, navigate }) {
             className={`mobile-bottom-nav-item${sPage===n.id?' active':''}`}
             onClick={()=>{ setSPage(n.id); if(n.id==='chat') setChatUnread(0); }}>
             <span className="icon">
-              {n.id==='task'?'📝':n.id==='test'?'🧪':n.id==='chat'?'💬':n.id==='weekly'?'📅':'📊'}
+              {n.id==='task'?'📝':n.id==='test'?'🧪':n.id==='chat'?'💬':'📊'}
             </span>
-            <span>{n.id==='task'?'Task':n.id==='test'?'Test':n.id==='chat'?'Chat':n.id==='weekly'?'Weekly':'Report'}</span>
+            <span>{n.id==='task'?'Task':n.id==='test'?'Test':n.id==='chat'?'Chat':'Report'}</span>
             {n.id==='chat' && chatUnread>0 && <span className="notif-dot"/>}
           </button>
         ))}
+        <button
+          className="mobile-bottom-nav-item"
+          onClick={()=>setProfileOpen(true)}
+          style={{color:'var(--accent)'}}
+        >
+          <span className="icon">👤</span>
+          <span>Profile</span>
+        </button>
         <button
           id="student-hand-btn-mobile"
           className={`mobile-bottom-nav-item${handRaised?' active':''}`}
@@ -10684,6 +10873,439 @@ function StudentGuidedTour({ ready }) {
             {isLast ? '🎉 Let\'s go!' : 'Next →'}
           </button>
         </div>
+      </div>
+    </>
+  );
+}
+
+// ═════════════════════════════════════════════════════════════════
+//  PROFILE DRAWER COMPONENT
+// ═════════════════════════════════════════════════════════════════
+function ProfileDrawer({ open, onClose, userName, role, teacherData, studentData }) {
+  const [tab, setTab] = useState('overview');
+  const { add } = useContext(AppCtx);
+
+  // Close on overlay click
+  function handleOverlayClick(e) {
+    if (e.target === e.currentTarget) onClose();
+  }
+
+  // ── Computed teacher stats ──────────────────────────────────
+  const tStore    = _weeklyStore.teacher;
+  const tSessions = tStore.sessionsCreated.slice(-7);
+  const tAvgUnder = tSessions.length
+    ? Math.round(tSessions.reduce((s,r) => s + r.avgUnderstanding, 0) / tSessions.length) : 0;
+  const tAvgPart  = tSessions.length
+    ? Math.round(tSessions.reduce((s,r) => s + r.participation, 0) / tSessions.length) : 0;
+
+  // ── Computed student stats ──────────────────────────────────
+  const studentId   = studentData?.studentId || '';
+  const sRaw        = (_weeklyStore.students[studentId] || { sessionsAttended:0, tasksCompleted:0, scores:[], timeSecs:0 });
+  const sAnswered   = studentData?.answeredCount ?? 0;
+  const sCorrect    = studentData?.correctCount ?? 0;
+  const sTime       = studentData?.timeSpent ?? 0;
+  const sAccuracy   = sAnswered > 0 ? Math.round((sCorrect / sAnswered) * 100) : (sRaw.scores.length ? Math.round(sRaw.scores.reduce((a,b)=>a+b,0)/sRaw.scores.length) : 0);
+  const sMins       = Math.floor((sRaw.timeSecs + sTime) / 60);
+
+  // ── PDF Export (teacher) ────────────────────────────────────
+  function exportTeacherPDF() {
+    try {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF({ unit:'mm', format:'a4' });
+      const W = 210, m = 14;
+      let y = 20;
+      doc.setFont('helvetica','bold'); doc.setFontSize(18); doc.setTextColor(99,102,241);
+      doc.text('ClassMind — Weekly Teacher Report', m, y); y += 8;
+      doc.setFontSize(10); doc.setTextColor(100,116,139);
+      doc.text(`Teacher: ${userName}   |   Generated: ${new Date().toLocaleDateString()}`, m, y); y += 10;
+      doc.setDrawColor(200); doc.line(m, y, W-m, y); y += 6;
+      const stats = [
+        ['Sessions This Week', tSessions.length],
+        ['Tasks Assigned', tStore.tasksAssigned + (teacherData?.tasks?.length || 0)],
+        ['Total Students', Math.max(tStore.studentCount, teacherData?.totalStudents || 0)],
+        ['Avg Understanding', `${tAvgUnder}%`],
+        ['Avg Participation', `${tAvgPart}%`],
+      ];
+      doc.setFont('helvetica','bold'); doc.setFontSize(13); doc.setTextColor(30,30,30);
+      doc.text('Summary', m, y); y += 7;
+      doc.setFont('helvetica','normal'); doc.setFontSize(10);
+      stats.forEach(([label, val]) => {
+        doc.setTextColor(80,80,80); doc.text(label, m, y);
+        doc.setFont('helvetica','bold'); doc.setTextColor(99,102,241);
+        doc.text(String(val), m + 70, y);
+        doc.setFont('helvetica','normal'); doc.setTextColor(80,80,80);
+        y += 6;
+      });
+      y += 4;
+      doc.setFont('helvetica','bold'); doc.setFontSize(13); doc.setTextColor(30,30,30);
+      doc.text('Session Log', m, y); y += 7;
+      doc.setFontSize(9); doc.setFont('helvetica','bold');
+      doc.text('Session', m, y); doc.text('Date', m+60, y);
+      doc.text('Participation', m+90, y); doc.text('Understanding', m+125, y); y += 5;
+      doc.setFont('helvetica','normal');
+      tSessions.forEach(s => {
+        if (y > 270) { doc.addPage(); y = 20; }
+        doc.text(s.name.slice(0,28), m, y);
+        doc.text(s.date, m+60, y);
+        doc.text(`${s.participation}%`, m+90, y);
+        doc.text(`${s.avgUnderstanding}%`, m+125, y);
+        y += 5;
+      });
+      doc.save(`ClassMind_Weekly_${userName.replace(/\s+/g,'_')}_${new Date().toISOString().slice(0,10)}.pdf`);
+      add('✅ PDF report downloaded', 'success');
+    } catch(e) { add('PDF generation failed: ' + e.message, 'error'); }
+  }
+
+  // ── Excel Export (teacher) ──────────────────────────────────
+  function exportTeacherExcel() {
+    try {
+      const wb = XLSX.utils.book_new();
+      const summaryData = [
+        ['ClassMind Weekly Report'],
+        ['Teacher', userName],
+        ['Generated', new Date().toLocaleDateString()],
+        [],
+        ['Metric', 'Value'],
+        ['Sessions This Week', tSessions.length],
+        ['Tasks Assigned', tStore.tasksAssigned + (teacherData?.tasks?.length || 0)],
+        ['Total Students', Math.max(tStore.studentCount, teacherData?.totalStudents || 0)],
+        ['Avg Understanding (%)', tAvgUnder],
+        ['Avg Participation (%)', tAvgPart],
+      ];
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(summaryData), 'Summary');
+      const sesData = [['Session','Date','Participation %','Avg Understanding %']];
+      tSessions.forEach(s => sesData.push([s.name, s.date, s.participation, s.avgUnderstanding]));
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(sesData), 'Sessions');
+      XLSX.writeFile(wb, `ClassMind_Weekly_${userName.replace(/\s+/g,'_')}_${new Date().toISOString().slice(0,10)}.xlsx`);
+      add('✅ Excel report downloaded', 'success');
+    } catch(e) { add('Excel export failed: ' + e.message, 'error'); }
+  }
+
+  // ── PDF Export (student) ────────────────────────────────────
+  function exportStudentPDF() {
+    try {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF({ unit:'mm', format:'a4' });
+      let y = 20;
+      doc.setFont('helvetica','bold'); doc.setFontSize(16); doc.setTextColor(99,102,241);
+      doc.text('ClassMind — My Weekly Report', 14, y); y += 8;
+      doc.setFontSize(10); doc.setFont('helvetica','normal'); doc.setTextColor(100);
+      doc.text(`Student: ${userName}   |   ${new Date().toLocaleDateString()}`, 14, y); y += 10;
+      doc.setDrawColor(200); doc.line(14, y, 196, y); y += 6;
+      const rows = [
+        ['Sessions Attended', sRaw.sessionsAttended || 1],
+        ['Tasks Completed', Math.max(sRaw.tasksCompleted, sAnswered)],
+        ['Avg Accuracy', `${sAccuracy}%`],
+        ['Time Spent', `${sMins} min`],
+      ];
+      doc.setFont('helvetica','bold'); doc.setFontSize(12); doc.setTextColor(30);
+      doc.text('Performance Summary', 14, y); y += 7;
+      doc.setFont('helvetica','normal'); doc.setFontSize(10);
+      rows.forEach(([l, v]) => {
+        doc.setTextColor(80); doc.text(l, 14, y);
+        doc.setFont('helvetica','bold'); doc.setTextColor(99,102,241); doc.text(String(v), 90, y);
+        doc.setFont('helvetica','normal'); y += 6;
+      });
+      doc.save(`ClassMind_MyWeeklyReport_${userName.replace(/\s+/g,'_')}_${new Date().toISOString().slice(0,10)}.pdf`);
+      add('✅ PDF downloaded', 'success');
+    } catch(e) { add('PDF export failed', 'error'); }
+  }
+
+  // ── Trend mini-bars ─────────────────────────────────────────
+  function TrendBars({ log }) {
+    if (!log || log.length === 0) return <div className="prof-empty" style={{padding:'12px 0'}}>No trend data yet</div>;
+    const max = Math.max(...log.map(l=>l.pct), 1);
+    return (
+      <div className="prof-trend-row">
+        {log.slice(-7).map((l,i) => (
+          <div key={i} title={`${l.date}: ${l.pct}%`}
+            className="prof-trend-bar"
+            style={{height:`${Math.max(4, (l.pct/max)*100)}%`}}/>
+        ))}
+      </div>
+    );
+  }
+
+  // ── Initials avatar ─────────────────────────────────────────
+  const initials = (userName || '?').split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
+
+  const isTeacher = role === 'teacher';
+  const isStudent = role === 'student';
+  const isBoth    = role === 'both';
+
+  return (
+    <>
+      {/* Overlay */}
+      <div className={`profile-overlay${open?' open':''}`} onClick={handleOverlayClick}/>
+
+      {/* Drawer */}
+      <div className={`profile-drawer${open?' open':''}`} role="dialog" aria-label="Profile">
+
+        {/* ── Header ── */}
+        <div className="profile-drawer-header" style={{position:'relative'}}>
+          <button className="profile-drawer-close" onClick={onClose}>✕</button>
+          <div className="profile-avatar">{initials}</div>
+          <div className="profile-name">{userName}</div>
+          <div className="profile-role-badge">
+            {isTeacher ? '👨‍🏫 Teacher' : isStudent ? '👨‍🎓 Student' : '👤 User'}
+          </div>
+
+          {/* ── Tabs ── */}
+          <div className="profile-tabs">
+            <button className={`profile-tab${tab==='overview'?' active':''}`} onClick={()=>setTab('overview')}>
+              📊 Overview
+            </button>
+            {(isTeacher||isBoth) && (
+              <button className={`profile-tab${tab==='teacher'?' active':''}`} onClick={()=>setTab('teacher')}>
+                📅 Teaching
+              </button>
+            )}
+            {(isStudent||isBoth) && (
+              <button className={`profile-tab${tab==='student'?' active':''}`} onClick={()=>setTab('student')}>
+                🎓 Learning
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* ── Body ── */}
+        <div className="profile-drawer-body">
+
+          {/* ══ OVERVIEW TAB ══ */}
+          {tab==='overview' && (
+            <div>
+              {/* Teacher weekly summary */}
+              {(isTeacher||isBoth) && (
+                <>
+                  <div className="prof-section-title">📅 Teacher — This Week</div>
+                  <div className="prof-stat-grid">
+                    <div className="prof-stat">
+                      <div className="prof-stat-value">{tSessions.length}</div>
+                      <div className="prof-stat-label">Sessions Created</div>
+                    </div>
+                    <div className="prof-stat">
+                      <div className="prof-stat-value">{tStore.tasksAssigned + (teacherData?.tasks?.length||0)}</div>
+                      <div className="prof-stat-label">Tasks Assigned</div>
+                    </div>
+                    <div className="prof-stat">
+                      <div className="prof-stat-value">{tAvgPart}%</div>
+                      <div className="prof-stat-label">Avg Participation</div>
+                    </div>
+                    <div className="prof-stat">
+                      <div className="prof-stat-value">{tAvgUnder}%</div>
+                      <div className="prof-stat-label">Avg Understanding</div>
+                    </div>
+                  </div>
+                  <div className="card-sm" style={{marginBottom:10}}>
+                    <div style={{fontSize:'0.78rem',color:'var(--text3)',marginBottom:6,fontWeight:700}}>PARTICIPATION TREND (7 DAYS)</div>
+                    <TrendBars log={tStore.participationLog.slice(-7)}/>
+                  </div>
+                  <div className="card-sm" style={{marginBottom:14}}>
+                    <div style={{fontSize:'0.78rem',color:'var(--text3)',marginBottom:6,fontWeight:700}}>UNDERSTANDING TREND (7 DAYS)</div>
+                    <TrendBars log={tStore.understandingLog.slice(-7)}/>
+                  </div>
+                </>
+              )}
+
+              {/* Student weekly summary */}
+              {(isStudent||isBoth) && (
+                <>
+                  <div className="prof-section-title">🎓 Student — This Session</div>
+                  <div className="prof-stat-grid">
+                    <div className="prof-stat">
+                      <div className="prof-stat-value">{sRaw.sessionsAttended||1}</div>
+                      <div className="prof-stat-label">Sessions Attended</div>
+                    </div>
+                    <div className="prof-stat">
+                      <div className="prof-stat-value">{Math.max(sRaw.tasksCompleted,sAnswered)}</div>
+                      <div className="prof-stat-label">Tasks Completed</div>
+                    </div>
+                    <div className="prof-stat">
+                      <div className="prof-stat-value" style={{
+                        WebkitTextFillColor: sAccuracy>=70?'var(--green)':sAccuracy>=40?'var(--yellow)':'var(--red)',
+                        background:'none',color:sAccuracy>=70?'var(--green)':sAccuracy>=40?'var(--yellow)':'var(--red)'
+                      }}>{sAccuracy}%</div>
+                      <div className="prof-stat-label">Accuracy</div>
+                    </div>
+                    <div className="prof-stat">
+                      <div className="prof-stat-value">{sMins}</div>
+                      <div className="prof-stat-label">Time (min)</div>
+                    </div>
+                  </div>
+
+                  {/* Performance bar */}
+                  <div className="card-sm" style={{marginBottom:14}}>
+                    <div style={{display:'flex',justifyContent:'space-between',marginBottom:8,fontSize:'0.82rem'}}>
+                      <span style={{color:'var(--text2)'}}>Overall Performance</span>
+                      <span style={{fontWeight:700,color:sAccuracy>=70?'var(--green)':sAccuracy>=40?'var(--yellow)':'var(--red)'}}>
+                        {sAccuracy>=70?'🎉 Excellent!':sAccuracy>=40?'🙂 Keep going':'📚 Needs Practice'}
+                      </span>
+                    </div>
+                    <div className="progress-bar" style={{height:10}}>
+                      <div className="progress-fill accent" style={{width:`${sAccuracy}%`}}/>
+                    </div>
+                  </div>
+
+                  {/* Study tips */}
+                  <div className="card-sm" style={{background:'linear-gradient(135deg,rgba(99,102,241,0.08),rgba(139,92,246,0.06))'}}>
+                    <div style={{fontWeight:700,marginBottom:8,fontSize:'0.85rem'}}>💡 Study Tips</div>
+                    <div style={{display:'flex',flexDirection:'column',gap:6,fontSize:'0.8rem',color:'var(--text2)'}}>
+                      {sAccuracy<50 && <div>🔴 Review incorrect answers — identify patterns.</div>}
+                      {sAccuracy>=50&&sAccuracy<75 && <div>🟡 Try harder questions to push your understanding.</div>}
+                      {sAccuracy>=75 && <div>🟢 Excellent! Challenge yourself with complex problems.</div>}
+                      <div>📖 Regular sessions improve retention by up to 40%.</div>
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {!isTeacher && !isStudent && !isBoth && (
+                <div className="prof-empty">
+                  <div className="prof-empty-icon">👤</div>
+                  <div>No profile data available yet.</div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ══ TEACHER ACTIVITY TAB ══ */}
+          {tab==='teacher' && (isTeacher||isBoth) && (
+            <div>
+              <div className="prof-section-title">📋 Sessions Created</div>
+
+              {tSessions.length === 0 ? (
+                <div className="prof-empty">
+                  <div className="prof-empty-icon">📭</div>
+                  <div>No sessions recorded this week yet.</div>
+                  <div style={{marginTop:6,fontSize:'0.8rem'}}>Start a session to see your activity here.</div>
+                </div>
+              ) : (
+                tSessions.map((s, i) => {
+                  const partColor = s.participation>=70?'green':s.participation>=40?'yellow':'';
+                  const underColor = s.avgUnderstanding>=70?'green':s.avgUnderstanding>=40?'yellow':'';
+                  return (
+                    <div key={i} className="prof-session-row">
+                      <div>
+                        <div className="prof-session-name">{s.name}</div>
+                        <div className="prof-session-date">{s.date} · {Math.max(tStore.studentCount,teacherData?.totalStudents||0)} students</div>
+                        <div className="prof-session-stats">
+                          <span className={`prof-session-stat ${partColor}`}>👥 {s.participation}% participated</span>
+                          <span className={`prof-session-stat ${underColor}`}>🧠 {s.avgUnderstanding}% understood</span>
+                          {tStore.tasksAssigned > 0 && <span className="prof-session-stat">📝 {Math.ceil(tStore.tasksAssigned/Math.max(tSessions.length,1))} tasks</span>}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+
+              {/* Trend charts */}
+              {tSessions.length > 0 && (
+                <>
+                  <div className="prof-section-title" style={{marginTop:18}}>📈 Trends</div>
+                  <div className="card-sm" style={{marginBottom:10}}>
+                    <div style={{display:'flex',justifyContent:'space-between',marginBottom:6,fontSize:'0.8rem'}}>
+                      <span style={{color:'var(--text3)',fontWeight:700,fontSize:'0.72rem',textTransform:'uppercase',letterSpacing:'0.06em'}}>Participation (7 days)</span>
+                      <span style={{fontWeight:700,color:'var(--green)'}}>{tAvgPart}% avg</span>
+                    </div>
+                    <div style={{height:120}}>
+                      <BarChart labels={tStore.participationLog.slice(-7).map(l=>l.date)} data={tStore.participationLog.slice(-7).map(l=>l.pct)} label="Participation %" color="#22c55e"/>
+                    </div>
+                  </div>
+                  <div className="card-sm">
+                    <div style={{display:'flex',justifyContent:'space-between',marginBottom:6,fontSize:'0.8rem'}}>
+                      <span style={{color:'var(--text3)',fontWeight:700,fontSize:'0.72rem',textTransform:'uppercase',letterSpacing:'0.06em'}}>Understanding (7 days)</span>
+                      <span style={{fontWeight:700,color:'var(--accent)'}}>{tAvgUnder}% avg</span>
+                    </div>
+                    <div style={{height:120}}>
+                      <LineChart labels={tStore.understandingLog.slice(-7).map(l=>l.date)} data={tStore.understandingLog.slice(-7).map(l=>l.pct)} label="Understanding %"/>
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+
+          {/* ══ STUDENT ACTIVITY TAB ══ */}
+          {tab==='student' && (isStudent||isBoth) && (
+            <div>
+              <div className="prof-section-title">📚 Sessions Attended</div>
+
+              {(sRaw.sessionsAttended||0) === 0 ? (
+                <div className="prof-empty">
+                  <div className="prof-empty-icon">📭</div>
+                  <div>No session data yet.</div>
+                  <div style={{marginTop:6,fontSize:'0.8rem'}}>Join a session to track your progress.</div>
+                </div>
+              ) : (
+                <div className="prof-session-row" style={{marginBottom:14}}>
+                  <div>
+                    <div className="prof-session-name">Current Session</div>
+                    <div className="prof-session-date">Ongoing · {studentData?.studentName || userName}</div>
+                    <div className="prof-session-stats">
+                      <span className={`prof-session-stat ${sAccuracy>=70?'green':sAccuracy>=40?'yellow':''}`}>🎯 {sAccuracy}% accuracy</span>
+                      <span className="prof-session-stat">📝 {Math.max(sRaw.tasksCompleted,sAnswered)} tasks</span>
+                      <span className="prof-session-stat">⏱ {sMins} min</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Performance breakdown */}
+              <div className="prof-section-title">📊 Performance Breakdown</div>
+              <div className="card-sm" style={{marginBottom:10}}>
+                {[
+                  {label:'Accuracy', pct:sAccuracy, color:sAccuracy>=70?'var(--green)':sAccuracy>=40?'var(--yellow)':'var(--red)'},
+                  {label:'Tasks Done', pct:Math.min(100,Math.max(sRaw.tasksCompleted,sAnswered)*10), color:'var(--accent)'},
+                  {label:'Sessions', pct:Math.min(100,(sRaw.sessionsAttended||1)*20), color:'var(--blue)'},
+                ].map(item => (
+                  <div key={item.label} style={{marginBottom:10}}>
+                    <div style={{display:'flex',justifyContent:'space-between',fontSize:'0.8rem',marginBottom:4}}>
+                      <span style={{color:'var(--text2)'}}>{item.label}</span>
+                      <span style={{fontWeight:700,color:item.color}}>{item.pct}%</span>
+                    </div>
+                    <div className="progress-bar" style={{height:7}}>
+                      <div className="progress-fill" style={{width:`${item.pct}%`,background:item.color}}/>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Score history */}
+              {sRaw.scores && sRaw.scores.length > 1 && (
+                <>
+                  <div className="prof-section-title">📈 Score History</div>
+                  <div className="card-sm">
+                    <div style={{height:120}}>
+                      <LineChart
+                        labels={sRaw.scores.map((_,i)=>`Q${i+1}`)}
+                        data={sRaw.scores}
+                        label="Accuracy %"
+                      />
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* ── Export Bar (context-aware) ── */}
+        {tab !== 'overview' && (
+          <div className="prof-export-bar">
+            {(tab==='teacher' && (isTeacher||isBoth)) && (
+              <>
+                <button className="btn btn-primary btn-sm" style={{flex:1}} onClick={exportTeacherPDF}>📄 Download PDF</button>
+                <button className="btn btn-success btn-sm" style={{flex:1}} onClick={exportTeacherExcel}>📊 Export Excel</button>
+              </>
+            )}
+            {(tab==='student' && (isStudent||isBoth)) && (
+              <>
+                <button className="btn btn-primary btn-sm" style={{flex:1}} onClick={exportStudentPDF}>📄 Download PDF</button>
+              </>
+            )}
+          </div>
+        )}
       </div>
     </>
   );

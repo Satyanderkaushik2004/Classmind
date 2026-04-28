@@ -1034,7 +1034,85 @@ hr{border:none;border-top:1px solid var(--border);margin:16px 0}
   display:flex;align-items:center;justify-content:center;
   transition:all 0.2s;flex-shrink:0;
 }
+.profile-icon-btn.no-profile{
+  background:var(--surface2);border:2px dashed var(--border);
+  color:var(--text3);font-size:1rem;
+}
 .profile-icon-btn:hover{transform:scale(1.08);box-shadow:0 0 0 3px rgba(99,102,241,0.3)}
+
+/* ── Login Modal ── */
+@keyframes login-modal-in{
+  from{opacity:0;transform:scale(0.92) translateY(12px)}
+  to{opacity:1;transform:scale(1) translateY(0)}
+}
+.login-modal-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,0.6);
+  z-index:10000;display:flex;align-items:center;justify-content:center;
+  padding:16px;backdrop-filter:blur(4px);
+  animation:login-overlay-in 0.2s ease;
+}
+@keyframes login-overlay-in{from{opacity:0}to{opacity:1}}
+.login-modal{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:20px;width:100%;max-width:420px;
+  box-shadow:0 24px 80px rgba(0,0,0,0.5),0 0 0 1px rgba(99,102,241,0.1);
+  animation:login-modal-in 0.28s cubic-bezier(0.34,1.3,0.64,1);
+  overflow:hidden;
+}
+.login-modal-header{
+  padding:28px 28px 20px;
+  background:linear-gradient(135deg,rgba(99,102,241,0.12),rgba(139,92,246,0.06));
+  border-bottom:1px solid var(--border);
+  text-align:center;
+}
+.login-modal-logo{
+  font-size:2.2rem;margin-bottom:10px;
+  display:flex;align-items:center;justify-content:center;
+  width:60px;height:60px;border-radius:16px;margin:0 auto 14px;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  box-shadow:0 8px 24px rgba(99,102,241,0.35);
+}
+.login-modal-title{
+  font-size:1.25rem;font-weight:800;letter-spacing:-0.02em;margin-bottom:4px;
+}
+.login-modal-sub{font-size:0.85rem;color:var(--text2);line-height:1.5;}
+.login-modal-body{padding:24px 28px 28px;}
+.login-modal-role-row{
+  display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px;
+}
+.login-modal-role-btn{
+  padding:12px;border-radius:12px;border:2px solid var(--border);
+  background:var(--surface2);cursor:pointer;text-align:center;
+  transition:all 0.18s;font-family:inherit;color:var(--text);
+}
+.login-modal-role-btn:hover{border-color:var(--accent);background:rgba(99,102,241,0.06)}
+.login-modal-role-btn.selected{
+  border-color:var(--accent);
+  background:rgba(99,102,241,0.1);
+  box-shadow:0 0 0 3px rgba(99,102,241,0.15);
+}
+.login-modal-role-icon{font-size:1.6rem;margin-bottom:5px;}
+.login-modal-role-label{font-size:0.82rem;font-weight:700;}
+.login-modal-name-input{
+  width:100%;padding:12px 16px;
+  background:var(--surface2);border:1.5px solid var(--border);
+  border-radius:10px;color:var(--text);font-size:0.95rem;
+  font-family:inherit;outline:none;transition:border 0.2s;
+  margin-bottom:18px;
+}
+.login-modal-name-input:focus{border-color:var(--accent);}
+.login-modal-name-input::placeholder{color:var(--text3);}
+.login-modal-submit{
+  width:100%;padding:13px;border-radius:10px;border:none;cursor:pointer;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  color:#fff;font-size:0.95rem;font-weight:700;font-family:inherit;
+  transition:all 0.2s;letter-spacing:0.01em;
+}
+.login-modal-submit:hover{opacity:0.9;transform:translateY(-1px);box-shadow:0 8px 20px rgba(99,102,241,0.35);}
+.login-modal-submit:disabled{opacity:0.5;cursor:not-allowed;transform:none;}
+.login-modal-footer{
+  text-align:center;margin-top:14px;font-size:0.78rem;color:var(--text3);
+}
 
 /* ── Profile Drawer Overlay ── */
 .profile-overlay{
@@ -1147,6 +1225,42 @@ hr{border:none;border-top:1px solid var(--border);margin:16px 0}
   font-size:0.875rem;
 }
 .prof-empty-icon{font-size:2.5rem;margin-bottom:8px;}
+
+/* ── Profile Settings Tab ── */
+.prof-settings-section{margin-bottom:20px;}
+.prof-settings-label{
+  font-size:0.72rem;font-weight:700;color:var(--text3);
+  text-transform:uppercase;letter-spacing:0.1em;margin-bottom:8px;
+  display:flex;align-items:center;gap:6px;
+}
+.prof-settings-input{
+  width:100%;padding:10px 14px;background:var(--surface2);
+  border:1.5px solid var(--border);border-radius:10px;
+  color:var(--text);font-size:0.9rem;font-family:inherit;
+  outline:none;transition:border 0.2s;margin-bottom:8px;
+}
+.prof-settings-input:focus{border-color:var(--accent);}
+.prof-role-switch{
+  display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;
+}
+.prof-role-switch-btn{
+  padding:10px;border-radius:8px;border:1.5px solid var(--border);
+  background:var(--surface2);cursor:pointer;text-align:center;
+  font-family:inherit;color:var(--text2);transition:all 0.15s;
+  font-size:0.85rem;font-weight:600;
+}
+.prof-role-switch-btn:hover{border-color:var(--accent);color:var(--accent)}
+.prof-role-switch-btn.active{
+  border-color:var(--accent);background:rgba(99,102,241,0.1);color:var(--accent);
+}
+.prof-logout-btn{
+  width:100%;padding:11px;border-radius:10px;border:1.5px solid rgba(239,68,68,0.4);
+  background:rgba(239,68,68,0.08);color:var(--red);
+  cursor:pointer;font-family:inherit;font-size:0.875rem;font-weight:700;
+  transition:all 0.2s;display:flex;align-items:center;justify-content:center;gap:8px;
+  margin-top:24px;
+}
+.prof-logout-btn:hover{background:rgba(239,68,68,0.15);border-color:var(--red);}
 
 /* ── Profile trend mini-chart ── */
 .prof-trend-row{
@@ -1948,6 +2062,89 @@ function LineChart({ labels, data, label='Score' }) {
 // ═════════════════════════════════════════════════════════════════
 //  LANDING PAGE
 // ═════════════════════════════════════════════════════════════════
+//  LOGIN MODAL — mandatory profile gate
+// ═════════════════════════════════════════════════════════════════
+function LoginModal({ defaultRole, onComplete, onClose }) {
+  const [name, setName] = useState('');
+  const [role, setRole] = useState(defaultRole || 'teacher');
+  const [busy, setBusy] = useState(false);
+  const { add } = useContext(AppCtx);
+
+  function handleSubmit() {
+    const trimmed = name.trim();
+    if (!trimmed) { add('Please enter your name to continue', 'error'); return; }
+    setBusy(true);
+    const profile = {
+      id: 'u_' + Date.now(),
+      name: trimmed,
+      role,
+      createdAt: Date.now(),
+      // backward-compat fields kept for ProfileDrawer stats
+      roleHistory: [role],
+      sessionsCreated: [],
+      sessionsJoined: [],
+      stats: { totalSessionsCreated:0, totalSessionsJoined:0, avgParticipation:0, avgUnderstanding:0 },
+    };
+    try { localStorage.setItem('cm_user', JSON.stringify(profile)); } catch {}
+    setTimeout(() => {
+      add(`Welcome to ClassMind, ${trimmed}! 🎉`, 'success');
+      onComplete(profile);
+    }, 180);
+  }
+
+  return (
+    <div className="login-modal-overlay" onClick={e=>{ if(e.target===e.currentTarget) onClose && onClose(); }}>
+      <div className="login-modal" role="dialog" aria-modal="true" aria-label="Create your profile">
+        {/* Header */}
+        <div className="login-modal-header">
+          <div className="login-modal-logo">🧠</div>
+          <div className="login-modal-title">Create your profile</div>
+          <div className="login-modal-sub">One quick step to unlock ClassMind — your identity persists across sessions.</div>
+        </div>
+
+        {/* Body */}
+        <div className="login-modal-body">
+          {/* Role selector */}
+          <div style={{marginBottom:6,fontSize:'0.78rem',fontWeight:700,color:'var(--text3)',textTransform:'uppercase',letterSpacing:'0.08em'}}>I am a</div>
+          <div className="login-modal-role-row">
+            {[
+              {val:'teacher', icon:'👨‍🏫', label:'Teacher'},
+              {val:'student', icon:'👨‍🎓', label:'Student'},
+            ].map(r=>(
+              <button key={r.val}
+                className={`login-modal-role-btn${role===r.val?' selected':''}`}
+                onClick={()=>setRole(r.val)}
+              >
+                <div className="login-modal-role-icon">{r.icon}</div>
+                <div className="login-modal-role-label">{r.label}</div>
+              </button>
+            ))}
+          </div>
+
+          {/* Name */}
+          <div style={{marginBottom:6,fontSize:'0.78rem',fontWeight:700,color:'var(--text3)',textTransform:'uppercase',letterSpacing:'0.08em'}}>Your name</div>
+          <input
+            className="login-modal-name-input"
+            placeholder={role==='teacher'? 'e.g. Dr. Smith' : 'e.g. Priya Kapoor'}
+            value={name}
+            onChange={e=>setName(e.target.value)}
+            onKeyDown={e=>e.key==='Enter'&&handleSubmit()}
+            autoFocus
+          />
+
+          <button className="login-modal-submit" onClick={handleSubmit} disabled={busy}>
+            {busy ? 'Setting up…' : `Continue as ${role==='teacher'?'Teacher':'Student'} →`}
+          </button>
+          <div className="login-modal-footer">
+            Your profile is saved locally and persists across refreshes
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ═════════════════════════════════════════════════════════════════
 function LandingPage({ navigate, userProfile, updateUserProfile, onOpenProfile }) {
   const [showTeacher, setShowTeacher] = useState(false);
   const [showStudent, setShowStudent] = useState(false);
@@ -1959,6 +2156,30 @@ function LandingPage({ navigate, userProfile, updateUserProfile, onOpenProfile }
   const { add } = useContext(AppCtx);
   const [roll, setRoll] = useState('');
   const [cls, setCls] = useState('');
+  // ── Profile gate modal ──────────────────────────────────────────
+  const [loginModal, setLoginModal] = useState(null); // null | 'teacher' | 'student'
+
+  // Gate function: if profile exists, proceed; otherwise show modal
+  function gotoTeacher() {
+    if (userProfile) { setShowTeacher(true); }
+    else { setLoginModal('teacher'); }
+  }
+  function gotoStudent() {
+    if (userProfile) { setShowStudent(true); }
+    else { setLoginModal('student'); }
+  }
+
+  // Called when LoginModal completes profile creation
+  function handleLoginComplete(profile) {
+    updateUserProfile(profile);
+    setLoginModal(null);
+    // Pre-fill name fields
+    setTeacherName(profile.name);
+    setStudentName(profile.name);
+    // Proceed to the flow the user originally wanted
+    if (loginModal === 'teacher') setShowTeacher(true);
+    else setShowStudent(true);
+  }
 
   async function createSession() {
   if (!teacherName.trim()) return add('Enter your name','error');
@@ -2167,20 +2388,27 @@ async function joinSession() {
   return (
     <div className="landing">
 
+      {/* ── Login Modal (mandatory gate) ── */}
+      {loginModal && (
+        <LoginModal
+          defaultRole={loginModal}
+          onComplete={handleLoginComplete}
+          onClose={()=>setLoginModal(null)}
+        />
+      )}
+
       {/* ── STEP 3: Landing page navbar with global profile icon ── */}
       <nav className="nav" style={{position:'sticky',top:0,zIndex:100}}>
         <span className="nav-brand">🧠 ClassMind</span>
         <div className="nav-right">
-          {userProfile && (
-            <button
-              className="profile-icon-btn"
-              onClick={onOpenProfile}
-              title={`My Profile — ${userProfile.name}`}
-              style={{marginLeft:4}}
-            >
-              {(userProfile.name||'?')[0].toUpperCase()}
-            </button>
-          )}
+          <button
+            className={`profile-icon-btn${!userProfile?' no-profile':''}`}
+            onClick={userProfile ? onOpenProfile : ()=>setLoginModal('teacher')}
+            title={userProfile ? `My Profile — ${userProfile.name}` : 'Create your profile'}
+            style={{marginLeft:4}}
+          >
+            {userProfile ? (userProfile.name||'?')[0].toUpperCase() : '?'}
+          </button>
         </div>
       </nav>
 
@@ -2198,12 +2426,12 @@ async function joinSession() {
 
         {!showTeacher && !showStudent && (
           <div className="role-cards">
-            <div className="role-card" onClick={()=>setShowTeacher(true)}>
+            <div className="role-card" onClick={gotoTeacher}>
               <div className="role-icon">👨‍🏫</div>
               <div className="role-title">Start as Teacher</div>
               <div className="role-desc">Create a session and manage your class</div>
             </div>
-            <div className="role-card" onClick={()=>setShowStudent(true)}>
+            <div className="role-card" onClick={gotoStudent}>
               <div className="role-icon">👨‍🎓</div>
               <div className="role-title">Join as Student</div>
               <div className="role-desc">Enter a session code to join</div>
@@ -2530,13 +2758,13 @@ async function joinSession() {
           </div>
           <div style={{display:'flex',gap:16,justifyContent:'center',flexWrap:'wrap'}}>
             <button className="btn btn-primary btn-lg"
-              onClick={()=>{window.scrollTo({top:0,behavior:'smooth'});setTimeout(()=>setShowTeacher(true),400)}}
+              onClick={()=>{window.scrollTo({top:0,behavior:'smooth'});setTimeout(()=>gotoTeacher(),400)}}
               style={{padding:'14px 36px',fontSize:'1rem',borderRadius:12,
                 background:'linear-gradient(135deg,var(--accent),var(--accent2))'}}>
               👨‍🏫 Start as Teacher
             </button>
             <button className="btn btn-ghost btn-lg"
-              onClick={()=>{window.scrollTo({top:0,behavior:'smooth'});setTimeout(()=>setShowStudent(true),400)}}
+              onClick={()=>{window.scrollTo({top:0,behavior:'smooth'});setTimeout(()=>gotoStudent(),400)}}
               style={{padding:'14px 36px',fontSize:'1rem',borderRadius:12}}>
               👨‍🎓 Join as Student
             </button>
@@ -10963,8 +11191,10 @@ function StudentGuidedTour({ ready }) {
 // ═════════════════════════════════════════════════════════════════
 //  PROFILE DRAWER COMPONENT
 // ═════════════════════════════════════════════════════════════════
-function ProfileDrawer({ open, onClose, userName, role, teacherData, studentData }) {
+function ProfileDrawer({ open, onClose, userName, role, teacherData, studentData, updateUserProfile, navigate }) {
   const [tab, setTab] = useState('overview');
+  const [editName, setEditName] = useState(userName || '');
+  const [editRole, setEditRole] = useState(role === 'both' ? 'teacher' : (role || 'teacher'));
   const { add } = useContext(AppCtx);
 
   // Close on overlay click
@@ -11147,6 +11377,9 @@ function ProfileDrawer({ open, onClose, userName, role, teacherData, studentData
                 🎓 Learning
               </button>
             )}
+            <button className={`profile-tab${tab==='settings'?' active':''}`} onClick={()=>setTab('settings')}>
+              ⚙️ Settings
+            </button>
           </div>
         </div>
 
@@ -11370,10 +11603,111 @@ function ProfileDrawer({ open, onClose, userName, role, teacherData, studentData
               )}
             </div>
           )}
-        </div>
+          {/* ══ SETTINGS TAB ══ */}
+          {tab==='settings' && (
+            <div>
+              {/* Edit Name */}
+              <div className="prof-settings-section">
+                <div className="prof-settings-label">✏️ Display Name</div>
+                <input
+                  className="prof-settings-input"
+                  value={editName}
+                  onChange={e=>setEditName(e.target.value)}
+                  placeholder="Your name"
+                />
+                <button className="btn btn-primary btn-sm" style={{width:'100%'}} onClick={()=>{
+                  const n = editName.trim();
+                  if (!n) { add('Name cannot be empty','error'); return; }
+                  if (updateUserProfile) {
+                    try {
+                      const stored = JSON.parse(localStorage.getItem('cm_user') || '{}');
+                      const updated = { ...stored, name: n };
+                      localStorage.setItem('cm_user', JSON.stringify(updated));
+                      updateUserProfile(updated);
+                    } catch {}
+                  }
+                  add('✅ Name updated!','success');
+                }}>
+                  Save Name
+                </button>
+              </div>
 
-        {/* ── Export Bar (context-aware) ── */}
-        {tab !== 'overview' && (
+              {/* Switch Role */}
+              <div className="prof-settings-section">
+                <div className="prof-settings-label">🔄 Primary Role</div>
+                <div className="prof-role-switch">
+                  {[
+                    {val:'teacher', label:'👨‍🏫 Teacher'},
+                    {val:'student', label:'👨‍🎓 Student'},
+                  ].map(r=>(
+                    <button key={r.val}
+                      className={`prof-role-switch-btn${editRole===r.val?' active':''}`}
+                      onClick={()=>{
+                        setEditRole(r.val);
+                        if (updateUserProfile) {
+                          try {
+                            const stored = JSON.parse(localStorage.getItem('cm_user') || '{}');
+                            const updated = {
+                              ...stored, role: r.val,
+                              roleHistory: stored.roleHistory?.includes(r.val)
+                                ? stored.roleHistory
+                                : [...(stored.roleHistory||[]), r.val]
+                            };
+                            localStorage.setItem('cm_user', JSON.stringify(updated));
+                            updateUserProfile(updated);
+                          } catch {}
+                        }
+                        add(`Role switched to ${r.val}!`,'success');
+                      }}
+                    >{r.label}</button>
+                  ))}
+                </div>
+                <div style={{fontSize:'0.75rem',color:'var(--text3)',marginTop:4}}>
+                  Switching role affects the profile icon and default view.
+                </div>
+              </div>
+
+              {/* Account Info */}
+              <div className="prof-settings-section">
+                <div className="prof-settings-label">🆔 Account Info</div>
+                <div className="card-sm" style={{fontSize:'0.8rem',color:'var(--text2)'}}>
+                  {(() => {
+                    try {
+                      const p = JSON.parse(localStorage.getItem('cm_user') || '{}');
+                      return (
+                        <div style={{display:'flex',flexDirection:'column',gap:6}}>
+                          <div style={{display:'flex',justifyContent:'space-between'}}>
+                            <span>Member since</span>
+                            <span style={{fontWeight:600,color:'var(--text)'}}>{p.createdAt ? new Date(p.createdAt).toLocaleDateString() : 'Today'}</span>
+                          </div>
+                          <div style={{display:'flex',justifyContent:'space-between'}}>
+                            <span>Profile ID</span>
+                            <span style={{fontFamily:'monospace',fontSize:'0.72rem',color:'var(--text3)'}}>{(p.id||'').slice(0,16)}</span>
+                          </div>
+                        </div>
+                      );
+                    } catch { return null; }
+                  })()}
+                </div>
+              </div>
+
+              {/* Logout */}
+              <button className="prof-logout-btn" onClick={()=>{
+                try { localStorage.removeItem('cm_user'); } catch {}
+                if (updateUserProfile) updateUserProfile(null);
+                onClose();
+                add('👋 Logged out successfully','success');
+                if (navigate) navigate('landing', {});
+              }}>
+                🚪 Logout &amp; Clear Profile
+              </button>
+              <div style={{textAlign:'center',fontSize:'0.72rem',color:'var(--text3)',marginTop:8}}>
+                This will clear your profile from this device.
+              </div>
+            </div>
+          )}
+        </div>
+        {tab !== 'overview' && tab !== 'settings' && (
           <div className="prof-export-bar">
             {(tab==='teacher' && (isTeacher||isBoth)) && (
               <>
@@ -11422,11 +11756,14 @@ function App() {
 
   // Derive role string for landing-page ProfileDrawer
   const lpRoleHistory = (userProfile?.roleHistory) || [];
-  const lpRole = lpRoleHistory.includes('teacher') && lpRoleHistory.includes('student')
-    ? 'both'
-    : lpRoleHistory.includes('teacher') ? 'teacher'
-    : lpRoleHistory.includes('student') ? 'student'
-    : null;
+  // Support both new unified role field and legacy roleHistory
+  const lpRole = userProfile?.role
+    ? userProfile.role
+    : lpRoleHistory.includes('teacher') && lpRoleHistory.includes('student')
+      ? 'both'
+      : lpRoleHistory.includes('teacher') ? 'teacher'
+      : lpRoleHistory.includes('student') ? 'student'
+      : null;
 
   return (
    <AppCtx.Provider value={toastCtx}>
@@ -11444,12 +11781,14 @@ function App() {
       {page==='student-task'      && <StudentTaskView {...params} navigate={navigate}/>}
 
       {/* ── STEP 4: Global Profile Drawer for Landing Page ──────────── */}
-      {page==='landing' && userProfile && lpRole && (
+      {page==='landing' && userProfile && (
         <ProfileDrawer
           open={landingProfileOpen}
           onClose={() => setLandingProfileOpen(false)}
           userName={userProfile.name}
-          role={lpRole}
+          role={lpRole || userProfile.role || 'teacher'}
+          updateUserProfile={updateUserProfile}
+          navigate={navigate}
         />
       )}
     </AppCtx.Provider>

@@ -1948,11 +1948,12 @@ function LineChart({ labels, data, label='Score' }) {
 // ═════════════════════════════════════════════════════════════════
 //  LANDING PAGE
 // ═════════════════════════════════════════════════════════════════
-function LandingPage({ navigate }) {
+function LandingPage({ navigate, userProfile, updateUserProfile, onOpenProfile }) {
   const [showTeacher, setShowTeacher] = useState(false);
   const [showStudent, setShowStudent] = useState(false);
-  const [teacherName, setTeacherName] = useState('');
-  const [studentName, setStudentName] = useState('');
+  // STEP 2: Pre-fill name from existing profile
+  const [teacherName, setTeacherName] = useState(userProfile?.name || '');
+  const [studentName, setStudentName] = useState(userProfile?.name || '');
   const [sessionCode, setSessionCode] = useState('');
   const [loading, setLoading] = useState(false);
   const { add } = useContext(AppCtx);
@@ -1967,6 +1968,38 @@ function LandingPage({ navigate }) {
       method:'POST',
       body:{teacher_name:teacherName}
     });
+
+    // ── STEP 2 & 7: Create / update unified profile ────────────────
+    const now = Date.now();
+    if (!userProfile) {
+      // First-time login: create profile
+      const newProfile = {
+        id: 'u_' + now,
+        name: teacherName.trim(),
+        roleHistory: ['teacher'],
+        sessionsCreated: [{ code: res.session_code, date: new Date().toLocaleDateString() }],
+        sessionsJoined: [],
+        stats: { totalSessionsCreated: 1, totalSessionsJoined: 0, avgParticipation: 0, avgUnderstanding: 0 },
+      };
+      updateUserProfile(newProfile);
+    } else {
+      // Existing profile: merge teacher role + track session
+      const alreadyCreated = userProfile.sessionsCreated || [];
+      const updatedProfile = {
+        ...userProfile,
+        name: teacherName.trim(),
+        roleHistory: userProfile.roleHistory.includes('teacher')
+          ? userProfile.roleHistory
+          : [...userProfile.roleHistory, 'teacher'],
+        sessionsCreated: [...alreadyCreated, { code: res.session_code, date: new Date().toLocaleDateString() }],
+        stats: {
+          ...(userProfile.stats || {}),
+          totalSessionsCreated: (userProfile.stats?.totalSessionsCreated || 0) + 1,
+        },
+      };
+      updateUserProfile(updatedProfile);
+    }
+
     navigate('teacher-dashboard', {
       sessionCode:res.session_code,
       teacherName
@@ -2023,6 +2056,38 @@ async function joinSession() {
       `/api/session/${sessionCode}/join?name=${encodeURIComponent(studentName)}&roll=${encodeURIComponent(roll)}&cls=${encodeURIComponent(cls)}&anonymous=true`,
       { method:'POST' }
     );
+
+    // ── STEP 2 & 7: Create / update unified profile ────────────────
+    const now = Date.now();
+    if (!userProfile) {
+      const newProfile = {
+        id: 'u_' + now,
+        name: studentName.trim(),
+        roleHistory: ['student'],
+        sessionsCreated: [],
+        sessionsJoined: [{ code: sessionCode, date: new Date().toLocaleDateString(), studentId: res.student_id }],
+        stats: { totalSessionsCreated: 0, totalSessionsJoined: 1, avgParticipation: 0, avgUnderstanding: 0 },
+      };
+      updateUserProfile(newProfile);
+    } else {
+      const alreadyJoined = userProfile.sessionsJoined || [];
+      const alreadyJoinedThisCode = alreadyJoined.some(s => s.code === sessionCode);
+      const updatedProfile = {
+        ...userProfile,
+        name: studentName.trim(),
+        roleHistory: userProfile.roleHistory.includes('student')
+          ? userProfile.roleHistory
+          : [...userProfile.roleHistory, 'student'],
+        sessionsJoined: alreadyJoinedThisCode
+          ? alreadyJoined
+          : [...alreadyJoined, { code: sessionCode, date: new Date().toLocaleDateString(), studentId: res.student_id }],
+        stats: {
+          ...(userProfile.stats || {}),
+          totalSessionsJoined: (userProfile.stats?.totalSessionsJoined || 0) + (alreadyJoinedThisCode ? 0 : 1),
+        },
+      };
+      updateUserProfile(updatedProfile);
+    }
 
     navigate('student-waiting', {
       sessionCode,
@@ -2101,6 +2166,23 @@ async function joinSession() {
 
   return (
     <div className="landing">
+
+      {/* ── STEP 3: Landing page navbar with global profile icon ── */}
+      <nav className="nav" style={{position:'sticky',top:0,zIndex:100}}>
+        <span className="nav-brand">🧠 ClassMind</span>
+        <div className="nav-right">
+          {userProfile && (
+            <button
+              className="profile-icon-btn"
+              onClick={onOpenProfile}
+              title={`My Profile — ${userProfile.name}`}
+              style={{marginLeft:4}}
+            >
+              {(userProfile.name||'?')[0].toUpperCase()}
+            </button>
+          )}
+        </div>
+      </nav>
 
       {/* ═══════════════════════════════════════
           HERO — existing content, unchanged logic
@@ -11313,11 +11395,23 @@ function ProfileDrawer({ open, onClose, userName, role, teacherData, studentData
 
 // ═════════════════════════════════════════════════════════════════
 //  ROOT APP — ROUTER
-//  ROOT APP — ROUTER
 // ═════════════════════════════════════════════════════════════════
 function App() {
   const [route, setRoute] = useState({ page:'landing', params:{} });
   const toastCtx = useToasts();
+
+  // ── STEP 8: Unified user profile — lifted to top level ──────────────
+  const [userProfile, setUserProfile] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('cm_user')) || null; }
+    catch { return null; }
+  });
+  const [landingProfileOpen, setLandingProfileOpen] = useState(false);
+
+  // Persist and update profile in one call
+  function updateUserProfile(next) {
+    setUserProfile(next);
+    try { localStorage.setItem('cm_user', JSON.stringify(next)); } catch {}
+  }
 
   function navigate(page, params={}) {
     setRoute({ page, params });
@@ -11326,13 +11420,38 @@ function App() {
 
   const { page, params } = route;
 
+  // Derive role string for landing-page ProfileDrawer
+  const lpRoleHistory = (userProfile?.roleHistory) || [];
+  const lpRole = lpRoleHistory.includes('teacher') && lpRoleHistory.includes('student')
+    ? 'both'
+    : lpRoleHistory.includes('teacher') ? 'teacher'
+    : lpRoleHistory.includes('student') ? 'student'
+    : null;
+
   return (
    <AppCtx.Provider value={toastCtx}>
       <Toasts toasts={toastCtx.toasts} removeToast={toastCtx.removeToast}/>
-      {page==='landing'       && <LandingPage navigate={navigate}/>}
+      {page==='landing' && (
+        <LandingPage
+          navigate={navigate}
+          userProfile={userProfile}
+          updateUserProfile={updateUserProfile}
+          onOpenProfile={() => setLandingProfileOpen(true)}
+        />
+      )}
       {page==='teacher-dashboard' && <TeacherShell {...params} navigate={navigate}/>}
       {page==='student-waiting'   && <StudentWaiting {...params} navigate={navigate}/>}
       {page==='student-task'      && <StudentTaskView {...params} navigate={navigate}/>}
+
+      {/* ── STEP 4: Global Profile Drawer for Landing Page ──────────── */}
+      {page==='landing' && userProfile && lpRole && (
+        <ProfileDrawer
+          open={landingProfileOpen}
+          onClose={() => setLandingProfileOpen(false)}
+          userName={userProfile.name}
+          role={lpRole}
+        />
+      )}
     </AppCtx.Provider>
   );
 }

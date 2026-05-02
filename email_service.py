@@ -24,8 +24,6 @@ log = logging.getLogger("classmind.email")
 # ── Configuration ─────────────────────────────────────────────────
 SMTP_SERVER = "smtp.gmail.com"
 SMTP_PORT = 587
-SENDER_EMAIL = os.getenv("EMAIL_ADDRESS", "")
-SENDER_PASSWORD = os.getenv("EMAIL_PASSWORD", "")
 
 # ── Email validation ──────────────────────────────────────────────
 EMAIL_REGEX = re.compile(r"^[^\s@]+@[^\s@]+\.[^\s@]+$")
@@ -36,12 +34,17 @@ def is_valid_email(email: str) -> bool:
 
 def validate_smtp_config() -> bool:
     """Check if SMTP credentials are configured and not placeholders."""
-    if not SENDER_EMAIL or not SENDER_PASSWORD:
+    email, pwd = get_credentials()
+    if not email or not pwd:
         return False
     placeholders = ["your-email@gmail.com", "your-app-password", "example.com"]
-    if any(p in SENDER_EMAIL for p in placeholders) or any(p in SENDER_PASSWORD for p in placeholders):
+    if any(p in email for p in placeholders) or any(p in pwd for p in placeholders):
         return False
     return True
+
+def get_credentials():
+    """Dynamically fetch credentials to ensure they are loaded after dotenv."""
+    return os.getenv("EMAIL_ADDRESS", "").strip(), os.getenv("EMAIL_PASSWORD", "").strip()
 
 # ── SMTP CORE SEND ───────────────────────────────────────────────
 
@@ -49,7 +52,9 @@ async def send_mail_raw(to_email: str, subject: str, html_content: str) -> Tuple
     """
     Core SMTP sending logic with strict error handling.
     """
-    if not validate_smtp_config():
+    sender_email, sender_password = get_credentials()
+    
+    if not sender_email or not sender_password:
         return False, "SMTP not configured (check EMAIL_ADDRESS and EMAIL_PASSWORD in .env)"
     
     if not aiosmtplib:
@@ -58,30 +63,32 @@ async def send_mail_raw(to_email: str, subject: str, html_content: str) -> Tuple
     try:
         message = MIMEMultipart("alternative")
         message["Subject"] = subject
-        message["From"] = f"ClassMind Reports <{SENDER_EMAIL}>"
+        message["From"] = f"ClassMind Reports <{sender_email}>"
         message["To"] = to_email
         
         text_content = "Please view this email in an HTML-compatible client."
         message.attach(MIMEText(text_content, "plain"))
         message.attach(MIMEText(html_content, "html"))
 
-        # Port 465 is the modern standard for direct SSL/TLS
-        smtp = aiosmtplib.SMTP(hostname=SMTP_SERVER, port=465, use_tls=True, timeout=15)
+        # Port 587 with STARTTLS is generally more compatible than 465
+        smtp = aiosmtplib.SMTP(hostname=SMTP_SERVER, port=587, use_tls=False, timeout=20)
         
         async with smtp:
             try:
-                # Requirement 3: Auth test
-                target_user = SENDER_EMAIL.strip()
-                target_pwd = SENDER_PASSWORD.strip().replace(" ", "")
-                log.info("[SMTP_AUTH] Attempting login for: %s", target_user)
-                await smtp.login(target_user, target_pwd)
+                await smtp.starttls()
+                # Clean password of any spaces (common in App Passwords)
+                clean_pwd = sender_password.replace(" ", "")
+                log.info("[SMTP] Attempting login for: %s", sender_email)
+                await smtp.login(sender_email, clean_pwd)
             except aiosmtplib.SMTPAuthenticationError:
-                return False, f"Authentication failed for {SENDER_EMAIL}. Check App Password."
-            except aiosmtplib.SMTPException as e:
-                return False, f"SMTP Login Error: {str(e)}"
+                log.error("[SMTP] Auth failed for %s", sender_email)
+                return False, f"Authentication failed for {sender_email}. Check App Password."
+            except Exception as e:
+                log.error("[SMTP] Login/TLS Error: %s", e)
+                return False, f"SMTP Connection Error: {str(e)}"
             
-            # Requirement 4: Confirm success only after send
             await smtp.send_message(message)
+            log.info("[SMTP] Successfully sent email to %s", to_email)
             
         return True, "Email sent successfully"
 

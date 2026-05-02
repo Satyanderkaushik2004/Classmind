@@ -2563,13 +2563,19 @@ function LoginModal({defaultRole, onComplete, onClose}) {
     async function initGoogle() {
       try {
         const config = await apiFetch('/api/config');
-        if (!config.google_client_id || config.google_client_id === 'your-google-client-id-here') {
-          console.warn('Google Client ID not configured');
+        
+        const cid = config.google_client_id || config.GOOGLE_CLIENT_ID;
+        if (!cid || cid.includes('your-google-client-id')) {
+          console.error('[AUTH] Google Client ID is missing or placeholder in config');
+          add('Google Login not configured', 'error');
           return;
         }
 
+        const masked = cid.substring(0, 8) + '...' + cid.substring(cid.length - 8);
+        console.log('[AUTH] Using client_id: ' + masked);
+
         window.google.accounts.id.initialize({
-          client_id: config.google_client_id,
+          client_id: cid,
           callback: handleCredentialResponse,
           auto_select: false,
           cancel_on_tap_outside: true,

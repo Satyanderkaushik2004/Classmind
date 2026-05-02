@@ -11,7 +11,11 @@ from __future__ import annotations
 
 # ── Load environment variables FIRST ──────────────────────────────
 from dotenv import load_dotenv
-load_dotenv()   # auto-loads .env from project root
+# ── Environment ──
+from pathlib import Path
+from dotenv import load_dotenv
+env_path = Path(__file__).parent / ".env"
+load_dotenv(dotenv_path=env_path)
 
 # ── Standard library imports ──────────────────────────────────────
 import asyncio
@@ -63,6 +67,35 @@ logging.basicConfig(
 log = logging.getLogger("classmind")
 
 
+# ── Google OAuth Source of Truth ──
+def get_google_client_id() -> str:
+    """Retrieves and sanitizes the Google Client ID from environment."""
+    val = os.getenv("GOOGLE_CLIENT_ID", "").strip()
+    # Strip accidental quotes
+    if (val.startswith('"') and val.endswith('"')) or (val.startswith("'") and val.endswith("'")):
+        val = val[1:-1].strip()
+    return val
+
+def validate_oauth_config():
+    """Strict runtime check for OAuth configuration."""
+    cid = get_google_client_id()
+    placeholders = ["your-google-client-id", "your-google-client-id-here"]
+    
+    if not cid:
+        log.error("❌ OAuth config invalid: GOOGLE_CLIENT_ID is missing from .env")
+        # In a real production app we might sys.exit(1), but for this environment
+        # we'll log loudly and let the dev see the error.
+        return False
+        
+    if any(p in cid.lower() for p in placeholders):
+        log.error("❌ OAuth config invalid: GOOGLE_CLIENT_ID contains placeholder value")
+        return False
+        
+    masked = cid[:6] + "..." + cid[-10:] if len(cid) > 16 else "***"
+    log.info("[AUTH] Google Client ID loaded: %s", masked)
+    log.info("✅ OAuth config valid")
+    return True
+
 # ── validation ───────────────────────────────────────────────────
 def check_environment():
     """Validates environment variables on startup."""
@@ -75,6 +108,9 @@ def check_environment():
         log.warning("[!] EMAIL_PASSWORD is not configured properly in .env")
     else:
         log.info("[OK] Email system configured for: %s", email)
+    
+    # Strict OAuth check
+    validate_oauth_config()
 
 check_environment()
 
@@ -822,6 +858,7 @@ async def lifespan(app: FastAPI):
         log.info("Restored %d session(s) from disk", loaded)
 
     log.info("ClassMind starting on port %s…", os.getenv("PORT", "8000"))
+    log.info("NOTE: Server restart is required after changing .env variables.")
     
     # Requirement 8: Self-test mode on server start
     from email_service import verify_email_system
@@ -890,8 +927,8 @@ def serve_frontend():
 # ── Google OAuth Verification ─────────────────────────────────────
 @app.post("/auth/google")
 async def google_auth(req: GoogleLoginReq):
-    client_id = os.getenv("GOOGLE_CLIENT_ID")
-    if not client_id or client_id == "your-google-client-id-here":
+    client_id = get_google_client_id()
+    if not client_id or "your-google" in client_id.lower():
         raise HTTPException(500, "Google Client ID not configured on server")
 
     try:
@@ -941,8 +978,11 @@ async def google_auth(req: GoogleLoginReq):
 
 @app.get("/api/config")
 async def get_config():
+    cid = get_google_client_id()
+    log.info("[CONFIG] Serving client_id to frontend: %s...", cid[:8] if cid else "NONE")
     return {
-        "google_client_id": os.getenv("GOOGLE_CLIENT_ID", ""),
+        "GOOGLE_CLIENT_ID": cid,
+        "google_client_id": cid, # Maintain compatibility
         "admin_emails":     ADMIN_EMAILS,
     }
 

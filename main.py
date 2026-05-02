@@ -158,7 +158,7 @@ def admin_authorized(
         
     # 2. Try Google ID token
     try:
-        google_client_id = os.getenv("GOOGLE_CLIENT_ID")
+        google_client_id = get_google_client_id()
         if google_client_id:
             # Note: verify_oauth2_token handles expiration and signature checks
             idinfo = id_token.verify_oauth2_token(token, requests.Request(), google_client_id)
@@ -185,7 +185,7 @@ def google_authorized(
     
     token = credentials.credentials
     try:
-        google_client_id = os.getenv("GOOGLE_CLIENT_ID")
+        google_client_id = get_google_client_id()
         if not google_client_id:
             raise HTTPException(500, "Server configuration error: GOOGLE_CLIENT_ID missing")
             
@@ -926,13 +926,14 @@ def serve_frontend():
 
 # ── Google OAuth Verification ─────────────────────────────────────
 @app.post("/auth/google")
-async def google_auth(req: GoogleLoginReq):
+async def google_auth(req: GoogleLoginReq, request: Request):
     client_id = get_google_client_id()
     if not client_id or "your-google" in client_id.lower():
         raise HTTPException(500, "Google Client ID not configured on server")
 
     try:
-        log.info("[AUTH] Verifying Google token...")
+        origin = request.headers.get("origin") or request.headers.get("referer", "unknown")
+        log.info("[AUTH] Verifying Google token from origin: %s", origin)
         # Verify the ID token
         idinfo = id_token.verify_oauth2_token(req.token, requests.Request(), client_id)
 

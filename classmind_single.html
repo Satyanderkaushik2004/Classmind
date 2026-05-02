@@ -2572,7 +2572,7 @@ function LoginModal({defaultRole, onComplete, onClose}) {
         }
 
         const masked = cid.substring(0, 8) + '...' + cid.substring(cid.length - 8);
-        console.log('[AUTH] Using client_id: ' + masked);
+        console.log('[AUTH] Initializing Google with client_id: ' + masked);
 
         window.google.accounts.id.initialize({
           client_id: cid,
@@ -2580,9 +2580,10 @@ function LoginModal({defaultRole, onComplete, onClose}) {
           auto_select: false,
           cancel_on_tap_outside: true,
         });
+        console.log('[AUTH] Google Identity Services initialized successfully');
         setGoogleInitialized(true);
       } catch (err) {
-        console.error('Failed to init Google Sign-In:', err);
+        console.error('[AUTH] Failed to init Google Sign-In:', err);
       }
     }
     
@@ -16715,6 +16716,17 @@ function App() {
     params: {}
   });
   const toastCtx = useToasts();
+  const [config, setConfig] = useState({ admin_emails: [] });
+
+  useEffect(() => {
+    // Load global config on app mount
+    apiFetch('/api/config')
+      .then(data => {
+        console.log('[APP] Global config loaded');
+        setConfig(data);
+      })
+      .catch(err => console.error('[APP] Failed to load config:', err));
+  }, []);
 
   // ── STEP 8: Unified user profile — lifted to top level ──────────────
   const [userProfile, setUserProfile] = useState(() => {
@@ -16756,7 +16768,10 @@ function App() {
   const lpRole = userProfile?.role ? userProfile.role : lpRoleHistory.includes('teacher') && lpRoleHistory.includes('student') ? 'both' : lpRoleHistory.includes('teacher') ? 'teacher' : lpRoleHistory.includes('student') ? 'student' : null;
 
   const isUserAdmin = () => {
-    return userProfile?.email && ADMIN_EMAILS.includes(userProfile.email);
+    const adminList = config.admin_emails && config.admin_emails.length > 0 
+      ? config.admin_emails 
+      : ADMIN_EMAILS;
+    return userProfile?.email && adminList.includes(userProfile.email);
   };
 
   // If no profile yet, render ONLY the LoginModal — nothing else is accessible

@@ -1135,57 +1135,76 @@ def get_session_info(code: str):
 
 async def _send_session_end_emails(s: dict) -> None:
     """Background task: email ONLY the teacher with the session report."""
-    code         = s.get("code", "?")
+    code = s.get("code", "?")
     teacher_name = s.get("teacher_name", "Teacher")
-    log.info("[EMAIL] Email triggered for session %s", code)
+    teacher_email = s.get("teacher_email", "")
 
-    # Validate SMTP config first
-    from email_service import validate_smtp_config
-    if not validate_smtp_config():
-        log.error("[EMAIL] Email failed — SMTP not configured for session %s", code)
-        return
+    log.info("[EMAIL_TASK] Starting background email task for session %s", code)
 
     try:
-        report = compute_report(s)
-    except Exception as exc:
-        log.error("[EMAIL] compute_report failed for %s: %s", code, exc)
-        return
+        # 1. Validate SMTP config first
+        from email_service import validate_smtp_config
+        if not validate_smtp_config():
+            log.error("[EMAIL_TASK] FAILED: SMTP not configured (check .env for session %s)", code)
+            return
 
-    # Send ONLY to teacher — never to students
-    teacher_email = s.get("teacher_email", "")
-    if not teacher_email or not is_valid_email(teacher_email):
-        log.warning("[EMAIL] No valid teacher email on session %s — skipping", code)
-        return
+        # 2. Compute report
+        try:
+            report = compute_report(s)
+            if not report:
+                log.error("[EMAIL_TASK] FAILED: compute_report returned None for %s", code)
+                return
+        except Exception as exc:
+            log.error("[EMAIL_TASK] FAILED: compute_report error for %s: %s", code, exc)
+            return
 
-    ok, msg = await send_session_email(
-        to_email     = teacher_email,
-        session_data = report,
-        teacher_name = teacher_name,
-    )
-    if ok:
-        log.info("[EMAIL] Email sent successfully to teacher (%s) for session %s", teacher_email, code)
-    else:
-        log.error("[EMAIL] Email failed for session %s: %s", code, msg)
+        # 3. Check email
+        if not teacher_email or not is_valid_email(teacher_email):
+            log.warning("[EMAIL_TASK] SKIPPED: No valid teacher email for session %s", code)
+            return
+
+        # 4. SEND (Awaited)
+        log.info("[EMAIL_TASK] Sending report to %s...", teacher_email)
+        ok, msg = await send_session_email(
+            to_email     = teacher_email,
+            session_data = report,
+            teacher_name = teacher_name,
+        )
+        
+        if ok:
+            log.info("[EMAIL_TASK] SUCCESS: Email sent to teacher (%s) for session %s", teacher_email, code)
+        else:
+            log.error("[EMAIL_TASK] FAILED: %s", msg)
+
+    except Exception as e:
+        log.error("[EMAIL_TASK] CRITICAL ERROR in background task: %s", e, exc_info=True)
 
 
 async def _send_class_start_notifications(s: dict) -> None:
     """Background task: notify students with emails that class has started."""
-    code         = s.get("code", "?")
+    code = s.get("code", "?")
     teacher_name = s.get("teacher_name", "Teacher")
-    for sid, student in s.get("students", {}).items():
+    students = s.get("students", {})
+    
+    log.info("[EMAIL_TASK] Notifying %d students that session %s started", len(students), code)
+    
+    for sid, student in students.items():
         student_email = student.get("email", "")
         if not student_email or not is_valid_email(student_email):
             continue
-        ok, msg = await send_class_starting_email(
-            to_email     = student_email,
-            student_name = student.get("name", "Student"),
-            session_code = code,
-            teacher_name = teacher_name,
-        )
-        log.info(
-            "[AUTO-EMAIL] Start notification -> %s (%s): %s",
-            student.get("name", sid), student_email, "OK" if ok else msg,
-        )
+            
+        try:
+            ok, msg = await send_class_starting_email(
+                to_email     = student_email,
+                session_code = code,
+                teacher_name = teacher_name,
+            )
+            if ok:
+                log.info("[EMAIL_TASK] Start notification sent to %s (%s)", student.get("name", sid), student_email)
+            else:
+                log.error("[EMAIL_TASK] FAILED notification to %s: %s", student_email, msg)
+        except Exception as e:
+            log.error("[EMAIL_TASK] ERROR notifying %s: %s", student_email, e)
 
 
 @app.post("/api/session/{code}/control")

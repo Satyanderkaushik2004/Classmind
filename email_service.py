@@ -10,14 +10,9 @@ from datetime import datetime
 from typing import Dict, Optional, Tuple
 
 # Third-party imports
-try:
-    import aiosmtplib
-    from email.mime.text import MIMEText
-    from email.mime.multipart import MIMEMultipart
-except ImportError:
-    aiosmtplib = None
-    MIMEText = None
-    MIMEMultipart = None
+import aiosmtplib
+from email.message import EmailMessage
+from email.utils import make_msgid, formatdate
 
 log = logging.getLogger("classmind.email")
 
@@ -30,6 +25,7 @@ EMAIL_REGEX = re.compile(r"^[^\s@]+@[^\s@]+\.[^\s@]+$")
 
 def is_valid_email(email: str) -> bool:
     """Validate email format."""
+    if not email: return False
     return bool(EMAIL_REGEX.match(email.strip()))
 
 def validate_smtp_config() -> bool:
@@ -50,7 +46,7 @@ def get_credentials():
 
 async def send_mail_raw(to_email: str, subject: str, html_content: str) -> Tuple[bool, str]:
     """
-    Core SMTP sending logic with strict error handling.
+    Core SMTP sending logic using modern EmailMessage for maximum compatibility.
     """
     sender_email, sender_password = get_credentials()
     
@@ -61,41 +57,54 @@ async def send_mail_raw(to_email: str, subject: str, html_content: str) -> Tuple
         return False, "aiosmtplib not installed"
 
     try:
-        message = MIMEMultipart("alternative")
-        message["Subject"] = subject
-        message["From"] = f"ClassMind Reports <{sender_email}>"
-        message["To"] = to_email
+        # Create modern EmailMessage
+        msg = EmailMessage()
+        msg["Subject"] = subject
+        msg["From"] = f"ClassMind Reports <{sender_email}>"
+        msg["To"] = to_email
+        msg["Reply-To"] = sender_email
+        msg["Date"] = formatdate(localtime=True)
+        msg["Message-ID"] = make_msgid(domain="classmind.onrender.com")
         
-        text_content = "Please view this email in an HTML-compatible client."
-        message.attach(MIMEText(text_content, "plain"))
-        message.attach(MIMEText(html_content, "html"))
+        # Add content (plain text fallback + HTML)
+        msg.set_content("Please view this email in an HTML-compatible client.")
+        msg.add_alternative(html_content, subtype="html")
 
-        # Port 587 with STARTTLS is generally more compatible than 465
-        smtp = aiosmtplib.SMTP(hostname=SMTP_SERVER, port=587, use_tls=False, timeout=20)
+        # Clean password
+        clean_pwd = sender_password.replace(" ", "")
+
+        # Use aiosmtplib.send() - The most robust way to send
+        # It handles connect, starttls, and login automatically.
+        log.info("[SMTP] Sending email to %s via %s:587...", to_email, SMTP_SERVER)
         
-        async with smtp:
-            try:
-                await smtp.starttls()
-                # Clean password of any spaces (common in App Passwords)
-                clean_pwd = sender_password.replace(" ", "")
-                log.info("[SMTP] Attempting login for: %s", sender_email)
-                await smtp.login(sender_email, clean_pwd)
-            except aiosmtplib.SMTPAuthenticationError:
-                log.error("[SMTP] Auth failed for %s", sender_email)
-                return False, f"Authentication failed for {sender_email}. Check App Password."
-            except Exception as e:
-                log.error("[SMTP] Login/TLS Error: %s", e)
-                return False, f"SMTP Connection Error: {str(e)}"
-            
-            await smtp.send_message(message)
-            log.info("[SMTP] Successfully sent email to %s", to_email)
-            
+        await aiosmtplib.send(
+            msg,
+            hostname  = SMTP_SERVER,
+            port      = SMTP_PORT,
+            use_tls   = False,
+            start_tls = True,  # Let aiosmtplib handle STARTTLS upgrade
+            username  = sender_email,
+            password  = clean_pwd,
+            timeout   = 30
+        )
+        
+        log.info("[SMTP] SUCCESS: Email delivered to %s", to_email)
         return True, "Email sent successfully"
 
+    except aiosmtplib.SMTPAuthenticationError as e:
+        err_msg = f"Auth failed. Check App Password. Error: {e}"
+        log.error("[SMTP] AUTH ERROR: %s", err_msg)
+        return False, err_msg
+    except aiosmtplib.SMTPException as e:
+        err_msg = f"SMTP Error: {str(e)}"
+        log.error("[SMTP] PROTOCOL ERROR: %s", err_msg)
+        return False, err_msg
     except (ConnectionError, asyncio.TimeoutError, OSError) as e:
-        return False, f"Connection error (check your internet or firewall): {str(e)}"
+        err_msg = f"Connection error: {str(e)}"
+        log.error("[SMTP] CONNECTION ERROR: %s", err_msg)
+        return False, err_msg
     except Exception as e:
-        log.error("Unexpected SMTP error: %s", e, exc_info=True)
+        log.error("[SMTP] UNEXPECTED ERROR: %s", e, exc_info=True)
         return False, f"Unexpected error: {str(e)}"
 
 # ── Self-Test Mode ────────────────────────────────────────────────
@@ -105,6 +114,7 @@ async def verify_email_system() -> Tuple[bool, str]:
     Requirement 8: Self-test mode on server start.
     Sends a real test email to the sender.
     """
+    SENDER_EMAIL, SENDER_PASSWORD = get_credentials()
     if not validate_smtp_config():
         if SENDER_PASSWORD == "your-app-password":
             print("\n\u26A0\uFE0F Please replace EMAIL_PASSWORD with a valid Gmail App Password")

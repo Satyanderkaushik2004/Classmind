@@ -9,6 +9,11 @@ import asyncio
 from datetime import datetime
 from typing import Dict, Optional, Tuple
 
+from dotenv import load_dotenv
+
+# Load environment variables early
+load_dotenv()
+
 # Third-party imports
 try:
     from sendgrid import SendGridAPIClient
@@ -35,8 +40,14 @@ def validate_smtp_config() -> bool:
     return bool(os.getenv("SENDGRID_API_KEY", "").strip())
 
 def get_sendgrid_key():
-    """Fetch SendGrid API Key."""
-    return os.getenv("SENDGRID_API_KEY", "").strip()
+    """Fetch SendGrid API Key and show debug info."""
+    key = os.getenv("SENDGRID_API_KEY", "").strip()
+    if key:
+        masked = key[:10] + "..." + key[-4:] if len(key) > 14 else "***"
+        log.info("[SENDGRID] Using API Key: %s", masked)
+    else:
+        log.warning("[SENDGRID] No API Key found in environment!")
+    return key
 
 # ── SendGrid API CORE SEND ───────────────────────────────────────
 

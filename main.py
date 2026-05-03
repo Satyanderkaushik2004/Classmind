@@ -169,32 +169,6 @@ def admin_authorized(
     raise HTTPException(401, "Unauthorized: Admin privileges required")
 
 
-def google_authorized(
-    credentials: Optional[HTTPAuthorizationCredentials] = Depends(HTTPBearer(auto_error=False)),
-) -> str:
-    """
-    Verifies that the requester has a valid Google session.
-    Returns the verified email address.
-    """
-    if not credentials or credentials.scheme.lower() != "bearer":
-        raise HTTPException(401, "Authentication required. Please log in with Google.")
-    
-    token = credentials.credentials
-    try:
-        google_client_id = get_google_client_id()
-        if not google_client_id:
-            raise HTTPException(500, "Server configuration error: GOOGLE_CLIENT_ID missing")
-            
-        idinfo = id_token.verify_oauth2_token(token, requests.Request(), google_client_id)
-        email = idinfo.get("email")
-        if not email:
-            raise HTTPException(401, "Could not verify email from Google token")
-        return email
-    except Exception as e:
-        log.warning("[AUTH] Google token verification failed: %s", e)
-        raise HTTPException(401, "Your session has expired. Please log in again.")
-
-
 def normalize_student_key(name: str, roll: str, cls: str) -> str:
     return f"{name.strip().lower()}|{roll.strip().upper()}|{cls.strip().upper()}"
 
@@ -879,6 +853,108 @@ app = FastAPI(
     docs_url="/docs",
     redoc_url="/redoc",
 )
+
+def google_authorized(
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(HTTPBearer(auto_error=False)),
+) -> str:
+    """
+    Verifies that the requester has a valid Google session.
+    Returns the verified email address.
+    """
+    if not credentials or credentials.scheme.lower() != "bearer":
+        raise HTTPException(401, "Authentication required. Please log in with Google.")
+    
+    token = credentials.credentials
+    try:
+        google_client_id = get_google_client_id()
+        if not google_client_id:
+            raise HTTPException(500, "Server configuration error: GOOGLE_CLIENT_ID missing")
+            
+        idinfo = id_token.verify_oauth2_token(token, requests.Request(), google_client_id)
+        email = idinfo.get("email")
+        if not email:
+            raise HTTPException(401, "Could not verify email from Google token")
+        return email.lower().strip()
+    except Exception as e:
+        log.warning("[AUTH] Google token verification failed: %s", e)
+        raise HTTPException(401, "Your session has expired. Please log in again.")
+
+def google_authorized_optional(
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(HTTPBearer(auto_error=False)),
+) -> Optional[str]:
+    """
+    Optional version of google_authorized. Returns None instead of raising 401.
+    """
+    if not credentials or credentials.scheme.lower() != "bearer":
+        return None
+    try:
+        return google_authorized(credentials)
+    except:
+        return None
+
+@app.get("/api/teacher/sessions")
+def get_teacher_sessions(email: str = Query(...)):
+    """
+    Returns all sessions created by a teacher, filtered by email.
+    Completely public endpoint for dashboard flexibility.
+    """
+    if not email:
+        raise HTTPException(400, "Email parameter is required")
+
+    teacher_history = []
+    
+    # Normalize email for comparison
+    email_n = email.lower().strip()
+    
+    # Filter sessions where teacher_id matches the authenticated email
+    for s in sessions.values():
+        s_email = (s.get("teacher_email") or s.get("teacher_id") or "").lower().strip()
+        
+        if s_email == email_n:
+            # Compute real-time analytics for this session (including offline but only if they participated)
+            analytics = compute_analytics(s, include_offline=True)
+            
+            # Rule: students_count = number of students who actually participated
+            # analytics["total_students"] in history mode is the count of engaged students.
+            student_p_count = analytics.get("total_students", 0)
+            
+            # Rule: tasks_count = number of tasks actually delivered/sent to students
+            delivery_ids = s.get("task_deliveries", {})
+            unique_tasks_sent = len({d["task_id"] for d in delivery_ids.values() if d.get("sent_to")})
+            
+            # Rule: Calculate real participation and understanding
+            participation = analytics.get("participation", 0)
+            avg_understanding = analytics.get("understanding", 0)
+
+            teacher_history.append({
+                "code": s["code"],
+                "name": f"Session {s['code']}",
+                "date": time.strftime('%Y-%m-%d', time.localtime(s.get("created_at", 0))),
+                "timestamp": s.get("created_at", 0),
+                "status": s.get("status", "waiting"),
+                "students_count": student_p_count,
+                "participation": participation,
+                "avg_understanding": avg_understanding,
+                "tasks_count": unique_tasks_sent,
+            })
+    
+    # Sort by newest first
+    teacher_history.sort(key=lambda x: x["timestamp"], reverse=True)
+    
+    # Calculate global summary stats across all sessions
+    total_students = sum(s["students_count"] for s in teacher_history)
+    avg_participation = sum(s["participation"] for s in teacher_history) / len(teacher_history) if teacher_history else 0
+    avg_understanding = sum(s["avg_understanding"] for s in teacher_history) / len(teacher_history) if teacher_history else 0
+    
+    return {
+        "sessions": teacher_history,
+        "stats": {
+            "total_sessions": len(teacher_history),
+            "total_students": total_students,
+            "avg_participation": round(avg_participation, 1),
+            "avg_understanding": round(avg_understanding, 1),
+        }
+    }
 
 # Consolidated exception handling moved to bottom
 

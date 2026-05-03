@@ -2039,45 +2039,18 @@ const ADMIN_EMAILS = ["classmind7@gmail.com"];
 //  WEEKLY DATA STORE  — in-memory, no backend required
 //  Simulates a rolling 7-day window with current-session data merged in.
 // ═══════════════════════════════════════════════════════════════════
+// Global analytics store (cached sessions for the current logged-in user)
 const _weeklyStore = {
   teacher: {
     sessionsCreated: [],
     tasksAssigned: 0,
     understandingLog: [],
-    // [{date,pct}]
     participationLog: [],
-    // [{date,pct}]
-    studentCount: 0
+    studentCount: 0,
+    stats: { total_sessions: 0, total_students: 0, avg_participation: 0, avg_understanding: 0 }
   },
-  students: {} // studentId -> { sessionsAttended, tasksCompleted, scores:[], timeSecs }
+  students: {}
 };
-
-// Seed with simulated past-week history so the report looks meaningful on first load
-(function seedWeeklyData() {
-  const now = Date.now();
-  const DAY = 86400000;
-  const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-  for (let i = 6; i >= 1; i--) {
-    const d = new Date(now - i * DAY);
-    const label = days[d.getDay()];
-    _weeklyStore.teacher.understandingLog.push({
-      date: label,
-      pct: 55 + Math.round(Math.random() * 30)
-    });
-    _weeklyStore.teacher.participationLog.push({
-      date: label,
-      pct: 60 + Math.round(Math.random() * 35)
-    });
-    _weeklyStore.teacher.sessionsCreated.push({
-      name: `Session ${7 - i}`,
-      date: d.toLocaleDateString(),
-      participation: 60 + Math.round(Math.random() * 35),
-      avgUnderstanding: 55 + Math.round(Math.random() * 35)
-    });
-  }
-  _weeklyStore.teacher.tasksAssigned = 4 + Math.round(Math.random() * 8);
-  _weeklyStore.teacher.studentCount = 12 + Math.round(Math.random() * 8);
-})();
 
 // Call this whenever teacher session data changes (non-destructive)
 function weeklyRecordTeacherSession(sessionCode, participation, understanding, tasks, students) {
@@ -2453,6 +2426,66 @@ function DoughnutChart({
     ref: ref
   }));
 }
+function BarChart({
+  labels,
+  data,
+  label = 'Value',
+  color = '#22c55e'
+}) {
+  const ref = useRef(null);
+  const chartRef = useRef(null);
+  useEffect(() => {
+    if (!ref.current) return;
+    chartRef.current?.destroy();
+    chartRef.current = new Chart(ref.current, {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [{
+          label,
+          data,
+          backgroundColor: color,
+          borderRadius: 4,
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            display: false
+          }
+        },
+        scales: {
+          x: {
+            grid: {
+              display: false
+            },
+            ticks: {
+              color: '#94a3b8'
+            }
+          },
+          y: {
+            grid: {
+              color: '#2d3148'
+            },
+            ticks: {
+              color: '#94a3b8'
+            },
+            beginAtZero: true
+          }
+        }
+      }
+    });
+    return () => chartRef.current?.destroy();
+  }, [labels, data]);
+  return /*#__PURE__*/React.createElement("div", {
+    className: "chart-container"
+  }, /*#__PURE__*/React.createElement("canvas", {
+    ref: ref
+  }));
+}
+
 function LineChart({
   labels,
   data,
@@ -15014,37 +15047,23 @@ function StudentCopilotLight({
 }
 
 // ═════════════════════════════════════════════════════════════════
-//  WAITING ROOM TIPS  (Feature 6 — tip rotator)
+//  WAITING ROOM TIPS
 // ═════════════════════════════════════════════════════════════════
-const WAITING_TIPS = [{
-  icon: '📝',
-  text: "Get ready! When a task arrives, read the question carefully before selecting your answer."
-}, {
-  icon: '💬',
-  text: "Have a doubt? Use the Chat tab to ask your teacher anytime during the session."
-}, {
-  icon: '✋',
-  text: "Stuck or confused? Raise your hand — your teacher will be notified silently."
-}, {
-  icon: '⏱️',
-  text: "Some questions may have time limits. Answer quickly but thoughtfully!"
-}, {
-  icon: '🏆',
-  text: "Correct answers earn points. Stay focused and aim for the leaderboard!"
-}, {
-  icon: '💡',
-  text: "Hints are available on most tasks if you get stuck. Don't be afraid to use them."
-}, {
-  icon: '📊',
-  text: "Track your accuracy and rank in real-time from the task view."
-}, {
-  icon: '🔔',
-  text: "Stay on this page — you'll be automatically moved when the session starts."
-}];
+const WAITING_TIPS = [
+  { icon: '📝', text: "Get ready! When a task arrives, read the question carefully before selecting your answer." },
+  { icon: '💬', text: "Have a doubt? Use the Chat tab to ask your teacher anytime during the session." },
+  { icon: '✋', text: "Stuck or confused? Raise your hand — your teacher will be notified silently." },
+  { icon: '⏱️', text: "Some questions may have time limits. Answer quickly but thoughtfully!" },
+  { icon: '🏆', text: "Correct answers earn points. Stay focused and aim for the leaderboard!" },
+  { icon: '💡', text: "Hints are available on most tasks if you get stuck. Don't be afraid to use them." },
+  { icon: '📊', text: "Track your accuracy and rank in real-time from the task view." },
+  { icon: '🔔', text: "Stay on this page — you'll be automatically moved when the session starts." }
+];
+
 function WaitingTipRotator() {
-  const [idx, setIdx] = useState(Math.floor(Math.random() * WAITING_TIPS.length));
-  const [visible, setVisible] = useState(true);
-  useEffect(() => {
+  const [idx, setIdx] = React.useState(Math.floor(Math.random() * WAITING_TIPS.length));
+  const [visible, setVisible] = React.useState(true);
+  React.useEffect(() => {
     const id = setInterval(() => {
       setVisible(false);
       setTimeout(() => {
@@ -15055,946 +15074,171 @@ function WaitingTipRotator() {
     return () => clearInterval(id);
   }, []);
   const tip = WAITING_TIPS[idx];
-  return /*#__PURE__*/React.createElement("div", {
+  return React.createElement("div", {
     className: "waiting-tip",
-    style: {
-      opacity: visible ? 1 : 0,
-      transition: 'opacity 0.4s ease'
-    }
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "waiting-tip-icon"
-  }, tip.icon), tip.text);
+    style: { opacity: visible ? 1 : 0, transition: 'opacity 0.4s ease' }
+  }, React.createElement("span", { className: "waiting-tip-icon" }, tip.icon), tip.text);
 }
 
 // ═════════════════════════════════════════════════════════════════
-//  STUDENT: MY QUIZ REPORT  (Feature 1A — student sees ONLY their own)
+//  STUDENT: MY QUIZ REPORT
 // ═════════════════════════════════════════════════════════════════
-function StudentMyQuizReport({
-  sessionCode,
-  studentId,
-  studentName
-}) {
-  const [report, setReport] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  useEffect(() => {
+function StudentMyQuizReport({ sessionCode, studentId, studentName }) {
+  const [report, setReport] = React.useState(null);
+  const [loading, setLoading] = React.useState(true);
+  const [error, setError] = React.useState(null);
+  React.useEffect(() => {
     setLoading(true);
-    setError(null);
-    apiFetch(`/quiz/report/${sessionCode}/${studentId}`).then(data => {
-      setReport(data);
-      setLoading(false);
-    }).catch(e => {
-      setError(e.message);
-      setLoading(false);
-    });
+    apiFetch(`/quiz/report/${sessionCode}/${studentId}`)
+      .then(data => { setReport(data); setLoading(false); })
+      .catch(e => { setError(e.message); setLoading(false); });
   }, [sessionCode, studentId]);
-  if (loading) return /*#__PURE__*/React.createElement("div", {
-    className: "page-sm text-center",
-    style: {
-      paddingTop: 48
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "text-muted"
-  }, "Loading your quiz report\u2026"));
-  if (error) return /*#__PURE__*/React.createElement("div", {
-    className: "page-sm text-center",
-    style: {
-      paddingTop: 48
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      fontSize: '3rem',
-      marginBottom: 12
-    }
-  }, "\uD83D\uDCCA"), /*#__PURE__*/React.createElement("div", {
-    style: {
-      fontWeight: 600,
-      marginBottom: 8
-    }
-  }, "No Quiz Report Yet"), /*#__PURE__*/React.createElement("div", {
-    className: "text-muted text-sm"
-  }, "Your quiz results will appear here once you've submitted a quiz."));
+
+  if (loading) return React.createElement("div", { className: "page-sm text-center", style: { paddingTop: 48 } }, "Loading your quiz report...");
+  if (error || !report) return React.createElement("div", { className: "page-sm text-center", style: { paddingTop: 48 } }, "No Quiz Report Yet");
+
   const total = report.total || 0;
   const score = report.score || 0;
   const accuracy = total > 0 ? Math.round(score / total * 100) : 0;
-  const wrong = total - score;
-  return /*#__PURE__*/React.createElement("div", {
-    className: "page-sm"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "section-header",
-    style: {
-      marginBottom: 16
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "section-title"
-  }, "\uD83D\uDCCA My Quiz Report"), /*#__PURE__*/React.createElement("div", {
-    className: "text-muted text-sm"
-  }, studentName)), /*#__PURE__*/React.createElement("div", {
-    className: "quiz-report-stat-row"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "stat"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "stat-value"
-  }, score, "/", total), /*#__PURE__*/React.createElement("div", {
-    className: "stat-label"
-  }, "Score")), /*#__PURE__*/React.createElement("div", {
-    className: "stat"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "stat-value"
-  }, accuracy, "%"), /*#__PURE__*/React.createElement("div", {
-    className: "stat-label"
-  }, "Accuracy")), /*#__PURE__*/React.createElement("div", {
-    className: "stat"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "stat-value",
-    style: {
-      backgroundImage: 'linear-gradient(135deg,var(--green),#16a34a)'
-    }
-  }, score), /*#__PURE__*/React.createElement("div", {
-    className: "stat-label"
-  }, "\u2705 Correct")), /*#__PURE__*/React.createElement("div", {
-    className: "stat"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "stat-value",
-    style: {
-      backgroundImage: 'linear-gradient(135deg,var(--red),#dc2626)'
-    }
-  }, wrong), /*#__PURE__*/React.createElement("div", {
-    className: "stat-label"
-  }, "\u274C Wrong"))), /*#__PURE__*/React.createElement("div", {
-    className: "card",
-    style: {
-      marginBottom: 16
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: 'flex',
-      justifyContent: 'space-between',
-      marginBottom: 8,
-      fontSize: '0.85rem'
-    }
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "text-muted"
-  }, "Overall Performance"), /*#__PURE__*/React.createElement("span", {
-    style: {
-      fontWeight: 700,
-      color: accuracy >= 70 ? 'var(--green)' : accuracy >= 40 ? 'var(--yellow)' : 'var(--red)'
-    }
-  }, accuracy >= 70 ? 'Good 🎉' : accuracy >= 40 ? 'Fair 🙂' : 'Needs Practice 📚')), /*#__PURE__*/React.createElement("div", {
-    className: "progress-bar"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: `progress-fill ${accuracy >= 70 ? 'green' : accuracy >= 40 ? 'yellow' : 'red'}`,
-    style: {
-      width: `${accuracy}%`
-    }
-  }))), report.details && report.details.length > 0 && /*#__PURE__*/React.createElement("div", {
-    className: "card"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "card-title"
-  }, "\uD83D\uDCCB Question Breakdown"), report.details.map((d, i) => /*#__PURE__*/React.createElement("div", {
-    key: i,
-    className: `quiz-report-q ${d.is_correct ? 'correct' : 'wrong'}`
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "quiz-report-q-text"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: `badge ${d.is_correct ? 'badge-green' : 'badge-red'}`,
-    style: {
-      marginRight: 8
-    }
-  }, d.is_correct ? '✅ Correct' : '❌ Wrong'), "Q", i + 1, ": ", d.question), /*#__PURE__*/React.createElement("div", {
-    className: "quiz-report-ans"
-  }, /*#__PURE__*/React.createElement("span", {
-    style: {
-      color: 'var(--text3)'
-    }
-  }, "Your answer: "), /*#__PURE__*/React.createElement("strong", {
-    style: {
-      color: d.is_correct ? 'var(--green)' : 'var(--red)'
-    }
-  }, d.student_answer ?? '(no answer)')), !d.is_correct && d.correct_answer && /*#__PURE__*/React.createElement("div", {
-    className: "quiz-report-ans"
-  }, /*#__PURE__*/React.createElement("span", {
-    style: {
-      color: 'var(--text3)'
-    }
-  }, "Correct answer: "), /*#__PURE__*/React.createElement("strong", {
-    style: {
-      color: 'var(--green)'
-    }
-  }, d.correct_answer)), d.topic && /*#__PURE__*/React.createElement("div", {
-    style: {
-      marginTop: 4
-    }
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "badge badge-blue",
-    style: {
-      fontSize: '0.7rem'
-    }
-  }, d.topic))))));
+
+  return React.createElement("div", { className: "page-sm" },
+    React.createElement("div", { className: "section-header" },
+      React.createElement("div", { className: "section-title" }, "📊 My Quiz Report"),
+      React.createElement("div", { className: "text-muted" }, studentName)
+    ),
+    React.createElement("div", { className: "quiz-report-stat-row" },
+      React.createElement("div", { className: "stat" }, React.createElement("div", { className: "stat-value" }, score, "/", total), React.createElement("div", { className: "stat-label" }, "Score")),
+      React.createElement("div", { className: "stat" }, React.createElement("div", { className: "stat-value" }, accuracy, "%"), React.createElement("div", { className: "stat-label" }, "Accuracy"))
+    )
+  );
+}
+
+// ── Trend mini-bars ─────────────────────────────────────────
+function TrendBars({ log }) {
+  if (!log || log.length === 0) return React.createElement("div", { className: "prof-empty", style: { padding: '12px 0' } }, "No trend data yet");
+  const max = Math.max(...log.map(l => l.pct), 1);
+  return React.createElement("div", { className: "prof-trend-row" }, 
+    log.slice(-7).map((l, i) => React.createElement("div", {
+      key: i, title: `${l.date}: ${l.pct}%`, className: "prof-trend-bar",
+      style: { height: `${Math.max(4, (l.pct / max) * 100)}%` }
+    }))
+  );
+}
+
+// ── Chart Components (SVG based for zero dependency stability) ──
+function LineChart({ labels, data, label, color = "#6366f1" }) {
+  if (!data.length) return React.createElement("div", { className: "prof-empty" }, "No data");
+  const max = Math.max(...data, 100);
+  const W = 300, H = 100;
+  const pts = data.map((v, i) => {
+    const x = (i / (data.length - 1 || 1)) * W;
+    const y = H - (v / max) * H;
+    return `${x},${y}`;
+  }).join(' ');
+  
+  return React.createElement("svg", { viewBox: `0 0 ${W} ${H}`, style: { width: '100%', height: '100%', overflow: 'visible' } },
+    React.createElement("polyline", { fill: "none", stroke: color, strokeWidth: "3", strokeLinecap: "round", strokeLinejoin: "round", points: pts }),
+    data.map((v, i) => React.createElement("circle", { key: i, cx: (i / (data.length - 1 || 1)) * W, cy: H - (v / max) * H, r: "4", fill: "#fff", stroke: color, strokeWidth: "2" }))
+  );
+}
+
+function BarChart({ labels, data, label, color = "#22c55e" }) {
+  if (!data.length) return React.createElement("div", { className: "prof-empty" }, "No data");
+  const max = Math.max(...data, 100);
+  const W = 300, H = 100;
+  const barW = (W / data.length) * 0.8;
+  const gap = (W / data.length) * 0.2;
+
+  return React.createElement("svg", { viewBox: `0 0 ${W} ${H}`, style: { width: '100%', height: '100%', overflow: 'visible' } },
+    data.map((v, i) => {
+      const h = (v / max) * H;
+      return React.createElement("rect", { key: i, x: i * (barW + gap), y: H - h, width: barW, height: h, fill: color, rx: "2" });
+    })
+  );
 }
 
 // ═════════════════════════════════════════════════════════════════
-//  FEATURE 2 — TEACHER WEEKLY REPORT PAGE
+//  PROFILE DRAWER — MODERNIZED ANALYTICS
 // ═════════════════════════════════════════════════════════════════
-function WeeklyReportPage({
-  teacherName,
-  tasks,
-  roster,
-  analytics,
-  sessionCode
-}) {
-  const {
-    add
-  } = useContext(AppCtx);
-  const [refreshTick, setRefreshTick] = useState(0);
-
-  // Merge live session data into store on every render tick
-  const totalStudents = (roster.active || []).length;
-  const totalTasks = tasks.length;
-  if (analytics.participation > 0 || analytics.understanding > 0) {
-    weeklyRecordTeacherSession(sessionCode, analytics.participation || 0, analytics.understanding || 0, totalTasks, totalStudents);
-  }
-  const store = _weeklyStore.teacher;
-  const sessions = store.sessionsCreated.slice(-7); // rolling 7
-  const avgUnder = sessions.length ? Math.round(sessions.reduce((s, r) => s + r.avgUnderstanding, 0) / sessions.length) : 0;
-  const avgPart = sessions.length ? Math.round(sessions.reduce((s, r) => s + r.participation, 0) / sessions.length) : 0;
-  const uLog = store.understandingLog.slice(-7);
-  const pLog = store.participationLog.slice(-7);
-
-  // ── PDF Export ──────────────────────────────────────────────────
-  function exportPDF() {
-    try {
-      const {
-        jsPDF
-      } = window.jspdf;
-      const doc = new jsPDF({
-        unit: 'mm',
-        format: 'a4'
-      });
-      const W = 210,
-        margin = 14;
-      let y = 20;
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(18);
-      doc.setTextColor(99, 102, 241);
-      doc.text('ClassMind — Weekly Teacher Report', margin, y);
-      y += 8;
-      doc.setFontSize(10);
-      doc.setTextColor(100, 116, 139);
-      doc.text(`Teacher: ${teacherName}   |   Generated: ${new Date().toLocaleDateString()}`, margin, y);
-      y += 10;
-      doc.setDrawColor(200);
-      doc.line(margin, y, W - margin, y);
-      y += 6;
-      const stats = [['Sessions This Week', sessions.length], ['Tasks Assigned', store.tasksAssigned + totalTasks], ['Total Students', Math.max(store.studentCount, totalStudents)], ['Avg Understanding', `${avgUnder}%`], ['Avg Participation', `${avgPart}%`]];
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(13);
-      doc.setTextColor(30, 30, 30);
-      doc.text('Summary', margin, y);
-      y += 7;
-      doc.setFont('helvetica', 'normal');
-      doc.setFontSize(10);
-      stats.forEach(([label, val]) => {
-        doc.setTextColor(80, 80, 80);
-        doc.text(label, margin, y);
-        doc.setFont('helvetica', 'bold');
-        doc.setTextColor(99, 102, 241);
-        doc.text(String(val), margin + 70, y);
-        doc.setFont('helvetica', 'normal');
-        doc.setTextColor(80, 80, 80);
-        y += 6;
-      });
-      y += 4;
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(13);
-      doc.setTextColor(30, 30, 30);
-      doc.text('Session Log', margin, y);
-      y += 7;
-      doc.setFontSize(9);
-      doc.setFont('helvetica', 'bold');
-      doc.text('Session', margin, y);
-      doc.text('Date', margin + 60, y);
-      doc.text('Participation', margin + 90, y);
-      doc.text('Understanding', margin + 125, y);
-      y += 5;
-      doc.setFont('helvetica', 'normal');
-      sessions.forEach(s => {
-        if (y > 270) {
-          doc.addPage();
-          y = 20;
-        }
-        doc.text(s.name.slice(0, 28), margin, y);
-        doc.text(s.date, margin + 60, y);
-        doc.text(`${s.participation}%`, margin + 90, y);
-        doc.text(`${s.avgUnderstanding}%`, margin + 125, y);
-        y += 5;
-      });
-      doc.save(`ClassMind_Weekly_${teacherName.replace(/\s+/g, '_')}_${new Date().toISOString().slice(0, 10)}.pdf`);
-      add('✅ PDF report downloaded', 'success');
-    } catch (e) {
-      add('PDF generation failed: ' + e.message, 'error');
-    }
-  }
-
-  // ── Excel Export ────────────────────────────────────────────────
-  function exportExcel() {
-    try {
-      const wb = XLSX.utils.book_new();
-      // Summary sheet
-      const summaryData = [['ClassMind Weekly Report'], ['Teacher', teacherName], ['Generated', new Date().toLocaleDateString()], [], ['Metric', 'Value'], ['Sessions This Week', sessions.length], ['Tasks Assigned', store.tasksAssigned + totalTasks], ['Total Students', Math.max(store.studentCount, totalStudents)], ['Avg Understanding (%)', avgUnder], ['Avg Participation (%)', avgPart]];
-      XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(summaryData), 'Summary');
-      // Sessions sheet
-      const sesData = [['Session', 'Date', 'Participation %', 'Avg Understanding %']];
-      sessions.forEach(s => sesData.push([s.name, s.date, s.participation, s.avgUnderstanding]));
-      XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(sesData), 'Sessions');
-      // Trend sheet
-      const trendData = [['Day', 'Understanding %', 'Participation %']];
-      uLog.forEach((u, i) => trendData.push([u.date, u.pct, pLog[i]?.pct || 0]));
-      XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(trendData), 'Trends');
-      XLSX.writeFile(wb, `ClassMind_Weekly_${teacherName.replace(/\s+/g, '_')}_${new Date().toISOString().slice(0, 10)}.xlsx`);
-      add('✅ Excel report downloaded', 'success');
-    } catch (e) {
-      add('Excel export failed: ' + e.message, 'error');
-    }
-  }
-  return /*#__PURE__*/React.createElement("div", {
-    className: "page"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "section-header",
-    style: {
-      marginBottom: 20
-    }
-  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
-    className: "section-title",
-    style: {
-      marginBottom: 4
-    }
-  }, "\uD83D\uDCC5 Weekly Report"), /*#__PURE__*/React.createElement("div", {
-    className: "text-muted text-sm"
-  }, "Rolling 7-day classroom performance overview")), /*#__PURE__*/React.createElement("button", {
-    className: "btn btn-ghost btn-sm",
-    onClick: () => setRefreshTick(t => t + 1)
-  }, "\uD83D\uDD04 Refresh")), /*#__PURE__*/React.createElement("div", {
-    className: "wr-stat-grid"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "wr-stat"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "wr-stat-value"
-  }, sessions.length), /*#__PURE__*/React.createElement("div", {
-    className: "wr-stat-label"
-  }, "Sessions This Week")), /*#__PURE__*/React.createElement("div", {
-    className: "wr-stat"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "wr-stat-value"
-  }, store.tasksAssigned + totalTasks), /*#__PURE__*/React.createElement("div", {
-    className: "wr-stat-label"
-  }, "Tasks Assigned")), /*#__PURE__*/React.createElement("div", {
-    className: "wr-stat"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "wr-stat-value"
-  }, Math.max(store.studentCount, totalStudents)), /*#__PURE__*/React.createElement("div", {
-    className: "wr-stat-label"
-  }, "Total Students")), /*#__PURE__*/React.createElement("div", {
-    className: "wr-stat"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "wr-stat-value"
-  }, avgUnder, "%"), /*#__PURE__*/React.createElement("div", {
-    className: "wr-stat-label"
-  }, "Avg Understanding")), /*#__PURE__*/React.createElement("div", {
-    className: "wr-stat"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "wr-stat-value"
-  }, avgPart, "%"), /*#__PURE__*/React.createElement("div", {
-    className: "wr-stat-label"
-  }, "Avg Participation"))), /*#__PURE__*/React.createElement("div", {
-    className: "grid grid-2",
-    style: {
-      marginBottom: 16
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "card"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "card-title"
-  }, "\uD83D\uDCC8 Understanding Trend (7 Days)"), uLog.length > 0 ? /*#__PURE__*/React.createElement("div", {
-    className: "wr-chart-wrap"
-  }, /*#__PURE__*/React.createElement(LineChart, {
-    labels: uLog.map(l => l.date),
-    data: uLog.map(l => l.pct),
-    label: "Understanding %"
-  })) : /*#__PURE__*/React.createElement("div", {
-    className: "text-muted text-sm",
-    style: {
-      padding: '24px 0',
-      textAlign: 'center'
-    }
-  }, "No trend data yet")), /*#__PURE__*/React.createElement("div", {
-    className: "card"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "card-title"
-  }, "\uD83D\uDC65 Participation Trend (7 Days)"), pLog.length > 0 ? /*#__PURE__*/React.createElement("div", {
-    className: "wr-chart-wrap"
-  }, /*#__PURE__*/React.createElement(BarChart, {
-    labels: pLog.map(l => l.date),
-    data: pLog.map(l => l.pct),
-    label: "Participation %",
-    color: "#22c55e"
-  })) : /*#__PURE__*/React.createElement("div", {
-    className: "text-muted text-sm",
-    style: {
-      padding: '24px 0',
-      textAlign: 'center'
-    }
-  }, "No trend data yet"))), /*#__PURE__*/React.createElement("div", {
-    className: "card",
-    style: {
-      marginBottom: 16
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "card-title"
-  }, "\uD83D\uDCCB Session History"), sessions.length === 0 && /*#__PURE__*/React.createElement("div", {
-    className: "text-muted text-sm",
-    style: {
-      textAlign: 'center',
-      padding: '20px 0'
-    }
-  }, "No sessions recorded this week yet."), sessions.map((s, i) => /*#__PURE__*/React.createElement("div", {
-    key: i,
-    className: "wr-session-row",
-    style: {
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      padding: '12px 16px',
-      borderBottom: '1px solid var(--border)'
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      flex: 1
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "wr-session-name",
-    style: {
-      fontWeight: 600,
-      marginBottom: 4
-    }
-  }, s.name), /*#__PURE__*/React.createElement("div", {
-    className: "wr-session-date",
-    style: {
-      fontSize: '0.8rem',
-      color: 'var(--text3)'
-    }
-  }, s.date), /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: 'flex',
-      gap: 10,
-      marginTop: 8
-    }
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "badge badge-blue"
-  }, "\uD83D\uDC65 ", s.participation, "% participation"), /*#__PURE__*/React.createElement("span", {
-    className: `badge badge-${s.avgUnderstanding >= 70 ? 'green' : s.avgUnderstanding >= 40 ? 'yellow' : 'red'}`
-  }, "\uD83E\uDDE0 ", s.avgUnderstanding, "% understanding")), s.code && /*#__PURE__*/React.createElement("button", {
-    className: "btn btn-ghost btn-sm",
-    onClick: async e => {
-      const btn = e.currentTarget;
-      btn.disabled = true;
-      btn.innerText = '⏳ Sending…';
-      try {
-        const res = await apiFetch(`/api/session/${s.code}/resend-report`, {
-          method: 'POST'
-        });
-        if (res.success) {
-          add('\ud83d\udce7 Report queued for delivery!', 'success');
-        } else {
-          add(res.message || 'Resend failed', 'error');
-        }
-      } catch (err) {
-        add('Error: ' + err.message, 'error');
-      } finally {
-        btn.disabled = false;
-        btn.innerText = 'Resend \ud83d\udce7';
-      }
-    }
-  }, "Resend \ud83d\udce7"))))), /*#__PURE__*/React.createElement("div", {
-    className: "wr-export-bar"
-  }, /*#__PURE__*/React.createElement("button", {
-    className: "btn btn-primary",
-    onClick: exportPDF
-  }, "\uD83D\uDCC4 Download PDF Report"), /*#__PURE__*/React.createElement("button", {
-    className: "btn btn-success",
-    onClick: exportExcel
-  }, "\uD83D\uDCCA Export to Excel")));
-}
-
-// ═════════════════════════════════════════════════════════════════
-//  FEATURE 2 — STUDENT WEEKLY REPORT PAGE
-// ═════════════════════════════════════════════════════════════════
-function StudentWeeklyReport({
-  studentId,
-  studentName,
-  answeredCount,
-  correctCount,
-  timeSpent
-}) {
-  const {
-    add
-  } = useContext(AppCtx);
-
-  // Merge current session data into store
-  weeklyRecordStudent(studentId, correctCount, answeredCount, timeSpent);
-  const s = _weeklyStore.students[studentId] || {
-    sessionsAttended: 0,
-    tasksCompleted: 0,
-    scores: [],
-    timeSecs: 0
-  };
-  const scores = s.scores.length ? s.scores : [];
-  const avgScore = scores.length ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : 0;
-  const mins = Math.floor((s.timeSecs + timeSpent) / 60);
-  const accuracy = answeredCount > 0 ? Math.round(correctCount / answeredCount * 100) : avgScore;
-  const accColor = accuracy >= 70 ? 'var(--green)' : accuracy >= 40 ? 'var(--yellow)' : 'var(--red)';
-  const accLabel = accuracy >= 70 ? '🎉 Excellent!' : accuracy >= 40 ? '🙂 Keep going' : '📚 Needs practice';
-  const chartLabels = scores.length > 1 ? scores.map((_, i) => `Q${i + 1}`) : ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].slice(0, 7);
-  const chartData = scores.length > 1 ? scores : [45, 62, 55, 70, 65, 80, accuracy || 0];
-
-  // ── PDF Export ──────────────────────────────────────────────────
-  function exportStudentPDF() {
-    try {
-      const {
-        jsPDF
-      } = window.jspdf;
-      const doc = new jsPDF({
-        unit: 'mm',
-        format: 'a4'
-      });
-      let y = 20;
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(16);
-      doc.setTextColor(99, 102, 241);
-      doc.text('ClassMind — My Weekly Report', 14, y);
-      y += 8;
-      doc.setFontSize(10);
-      doc.setFont('helvetica', 'normal');
-      doc.setTextColor(100);
-      doc.text(`Student: ${studentName}   |   ${new Date().toLocaleDateString()}`, 14, y);
-      y += 10;
-      doc.setDrawColor(200);
-      doc.line(14, y, 196, y);
-      y += 6;
-      const rows = [['Sessions Attended', s.sessionsAttended], ['Tasks Completed', Math.max(s.tasksCompleted, answeredCount)], ['Avg Accuracy', `${accuracy}%`], ['Time Spent', `${mins} min`], ['Overall Score', `${avgScore || accuracy}%`]];
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(12);
-      doc.setTextColor(30);
-      doc.text('Performance Summary', 14, y);
-      y += 7;
-      doc.setFont('helvetica', 'normal');
-      doc.setFontSize(10);
-      rows.forEach(([l, v]) => {
-        doc.setTextColor(80);
-        doc.text(l, 14, y);
-        doc.setFont('helvetica', 'bold');
-        doc.setTextColor(99, 102, 241);
-        doc.text(String(v), 90, y);
-        doc.setFont('helvetica', 'normal');
-        y += 6;
-      });
-      doc.save(`ClassMind_MyWeeklyReport_${studentName.replace(/\s+/g, '_')}_${new Date().toISOString().slice(0, 10)}.pdf`);
-      add('✅ PDF downloaded', 'success');
-    } catch (e) {
-      add('PDF export failed', 'error');
-    }
-  }
-
-  // ── Excel Export ────────────────────────────────────────────────
-  function exportStudentExcel() {
-    try {
-      const wb = XLSX.utils.book_new();
-      const data = [['My ClassMind Weekly Report'], ['Student', studentName], ['Date', new Date().toLocaleDateString()], [], ['Metric', 'Value'], ['Sessions Attended', s.sessionsAttended], ['Tasks Completed', Math.max(s.tasksCompleted, answeredCount)], ['Avg Accuracy (%)', accuracy], ['Time Spent (min)', mins], ['Overall Score (%)', avgScore || accuracy], [], ['Question #', 'Score %'], ...scores.map((sc, i) => [`Q${i + 1}`, sc])];
-      XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(data), 'My Report');
-      XLSX.writeFile(wb, `ClassMind_MyWeekly_${studentName.replace(/\s+/g, '_')}.xlsx`);
-      add('✅ Excel downloaded', 'success');
-    } catch (e) {
-      add('Excel export failed', 'error');
-    }
-  }
-  return /*#__PURE__*/React.createElement("div", {
-    className: "page-sm"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "section-header",
-    style: {
-      marginBottom: 16
-    }
-  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
-    className: "section-title",
-    style: {
-      marginBottom: 2
-    }
-  }, "\uD83D\uDCC5 My Weekly Report"), /*#__PURE__*/React.createElement("div", {
-    className: "text-muted text-sm"
-  }, studentName))), /*#__PURE__*/React.createElement("div", {
-    className: "wr-stat-grid"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "wr-stat"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "wr-stat-value"
-  }, s.sessionsAttended || 1), /*#__PURE__*/React.createElement("div", {
-    className: "wr-stat-label"
-  }, "Sessions Attended")), /*#__PURE__*/React.createElement("div", {
-    className: "wr-stat"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "wr-stat-value"
-  }, Math.max(s.tasksCompleted, answeredCount)), /*#__PURE__*/React.createElement("div", {
-    className: "wr-stat-label"
-  }, "Tasks Completed")), /*#__PURE__*/React.createElement("div", {
-    className: "wr-stat"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "wr-stat-value",
-    style: {
-      WebkitTextFillColor: accColor,
-      background: 'none',
-      color: accColor
-    }
-  }, accuracy, "%"), /*#__PURE__*/React.createElement("div", {
-    className: "wr-stat-label"
-  }, "Accuracy")), /*#__PURE__*/React.createElement("div", {
-    className: "wr-stat"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "wr-stat-value"
-  }, mins), /*#__PURE__*/React.createElement("div", {
-    className: "wr-stat-label"
-  }, "Time (min)"))), /*#__PURE__*/React.createElement("div", {
-    className: "card",
-    style: {
-      marginBottom: 16
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: 'flex',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      marginBottom: 8
-    }
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "text-sm text-muted"
-  }, "Overall Performance"), /*#__PURE__*/React.createElement("span", {
-    style: {
-      fontWeight: 700,
-      fontSize: '0.875rem',
-      color: accColor
-    }
-  }, accLabel)), /*#__PURE__*/React.createElement("div", {
-    className: "progress-bar",
-    style: {
-      height: 12
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "progress-fill accent",
-    style: {
-      width: `${accuracy}%`
-    }
-  })), /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: 'grid',
-      gridTemplateColumns: '1fr 1fr 1fr',
-      gap: 10,
-      marginTop: 14
-    }
-  }, [{
-    label: 'Sessions',
-    pct: Math.min(100, (s.sessionsAttended || 1) * 20),
-    color: 'var(--accent)'
-  }, {
-    label: 'Tasks Done',
-    pct: Math.min(100, Math.max(s.tasksCompleted, answeredCount) * 10),
-    color: 'var(--green)'
-  }, {
-    label: 'Accuracy',
-    pct: accuracy,
-    color: accColor
-  }].map(item => /*#__PURE__*/React.createElement("div", {
-    key: item.label
-  }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      fontSize: '0.72rem',
-      color: 'var(--text2)',
-      marginBottom: 4,
-      display: 'flex',
-      justifyContent: 'space-between'
-    }
-  }, /*#__PURE__*/React.createElement("span", null, item.label), /*#__PURE__*/React.createElement("span", {
-    style: {
-      fontWeight: 700,
-      color: item.color
-    }
-  }, item.pct, "%")), /*#__PURE__*/React.createElement("div", {
-    className: "progress-bar",
-    style: {
-      height: 6
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "progress-fill",
-    style: {
-      width: `${item.pct}%`,
-      background: item.color
-    }
-  })))))), /*#__PURE__*/React.createElement("div", {
-    className: "card",
-    style: {
-      marginBottom: 16
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "card-title"
-  }, "\uD83D\uDCC8 Accuracy Over Time"), /*#__PURE__*/React.createElement("div", {
-    className: "wr-chart-wrap"
-  }, /*#__PURE__*/React.createElement(LineChart, {
-    labels: chartLabels,
-    data: chartData,
-    label: "Accuracy %"
-  }))), /*#__PURE__*/React.createElement("div", {
-    className: "card",
-    style: {
-      marginBottom: 16,
-      background: 'linear-gradient(135deg,rgba(99,102,241,0.08),rgba(139,92,246,0.06))'
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "card-title"
-  }, "\uD83D\uDCA1 Study Tips"), /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: 'flex',
-      flexDirection: 'column',
-      gap: 8,
-      fontSize: '0.875rem',
-      color: 'var(--text2)'
-    }
-  }, accuracy < 50 && /*#__PURE__*/React.createElement("div", null, "\uD83D\uDD34 Focus on reviewing incorrect answers \u2014 identify patterns in your mistakes."), accuracy >= 50 && accuracy < 75 && /*#__PURE__*/React.createElement("div", null, "\uD83D\uDFE1 Good progress! Try practicing with harder questions to push your understanding further."), accuracy >= 75 && /*#__PURE__*/React.createElement("div", null, "\uD83D\uDFE2 Excellent work! Challenge yourself with more complex problems to stay sharp."), /*#__PURE__*/React.createElement("div", null, "\uD83D\uDCD6 Consistency is key \u2014 attending sessions regularly improves retention by up to 40%."), /*#__PURE__*/React.createElement("div", null, "\u270B Don't hesitate to raise your hand when stuck \u2014 asking questions boosts learning!"))), /*#__PURE__*/React.createElement("div", {
-    className: "wr-export-bar"
-  }, /*#__PURE__*/React.createElement("button", {
-    className: "btn btn-primary",
-    onClick: exportStudentPDF
-  }, "\uD83D\uDCC4 Download PDF"), /*#__PURE__*/React.createElement("button", {
-    className: "btn btn-success",
-    onClick: exportStudentExcel
-  }, "\uD83D\uDCCA Export Excel")));
-}
-
-// ═════════════════════════════════════════════════════════════════
-//  STUDENT GUIDED TOUR
-// ═════════════════════════════════════════════════════════════════
-const STUDENT_TOUR_STEPS = [{
-  targetId: 'student-nav-task',
-  text: "Welcome to ClassMind! 👋 This is your **Task** view — where questions from your teacher appear. Wait here for the next task!"
-}, {
-  targetId: 'student-nav-chat',
-  text: "The **Chat** tab lets you send messages, ask doubts, and raise your hand ✋ when you need help. Your teacher sees everything!"
-}, {
-  targetId: 'student-hand-btn',
-  text: "Click **Raise Hand** anytime to silently signal your teacher. They'll get notified instantly — no interruptions needed!"
-}, {
-  targetId: 'student-session-badge',
-  text: "This is your **Session Code** — share it with classmates who want to join the same session."
-}, {
-  targetId: 'student-tour-task-hint',
-  fallbackId: 'student-nav-task',
-  text: "When a task arrives, read the question carefully, select or type your answer, then hit **Submit**. You may also request a hint!"
-}, {
-  targetId: 'student-nav-task',
-  text: "After submitting, you'll get **instant feedback** — whether you got it right, your score, and the correct answer if you were wrong. 🎯"
-}, {
-  targetId: 'student-nav-chat',
-  text: "Have a question about the lesson? Go to **Chat → My Doubts** and type it. Your teacher will answer and you'll get a notification!"
-}, {
-  targetId: 'student-hand-btn',
-  text: "You're all set! 🎉 Participate actively, answer tasks, and ask doubts freely. **Good luck and enjoy the class!**"
-}];
-function StudentGuidedTour({
-  ready
-}) {
-  const [active, setActive] = useState(false);
-  const [step, setStep] = useState(0);
-  const [rect, setRect] = useState(null);
-  const [tipPos, setTipPos] = useState({
-    top: 0,
-    left: 0
+function ProfileDrawer({ open, onClose, userName, role, updateUserProfile, navigate }) {
+  const [tab, setTab] = React.useState('overview');
+  const [editName, setEditName] = React.useState(userName || '');
+  const [editRole, setEditRole] = React.useState(role === 'both' ? 'teacher' : (role || 'teacher'));
+  const { add } = React.useContext(AppCtx);
+  
+  // Analytics State
+  const [tData, setTData] = React.useState({
+    sessions: [],
+    summary: { total_sessions: 0, total_students: 0, avg_understanding: 0, avg_participation: 0 },
+    understandingLog: [],
+    participationLog: []
   });
-  const [arrowStyle, setArrowStyle] = useState({});
-  useEffect(() => {
-    if (!ready) return;
-    // Tour triggers ONCE per session only (sessionStorage prevents re-run on refresh/navigation)
-    if (sessionStorage.getItem('cm_student_tour_done')) return;
-    const t = setTimeout(() => {
-      setStep(0);
-      setRect(null);
-      setActive(true);
-    }, 800);
-    return () => clearTimeout(t);
-  }, [ready]);
-  useEffect(() => {
-    if (!active) return;
-    const t = setTimeout(() => computePos(), 180);
-    window.addEventListener('resize', computePos);
-    return () => {
-      clearTimeout(t);
-      window.removeEventListener('resize', computePos);
-    };
-  }, [active, step]);
-  function computePos() {
-    const s = STUDENT_TOUR_STEPS[step];
-    if (!s) return;
-    let el = document.getElementById(s.targetId);
-    if (!el && s.fallbackId) el = document.getElementById(s.fallbackId);
-    if (!el) {
-      setRect(null);
-      return;
+  const [loading, setLoading] = React.useState(false);
+
+  React.useEffect(() => {
+    // Only fetch if drawer is open AND we are on the Teaching tab (or it's the first open)
+    if (open && (role === 'teacher' || role === 'both') && (tab === 'teacher' || tab === 'overview')) {
+      loadTeacherProfile();
     }
-    const r = el.getBoundingClientRect();
-    setRect({
-      top: r.top - 6,
-      left: r.left - 6,
-      width: r.width + 12,
-      height: r.height + 12
-    });
-    const vw = window.innerWidth;
-    const below = r.bottom + 16;
-    const above = r.top - 148;
-    const useBelow = below + 130 < window.innerHeight;
-    let tipLeft = r.left;
-    if (tipLeft + 285 > vw) tipLeft = vw - 295;
-    if (tipLeft < 10) tipLeft = 10;
-    setTipPos({
-      top: useBelow ? below : above,
-      left: tipLeft
-    });
-    setArrowStyle(useBelow ? {
-      top: -7,
-      left: Math.min(r.left - tipLeft + r.width / 2 - 6, 220)
-    } : {
-      bottom: -7,
-      left: Math.min(r.left - tipLeft + r.width / 2 - 6, 220)
-    });
-  }
-  function nextStep() {
-    if (step >= STUDENT_TOUR_STEPS.length - 1) {
-      finish();
-      return;
+  }, [open, role, tab]);
+
+  async function loadTeacherProfile() {
+    console.log('[Profile] loadTeacherProfile() called. Tab:', tab);
+    setLoading(true);
+    try {
+      const user = JSON.parse(localStorage.getItem('cm_user') || '{}');
+      const email = user.email;
+      
+      if (!email) {
+        console.error('[Profile] No email found in user profile');
+        setLoading(false);
+        return;
+      }
+
+      console.log('[Profile] Fetching sessions for:', email);
+      const data = await apiFetch(`/api/teacher/sessions?email=${encodeURIComponent(email)}`);
+      console.log('[Profile] Data received:', data);
+      
+      // Format logs for charts
+      const uLog = (data.sessions || []).slice(0, 7).reverse().map(s => ({ date: s.date, pct: s.avg_understanding }));
+      const pLog = (data.sessions || []).slice(0, 7).reverse().map(s => ({ date: s.date, pct: s.participation }));
+      
+      setTData({
+        sessions: data.sessions || [],
+        summary: data.summary || tData.summary,
+        understandingLog: uLog,
+        participationLog: pLog
+      });
+    } catch (e) {
+      console.error('[Profile] Fetch failed:', e);
+    } finally {
+      setLoading(false);
     }
-    setStep(s => s + 1);
-  }
-  function finish() {
-    setActive(false);
-    sessionStorage.setItem('cm_student_tour_done', '1');
-  }
-  function parseMarkdown(t) {
-    return t.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-  }
-  if (!active) return null;
-  const cur = STUDENT_TOUR_STEPS[step];
-  const isLast = step === STUDENT_TOUR_STEPS.length - 1;
-  return /*#__PURE__*/React.createElement(React.Fragment, null, rect && /*#__PURE__*/React.createElement("div", {
-    className: "tour-highlight",
-    style: {
-      top: rect.top,
-      left: rect.left,
-      width: rect.width,
-      height: rect.height
-    }
-  }), /*#__PURE__*/React.createElement("div", {
-    className: "tour-tooltip",
-    style: {
-      top: tipPos.top,
-      left: tipPos.left
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "tour-tooltip-arrow",
-    style: arrowStyle
-  }), /*#__PURE__*/React.createElement("div", {
-    className: "tour-progress"
-  }, STUDENT_TOUR_STEPS.map((_, i) => /*#__PURE__*/React.createElement("div", {
-    key: i,
-    className: `tour-dot ${i === step ? 'active' : i < step ? 'done' : ''}`
-  }))), /*#__PURE__*/React.createElement("div", {
-    className: "tour-step-num"
-  }, "Step ", step + 1, " of ", STUDENT_TOUR_STEPS.length), /*#__PURE__*/React.createElement("div", {
-    className: "tour-tooltip-text",
-    dangerouslySetInnerHTML: {
-      __html: parseMarkdown(cur.text)
-    }
-  }), /*#__PURE__*/React.createElement("div", {
-    className: "tour-actions"
-  }, /*#__PURE__*/React.createElement("button", {
-    className: "tour-btn-skip",
-    onClick: finish
-  }, "Skip"), /*#__PURE__*/React.createElement("button", {
-    className: "tour-btn-next",
-    onClick: nextStep
-  }, isLast ? '🎉 Let\'s go!' : 'Next →'))));
-}
-
-// ═════════════════════════════════════════════════════════════════
-//  PROFILE DRAWER COMPONENT
-// ═════════════════════════════════════════════════════════════════
-
-
-// ═════════════════════════════════════════════════════════════════
-// PROFILE DRAWER
-// ═════════════════════════════════════════════════════════════════
-
-
-// ── SHARED: Profile Drawer ──
-function ProfileDrawer({
-  open,
-  onClose,
-  userName,
-  role,
-  teacherData,
-  studentData,
-  updateUserProfile,
-  navigate
-}) {
-  const [tab, setTab] = useState('overview');
-  const [editName, setEditName] = useState(userName || '');
-  const [editRole, setEditRole] = useState(role === 'both' ? 'teacher' : role || 'teacher');
-  const {
-    add
-  } = useContext(AppCtx);
-
-  // Close on overlay click
-  function handleOverlayClick(e) {
-    if (e.target === e.currentTarget) onClose();
   }
 
-  // ── Computed teacher stats ──────────────────────────────────
-  const tStore = _weeklyStore.teacher;
-  const tSessions = tStore.sessionsCreated.slice(-7);
-  const tAvgUnder = tSessions.length ? Math.round(tSessions.reduce((s, r) => s + r.avgUnderstanding, 0) / tSessions.length) : 0;
-  const tAvgPart = tSessions.length ? Math.round(tSessions.reduce((s, r) => s + r.participation, 0) / tSessions.length) : 0;
-
-  // ── Computed student stats ──────────────────────────────────
-  const studentId = studentData?.studentId || '';
-  const sRaw = _weeklyStore.students[studentId] || {
-    sessionsAttended: 0,
-    tasksCompleted: 0,
-    scores: [],
-    timeSecs: 0
+  const handleOverlayClick = (e) => {
+    if (e.target.className === 'profile-overlay open') onClose();
   };
-  const sAnswered = studentData?.answeredCount ?? 0;
-  const sCorrect = studentData?.correctCount ?? 0;
-  const sTime = studentData?.timeSpent ?? 0;
-  const sAccuracy = sAnswered > 0 ? Math.round(sCorrect / sAnswered * 100) : sRaw.scores.length ? Math.round(sRaw.scores.reduce((a, b) => a + b, 0) / sRaw.scores.length) : 0;
-  const sMins = Math.floor((sRaw.timeSecs + sTime) / 60);
+
+  const tSessions = tData.sessions;
+  const tStats = tData.summary;
+  const tAvgUnder = tStats.avg_understanding;
+  const tAvgPart = tStats.avg_participation;
+
+  // Student stats (mocked/local for now as per legacy)
+  const studentId = JSON.parse(localStorage.getItem('cm_user') || '{}').id;
+  const sRaw = _weeklyStore.students[studentId] || { sessionsAttended: 0, tasksCompleted: 0, scores: [], timeSecs: 0 };
+  const sAnswered = 0; // Replace with live if available
+  const sAccuracy = sRaw.scores.length ? Math.round(sRaw.scores.reduce((a, b) => a + b, 0) / sRaw.scores.length) : 0;
+  const sMins = Math.floor(sRaw.timeSecs / 60);
 
   // ── PDF Export (teacher) ────────────────────────────────────
   function exportTeacherPDF() {
     try {
-      const {
-        jsPDF
-      } = window.jspdf;
-      const doc = new jsPDF({
-        unit: 'mm',
-        format: 'a4'
-      });
-      const W = 210,
-        m = 14;
-      let y = 20;
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+      const W = 210, m = 14; let y = 20;
+
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(18);
       doc.setTextColor(99, 102, 241);
@@ -16007,53 +15251,57 @@ function ProfileDrawer({
       doc.setDrawColor(200);
       doc.line(m, y, W - m, y);
       y += 6;
-      const stats = [['Sessions This Week', tSessions.length], ['Tasks Assigned', tStore.tasksAssigned + (teacherData?.tasks?.length || 0)], ['Total Students', Math.max(tStore.studentCount, teacherData?.totalStudents || 0)], ['Avg Understanding', `${tAvgUnder}%`], ['Avg Participation', `${tAvgPart}%`]];
+
+      const stats = [
+        ['Total Sessions', tStats.total_sessions],
+        ['Total Students', tStats.total_students],
+        ['Avg Understanding', `${tAvgUnder}%`],
+        ['Avg Participation', `${tAvgPart}%`]
+      ];
+
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(13);
       doc.setTextColor(30, 30, 30);
-      doc.text('Summary', m, y);
+      doc.text('Summary Metrics', m, y);
       y += 7;
+
       doc.setFont('helvetica', 'normal');
       doc.setFontSize(10);
       stats.forEach(([label, val]) => {
         doc.setTextColor(80, 80, 80);
         doc.text(label, m, y);
         doc.setFont('helvetica', 'bold');
-        doc.setTextColor(99, 102, 241);
+        doc.setTextColor(16, 185, 129);
         doc.text(String(val), m + 70, y);
-        doc.setFont('helvetica', 'normal');
-        doc.setTextColor(80, 80, 80);
         y += 6;
       });
+
       y += 4;
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(13);
-      doc.setTextColor(30, 30, 30);
       doc.text('Session Log', m, y);
       y += 7;
       doc.setFontSize(9);
-      doc.setFont('helvetica', 'bold');
       doc.text('Session', m, y);
       doc.text('Date', m + 60, y);
-      doc.text('Participation', m + 90, y);
-      doc.text('Understanding', m + 125, y);
+      doc.text('Part %', m + 90, y);
+      doc.text('Under %', m + 125, y);
       y += 5;
+
       doc.setFont('helvetica', 'normal');
       tSessions.forEach(s => {
-        if (y > 270) {
-          doc.addPage();
-          y = 20;
-        }
+        if (y > 270) { doc.addPage(); y = 20; }
         doc.text(s.name.slice(0, 28), m, y);
         doc.text(s.date, m + 60, y);
         doc.text(`${s.participation}%`, m + 90, y);
-        doc.text(`${s.avgUnderstanding}%`, m + 125, y);
+        doc.text(`${s.avg_understanding}%`, m + 125, y);
         y += 5;
       });
-      doc.save(`ClassMind_Weekly_${userName.replace(/\s+/g, '_')}_${new Date().toISOString().slice(0, 10)}.pdf`);
+
+      doc.save(`ClassMind_Weekly_${userName.replace(/\s+/g, '_')}_${new Date().toISOString().slice(0,10)}.pdf`);
       add('✅ PDF report downloaded', 'success');
     } catch (e) {
-      add('PDF generation failed: ' + e.message, 'error');
+      add('PDF generation failed', 'error');
     }
   }
 
@@ -16061,622 +15309,164 @@ function ProfileDrawer({
   function exportTeacherExcel() {
     try {
       const wb = XLSX.utils.book_new();
-      const summaryData = [['ClassMind Weekly Report'], ['Teacher', userName], ['Generated', new Date().toLocaleDateString()], [], ['Metric', 'Value'], ['Sessions This Week', tSessions.length], ['Tasks Assigned', tStore.tasksAssigned + (teacherData?.tasks?.length || 0)], ['Total Students', Math.max(tStore.studentCount, teacherData?.totalStudents || 0)], ['Avg Understanding (%)', tAvgUnder], ['Avg Participation (%)', tAvgPart]];
+      const summaryData = [
+        ['ClassMind Teacher Analytics Report'],
+        ['Teacher', userName],
+        ['Generated', new Date().toLocaleDateString()],
+        [],
+        ['Metric', 'Value'],
+        ['Total Sessions', tStats.total_sessions],
+        ['Total Students', tStats.total_students],
+        ['Avg Understanding (%)', tAvgUnder],
+        ['Avg Participation (%)', tAvgPart]
+      ];
       XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(summaryData), 'Summary');
-      const sesData = [['Session', 'Date', 'Participation %', 'Avg Understanding %']];
-      tSessions.forEach(s => sesData.push([s.name, s.date, s.participation, s.avgUnderstanding]));
+      const sesData = [['Session Name', 'Date', 'Students', 'Participation %', 'Avg Understanding %']];
+      tSessions.forEach(s => sesData.push([s.name, s.date, s.students_count, s.participation, s.avg_understanding]));
       XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(sesData), 'Sessions');
-      XLSX.writeFile(wb, `ClassMind_Weekly_${userName.replace(/\s+/g, '_')}_${new Date().toISOString().slice(0, 10)}.xlsx`);
+      XLSX.writeFile(wb, `ClassMind_Weekly_${userName.replace(/\s+/g, '_')}_${new Date().toISOString().slice(0,10)}.xlsx`);
       add('✅ Excel report downloaded', 'success');
     } catch (e) {
-      add('Excel export failed: ' + e.message, 'error');
+      add('Excel export failed', 'error');
     }
   }
 
-  // ── PDF Export (student) ────────────────────────────────────
   function exportStudentPDF() {
     try {
-      const {
-        jsPDF
-      } = window.jspdf;
-      const doc = new jsPDF({
-        unit: 'mm',
-        format: 'a4'
-      });
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF({ unit: 'mm', format: 'a4' });
       let y = 20;
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(16);
+      doc.setFont('helvetica', 'bold'); doc.setFontSize(16);
       doc.setTextColor(99, 102, 241);
-      doc.text('ClassMind — My Weekly Report', 14, y);
-      y += 8;
-      doc.setFontSize(10);
-      doc.setFont('helvetica', 'normal');
-      doc.setTextColor(100);
-      doc.text(`Student: ${userName}   |   ${new Date().toLocaleDateString()}`, 14, y);
+      doc.text('ClassMind — My Learning Report', 14, y);
+      y += 15;
+      doc.setFontSize(10); doc.setTextColor(80);
+      doc.text(`Student: ${userName}`, 14, y);
       y += 10;
-      doc.setDrawColor(200);
-      doc.line(14, y, 196, y);
-      y += 6;
-      const rows = [['Sessions Attended', sRaw.sessionsAttended || 1], ['Tasks Completed', Math.max(sRaw.tasksCompleted, sAnswered)], ['Avg Accuracy', `${sAccuracy}%`], ['Time Spent', `${sMins} min`]];
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(12);
-      doc.setTextColor(30);
-      doc.text('Performance Summary', 14, y);
-      y += 7;
-      doc.setFont('helvetica', 'normal');
-      doc.setFontSize(10);
-      rows.forEach(([l, v]) => {
-        doc.setTextColor(80);
-        doc.text(l, 14, y);
-        doc.setFont('helvetica', 'bold');
-        doc.setTextColor(99, 102, 241);
-        doc.text(String(v), 90, y);
-        doc.setFont('helvetica', 'normal');
-        y += 6;
-      });
-      doc.save(`ClassMind_MyWeeklyReport_${userName.replace(/\s+/g, '_')}_${new Date().toISOString().slice(0, 10)}.pdf`);
+      doc.text(`Sessions Joined: ${sRaw.sessionsAttended}`, 14, y);
+      doc.text(`Avg Accuracy: ${sAccuracy}%`, 14, y+6);
+      doc.save(`ClassMind_Report_${userName.replace(/\s+/g, '_')}.pdf`);
       add('✅ PDF downloaded', 'success');
-    } catch (e) {
-      add('PDF export failed', 'error');
-    }
+    } catch (e) { add('PDF failed', 'error'); }
   }
 
-  // ── Trend mini-bars ─────────────────────────────────────────
-  function TrendBars({
-    log
-  }) {
-    if (!log || log.length === 0) return /*#__PURE__*/React.createElement("div", {
-      className: "prof-empty",
-      style: {
-        padding: '12px 0'
-      }
-    }, "No trend data yet");
-    const max = Math.max(...log.map(l => l.pct), 1);
-    return /*#__PURE__*/React.createElement("div", {
-      className: "prof-trend-row"
-    }, log.slice(-7).map((l, i) => /*#__PURE__*/React.createElement("div", {
-      key: i,
-      title: `${l.date}: ${l.pct}%`,
-      className: "prof-trend-bar",
-      style: {
-        height: `${Math.max(4, l.pct / max * 100)}%`
-      }
-    })));
-  }
-
-  // ── Initials avatar ─────────────────────────────────────────
   const initials = (userName || '?').split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
   const isTeacher = role === 'teacher';
   const isStudent = role === 'student';
   const isBoth = role === 'both';
-  return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
-    className: `profile-overlay${open ? ' open' : ''}`,
-    onClick: handleOverlayClick
-  }), /*#__PURE__*/React.createElement("div", {
-    className: `profile-drawer${open ? ' open' : ''}`,
-    role: "dialog",
-    "aria-label": "Profile"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "profile-drawer-header",
-    style: {
-      position: 'relative'
-    }
-  }, /*#__PURE__*/React.createElement("button", {
-    className: "profile-drawer-close",
-    onClick: onClose
-  }, "\u2715"), /*#__PURE__*/React.createElement("div", {
-    className: "profile-avatar"
-  }, initials), /*#__PURE__*/React.createElement("div", {
-    className: "profile-name"
-  }, userName), /*#__PURE__*/React.createElement("div", {
-    className: "profile-role-badge"
-  }, isTeacher ? '👨‍🏫 Teacher' : isStudent ? '👨‍🎓 Student' : '👤 User'), /*#__PURE__*/React.createElement("div", {
-    className: "profile-tabs"
-  }, /*#__PURE__*/React.createElement("button", {
-    className: `profile-tab${tab === 'overview' ? ' active' : ''}`,
-    onClick: () => setTab('overview')
-  }, "\uD83D\uDCCA Overview"), (isTeacher || isBoth) && /*#__PURE__*/React.createElement("button", {
-    className: `profile-tab${tab === 'teacher' ? ' active' : ''}`,
-    onClick: () => setTab('teacher')
-  }, "\uD83D\uDCC5 Teaching"), (isStudent || isBoth) && /*#__PURE__*/React.createElement("button", {
-    className: `profile-tab${tab === 'student' ? ' active' : ''}`,
-    onClick: () => setTab('student')
-  }, "\uD83C\uDF93 Learning"), /*#__PURE__*/React.createElement("button", {
-    className: `profile-tab${tab === 'settings' ? ' active' : ''}`,
-    onClick: () => setTab('settings')
-  }, "\u2699\uFE0F Settings"))), /*#__PURE__*/React.createElement("div", {
-    className: "profile-drawer-body"
-  }, tab === 'overview' && /*#__PURE__*/React.createElement("div", null, (isTeacher || isBoth) && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
-    className: "prof-section-title"
-  }, "\uD83D\uDCC5 Teacher \u2014 This Week"), /*#__PURE__*/React.createElement("div", {
-    className: "prof-stat-grid"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "prof-stat"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "prof-stat-value"
-  }, tSessions.length), /*#__PURE__*/React.createElement("div", {
-    className: "prof-stat-label"
-  }, "Sessions Created")), /*#__PURE__*/React.createElement("div", {
-    className: "prof-stat"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "prof-stat-value"
-  }, tStore.tasksAssigned + (teacherData?.tasks?.length || 0)), /*#__PURE__*/React.createElement("div", {
-    className: "prof-stat-label"
-  }, "Tasks Assigned")), /*#__PURE__*/React.createElement("div", {
-    className: "prof-stat"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "prof-stat-value"
-  }, tAvgPart, "%"), /*#__PURE__*/React.createElement("div", {
-    className: "prof-stat-label"
-  }, "Avg Participation")), /*#__PURE__*/React.createElement("div", {
-    className: "prof-stat"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "prof-stat-value"
-  }, tAvgUnder, "%"), /*#__PURE__*/React.createElement("div", {
-    className: "prof-stat-label"
-  }, "Avg Understanding"))), /*#__PURE__*/React.createElement("div", {
-    className: "card-sm",
-    style: {
-      marginBottom: 10
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      fontSize: '0.78rem',
-      color: 'var(--text3)',
-      marginBottom: 6,
-      fontWeight: 700
-    }
-  }, "PARTICIPATION TREND (7 DAYS)"), /*#__PURE__*/React.createElement(TrendBars, {
-    log: tStore.participationLog.slice(-7)
-  })), /*#__PURE__*/React.createElement("div", {
-    className: "card-sm",
-    style: {
-      marginBottom: 14
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      fontSize: '0.78rem',
-      color: 'var(--text3)',
-      marginBottom: 6,
-      fontWeight: 700
-    }
-  }, "UNDERSTANDING TREND (7 DAYS)"), /*#__PURE__*/React.createElement(TrendBars, {
-    log: tStore.understandingLog.slice(-7)
-  }))), (isStudent || isBoth) && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
-    className: "prof-section-title"
-  }, "\uD83C\uDF93 Student \u2014 This Session"), /*#__PURE__*/React.createElement("div", {
-    className: "prof-stat-grid"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "prof-stat"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "prof-stat-value"
-  }, sRaw.sessionsAttended || 1), /*#__PURE__*/React.createElement("div", {
-    className: "prof-stat-label"
-  }, "Sessions Attended")), /*#__PURE__*/React.createElement("div", {
-    className: "prof-stat"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "prof-stat-value"
-  }, Math.max(sRaw.tasksCompleted, sAnswered)), /*#__PURE__*/React.createElement("div", {
-    className: "prof-stat-label"
-  }, "Tasks Completed")), /*#__PURE__*/React.createElement("div", {
-    className: "prof-stat"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "prof-stat-value",
-    style: {
-      WebkitTextFillColor: sAccuracy >= 70 ? 'var(--green)' : sAccuracy >= 40 ? 'var(--yellow)' : 'var(--red)',
-      background: 'none',
-      color: sAccuracy >= 70 ? 'var(--green)' : sAccuracy >= 40 ? 'var(--yellow)' : 'var(--red)'
-    }
-  }, sAccuracy, "%"), /*#__PURE__*/React.createElement("div", {
-    className: "prof-stat-label"
-  }, "Accuracy")), /*#__PURE__*/React.createElement("div", {
-    className: "prof-stat"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "prof-stat-value"
-  }, sMins), /*#__PURE__*/React.createElement("div", {
-    className: "prof-stat-label"
-  }, "Time (min)"))), /*#__PURE__*/React.createElement("div", {
-    className: "card-sm",
-    style: {
-      marginBottom: 14
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: 'flex',
-      justifyContent: 'space-between',
-      marginBottom: 8,
-      fontSize: '0.82rem'
-    }
-  }, /*#__PURE__*/React.createElement("span", {
-    style: {
-      color: 'var(--text2)'
-    }
-  }, "Overall Performance"), /*#__PURE__*/React.createElement("span", {
-    style: {
-      fontWeight: 700,
-      color: sAccuracy >= 70 ? 'var(--green)' : sAccuracy >= 40 ? 'var(--yellow)' : 'var(--red)'
-    }
-  }, sAccuracy >= 70 ? '🎉 Excellent!' : sAccuracy >= 40 ? '🙂 Keep going' : '📚 Needs Practice')), /*#__PURE__*/React.createElement("div", {
-    className: "progress-bar",
-    style: {
-      height: 10
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "progress-fill accent",
-    style: {
-      width: `${sAccuracy}%`
-    }
-  }))), /*#__PURE__*/React.createElement("div", {
-    className: "card-sm",
-    style: {
-      background: 'linear-gradient(135deg,rgba(99,102,241,0.08),rgba(139,92,246,0.06))'
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      fontWeight: 700,
-      marginBottom: 8,
-      fontSize: '0.85rem'
-    }
-  }, "\uD83D\uDCA1 Study Tips"), /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: 'flex',
-      flexDirection: 'column',
-      gap: 6,
-      fontSize: '0.8rem',
-      color: 'var(--text2)'
-    }
-  }, sAccuracy < 50 && /*#__PURE__*/React.createElement("div", null, "\uD83D\uDD34 Review incorrect answers \u2014 identify patterns."), sAccuracy >= 50 && sAccuracy < 75 && /*#__PURE__*/React.createElement("div", null, "\uD83D\uDFE1 Try harder questions to push your understanding."), sAccuracy >= 75 && /*#__PURE__*/React.createElement("div", null, "\uD83D\uDFE2 Excellent! Challenge yourself with complex problems."), /*#__PURE__*/React.createElement("div", null, "\uD83D\uDCD6 Regular sessions improve retention by up to 40%.")))), !isTeacher && !isStudent && !isBoth && /*#__PURE__*/React.createElement("div", {
-    className: "prof-empty"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "prof-empty-icon"
-  }, "\uD83D\uDC64"), /*#__PURE__*/React.createElement("div", null, "No profile data available yet."))), tab === 'teacher' && (isTeacher || isBoth) && /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
-    className: "prof-section-title"
-  }, "\uD83D\uDCCB Sessions Created"), tSessions.length === 0 ? /*#__PURE__*/React.createElement("div", {
-    className: "prof-empty"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "prof-empty-icon"
-  }, "\uD83D\uDCED"), /*#__PURE__*/React.createElement("div", null, "No sessions recorded this week yet."), /*#__PURE__*/React.createElement("div", {
-    style: {
-      marginTop: 6,
-      fontSize: '0.8rem'
-    }
-  }, "Start a session to see your activity here.")) : tSessions.map((s, i) => {
-    const partColor = s.participation >= 70 ? 'green' : s.participation >= 40 ? 'yellow' : '';
-    const underColor = s.avgUnderstanding >= 70 ? 'green' : s.avgUnderstanding >= 40 ? 'yellow' : '';
-    return /*#__PURE__*/React.createElement("div", {
-      key: i,
-      className: "prof-session-row"
-    }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
-      className: "prof-session-name"
-    }, s.name), /*#__PURE__*/React.createElement("div", {
-      className: "prof-session-date"
-    }, s.date, " \xB7 ", Math.max(tStore.studentCount, teacherData?.totalStudents || 0), " students"), /*#__PURE__*/React.createElement("div", {
-      className: "prof-session-stats"
-    }, /*#__PURE__*/React.createElement("span", {
-      className: `prof-session-stat ${partColor}`
-    }, "\uD83D\uDC65 ", s.participation, "% participated"), /*#__PURE__*/React.createElement("span", {
-      className: `prof-session-stat ${underColor}`
-    }, "\uD83E\uDDE0 ", s.avgUnderstanding, "% understood"), tStore.tasksAssigned > 0 && /*#__PURE__*/React.createElement("span", {
-      className: "prof-session-stat"
-    }, "\uD83D\uDCDD ", Math.ceil(tStore.tasksAssigned / Math.max(tSessions.length, 1)), " tasks"))));
-  }), tSessions.length > 0 && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
-    className: "prof-section-title",
-    style: {
-      marginTop: 18
-    }
-  }, "\uD83D\uDCC8 Trends"), /*#__PURE__*/React.createElement("div", {
-    className: "card-sm",
-    style: {
-      marginBottom: 10
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: 'flex',
-      justifyContent: 'space-between',
-      marginBottom: 6,
-      fontSize: '0.8rem'
-    }
-  }, /*#__PURE__*/React.createElement("span", {
-    style: {
-      color: 'var(--text3)',
-      fontWeight: 700,
-      fontSize: '0.72rem',
-      textTransform: 'uppercase',
-      letterSpacing: '0.06em'
-    }
-  }, "Participation (7 days)"), /*#__PURE__*/React.createElement("span", {
-    style: {
-      fontWeight: 700,
-      color: 'var(--green)'
-    }
-  }, tAvgPart, "% avg")), /*#__PURE__*/React.createElement("div", {
-    style: {
-      height: 120
-    }
-  }, /*#__PURE__*/React.createElement(BarChart, {
-    labels: tStore.participationLog.slice(-7).map(l => l.date),
-    data: tStore.participationLog.slice(-7).map(l => l.pct),
-    label: "Participation %",
-    color: "#22c55e"
-  }))), /*#__PURE__*/React.createElement("div", {
-    className: "card-sm"
-  }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: 'flex',
-      justifyContent: 'space-between',
-      marginBottom: 6,
-      fontSize: '0.8rem'
-    }
-  }, /*#__PURE__*/React.createElement("span", {
-    style: {
-      color: 'var(--text3)',
-      fontWeight: 700,
-      fontSize: '0.72rem',
-      textTransform: 'uppercase',
-      letterSpacing: '0.06em'
-    }
-  }, "Understanding (7 days)"), /*#__PURE__*/React.createElement("span", {
-    style: {
-      fontWeight: 700,
-      color: 'var(--accent)'
-    }
-  }, tAvgUnder, "% avg")), /*#__PURE__*/React.createElement("div", {
-    style: {
-      height: 120
-    }
-  }, /*#__PURE__*/React.createElement(LineChart, {
-    labels: tStore.understandingLog.slice(-7).map(l => l.date),
-    data: tStore.understandingLog.slice(-7).map(l => l.pct),
-    label: "Understanding %"
-  }))))), tab === 'student' && (isStudent || isBoth) && /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
-    className: "prof-section-title"
-  }, "\uD83D\uDCDA Sessions Attended"), (sRaw.sessionsAttended || 0) === 0 ? /*#__PURE__*/React.createElement("div", {
-    className: "prof-empty"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "prof-empty-icon"
-  }, "\uD83D\uDCED"), /*#__PURE__*/React.createElement("div", null, "No session data yet."), /*#__PURE__*/React.createElement("div", {
-    style: {
-      marginTop: 6,
-      fontSize: '0.8rem'
-    }
-  }, "Join a session to track your progress.")) : /*#__PURE__*/React.createElement("div", {
-    className: "prof-session-row",
-    style: {
-      marginBottom: 14
-    }
-  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
-    className: "prof-session-name"
-  }, "Current Session"), /*#__PURE__*/React.createElement("div", {
-    className: "prof-session-date"
-  }, "Ongoing \xB7 ", studentData?.studentName || userName), /*#__PURE__*/React.createElement("div", {
-    className: "prof-session-stats"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: `prof-session-stat ${sAccuracy >= 70 ? 'green' : sAccuracy >= 40 ? 'yellow' : ''}`
-  }, "\uD83C\uDFAF ", sAccuracy, "% accuracy"), /*#__PURE__*/React.createElement("span", {
-    className: "prof-session-stat"
-  }, "\uD83D\uDCDD ", Math.max(sRaw.tasksCompleted, sAnswered), " tasks"), /*#__PURE__*/React.createElement("span", {
-    className: "prof-session-stat"
-  }, "\u23F1 ", sMins, " min")))), /*#__PURE__*/React.createElement("div", {
-    className: "prof-section-title"
-  }, "\uD83D\uDCCA Performance Breakdown"), /*#__PURE__*/React.createElement("div", {
-    className: "card-sm",
-    style: {
-      marginBottom: 10
-    }
-  }, [{
-    label: 'Accuracy',
-    pct: sAccuracy,
-    color: sAccuracy >= 70 ? 'var(--green)' : sAccuracy >= 40 ? 'var(--yellow)' : 'var(--red)'
-  }, {
-    label: 'Tasks Done',
-    pct: Math.min(100, Math.max(sRaw.tasksCompleted, sAnswered) * 10),
-    color: 'var(--accent)'
-  }, {
-    label: 'Sessions',
-    pct: Math.min(100, (sRaw.sessionsAttended || 1) * 20),
-    color: 'var(--blue)'
-  }].map(item => /*#__PURE__*/React.createElement("div", {
-    key: item.label,
-    style: {
-      marginBottom: 10
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: 'flex',
-      justifyContent: 'space-between',
-      fontSize: '0.8rem',
-      marginBottom: 4
-    }
-  }, /*#__PURE__*/React.createElement("span", {
-    style: {
-      color: 'var(--text2)'
-    }
-  }, item.label), /*#__PURE__*/React.createElement("span", {
-    style: {
-      fontWeight: 700,
-      color: item.color
-    }
-  }, item.pct, "%")), /*#__PURE__*/React.createElement("div", {
-    className: "progress-bar",
-    style: {
-      height: 7
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "progress-fill",
-    style: {
-      width: `${item.pct}%`,
-      background: item.color
-    }
-  }))))), sRaw.scores && sRaw.scores.length > 1 && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
-    className: "prof-section-title"
-  }, "\uD83D\uDCC8 Score History"), /*#__PURE__*/React.createElement("div", {
-    className: "card-sm"
-  }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      height: 120
-    }
-  }, /*#__PURE__*/React.createElement(LineChart, {
-    labels: sRaw.scores.map((_, i) => `Q${i + 1}`),
-    data: sRaw.scores,
-    label: "Accuracy %"
-  }))))), tab === 'settings' && /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
-    className: "prof-settings-section"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "prof-settings-label"
-  }, "\u270F\uFE0F Display Name"), /*#__PURE__*/React.createElement("input", {
-    className: "prof-settings-input",
-    value: editName,
-    onChange: e => setEditName(e.target.value),
-    placeholder: "Your name"
-  }), /*#__PURE__*/React.createElement("button", {
-    className: "btn btn-primary btn-sm",
-    style: {
-      width: '100%'
-    },
-    onClick: () => {
-      const n = editName.trim();
-      if (!n) {
-        add('Name cannot be empty', 'error');
-        return;
-      }
-      if (updateUserProfile) {
-        try {
-          const stored = JSON.parse(localStorage.getItem('cm_user') || '{}');
-          const updated = {
-            ...stored,
-            name: n
-          };
-          localStorage.setItem('cm_user', JSON.stringify(updated));
-          updateUserProfile(updated);
-        } catch {}
-      }
-      add('✅ Name updated!', 'success');
-    }
-  }, "Save Name")), /*#__PURE__*/React.createElement("div", {
-    className: "prof-settings-section"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "prof-settings-label"
-  }, "\uD83D\uDD04 Primary Role"), /*#__PURE__*/React.createElement("div", {
-    className: "prof-role-switch"
-  }, [{
-    val: 'teacher',
-    label: '👨‍🏫 Teacher'
-  }, {
-    val: 'student',
-    label: '👨‍🎓 Student'
-  }].map(r => /*#__PURE__*/React.createElement("button", {
-    key: r.val,
-    className: `prof-role-switch-btn${editRole === r.val ? ' active' : ''}`,
-    onClick: () => {
-      setEditRole(r.val);
-      if (updateUserProfile) {
-        try {
-          const stored = JSON.parse(localStorage.getItem('cm_user') || '{}');
-          const updated = {
-            ...stored,
-            role: r.val,
-            roleHistory: stored.roleHistory?.includes(r.val) ? stored.roleHistory : [...(stored.roleHistory || []), r.val]
-          };
-          localStorage.setItem('cm_user', JSON.stringify(updated));
-          updateUserProfile(updated);
-        } catch {}
-      }
-      add(`Role switched to ${r.val}!`, 'success');
-    }
-  }, r.label))), /*#__PURE__*/React.createElement("div", {
-    style: {
-      fontSize: '0.75rem',
-      color: 'var(--text3)',
-      marginTop: 4
-    }
-  }, "Switching role affects the profile icon and default view.")), /*#__PURE__*/React.createElement("div", {
-    className: "prof-settings-section"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "prof-settings-label"
-  }, "\uD83C\uDD94 Account Info"), /*#__PURE__*/React.createElement("div", {
-    className: "card-sm",
-    style: {
-      fontSize: '0.8rem',
-      color: 'var(--text2)'
-    }
-  }, (() => {
-    try {
-      const p = JSON.parse(localStorage.getItem('cm_user') || '{}');
-      return /*#__PURE__*/React.createElement("div", {
-        style: {
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 6
-        }
-      }, /*#__PURE__*/React.createElement("div", {
-        style: {
-          display: 'flex',
-          justifyContent: 'space-between'
-        }
-      }, /*#__PURE__*/React.createElement("span", null, "Member since"), /*#__PURE__*/React.createElement("span", {
-        style: {
-          fontWeight: 600,
-          color: 'var(--text)'
-        }
-      }, p.createdAt ? new Date(p.createdAt).toLocaleDateString() : 'Today')), /*#__PURE__*/React.createElement("div", {
-        style: {
-          display: 'flex',
-          justifyContent: 'space-between'
-        }
-      }, /*#__PURE__*/React.createElement("span", null, "Profile ID"), /*#__PURE__*/React.createElement("span", {
-        style: {
-          fontFamily: 'monospace',
-          fontSize: '0.72rem',
-          color: 'var(--text3)'
-        }
-      }, (p.id || '').slice(0, 16))));
-    } catch {
-      return null;
-    }
-  })())), /*#__PURE__*/React.createElement("button", {
-    className: "prof-logout-btn",
-    onClick: () => {
-      try {
-        localStorage.removeItem('cm_user');
-      } catch {}
-      if (updateUserProfile) updateUserProfile(null);
-      onClose();
-      add('👋 Logged out successfully', 'success');
-      if (navigate) navigate('landing', {});
-    }
-  }, "\uD83D\uDEAA Logout & Clear Profile"), /*#__PURE__*/React.createElement("div", {
-    style: {
-      textAlign: 'center',
-      fontSize: '0.72rem',
-      color: 'var(--text3)',
-      marginTop: 8
-    }
-  }, "This will clear your profile from this device."))), tab !== 'overview' && tab !== 'settings' && /*#__PURE__*/React.createElement("div", {
-    className: "prof-export-bar"
-  }, tab === 'teacher' && (isTeacher || isBoth) && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("button", {
-    className: "btn btn-primary btn-sm",
-    style: {
-      flex: 1
-    },
-    onClick: exportTeacherPDF
-  }, "\uD83D\uDCC4 Download PDF"), /*#__PURE__*/React.createElement("button", {
-    className: "btn btn-success btn-sm",
-    style: {
-      flex: 1
-    },
-    onClick: exportTeacherExcel
-  }, "\uD83D\uDCCA Export Excel")), tab === 'student' && (isStudent || isBoth) && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("button", {
-    className: "btn btn-primary btn-sm",
-    style: {
-      flex: 1
-    },
-    onClick: exportStudentPDF
-  }, "\uD83D\uDCC4 Download PDF")))));
+
+  return React.createElement(React.Fragment, null,
+    React.createElement("div", { className: `profile-overlay${open ? ' open' : ''}`, onClick: handleOverlayClick }),
+    React.createElement("div", { className: `profile-drawer${open ? ' open' : ''}` },
+      React.createElement("div", { className: "profile-drawer-header" },
+        React.createElement("button", { className: "profile-drawer-close", onClick: onClose }, "✕"),
+        React.createElement("div", { className: "profile-avatar" }, initials),
+        React.createElement("div", { className: "profile-name" }, userName),
+        React.createElement("div", { className: "profile-role-badge" }, isTeacher ? '👨‍🏫 Teacher' : isStudent ? '👨‍🎓 Student' : '👤 User'),
+        React.createElement("div", { className: "profile-tabs" },
+          React.createElement("button", { className: `profile-tab${tab === 'overview' ? ' active' : ''}`, onClick: () => setTab('overview') }, "📊 Overview"),
+          (isTeacher || isBoth) && React.createElement("button", { className: `profile-tab${tab === 'teacher' ? ' active' : ''}`, onClick: () => setTab('teacher') }, "📅 Teaching"),
+          (isStudent || isBoth) && React.createElement("button", { className: `profile-tab${tab === 'student' ? ' active' : ''}`, onClick: () => setTab('student') }, "🎓 Learning"),
+          React.createElement("button", { className: `profile-tab${tab === 'settings' ? ' active' : ''}`, onClick: () => setTab('settings') }, "⚙️ Settings")
+        )
+      ),
+      React.createElement("div", { className: "profile-drawer-body" },
+        tab === 'overview' && React.createElement("div", null,
+          (isTeacher || isBoth) && React.createElement(React.Fragment, null,
+            React.createElement("div", { className: "prof-section-title" }, "👨‍🏫 Teacher Analytics"),
+            React.createElement("div", { className: "prof-stat-grid" },
+              React.createElement("div", { className: "prof-stat" }, React.createElement("div", { className: "prof-stat-value" }, tStats.total_sessions), React.createElement("div", { className: "prof-stat-label" }, "Sessions")),
+              React.createElement("div", { className: "prof-stat" }, React.createElement("div", { className: "prof-stat-value" }, tStats.total_students), React.createElement("div", { className: "prof-stat-label" }, "Students")),
+              React.createElement("div", { className: "prof-stat" }, React.createElement("div", { className: "prof-stat-value" }, tAvgPart, "%"), React.createElement("div", { className: "prof-stat-label" }, "Participation")),
+              React.createElement("div", { className: "prof-stat" }, React.createElement("div", { className: "prof-stat-value" }, tAvgUnder, "%"), React.createElement("div", { className: "prof-stat-label" }, "Understanding"))
+            ),
+            React.createElement("div", { className: "card-sm", style: { marginBottom: 10 } },
+              React.createElement("div", { style: { fontSize: '0.78rem', color: 'var(--text3)', marginBottom: 6, fontWeight: 700 } }, "UNDERSTANDING TREND"),
+              React.createElement(TrendBars, { log: tData.understandingLog })
+            ),
+            React.createElement("div", { className: "card-sm", style: { marginBottom: 14 } },
+              React.createElement("div", { style: { fontSize: '0.78rem', color: 'var(--text3)', marginBottom: 6, fontWeight: 700 } }, "PARTICIPATION TREND"),
+              React.createElement(TrendBars, { log: tData.participationLog })
+            )
+          ),
+          (isStudent || isBoth) && React.createElement(React.Fragment, null,
+            React.createElement("div", { className: "prof-section-title" }, "🎓 Student Performance"),
+            React.createElement("div", { className: "prof-stat-grid" },
+              React.createElement("div", { className: "prof-stat" }, React.createElement("div", { className: "prof-stat-value" }, sRaw.sessionsAttended), React.createElement("div", { className: "prof-stat-label" }, "Sessions")),
+              React.createElement("div", { className: "prof-stat" }, React.createElement("div", { className: "prof-stat-value" }, sAccuracy, "%"), React.createElement("div", { className: "prof-stat-label" }, "Accuracy")),
+              React.createElement("div", { className: "prof-stat" }, React.createElement("div", { className: "prof-stat-value" }, sMins), React.createElement("div", { className: "prof-stat-label" }, "Mins"))
+            ),
+            React.createElement("div", { className: "card-sm", style: { marginBottom: 14 } },
+              React.createElement("div", { style: { display: 'flex', justifyContent: 'space-between', marginBottom: 8, fontSize: '0.82rem' } },
+                React.createElement("span", { style: { color: 'var(--text2)' } }, "Overall Mastery"),
+                React.createElement("span", { style: { fontWeight: 700, color: sAccuracy >= 70 ? 'var(--green)' : 'var(--yellow)' } }, sAccuracy >= 70 ? 'Excellent!' : 'Good Progress')
+              ),
+              React.createElement("div", { className: "progress-bar", style: { height: 10 } },
+                React.createElement("div", { className: "progress-fill accent", style: { width: `${sAccuracy}%` } })
+              )
+            )
+          )
+        ),
+        tab === 'teacher' && React.createElement("div", null,
+          React.createElement("div", { className: "section-header" },
+            React.createElement("div", { className: "section-title" }, "Sessions Created"),
+            React.createElement("div", { className: "flex gap-8" },
+              React.createElement("button", { className: "btn btn-ghost btn-sm", onClick: exportTeacherExcel }, "📊 Excel"),
+              React.createElement("button", { className: "btn btn-ghost btn-sm", onClick: exportTeacherPDF }, "📄 PDF")
+            )
+          ),
+          tSessions.length === 0 ? React.createElement("div", { className: "prof-empty" }, "No sessions recorded yet.") :
+          tSessions.map((s, i) => React.createElement("div", { key: i, className: "prof-session-row" },
+            React.createElement("div", { style: { flex: 1 } },
+              React.createElement("div", { className: "prof-session-name", style: { fontWeight: 700 } }, s.name),
+              React.createElement("div", { className: "prof-session-date" }, s.date, " • ", s.students_count, " students")
+            ),
+            React.createElement("div", { className: "prof-session-stats" },
+              React.createElement("span", null, "👥 ", s.participation, "%"),
+              React.createElement("span", null, "🧠 ", s.avg_understanding, "%")
+            )
+          )),
+          tSessions.length > 0 && React.createElement(React.Fragment, null,
+            React.createElement("div", { className: "prof-section-title", style: { marginTop: 24 } }, "📈 Growth Trends"),
+            React.createElement("div", { className: "card-sm", style: { marginBottom: 16 } },
+              React.createElement("div", { style: { marginBottom: 10, fontSize: '0.75rem', fontWeight: 700, color: 'var(--text3)' } }, "UNDERSTANDING TREND (%)"),
+              React.createElement("div", { style: { height: 120 } }, 
+                React.createElement(LineChart, { data: tData.understandingLog.map(l => l.pct), labels: tData.understandingLog.map(l => l.date) })
+              )
+            ),
+            React.createElement("div", { className: "card-sm" },
+              React.createElement("div", { style: { marginBottom: 10, fontSize: '0.75rem', fontWeight: 700, color: 'var(--text3)' } }, "PARTICIPATION TREND (%)"),
+              React.createElement("div", { style: { height: 120 } }, 
+                React.createElement(BarChart, { data: tData.participationLog.map(l => l.pct), labels: tData.participationLog.map(l => l.date) })
+              )
+            )
+          )
+        ),
+        tab === 'settings' && React.createElement("div", null,
+          React.createElement("div", { className: "prof-settings-section" },
+            React.createElement("div", { className: "prof-settings-label" }, "✏️ Name"),
+            React.createElement("input", { className: "prof-settings-input", value: editName, onChange: e => setEditName(e.target.value) }),
+            React.createElement("button", { className: "btn btn-primary btn-sm w-full", style: {marginTop:8}, onClick: () => {
+              const u = JSON.parse(localStorage.getItem('cm_user') || '{}');
+              u.name = editName.trim();
+              updateUserProfile(u);
+              add('Name updated!', 'success');
+            }}, "Save")
+          ),
+          React.createElement("button", { className: "prof-logout-btn", onClick: () => {
+            localStorage.removeItem('cm_user');
+            updateUserProfile(null);
+            onClose();
+            add('Logged out', 'success');
+            navigate('landing', {});
+          }}, "Logout")
+        )
+      )
+    )
+  );
 }
 
-// ═════════════════════════════════════════════════════════════════
-//  ROOT APP — ROUTER
-// ═════════════════════════════════════════════════════════════════
+
 
 
 // ═════════════════════════════════════════════════════════════════

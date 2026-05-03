@@ -3986,54 +3986,64 @@ function TeacherShell({
   }, [page]);
   const wsUrl = `${WS_BASE}/ws/teacher/${sessionCode}`;
   const wsSend = useWS(wsUrl, useCallback(msg => {
-    if (msg.type === 'analytics_update') setAnalytics(msg.analytics);else if (msg.type === 'roster_update') setRoster({
-      active: msg.active,
-      waiting: msg.waiting
-    });else if (msg.type === 'session_status') setSessionStatus(msg.status);else if (msg.type === 'groups_updated') setGroups(msg.groups);else if (msg.type === 'task_created' || msg.type === 'task_deleted' || msg.type === 'tasks_imported') {
-      if (msg.tasks) setTasks(msg.tasks);else loadTasks();
-    } else if (msg.type === 'task_sent') {
-      if (msg.delivery?.recipient_count !== undefined) {
-        add(`Task delivered to ${msg.delivery.recipient_count} recipient(s)`, 'success');
+    try {
+      if (!msg) return;
+      if (msg.type === 'analytics_update') {
+        setAnalytics(msg.analytics || {
+          understanding: 0,
+          participation: 0,
+          at_risk: [],
+          total_students: 0,
+          answered: 0
+        });
+      } else if (msg.type === 'roster_update') {
+        setRoster({
+          active: msg.active || [],
+          waiting: msg.waiting || []
+        });
+      } else if (msg.type === 'session_status') {
+        setSessionStatus(msg.status || 'waiting');
+      } else if (msg.type === 'groups_updated') {
+        setGroups(msg.groups || []);
+      } else if (msg.type === 'task_created' || msg.type === 'task_deleted' || msg.type === 'tasks_imported') {
+        if (msg.tasks) setTasks(msg.tasks);else loadTasks();
+      } else if (msg.type === 'task_sent') {
+        if (msg.delivery?.recipient_count !== undefined) {
+          add(`Task delivered to ${msg.delivery.recipient_count} recipient(s)`, 'success');
+        }
+      } else if (msg.type === 'new_doubt') {
+        playBeep();
+        setNotifications(n => ({
+          ...n,
+          doubts: (n.doubts || 0) + 1
+        }));
+        add(`New doubt from ${msg.doubt?.student_name || 'Student'}`, 'info');
+      } else if (msg.type === 'hand_raised') {
+        playBeep();
+        setNotifications(n => ({
+          ...n,
+          hands: (n.hands || 0) + 1
+        }));
+        add(`✋ ${msg.student_name || 'Student'} raised hand`, 'info');
+      } else if (msg.type === 'chat_message') {
+        playBeep();
+        setNotifications(n => ({
+          ...n,
+          chat: (n.chat || 0) + 1
+        }));
+      } else if (msg.type === 'student_waiting') {
+        add(`${msg.display_name || 'Someone'} wants to join`, 'info');
+        loadRoster();
+      } else if (msg.type === 'connected') {
+        if (msg.analytics) setAnalytics(msg.analytics);
+        if (msg.session?.groups) setGroups(msg.session.groups || []);
+        if (msg.session?.tasks) setTasks(msg.session.tasks || []);
+        loadRoster();
       }
+    } catch (err) {
+      console.error("[WS Error] TeacherShell:", err);
     }
-
-    // 🔔 DOUBT NOTIFICATION
-    else if (msg.type === 'new_doubt') {
-      playBeep();
-      setNotifications(n => ({
-        ...n,
-        doubts: n.doubts + 1
-      }));
-      add(`New doubt from ${msg.doubt.student_name}`, 'info');
-    }
-
-    // 🔔 HAND RAISED
-    else if (msg.type === 'hand_raised') {
-      playBeep();
-      setNotifications(n => ({
-        ...n,
-        hands: n.hands + 1
-      }));
-      add(`✋ ${msg.student_name} raised hand`, 'info');
-    }
-
-    // 🔔 CHAT MESSAGE
-    else if (msg.type === 'chat_message') {
-      playBeep();
-      setNotifications(n => ({
-        ...n,
-        chat: n.chat + 1
-      }));
-    } else if (msg.type === 'student_waiting') {
-      add(`${msg.display_name} wants to join`, 'info');
-      loadRoster();
-    } else if (msg.type === 'connected') {
-      if (msg.analytics) setAnalytics(msg.analytics);
-      if (msg.session?.groups) setGroups(msg.session.groups);
-      if (msg.session?.tasks) setTasks(msg.session.tasks);
-      loadRoster();
-    }
-  }, [soundOn])); // ✅ IMPORTANT dependency
+  }, [soundOn, add])); // ✅ Added add to dependencies
 
   async function loadRoster() {
     try {
@@ -4482,7 +4492,11 @@ function TeacherDashboard({
       add(e.message, 'error');
     }
   }
-  async function approveStudent(id) {
+  async function approveStudent(id, e) {
+    if (e) {
+      if (typeof e.preventDefault === 'function') e.preventDefault();
+      if (typeof e.stopPropagation === 'function') e.stopPropagation();
+    }
     try {
       await apiFetch(`/api/session/${sessionCode}/approve/${id}`, {
         method: 'POST'
@@ -4557,7 +4571,7 @@ function TeacherDashboard({
       sessionControl('end');
     }
   }
-  const understanding = analytics.understanding || 0;
+  const understanding = (analytics?.understanding) || 0;
   const understandingColor = understanding >= 70 ? 'green' : understanding >= 40 ? 'yellow' : 'red';
   const statusColor = {
     waiting: 'yellow',
@@ -4681,7 +4695,7 @@ function TeacherDashboard({
     className: "stat"
   }, /*#__PURE__*/React.createElement("div", {
     className: "stat-value"
-  }, analytics.participation || 0, "%"), /*#__PURE__*/React.createElement("div", {
+  }, analytics?.participation || 0, "%"), /*#__PURE__*/React.createElement("div", {
     className: "stat-label"
   }, "Participation")), /*#__PURE__*/React.createElement("div", {
     className: "stat"
@@ -4729,10 +4743,10 @@ function TeacherDashboard({
       flexWrap: 'wrap',
       gap: 4
     }
-  }, analytics.at_risk.map(s => /*#__PURE__*/React.createElement("span", {
-    key: s.id || s,
+  }, (analytics?.at_risk || []).map(s => /*#__PURE__*/React.createElement("span", {
+    key: s.id || (typeof s === 'string' ? s : Math.random()),
     className: "risk-badge"
-  }, s.name || s))))), /*#__PURE__*/React.createElement(CodingPerformanceBar, {
+  }, String(s.name || s))))), /*#__PURE__*/React.createElement(CodingPerformanceBar, {
     sessionCode: sessionCode
   }), /*#__PURE__*/React.createElement("div", {
     className: "grid grid-2"
@@ -4771,7 +4785,7 @@ function TeacherDashboard({
   }, "\u23F3 Waiting Room (", roster.waiting?.length || 0, ")", roster.waiting?.length > 0 && /*#__PURE__*/React.createElement("span", {
     className: "notification-dot"
   })), (roster.waiting || []).map(st => /*#__PURE__*/React.createElement("div", {
-    key: st.id,
+    key: st.id || Math.random(),
     className: "flex items-center gap-8 mb-8",
     style: {
       padding: '8px 0',
@@ -4782,12 +4796,16 @@ function TeacherDashboard({
       flex: 1,
       fontSize: '0.9rem'
     }
-  }, st.name), /*#__PURE__*/React.createElement("button", {
+  }, String(st.name || st.id || 'Student')), /*#__PURE__*/React.createElement("button", {
     className: "btn btn-success btn-sm",
-    onClick: () => approveStudent(st.id)
+    onClick: (e) => approveStudent(st.id, e)
   }, "\u2713 Approve"), /*#__PURE__*/React.createElement("button", {
     className: "btn btn-danger btn-sm",
-    onClick: () => rejectStudent(st.id)
+    onClick: (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      rejectStudent(st.id);
+    }
   }, "\u2715 Reject"))), !roster.waiting?.length && /*#__PURE__*/React.createElement("div", {
     className: "text-muted text-sm"
   }, "No students waiting")), /*#__PURE__*/React.createElement("div", {
@@ -4943,11 +4961,11 @@ function TeacherDashboard({
     style: {
       marginTop: 4
     }
-  }, "\uD83D\uDC65 Groups: ", groups.length, " formed"))), analytics.topic_confusion && Object.keys(analytics.topic_confusion).length > 0 && /*#__PURE__*/React.createElement("div", {
+  }, "\uD83D\uDC65 Groups: ", groups.length, " formed"))), analytics?.topic_confusion && Object.keys(analytics.topic_confusion).length > 0 && /*#__PURE__*/React.createElement("div", {
     className: "card"
   }, /*#__PURE__*/React.createElement("div", {
     className: "card-title"
-  }, "\uD83C\uDFAF Topic Confusion"), Object.entries(analytics.topic_confusion).map(([topic, data]) => {
+  }, "\uD83C\uDFAF Topic Confusion"), Object.entries(analytics.topic_confusion || {}).map(([topic, data]) => {
     const pct = data.total > 0 ? Math.round(data.wrong / data.total * 100) : 0;
     return /*#__PURE__*/React.createElement("div", {
       key: topic,
@@ -4972,7 +4990,7 @@ function TeacherDashboard({
   }))), /*#__PURE__*/React.createElement(AtRiskPanel, {
     analytics: analytics,
     roster: roster
-  }));
+  })));
 }
 
 // ═════════════════════════════════════════════════════════════════
@@ -7435,7 +7453,7 @@ function ReportsPage({
     avg_score: 0,
     top_coder: null
   };
-  const topicEntries = Object.entries(analytics.topic_confusion || {});
+  const topicEntries = Object.entries(analytics?.topic_confusion || {});
   return /*#__PURE__*/React.createElement("div", {
     className: "page"
   }, /*#__PURE__*/React.createElement("div", {
@@ -7486,19 +7504,19 @@ function ReportsPage({
     className: "stat"
   }, /*#__PURE__*/React.createElement("div", {
     className: "stat-value"
-  }, analytics.understanding || 0, "%"), /*#__PURE__*/React.createElement("div", {
+  }, analytics?.understanding || 0, "%"), /*#__PURE__*/React.createElement("div", {
     className: "stat-label"
   }, "Understanding")), /*#__PURE__*/React.createElement("div", {
     className: "stat"
   }, /*#__PURE__*/React.createElement("div", {
     className: "stat-value"
-  }, analytics.participation || 0, "%"), /*#__PURE__*/React.createElement("div", {
+  }, analytics?.participation || 0, "%"), /*#__PURE__*/React.createElement("div", {
     className: "stat-label"
   }, "Participation")), /*#__PURE__*/React.createElement("div", {
     className: "stat"
   }, /*#__PURE__*/React.createElement("div", {
     className: "stat-value"
-  }, analytics.total_students || 0), /*#__PURE__*/React.createElement("div", {
+  }, analytics?.total_students || 0), /*#__PURE__*/React.createElement("div", {
     className: "stat-label"
   }, "Students")), /*#__PURE__*/React.createElement("div", {
     className: "stat"
@@ -10262,143 +10280,147 @@ function StudentTaskView({
     } catch {}
   }
   const wsSend = useWS(wsUrl, useCallback(msg => {
-    console.log('WS EVENT:', msg.type, '| QUIZ ACTIVE:', quizStateRef.current.active);
+    try {
+      console.log('WS EVENT:', msg.type, '| QUIZ ACTIVE:', quizStateRef.current.active);
 
-    // ══ STEP 1: ALWAYS handle quiz start first — before any other logic ══
-    if (msg.type === 'new_quiz' || msg.type === 'quiz_start') {
-      // Accept questions from any payload shape the backend may send
-      const qs = msg.questions || msg.tasks || msg.quiz?.questions || [];
-      if (!qs.length) return;
-      console.log('QUIZ START — questions:', qs.length, '| index reset to 0');
-      setQuizState({
-        active: true,
-        questions: qs,
-        index: 0,
-        answers: {}
-      });
-      setWsConnected(true);
-      playStudentBeep('task');
-      add(`📋 Quiz started — ${qs.length} question${qs.length !== 1 ? 's' : ''}. Navigate freely.`, 'info');
-      return; // nothing else runs
-    }
-
-    // ══ STEP 2: BLOCK ALL other events while a quiz is in progress ══
-    // quizStateRef always holds the current value — no stale closure risk
-    if (quizStateRef.current.active) {
-      console.log('WS EVENT BLOCKED (quiz active):', msg.type);
-      return; // ← hard wall — quiz UI never touched by WS
-    }
-
-    // ══ STEP 3: Normal (non-quiz) event handling ══
-    if (msg.type === 'new_task' || msg.type === 'task') {
-      const incomingTask = msg.task || null;
-      setCurrentTask(incomingTask);
-      setSelected(null);
-      setShortAnswer('');
-      setSubmitted(false);
-      setResult(null);
-      setHint(null);
-      setTaskStartTime(Date.now());
-      setTimeSpent(0);
-      if (incomingTask?.content) {
-        setContentShared({
-          name: incomingTask.content.name,
-          type: incomingTask.content.content_type,
-          data: incomingTask.content.data
+      // ══ STEP 1: ALWAYS handle quiz start first — before any other logic ══
+      if (msg.type === 'new_quiz' || msg.type === 'quiz_start') {
+        // Accept questions from any payload shape the backend may send
+        const qs = msg.questions || msg.tasks || msg.quiz?.questions || [];
+        if (!qs.length) return;
+        console.log('QUIZ START — questions:', qs.length, '| index reset to 0');
+        setQuizState({
+          active: true,
+          questions: qs,
+          index: 0,
+          answers: {}
         });
+        setWsConnected(true);
+        playStudentBeep('task');
+        add(`📋 Quiz started — ${qs.length} question${qs.length !== 1 ? 's' : ''}. Navigate freely.`, 'info');
+        return; // nothing else runs
       }
-      if (msg.task_index !== undefined) setTaskIndex(msg.task_index + 1);else if (msg.index !== undefined) setTaskIndex(msg.index + 1);
-      if (msg.total_tasks !== undefined) setTotalTasks(msg.total_tasks);else if (msg.total !== undefined) setTotalTasks(msg.total);
-      playStudentBeep('task');
-      add('📤 New task received — answer now!', 'info');
-      setWsConnected(true);
-    } else if (msg.type === 'quiz_submit_ack') {
-      // Server confirmed receipt of quiz answers
-      add(`🎉 ${msg.message || 'Quiz submitted! Great work.'}`, 'success');
-      console.log('QUIZ SUBMIT ACK — score:', msg.score, '| answers received:', msg.total);
-    } else if (msg.type === 'session_status') setSessionStatus(msg.status);else if (msg.type === 'kicked') navigate('landing');else if (msg.type === 'content_shared') {
-      setContentShared({
-        name: msg.filename,
-        type: msg.content_type,
-        data: msg.data
-      });
-      playStudentBeep('default');
-      add('📄 Teacher shared new content', 'info');
-    } else if (msg.type === 'chat_message') {
-      setMessages(m => [...m, msg.message]);
-      setTimeout(() => messagesEnd.current?.scrollIntoView({
-        behavior: 'smooth'
-      }), 100);
-      if (msg.message?.sender_id !== studentId) {
-        playStudentBeep('chat');
-        add('💬 New message in class chat', 'info');
-        setChatUnread(n => n + 1);
+
+      // ══ STEP 2: BLOCK ALL other events while a quiz is in progress ══
+      // quizStateRef always holds the current value — no stale closure risk
+      if (quizStateRef.current.active) {
+        console.log('WS EVENT BLOCKED (quiz active):', msg.type);
+        return; // ← hard wall — quiz UI never touched by WS
       }
-    }
-    // ── FEATURE 1: Handle chat enable/disable from teacher ──────────
-    else if (msg.type === 'chat_toggle') {
-      setChatEnabled(msg.enabled);
-      if (!msg.enabled) add('🔒 Chat has been disabled by the teacher', 'info');else add('🔓 Chat has been re-enabled by the teacher', 'success');
-    } else if (msg.type === 'doubt_resolved') {
-      setDoubts(d => d.map(x => x.id === msg.doubt.id ? msg.doubt : x));
-      playStudentBeep('doubt');
-      add('💡 Your doubt has been answered!', 'success');
-      setSPage(p => {
-        if (p !== 'chat') setChatUnread(n => n + 1);
-        return p;
-      });
-    } else if (msg.type === 'test_started') {
-      setTestState({
-        tasks: msg.tasks,
-        duration: msg.duration_secs,
-        startTime: msg.start_time
-      });
-      setTestAnswers({});
-      setSPage('test');
-      playStudentBeep('test');
-      add('🧪 Test has started — good luck!', 'info');
-      setTestTimeLeft(msg.duration_secs);
-      clearInterval(testTimerRef.current);
-      testTimerRef.current = setInterval(() => {
-        setTestTimeLeft(t => {
-          if (t <= 1) {
-            clearInterval(testTimerRef.current);
-            handleTestSubmit();
-            return 0;
-          }
-          return t - 1;
-        });
-      }, 1000);
-    } else if (msg.type === 'test_ended') {
-      clearInterval(testTimerRef.current);
-      setTestState(null);
-      setSPage('result');
-      add('🏁 Test has ended', 'info');
-    } else if (msg.type === 'announcement') setAnnouncement(msg.message);else if (msg.type === 'groups_updated') setGroups(msg.groups);else if (msg.type === 'coding_leaderboard_update') {
-      setCodingLeaderboard(msg.leaderboard || []);
-      const mine = (msg.leaderboard || []).find(r => r.name === studentName);
-      if (mine) setCodingScore(mine.score);
-    } else if (msg.type === 'connected') {
-      if (msg.current_task) {
-        setCurrentTask(msg.current_task);
+
+      // ══ STEP 3: Normal (non-quiz) event handling ══
+      if (msg.type === 'new_task' || msg.type === 'task') {
+        const incomingTask = msg.task || null;
+        setCurrentTask(incomingTask);
+        setSelected(null);
+        setShortAnswer('');
+        setSubmitted(false);
+        setResult(null);
+        setHint(null);
         setTaskStartTime(Date.now());
-        if (msg.current_task.content) {
+        setTimeSpent(0);
+        if (incomingTask?.content) {
           setContentShared({
-            name: msg.current_task.content.name,
-            type: msg.current_task.content.content_type,
-            data: msg.current_task.content.data
+            name: incomingTask.content.name,
+            type: incomingTask.content.content_type,
+            data: incomingTask.content.data
           });
         }
+        if (msg.task_index !== undefined) setTaskIndex(msg.task_index + 1);else if (msg.index !== undefined) setTaskIndex(msg.index + 1);
+        if (msg.total_tasks !== undefined) setTotalTasks(msg.total_tasks);else if (msg.total !== undefined) setTotalTasks(msg.total);
+        playStudentBeep('task');
+        add('📤 New task received — answer now!', 'info');
+        setWsConnected(true);
+      } else if (msg.type === 'quiz_submit_ack') {
+        // Server confirmed receipt of quiz answers
+        add(`🎉 ${msg.message || 'Quiz submitted! Great work.'}`, 'success');
+        console.log('QUIZ SUBMIT ACK — score:', msg.score, '| answers received:', msg.total);
+      } else if (msg.type === 'session_status') setSessionStatus(msg.status);else if (msg.type === 'kicked') navigate('landing');else if (msg.type === 'content_shared') {
+        setContentShared({
+          name: msg.filename,
+          type: msg.content_type,
+          data: msg.data
+        });
+        playStudentBeep('default');
+        add('📄 Teacher shared new content', 'info');
+      } else if (msg.type === 'chat_message') {
+        setMessages(m => [...m, msg.message]);
+        setTimeout(() => messagesEnd.current?.scrollIntoView({
+          behavior: 'smooth'
+        }), 100);
+        if (msg.message?.sender_id !== studentId) {
+          playStudentBeep('chat');
+          add('💬 New message in class chat', 'info');
+          setChatUnread(n => n + 1);
+        }
       }
-      if (msg.groups) setGroups(msg.groups);
-      if (msg.session_status) setSessionStatus(msg.session_status);
-      if (msg.task_index !== undefined && msg.task_index >= 0) setTaskIndex(msg.task_index + 1);
-      if (msg.total_tasks !== undefined) setTotalTasks(msg.total_tasks);
-      // Sync chat state from server on connect/reconnect
-      if (msg.chat_enabled !== undefined) setChatEnabled(msg.chat_enabled);
-      setWsConnected(true);
+      // ── FEATURE 1: Handle chat enable/disable from teacher ──────────
+      else if (msg.type === 'chat_toggle') {
+        setChatEnabled(msg.enabled);
+        if (!msg.enabled) add('🔒 Chat has been disabled by the teacher', 'info');else add('🔓 Chat has been re-enabled by the teacher', 'success');
+      } else if (msg.type === 'doubt_resolved') {
+        setDoubts(d => d.map(x => x.id === msg.doubt.id ? msg.doubt : x));
+        playStudentBeep('doubt');
+        add('💡 Your doubt has been answered!', 'success');
+        setSPage(p => {
+          if (p !== 'chat') setChatUnread(n => n + 1);
+          return p;
+        });
+      } else if (msg.type === 'test_started') {
+        setTestState({
+          tasks: msg.tasks,
+          duration: msg.duration_secs,
+          startTime: msg.start_time
+        });
+        setTestAnswers({});
+        setSPage('test');
+        playStudentBeep('test');
+        add('🧪 Test has started — good luck!', 'info');
+        setTestTimeLeft(msg.duration_secs);
+        clearInterval(testTimerRef.current);
+        testTimerRef.current = setInterval(() => {
+          setTestTimeLeft(t => {
+            if (t <= 1) {
+              clearInterval(testTimerRef.current);
+              handleTestSubmit();
+              return 0;
+            }
+            return t - 1;
+          });
+        }, 1000);
+      } else if (msg.type === 'test_ended') {
+        clearInterval(testTimerRef.current);
+        setTestState(null);
+        setSPage('result');
+        add('🏁 Test has ended', 'info');
+      } else if (msg.type === 'announcement') setAnnouncement(msg.message);else if (msg.type === 'groups_updated') setGroups(msg.groups);else if (msg.type === 'coding_leaderboard_update') {
+        setCodingLeaderboard(msg.leaderboard || []);
+        const mine = (msg.leaderboard || []).find(r => r.name === studentName);
+        if (mine) setCodingScore(mine.score);
+      } else if (msg.type === 'connected') {
+        if (msg.current_task) {
+          setCurrentTask(msg.current_task);
+          setTaskStartTime(Date.now());
+          if (msg.current_task.content) {
+            setContentShared({
+              name: msg.current_task.content.name,
+              type: msg.current_task.content.content_type,
+              data: msg.current_task.content.data
+            });
+          }
+        }
+        if (msg.groups) setGroups(msg.groups);
+        if (msg.session_status) setSessionStatus(msg.session_status);
+        if (msg.task_index !== undefined && msg.task_index >= 0) setTaskIndex(msg.task_index + 1);
+        if (msg.total_tasks !== undefined) setTotalTasks(msg.total_tasks);
+        // Sync chat state from server on connect/reconnect
+        if (msg.chat_enabled !== undefined) setChatEnabled(msg.chat_enabled);
+        setWsConnected(true);
+      }
+    } catch (err) {
+      console.error("[WS Error] StudentTaskView:", err);
     }
-  }, [studentId]));
+  }, [studentId, studentName, navigate, add, playStudentBeep]));
 
   // ── time-spent ticker ──
   useEffect(() => {
@@ -11493,9 +11515,7 @@ function StudentTaskView({
   }, "PDF includes all questions, your answers, and correct answers.")), /*#__PURE__*/React.createElement("button", {
     className: "btn btn-ghost mt-24",
     onClick: () => navigate('landing')
-  }, "\u2190 Back to Home")))), /*#__PURE__*/React.createElement(StudentGuidedTour, {
-    ready: tourReady
-  }), /*#__PURE__*/React.createElement(ProfileDrawer, {
+  }, "\u2190 Back to Home")))), /*#__PURE__*/React.createElement(ProfileDrawer, {
     open: profileOpen,
     onClose: () => setProfileOpen(false),
     userName: studentName,
@@ -13308,10 +13328,12 @@ function InterventionPopup({
   const AUTO_HIDE_MS = 6000;
   const understanding = analytics?.understanding ?? 0;
   const answered = analytics?.answered ?? 0;
-  const totalStudents = analytics?.total_students ?? roster?.active?.length ?? 0;
+  const totalStudents = analytics?.total_students ?? (roster?.active?.length || 0);
   const atRisk = analytics?.at_risk || [];
   const topicConfusion = analytics?.topic_confusion || {};
-  const topTopic = Object.entries(topicConfusion).sort((a, b) => b[1] - a[1])[0];
+  // Fix: Sort by 'wrong' count specifically
+  const topTopic = Object.entries(topicConfusion).sort((a, b) => (b[1]?.wrong || 0) - (a[1]?.wrong || 0))[0];
+  const topicName = topTopic ? topTopic[0] : null;
 
   // ── Strict trigger gate ──────────────────────────────────────────
   // ALL conditions must be true simultaneously:
@@ -13378,7 +13400,7 @@ function InterventionPopup({
     if (sessionStatus !== 'active' && visible) dismiss();
   }, [sessionStatus]);
   if (!visible) return null;
-  const riskNames = atRisk.slice(0, 3).map(s => s.name || s).join(', ') || null;
+  const riskNames = (atRisk || []).slice(0, 3).map(s => String(s.name || s)).join(', ') || null;
   return /*#__PURE__*/React.createElement("div", {
     className: `intervention-popup${hiding ? ' hiding' : ''}`
   }, /*#__PURE__*/React.createElement("div", {
@@ -13396,9 +13418,14 @@ function InterventionPopup({
     style: {
       color: understanding < 30 ? 'var(--red)' : 'var(--yellow)'
     }
-  }, understanding, "%")), topTopic && /*#__PURE__*/React.createElement("div", {
+  }, understanding, "%")), topicName && topTopic?.[1] && /*#__PURE__*/React.createElement("div", {
     className: "intervention-metric"
-  }, "\uD83C\uDFAF Topic: ", /*#__PURE__*/React.createElement("span", null, topTopic[0])), /*#__PURE__*/React.createElement("div", {
+  }, "\uD83C\uDFAF Topic: ", /*#__PURE__*/React.createElement("span", null, topicName), /*#__PURE__*/React.createElement("div", {
+    className: "text-xs text-muted",
+    style: {
+      marginTop: 4
+    }
+  }, "\uD83D\uDCA1 ", topTopic[1].total > 0 ? Math.round(topTopic[1].wrong / topTopic[1].total * 100) : 0, "% incorrect responses")), /*#__PURE__*/React.createElement("div", {
     className: "intervention-actions"
   }, /*#__PURE__*/React.createElement("div", {
     className: "intervention-action-label"
@@ -13475,7 +13502,7 @@ function AtRiskPanel({
     }
   }), /*#__PURE__*/React.createElement("div", {
     className: "at-risk-name"
-  }, s.name || s), /*#__PURE__*/React.createElement("div", {
+  }, String(s.name || s)), /*#__PURE__*/React.createElement("div", {
     className: "at-risk-label",
     style: {
       color: 'var(--red)'
@@ -13492,7 +13519,7 @@ function AtRiskPanel({
       }
     }), /*#__PURE__*/React.createElement("div", {
       className: "at-risk-name"
-    }, st.name), st.pct !== null && /*#__PURE__*/React.createElement("div", {
+    }, String(st.name || st.id || 'Student')), st.pct !== null && /*#__PURE__*/React.createElement("div", {
       className: "at-risk-bar"
     }, /*#__PURE__*/React.createElement("div", {
       className: "at-risk-bar-fill",

@@ -300,8 +300,28 @@ async def ws_broadcast(s: dict, data: dict):
 
 
 async def push_roster(s: dict):
-    active  = [st for st in s["students"].values() if st["status"] == "active"]
-    waiting = [s["students"][sid] for sid in s["waiting_room"] if sid in s["students"]]
+    # Send only essential fields to prevent payload bloat and serialization issues
+    active = []
+    for st in s["students"].values():
+        if st["status"] == "active":
+            active.append({
+                "id": st["id"],
+                "name": st["name"],
+                "status": st["status"],
+                "correct": st.get("correct", 0),
+                "total_answered": st.get("total_answered", 0),
+                "coding_submitted": st.get("coding_submitted", False)
+            })
+    
+    waiting = []
+    for sid in s["waiting_room"]:
+        if sid in s["students"]:
+            st = s["students"][sid]
+            waiting.append({
+                "id": st["id"],
+                "name": st["name"]
+            })
+
     await ws_teacher(s, {
         "type":         "roster_update",
         "active":       active,

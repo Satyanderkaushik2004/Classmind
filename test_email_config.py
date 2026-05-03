@@ -1,56 +1,49 @@
 import asyncio
 import os
 from dotenv import load_dotenv
-import aiosmtplib
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
 
 # Load environment variables
 load_dotenv()
 
-async def test_smtp_connection():
-    email = os.getenv("EMAIL_ADDRESS")
-    password = os.getenv("EMAIL_PASSWORD")
-    server = "smtp.gmail.com"
-    port = 587
+async def test_sendgrid_connection():
+    api_key = os.getenv("SENDGRID_API_KEY")
+    from_email = os.getenv("SENDGRID_FROM_EMAIL", "classmind7@gmail.com")
 
-    print(f"--- Email SMTP Connection Test ---")
-    print(f"Target Email: {email}")
-    print(f"SMTP Server: {server}:{port}")
+    print(f"--- SendGrid API Connection Test ---")
+    print(f"From Email: {from_email}")
     
-    if not email or not password:
-        print("ERROR: EMAIL_ADDRESS or EMAIL_PASSWORD not found in .env")
+    if not api_key:
+        print("ERROR: SENDGRID_API_KEY not found in .env")
         return
 
-    # Create a simple message
-    message = MIMEMultipart()
-    message["From"] = email
-    message["To"] = email  # Send to self for testing
-    message["Subject"] = "ClassMind SMTP Test"
-    message.attach(MIMEText("This is a test email to verify SMTP configuration.", "plain"))
+    try:
+        from sendgrid import SendGridAPIClient
+        from sendgrid.helpers.mail import Mail
+    except ImportError:
+        print("ERROR: sendgrid library not installed. Run: pip install sendgrid")
+        return
+
+    message = Mail(
+        from_email=from_email,
+        to_emails=from_email,
+        subject='ClassMind SendGrid Test',
+        plain_text_content='This is a test email to verify SendGrid configuration.'
+    )
 
     try:
-        print("Connecting to server...")
-        smtp = aiosmtplib.SMTP(hostname=server, port=port, use_tls=False, timeout=10)
+        print("Connecting to SendGrid...")
+        sg = SendGridAPIClient(api_key)
+        response = sg.send(message)
         
-        async with smtp:
-            print("Connected. Starting TLS...")
-            await smtp.starttls()
+        if response.status_code >= 200 and response.status_code < 300:
+            print(f"SUCCESS: Email sent successfully! Status Code: {response.status_code}")
+            print("\nSUCCESS: Your SendGrid configuration is 100% correct.")
+        else:
+            print(f"FAILED: SendGrid returned status code {response.status_code}")
             
-            print(f"Attempting login for {email}...")
-            await smtp.login(email, password)
-            
-            print("Login successful! Sending test email...")
-            await smtp.send_message(message)
-            print("Email sent successfully!")
-            
-        print("\nSUCCESS: Your SMTP configuration is 100% correct.")
-        
-    except aiosmtplib.SMTPAuthenticationError as e:
-        print(f"\nAUTH ERROR: Authentication failed. {e}")
-        print("Suggestion: Ensure you are using a 16-character 'App Password', not your regular Gmail password.")
     except Exception as e:
         print(f"\nERROR: {type(e).__name__}: {e}")
+        print("Suggestion: Ensure your API key is correct and your Sender Identity is verified in SendGrid.")
 
 if __name__ == "__main__":
-    asyncio.run(test_smtp_connection())
+    asyncio.run(test_sendgrid_connection())

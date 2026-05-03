@@ -1,6 +1,6 @@
 """
-email_service.py  ─  ClassMind Session Report Email System
-Sends async emails via Gmail SMTP with professional HTML formatting.
+email_service.py  ─  ClassMind Session Report Email System (SendGrid API Version)
+Sends async emails via SendGrid Web API to bypass Render SMTP port blocks.
 """
 import logging
 import os
@@ -10,15 +10,17 @@ from datetime import datetime
 from typing import Dict, Optional, Tuple
 
 # Third-party imports
-import aiosmtplib
-from email.message import EmailMessage
-from email.utils import make_msgid, formatdate
+try:
+    from sendgrid import SendGridAPIClient
+    from sendgrid.helpers.mail import Mail, Email, To, Content
+except ImportError:
+    SendGridAPIClient = None
+    Mail = None
 
 log = logging.getLogger("classmind.email")
 
 # ── Configuration ─────────────────────────────────────────────────
-SMTP_SERVER = "smtp.gmail.com"
-SMTP_PORT = 587
+DEFAULT_FROM_EMAIL = "classmind7@gmail.com"
 
 # ── Email validation ──────────────────────────────────────────────
 EMAIL_REGEX = re.compile(r"^[^\s@]+@[^\s@]+\.[^\s@]+$")
@@ -29,113 +31,89 @@ def is_valid_email(email: str) -> bool:
     return bool(EMAIL_REGEX.match(email.strip()))
 
 def validate_smtp_config() -> bool:
-    """Check if SMTP credentials are configured and not placeholders."""
-    email, pwd = get_credentials()
-    if not email or not pwd:
-        return False
-    placeholders = ["your-email@gmail.com", "your-app-password", "example.com"]
-    if any(p in email for p in placeholders) or any(p in pwd for p in placeholders):
-        return False
-    return True
+    """Check if SendGrid API key is configured (Aliased for compatibility)."""
+    return bool(os.getenv("SENDGRID_API_KEY", "").strip())
 
-def get_credentials():
-    """Dynamically fetch credentials to ensure they are loaded after dotenv."""
-    return os.getenv("EMAIL_ADDRESS", "").strip(), os.getenv("EMAIL_PASSWORD", "").strip()
+def get_sendgrid_key():
+    """Fetch SendGrid API Key."""
+    return os.getenv("SENDGRID_API_KEY", "").strip()
 
-# ── SMTP CORE SEND ───────────────────────────────────────────────
+# ── SendGrid API CORE SEND ───────────────────────────────────────
 
 async def send_mail_raw(to_email: str, subject: str, html_content: str) -> Tuple[bool, str]:
     """
-    Core SMTP sending logic using modern EmailMessage for maximum compatibility.
+    Core Email sending logic using SendGrid Web API.
     """
-    sender_email, sender_password = get_credentials()
+    api_key = get_sendgrid_key()
+    from_email = os.getenv("SENDGRID_FROM_EMAIL", DEFAULT_FROM_EMAIL)
     
-    if not sender_email or not sender_password:
-        return False, "SMTP not configured (check EMAIL_ADDRESS and EMAIL_PASSWORD in .env)"
+    if not api_key:
+        return False, "SendGrid API Key not configured (SENDGRID_API_KEY missing in .env)"
     
-    if not aiosmtplib:
-        return False, "aiosmtplib not installed"
+    if SendGridAPIClient is None:
+        return False, "SendGrid library not installed. Run: pip install sendgrid"
 
     try:
-        # Create modern EmailMessage
-        msg = EmailMessage()
-        msg["Subject"] = subject
-        msg["From"] = f"ClassMind Reports <{sender_email}>"
-        msg["To"] = to_email
-        msg["Reply-To"] = sender_email
-        msg["Date"] = formatdate(localtime=True)
-        msg["Message-ID"] = make_msgid(domain="classmind.onrender.com")
-        
-        # Add content (plain text fallback + HTML)
-        msg.set_content("Please view this email in an HTML-compatible client.")
-        msg.add_alternative(html_content, subtype="html")
-
-        # Clean password
-        clean_pwd = sender_password.replace(" ", "")
-
-        # Use aiosmtplib.send() - The most robust way to send
-        # It handles connect, starttls, and login automatically.
-        log.info("[SMTP] Sending email to %s via %s:587...", to_email, SMTP_SERVER)
-        
-        await aiosmtplib.send(
-            msg,
-            hostname  = SMTP_SERVER,
-            port      = SMTP_PORT,
-            use_tls   = False,
-            start_tls = True,  # Let aiosmtplib handle STARTTLS upgrade
-            username  = sender_email,
-            password  = clean_pwd,
-            timeout   = 30
+        message = Mail(
+            from_email=Email(from_email, "ClassMind Reports"),
+            to_emails=To(to_email),
+            subject=subject,
+            html_content=html_content
         )
         
-        log.info("[SMTP] SUCCESS: Email delivered to %s", to_email)
-        return True, "Email sent successfully"
+        # Add Reply-To
+        message.reply_to = Email(from_email)
 
-    except aiosmtplib.SMTPAuthenticationError as e:
-        err_msg = f"Auth failed. Check App Password. Error: {e}"
-        log.error("[SMTP] AUTH ERROR: %s", err_msg)
-        return False, err_msg
-    except aiosmtplib.SMTPException as e:
-        err_msg = f"SMTP Error: {str(e)}"
-        log.error("[SMTP] PROTOCOL ERROR: %s", err_msg)
-        return False, err_msg
-    except (ConnectionError, asyncio.TimeoutError, OSError) as e:
-        err_msg = f"Connection error: {str(e)}"
-        log.error("[SMTP] CONNECTION ERROR: %s", err_msg)
-        return False, err_msg
+        # SendGrid client is synchronous by default, we'll run it in a thread to avoid blocking FastAPI
+        def _send():
+            sg = SendGridAPIClient(api_key)
+            response = sg.send(message)
+            return response.status_code
+
+        log.info("[SENDGRID] Attempting to send email to: %s", to_email)
+        status_code = await asyncio.to_thread(_send)
+        
+        if 200 <= status_code < 300:
+            log.info("[SENDGRID] SUCCESS: Email delivered to %s (Status: %s)", to_email, status_code)
+            return True, "Email sent successfully"
+        else:
+            log.error("[SENDGRID] FAILED: Status code %s", status_code)
+            return False, f"SendGrid returned status code {status_code}"
+
     except Exception as e:
-        log.error("[SMTP] UNEXPECTED ERROR: %s", e, exc_info=True)
-        return False, f"Unexpected error: {str(e)}"
+        log.error("[SENDGRID] UNEXPECTED ERROR: %s", e, exc_info=True)
+        return False, f"SendGrid Error: {str(e)}"
 
 # ── Self-Test Mode ────────────────────────────────────────────────
 
 async def verify_email_system() -> Tuple[bool, str]:
     """
     Requirement 8: Self-test mode on server start.
-    Sends a real test email to the sender.
+    Sends a real test email to the configured sender.
     """
-    SENDER_EMAIL, SENDER_PASSWORD = get_credentials()
-    if not validate_smtp_config():
-        if SENDER_PASSWORD == "your-app-password":
-            print("\n\u26A0\uFE0F Please replace EMAIL_PASSWORD with a valid Gmail App Password")
-        msg = "Email system not fully working: Missing or placeholder credentials in .env"
-        print(f"\n\u274C {msg}")
+    api_key = get_sendgrid_key()
+    from_email = os.getenv("SENDGRID_FROM_EMAIL", DEFAULT_FROM_EMAIL)
+    
+    if not api_key:
+        msg = "Email system not fully working: SENDGRID_API_KEY missing in .env"
+        print(f"\n❌ {msg}")
         return False, msg
 
-    print(f"\n[SMTP_TEST] Verifying Gmail SMTP for {SENDER_EMAIL}...")
+    print(f"\n[SENDGRID_TEST] Verifying SendGrid API for {from_email}...")
     
     test_html = f"""
-    <div style="font-family: sans-serif; padding: 20px; border: 2px solid #6366f1; border-radius: 10px;">
-        <h2 style="color: #6366f1;">✅ ClassMind SMTP Test</h2>
+    <div style="font-family: sans-serif; padding: 20px; border: 2px solid #00b140; border-radius: 10px;">
+        <h2 style="color: #00b140;">✅ ClassMind SendGrid Test</h2>
         <p>This is a real-time verification email sent at <strong>{datetime.now().strftime('%H:%M:%S')}</strong>.</p>
-        <p>If you see this, your Gmail SMTP system is <strong>fully functional</strong>.</p>
+        <p>If you see this, your SendGrid API system is <strong>fully functional</strong>.</p>
+        <p><i>Note: Port 587 blocks on Render are now bypassed via Web API.</i></p>
     </div>
     """
     
-    success, msg = await send_mail_raw(SENDER_EMAIL, "🔬 ClassMind SMTP Self-Test", test_html)
+    success, msg = await send_mail_raw(from_email, "🔬 ClassMind SendGrid Self-Test", test_html)
     
     if success:
-        full_msg = "Gmail SMTP system is fully configured and working correctly"
+        full_msg = "SendGrid API system is fully configured and working correctly"
         print(f"✅ {full_msg}")
         return True, full_msg
     else:
@@ -156,7 +134,6 @@ def generate_email_html(session_data: dict, teacher_name: str) -> str:
     participation = analytics.get("participation", 0)
     understanding = analytics.get("understanding", 0)
     session_id = session_data.get("code", "N/A")
-    question_count = len(session_data.get("tasks", []))
 
     return f"""
     <!DOCTYPE html>
@@ -164,7 +141,7 @@ def generate_email_html(session_data: dict, teacher_name: str) -> str:
     <head><style>
         body {{ font-family: 'Segoe UI', sans-serif; line-height: 1.6; color: #334155; background: #f8fafc; margin: 0; padding: 20px; }}
         .container {{ max-width: 600px; margin: 0 auto; background: #fff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }}
-        .header {{ background: #6366f1; color: #fff; padding: 30px; text-align: center; }}
+        .header {{ background: #00b140; color: #fff; padding: 30px; text-align: center; }}
         .content {{ padding: 30px; }}
         .stat-grid {{ display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 20px 0; }}
         .stat-card {{ background: #f1f5f9; padding: 15px; border-radius: 12px; text-align: center; }}
@@ -183,7 +160,7 @@ def generate_email_html(session_data: dict, teacher_name: str) -> str:
                 </div>
                 <p style="text-align:center; color: #64748b; font-size: 14px;">Started at {start_time.strftime('%I:%M %p')}</p>
             </div>
-            <div class="footer">ClassMind &bull; Interactive Classroom intelligence</div>
+            <div class="footer">ClassMind &bull; Interactive Classroom Intelligence</div>
         </div>
     </body>
     </html>

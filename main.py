@@ -99,15 +99,11 @@ def validate_oauth_config():
 # ── validation ───────────────────────────────────────────────────
 def check_environment():
     """Validates environment variables on startup."""
-    email = os.getenv("EMAIL_ADDRESS", "")
-    pwd = os.getenv("EMAIL_PASSWORD", "")
-    placeholders = ["your-email@gmail.com", "your-app-password", "your_email@gmail.com"]
-    if not email or any(p in email for p in placeholders):
-        log.warning("[!] EMAIL_ADDRESS is not configured properly in .env")
-    elif not pwd or any(p in pwd for p in placeholders):
-        log.warning("[!] EMAIL_PASSWORD is not configured properly in .env")
+    sg_key = os.getenv("SENDGRID_API_KEY", "")
+    if not sg_key or "your_api_key" in sg_key:
+        log.warning("[!] SENDGRID_API_KEY is not configured in .env. Emails will not be sent.")
     else:
-        log.info("[OK] Email system configured for: %s", email)
+        log.info("[OK] SendGrid Email system configured.")
     
     # Strict OAuth check
     validate_oauth_config()

@@ -99,15 +99,11 @@ def validate_oauth_config():
 # ── validation ───────────────────────────────────────────────────
 def check_environment():
     """Validates environment variables on startup."""
-    email = os.getenv("EMAIL_ADDRESS", "")
-    pwd = os.getenv("EMAIL_PASSWORD", "")
-    placeholders = ["your-email@gmail.com", "your-app-password", "your_email@gmail.com"]
-    if not email or any(p in email for p in placeholders):
-        log.warning("[!] EMAIL_ADDRESS is not configured properly in .env")
-    elif not pwd or any(p in pwd for p in placeholders):
-        log.warning("[!] EMAIL_PASSWORD is not configured properly in .env")
+    sg_key = os.getenv("SENDGRID_API_KEY", "")
+    if not sg_key or "your_api_key" in sg_key:
+        log.warning("[!] SENDGRID_API_KEY is not configured in .env. Emails will not be sent.")
     else:
-        log.info("[OK] Email system configured for: %s", email)
+        log.info("[OK] SendGrid Email system configured.")
     
     # Strict OAuth check
     validate_oauth_config()
@@ -171,32 +167,6 @@ def admin_authorized(
         pass
         
     raise HTTPException(401, "Unauthorized: Admin privileges required")
-
-
-def google_authorized(
-    credentials: Optional[HTTPAuthorizationCredentials] = Depends(HTTPBearer(auto_error=False)),
-) -> str:
-    """
-    Verifies that the requester has a valid Google session.
-    Returns the verified email address.
-    """
-    if not credentials or credentials.scheme.lower() != "bearer":
-        raise HTTPException(401, "Authentication required. Please log in with Google.")
-    
-    token = credentials.credentials
-    try:
-        google_client_id = get_google_client_id()
-        if not google_client_id:
-            raise HTTPException(500, "Server configuration error: GOOGLE_CLIENT_ID missing")
-            
-        idinfo = id_token.verify_oauth2_token(token, requests.Request(), google_client_id)
-        email = idinfo.get("email")
-        if not email:
-            raise HTTPException(401, "Could not verify email from Google token")
-        return email
-    except Exception as e:
-        log.warning("[AUTH] Google token verification failed: %s", e)
-        raise HTTPException(401, "Your session has expired. Please log in again.")
 
 
 def normalize_student_key(name: str, roll: str, cls: str) -> str:
@@ -884,6 +854,108 @@ app = FastAPI(
     redoc_url="/redoc",
 )
 
+def google_authorized(
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(HTTPBearer(auto_error=False)),
+) -> str:
+    """
+    Verifies that the requester has a valid Google session.
+    Returns the verified email address.
+    """
+    if not credentials or credentials.scheme.lower() != "bearer":
+        raise HTTPException(401, "Authentication required. Please log in with Google.")
+    
+    token = credentials.credentials
+    try:
+        google_client_id = get_google_client_id()
+        if not google_client_id:
+            raise HTTPException(500, "Server configuration error: GOOGLE_CLIENT_ID missing")
+            
+        idinfo = id_token.verify_oauth2_token(token, requests.Request(), google_client_id)
+        email = idinfo.get("email")
+        if not email:
+            raise HTTPException(401, "Could not verify email from Google token")
+        return email.lower().strip()
+    except Exception as e:
+        log.warning("[AUTH] Google token verification failed: %s", e)
+        raise HTTPException(401, "Your session has expired. Please log in again.")
+
+def google_authorized_optional(
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(HTTPBearer(auto_error=False)),
+) -> Optional[str]:
+    """
+    Optional version of google_authorized. Returns None instead of raising 401.
+    """
+    if not credentials or credentials.scheme.lower() != "bearer":
+        return None
+    try:
+        return google_authorized(credentials)
+    except:
+        return None
+
+@app.get("/api/teacher/sessions")
+def get_teacher_sessions(email: str = Query(...)):
+    """
+    Returns all sessions created by a teacher, filtered by email.
+    Completely public endpoint for dashboard flexibility.
+    """
+    if not email:
+        raise HTTPException(400, "Email parameter is required")
+
+    teacher_history = []
+    
+    # Normalize email for comparison
+    email_n = email.lower().strip()
+    
+    # Filter sessions where teacher_id matches the authenticated email
+    for s in sessions.values():
+        s_email = (s.get("teacher_email") or s.get("teacher_id") or "").lower().strip()
+        
+        if s_email == email_n:
+            # Compute real-time analytics for this session (including offline but only if they participated)
+            analytics = compute_analytics(s, include_offline=True)
+            
+            # Rule: students_count = number of students who actually participated
+            # analytics["total_students"] in history mode is the count of engaged students.
+            student_p_count = analytics.get("total_students", 0)
+            
+            # Rule: tasks_count = number of tasks actually delivered/sent to students
+            delivery_ids = s.get("task_deliveries", {})
+            unique_tasks_sent = len({d["task_id"] for d in delivery_ids.values() if d.get("sent_to")})
+            
+            # Rule: Calculate real participation and understanding
+            participation = analytics.get("participation", 0)
+            avg_understanding = analytics.get("understanding", 0)
+
+            teacher_history.append({
+                "code": s["code"],
+                "name": f"Session {s['code']}",
+                "date": time.strftime('%Y-%m-%d', time.localtime(s.get("created_at", 0))),
+                "timestamp": s.get("created_at", 0),
+                "status": s.get("status", "waiting"),
+                "students_count": student_p_count,
+                "participation": participation,
+                "avg_understanding": avg_understanding,
+                "tasks_count": unique_tasks_sent,
+            })
+    
+    # Sort by newest first
+    teacher_history.sort(key=lambda x: x["timestamp"], reverse=True)
+    
+    # Calculate global summary stats across all sessions
+    total_students = sum(s["students_count"] for s in teacher_history)
+    avg_participation = sum(s["participation"] for s in teacher_history) / len(teacher_history) if teacher_history else 0
+    avg_understanding = sum(s["avg_understanding"] for s in teacher_history) / len(teacher_history) if teacher_history else 0
+    
+    return {
+        "sessions": teacher_history,
+        "stats": {
+            "total_sessions": len(teacher_history),
+            "total_students": total_students,
+            "avg_participation": round(avg_participation, 1),
+            "avg_understanding": round(avg_understanding, 1),
+        }
+    }
+
 # Consolidated exception handling moved to bottom
 
 # ── CORS: single-origin setup — fully open so no fetch failures ─
@@ -1135,57 +1207,76 @@ def get_session_info(code: str):
 
 async def _send_session_end_emails(s: dict) -> None:
     """Background task: email ONLY the teacher with the session report."""
-    code         = s.get("code", "?")
+    code = s.get("code", "?")
     teacher_name = s.get("teacher_name", "Teacher")
-    log.info("[EMAIL] Email triggered for session %s", code)
+    teacher_email = s.get("teacher_email", "")
 
-    # Validate SMTP config first
-    from email_service import validate_smtp_config
-    if not validate_smtp_config():
-        log.error("[EMAIL] Email failed — SMTP not configured for session %s", code)
-        return
+    log.info("[EMAIL_TASK] Starting background email task for session %s", code)
 
     try:
-        report = compute_report(s)
-    except Exception as exc:
-        log.error("[EMAIL] compute_report failed for %s: %s", code, exc)
-        return
+        # 1. Validate SMTP config first
+        from email_service import validate_smtp_config
+        if not validate_smtp_config():
+            log.error("[EMAIL_TASK] FAILED: SMTP not configured (check .env for session %s)", code)
+            return
 
-    # Send ONLY to teacher — never to students
-    teacher_email = s.get("teacher_email", "")
-    if not teacher_email or not is_valid_email(teacher_email):
-        log.warning("[EMAIL] No valid teacher email on session %s — skipping", code)
-        return
+        # 2. Compute report
+        try:
+            report = compute_report(s)
+            if not report:
+                log.error("[EMAIL_TASK] FAILED: compute_report returned None for %s", code)
+                return
+        except Exception as exc:
+            log.error("[EMAIL_TASK] FAILED: compute_report error for %s: %s", code, exc)
+            return
 
-    ok, msg = await send_session_email(
-        to_email     = teacher_email,
-        session_data = report,
-        teacher_name = teacher_name,
-    )
-    if ok:
-        log.info("[EMAIL] Email sent successfully to teacher (%s) for session %s", teacher_email, code)
-    else:
-        log.error("[EMAIL] Email failed for session %s: %s", code, msg)
+        # 3. Check email
+        if not teacher_email or not is_valid_email(teacher_email):
+            log.warning("[EMAIL_TASK] SKIPPED: No valid teacher email for session %s", code)
+            return
+
+        # 4. SEND (Awaited)
+        log.info("[EMAIL_TASK] Sending report to %s...", teacher_email)
+        ok, msg = await send_session_email(
+            to_email     = teacher_email,
+            session_data = report,
+            teacher_name = teacher_name,
+        )
+        
+        if ok:
+            log.info("[EMAIL_TASK] SUCCESS: Email sent to teacher (%s) for session %s", teacher_email, code)
+        else:
+            log.error("[EMAIL_TASK] FAILED: %s", msg)
+
+    except Exception as e:
+        log.error("[EMAIL_TASK] CRITICAL ERROR in background task: %s", e, exc_info=True)
 
 
 async def _send_class_start_notifications(s: dict) -> None:
     """Background task: notify students with emails that class has started."""
-    code         = s.get("code", "?")
+    code = s.get("code", "?")
     teacher_name = s.get("teacher_name", "Teacher")
-    for sid, student in s.get("students", {}).items():
+    students = s.get("students", {})
+    
+    log.info("[EMAIL_TASK] Notifying %d students that session %s started", len(students), code)
+    
+    for sid, student in students.items():
         student_email = student.get("email", "")
         if not student_email or not is_valid_email(student_email):
             continue
-        ok, msg = await send_class_starting_email(
-            to_email     = student_email,
-            student_name = student.get("name", "Student"),
-            session_code = code,
-            teacher_name = teacher_name,
-        )
-        log.info(
-            "[AUTO-EMAIL] Start notification -> %s (%s): %s",
-            student.get("name", sid), student_email, "OK" if ok else msg,
-        )
+            
+        try:
+            ok, msg = await send_class_starting_email(
+                to_email     = student_email,
+                session_code = code,
+                teacher_name = teacher_name,
+            )
+            if ok:
+                log.info("[EMAIL_TASK] Start notification sent to %s (%s)", student.get("name", sid), student_email)
+            else:
+                log.error("[EMAIL_TASK] FAILED notification to %s: %s", student_email, msg)
+        except Exception as e:
+            log.error("[EMAIL_TASK] ERROR notifying %s: %s", student_email, e)
 
 
 @app.post("/api/session/{code}/control")

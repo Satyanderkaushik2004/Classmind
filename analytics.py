@@ -9,31 +9,72 @@ from typing import Dict, List
 
 # ─────────────────────── LIVE SNAPSHOT ───────────────────────────
 
-def compute_analytics(session: dict) -> dict:
-    """
-    Lightweight snapshot pushed to teacher every 2 seconds.
-    Returns understanding%, participation%, at_risk list, topic_confusion.
-    """
-    active = [s for s in session["students"].values() if s["status"] == "active"]
-    total  = len(active)
+def get_participating_student_ids(session: dict) -> set[str]:
+    """Returns a set of IDs of students who actually interacted with the session."""
+    ids = set()
+    
+    # 1. Answered questions
+    for sid, st in session.get("students", {}).items():
+        if st.get("total_answered", 0) > 0 or st.get("coding_submitted"):
+            ids.add(sid)
+            
+    # 2. Sent chat messages
+    for msg in session.get("chat_messages", []):
+        sid = msg.get("sender_id")
+        if sid and sid != "teacher" and sid in session.get("students", {}):
+            ids.add(sid)
+            
+    # 3. Submitted doubts
+    for d in session.get("doubts", []):
+        sid = d.get("student_id")
+        if sid and sid in session.get("students", {}):
+            ids.add(sid)
+            
+    return ids
 
+def compute_analytics(session: dict, include_offline: bool = False) -> dict:
+    """
+    Calculates session metrics. 
+    By default (live push), it only considers active students.
+    If include_offline=True (reports/history), it considers all students who participated.
+    """
+    participated_ids = get_participating_student_ids(session)
+    students_list = list(session["students"].values())
+    
+    if not include_offline:
+        # For live dashboard, we still care about who is currently active
+        students_list = [s for s in students_list if s["status"] == "active"]
+    else:
+        # For history, we only care about those who actually participated
+        students_list = [s for s in students_list if s["id"] in participated_ids]
+    
+    total = len(students_list)
     if total == 0:
         return {
             "understanding": 0, "participation": 0,
             "at_risk": [], "topic_confusion": {},
             "total_students": 0, "answered": 0,
+            "participated_count": 0,
         }
 
-    answered_students = [s for s in active if s["total_answered"] > 0]
-    participation     = round(len(answered_students) / total * 100)
+    # Participation: % of students who have interacted in ANY way
+    # (Based on the total pool of students who joined the session)
+    all_joined_count = len(session.get("students", {}))
+    participation = round((len(participated_ids) / all_joined_count) * 100) if all_joined_count > 0 else 0
 
-    all_correct  = sum(s["correct"]        for s in active)
-    all_answered = sum(s["total_answered"] for s in active)
-    understanding = round(all_correct / all_answered * 100) if all_answered else 0
+    # Understanding: % of all answers that are correct
+    all_correct = sum(s.get("correct", 0) for s in students_list)
+    all_answered = sum(s.get("total_answered", 0) for s in students_list)
+    understanding = round((all_correct / all_answered) * 100) if all_answered > 0 else 0
+
+    # Defensiveness: If no one participated, everything must be 0
+    if len(participated_ids) == 0:
+        participation = 0
+        understanding = 0
 
     at_risk = [
-        {"id": s["id"], "name": s["name"]} for s in active
-        if s["total_answered"] > 0 and (s["correct"] / s["total_answered"]) < 0.40
+        {"id": s["id"], "name": s["name"]} for s in students_list
+        if s.get("total_answered", 0) > 0 and (s["correct"] / s["total_answered"]) < 0.40
     ]
 
     return {
@@ -42,7 +83,8 @@ def compute_analytics(session: dict) -> dict:
         "at_risk":         at_risk,
         "topic_confusion": _topic_confusion(session),
         "total_students":  total,
-        "answered":        len(answered_students),
+        "answered":        len([s for s in students_list if s.get("total_answered", 0) > 0]),
+        "participated_count": len(participated_ids),
     }
 
 

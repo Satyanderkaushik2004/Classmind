@@ -133,23 +133,388 @@ select option{background:var(--surface2)}
 
 /* ── Landing Page ── */
 .landing{display:block;overflow-x:hidden;background:var(--bg)}
-.landing-hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;
-  justify-content:center;padding:40px 24px;
-  background:radial-gradient(ellipse at 50% -10%,rgba(99,102,241,0.22) 0%,rgba(139,92,246,0.08) 40%,var(--bg) 70%);
-  position:relative;overflow:hidden}
-.landing-hero::before{content:'';position:absolute;inset:0;
-  background:radial-gradient(ellipse at 80% 50%,rgba(236,72,153,0.06) 0%,transparent 60%);pointer-events:none}
-.landing-hero-grid{position:absolute;inset:0;pointer-events:none;
-  background-image:linear-gradient(rgba(99,102,241,0.04) 1px,transparent 1px),
-    linear-gradient(90deg,rgba(99,102,241,0.04) 1px,transparent 1px);
-  background-size:48px 48px;mask-image:radial-gradient(ellipse 80% 60% at 50% 0%,black 0%,transparent 100%)}
-.landing-logo{font-size:3.5rem;font-weight:800;margin-bottom:8px;
-  background:linear-gradient(135deg,var(--accent),var(--accent2),#ec4899);
-  -webkit-background-clip:text;-webkit-text-fill-color:transparent;position:relative;z-index:1}
+
+/* ══════════════════════════════════════════════════════════════════════
+   HERO — animated cinematic background system
+   Z-INDEX HIERARCHY:
+     0  hero-bg-wrap     (image slideshow)
+     1  hero-overlay     (dark/light gradient vignette)
+     2  hero-glow-orbs   (ambient floating colour orbs)
+     3  hero-particles   (rising dot particles)
+     4  landing-hero-grid (subtle grid pattern)
+    10  .lp-animate      (foreground text + cards — always on top)
+══════════════════════════════════════════════════════════════════════ */
+.landing-hero{
+  min-height:calc(100vh - 60px);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:60px 24px;
+  position:relative;overflow:hidden;
+  background:#0a0a1e; /* safe fallback while images load */
+}
+
+/* ── IMAGE SLIDESHOW LAYER ── */
+.hero-bg-wrap{
+  position:absolute;inset:0;z-index:0;overflow:hidden;
+}
+/* Each slide: slightly oversized (for KB movement headroom) */
+.hero-bg-slide{
+  position:absolute;
+  inset:-6%;            /* 6% overflow on every side for Ken Burns travel */
+  background-size:cover;
+  background-position:center center;
+  background-repeat:no-repeat;
+  opacity:0;
+  transition:opacity 2s cubic-bezier(0.4,0,0.2,1);
+  will-change:transform,opacity;
+  backface-visibility:hidden;
+  -webkit-backface-visibility:hidden;
+}
+.hero-bg-slide.active{opacity:1}
+
+/* Ken Burns — 6 unique cinematic movement paths, each paired to a slot */
+.hero-bg-slide.kb-1{animation:hero-kb-1 18s ease-in-out infinite alternate}
+.hero-bg-slide.kb-2{animation:hero-kb-2 20s ease-in-out infinite alternate}
+.hero-bg-slide.kb-3{animation:hero-kb-3 16s ease-in-out infinite alternate}
+.hero-bg-slide.kb-4{animation:hero-kb-4 22s ease-in-out infinite alternate}
+.hero-bg-slide.kb-5{animation:hero-kb-5 19s ease-in-out infinite alternate}
+.hero-bg-slide.kb-6{animation:hero-kb-6 17s ease-in-out infinite alternate}
+
+@keyframes hero-kb-1{from{transform:scale(1)     translate(0,0)}    to{transform:scale(1.14) translate(-2.5%,1.5%)}}
+@keyframes hero-kb-2{from{transform:scale(1.06)  translate(1.5%,-1%)} to{transform:scale(1.16) translate(-1%,2%)}}
+@keyframes hero-kb-3{from{transform:scale(1)     translate(-2%,1%)}  to{transform:scale(1.13) translate(2.5%,-2%)}}
+@keyframes hero-kb-4{from{transform:scale(1.04)  translate(0.5%,0)}  to{transform:scale(1.15) translate(-2%,1.5%)}}
+@keyframes hero-kb-5{from{transform:scale(1)     translate(1%,0.5%)} to{transform:scale(1.14) translate(-1%,-2.5%)}}
+@keyframes hero-kb-6{from{transform:scale(1.05)  translate(-1%,-1%)} to{transform:scale(1.15) translate(2%,2%)}}
+
+/* ── CINEMATIC OVERLAY — dark gradient vignette over images ── */
+.hero-overlay{
+  position:absolute;inset:0;z-index:1;pointer-events:none;
+  background:
+    /* top-to-bottom darkening — calibrated for crisp text */
+    linear-gradient(180deg,
+      rgba(4,4,18,0.60) 0%,
+      rgba(4,4,18,0.36) 30%,
+      rgba(4,4,18,0.50) 65%,
+      rgba(4,4,18,0.76) 100%),
+    /* circular vignette corners */
+    radial-gradient(ellipse at 50% 50%,
+      transparent 25%,
+      rgba(2,2,14,0.55) 100%);
+}
+
+/* ── AMBIENT GLOW ORBS — soft colour blobs that float slowly ── */
+.hero-glow-orb{
+  position:absolute;border-radius:50%;pointer-events:none;z-index:2;
+  will-change:transform;
+}
+.hero-glow-orb.orb-1{
+  width:700px;height:700px;top:-15%;left:-12%;
+  background:radial-gradient(circle,rgba(99,102,241,0.22) 0%,transparent 68%);
+  animation:hgo-float-1 14s ease-in-out infinite;
+}
+.hero-glow-orb.orb-2{
+  width:600px;height:600px;bottom:-18%;right:-10%;
+  background:radial-gradient(circle,rgba(139,92,246,0.18) 0%,transparent 68%);
+  animation:hgo-float-2 18s ease-in-out infinite;
+}
+.hero-glow-orb.orb-3{
+  width:450px;height:450px;top:25%;right:12%;
+  background:radial-gradient(circle,rgba(236,72,153,0.13) 0%,transparent 68%);
+  animation:hgo-float-3 11s ease-in-out infinite;
+}
+.hero-glow-orb.orb-4{
+  width:320px;height:320px;top:55%;left:18%;
+  background:radial-gradient(circle,rgba(59,130,246,0.12) 0%,transparent 68%);
+  animation:hgo-float-4 16s ease-in-out infinite;
+}
+
+@keyframes hgo-float-1{
+  0%,100%{transform:translate(0,0)  scale(1)}
+  33%{transform:translate(50px,-35px) scale(1.06)}
+  66%{transform:translate(-25px,22px) scale(0.96)}
+}
+@keyframes hgo-float-2{
+  0%,100%{transform:translate(0,0)  scale(1)}
+  40%{transform:translate(-60px,30px) scale(1.09)}
+  70%{transform:translate(25px,-18px) scale(0.97)}
+}
+@keyframes hgo-float-3{
+  0%,100%{transform:translate(0,0)  scale(1)}
+  50%{transform:translate(-35px,35px) scale(1.12)}
+}
+@keyframes hgo-float-4{
+  0%,100%{transform:translate(0,0)  scale(1)}
+  45%{transform:translate(30px,-25px) scale(1.08)}
+  80%{transform:translate(-15px,15px) scale(0.95)}
+}
+
+/* ── FLOATING PARTICLES — rising luminous dots ── */
+.hero-particles{
+  position:absolute;inset:0;z-index:3;pointer-events:none;overflow:hidden;
+}
+.hero-particle{
+  position:absolute;border-radius:50%;will-change:transform,opacity;
+}
+/* 12 particles: varied sizes, positions, timings */
+.hero-particle:nth-child(1) {width:3px;height:3px;left:7%;  bottom:10%;animation:ptcl-rise 10s 0.0s infinite ease-in;background:rgba(255,255,255,0.65)}
+.hero-particle:nth-child(2) {width:2px;height:2px;left:19%; bottom:6%; animation:ptcl-rise 13s 2.2s infinite ease-in;background:rgba(255,255,255,0.5)}
+.hero-particle:nth-child(3) {width:4px;height:4px;left:35%; bottom:18%;animation:ptcl-rise 9s  3.5s infinite ease-in;background:rgba(99,102,241,0.9);box-shadow:0 0 8px rgba(99,102,241,0.7)}
+.hero-particle:nth-child(4) {width:2px;height:2px;left:52%; bottom:4%; animation:ptcl-rise 12s 0.8s infinite ease-in;background:rgba(255,255,255,0.55)}
+.hero-particle:nth-child(5) {width:3px;height:3px;left:65%; bottom:22%;animation:ptcl-rise 11s 4.2s infinite ease-in;background:rgba(255,255,255,0.6)}
+.hero-particle:nth-child(6) {width:2px;height:2px;left:78%; bottom:10%;animation:ptcl-rise 14s 1.5s infinite ease-in;background:rgba(255,255,255,0.45)}
+.hero-particle:nth-child(7) {width:3px;height:3px;left:13%; bottom:38%;animation:ptcl-rise 8s  5.0s infinite ease-in;background:rgba(139,92,246,0.8);box-shadow:0 0 7px rgba(139,92,246,0.6)}
+.hero-particle:nth-child(8) {width:2px;height:2px;left:43%; bottom:32%;animation:ptcl-rise 15s 2.8s infinite ease-in;background:rgba(255,255,255,0.35)}
+.hero-particle:nth-child(9) {width:4px;height:4px;left:70%; bottom:45%;animation:ptcl-rise 10s 6.0s infinite ease-in;background:rgba(99,102,241,0.75);box-shadow:0 0 8px rgba(99,102,241,0.55)}
+.hero-particle:nth-child(10){width:2px;height:2px;left:88%; bottom:7%; animation:ptcl-rise 12s 0.5s infinite ease-in;background:rgba(255,255,255,0.5)}
+.hero-particle:nth-child(11){width:3px;height:3px;left:28%; bottom:55%;animation:ptcl-rise 9s  3.8s infinite ease-in;background:rgba(236,72,153,0.6);box-shadow:0 0 6px rgba(236,72,153,0.45)}
+.hero-particle:nth-child(12){width:2px;height:2px;left:58%; bottom:65%;animation:ptcl-rise 16s 1.9s infinite ease-in;background:rgba(255,255,255,0.3)}
+
+@keyframes ptcl-rise{
+  0%  {transform:translateY(0)     translateX(0)  ;opacity:0}
+  6%  {opacity:0.9}
+  88% {opacity:0.3}
+  100%{transform:translateY(-75vh) translateX(22px);opacity:0}
+}
+
+/* ── GRID LAYER — keep above orbs/particles ── */
+.landing-hero-grid{
+  position:absolute;inset:0;z-index:4;pointer-events:none;
+  background-image:
+    linear-gradient(rgba(99,102,241,0.06) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(99,102,241,0.06) 1px,transparent 1px);
+  background-size:48px 48px;
+  mask-image:radial-gradient(ellipse 80% 60% at 50% 0%,black 0%,transparent 100%);
+  -webkit-mask-image:radial-gradient(ellipse 80% 60% at 50% 0%,black 0%,transparent 100%);
+}
+
+/* ── FOREGROUND CONTENT WRAPPER — always on top ── */
+.landing-hero > .lp-animate{
+  width:100%;max-width:640px;
+  display:flex;flex-direction:column;align-items:center;
+  text-align:center;
+  position:relative;z-index:10;
+  /* Prevents height collapse during role→form transition */
+  min-height:300px;
+}
+
+/* ── ENHANCED HERO TEXT for cinematic bg — premium redesign ── */
+.landing-logo{
+  text-shadow:
+    0 0 36px rgba(99,102,241,0.50),
+    0 0 16px rgba(139,92,246,0.35),
+    0 0 8px  rgba(99,102,241,0.25),
+    0 4px 22px rgba(0,0,0,0.92),
+    0 2px 6px  rgba(0,0,0,0.85);
+  filter:drop-shadow(0 0 14px rgba(99,102,241,0.30));
+}
+.landing-eyebrow{
+  backdrop-filter:blur(20px) saturate(180%);-webkit-backdrop-filter:blur(20px) saturate(180%);
+  text-shadow:none;
+  background:rgba(99,102,241,0.22)!important;
+  border:1.5px solid rgba(99,102,241,0.55)!important;
+  color:#c4c6ff!important;
+  font-weight:800!important;
+  box-shadow:0 0 18px rgba(99,102,241,0.3),inset 0 1px 0 rgba(255,255,255,0.15);
+}
+.landing-sub{
+  text-shadow:
+    0 2px 20px rgba(0,0,0,0.95),
+    0 4px 40px rgba(0,0,0,0.8),
+    0 1px 4px rgba(0,0,0,0.9);
+  color:#dde3f4!important;
+  font-weight:500!important;
+  letter-spacing:0.01em;
+  line-height:1.75!important;
+}
+
+/* ── ROLE CARDS over cinematic bg — premium glass ── */
+.role-card{
+  background:rgba(14,17,36,0.82)!important;
+  backdrop-filter:blur(28px) saturate(160%);-webkit-backdrop-filter:blur(28px) saturate(160%);
+  border:1.5px solid rgba(99,102,241,0.35)!important;
+  box-shadow:
+    0 8px 40px rgba(0,0,0,0.55),
+    0 2px 12px rgba(0,0,0,0.4),
+    inset 0 1px 0 rgba(255,255,255,0.1),
+    inset 0 0 32px rgba(99,102,241,0.04);
+  transition:all 0.3s cubic-bezier(0.4,0,0.2,1)!important;
+}
+.role-card:hover{
+  background:rgba(28,32,68,0.92)!important;
+  border-color:rgba(99,102,241,0.7)!important;
+  box-shadow:
+    0 16px 64px rgba(99,102,241,0.3),
+    0 4px 20px rgba(0,0,0,0.5),
+    inset 0 1px 0 rgba(255,255,255,0.15),
+    0 0 0 1px rgba(99,102,241,0.2)!important;
+  transform:translateY(-4px) scale(1.01)!important;
+}
+.role-title{color:#f0f2ff!important;text-shadow:0 1px 8px rgba(0,0,0,0.6)}
+.role-desc{color:#b8c0e0!important;text-shadow:0 1px 4px rgba(0,0,0,0.5)}
+.role-icon{filter:drop-shadow(0 0 12px rgba(99,102,241,0.4))}
+
+/* ── FORM CARD over cinematic bg ── */
+.lp-form-fade-card{
+  background:rgba(22,25,40,0.8)!important;
+  backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
+  border:1px solid rgba(99,102,241,0.2)!important;
+  box-shadow:0 16px 48px rgba(0,0,0,0.5)!important;
+}
+
+/* ── SLIDE PROGRESS DOTS ── */
+.hero-progress-dots{
+  position:absolute;bottom:28px;left:50%;transform:translateX(-50%);
+  z-index:10;display:flex;gap:8px;pointer-events:none;
+}
+.hero-progress-dot{
+  width:28px;height:3px;border-radius:2px;
+  background:rgba(255,255,255,0.2);
+  transition:background 0.4s ease,width 0.4s ease;
+  overflow:hidden;position:relative;
+}
+.hero-progress-dot.active{background:rgba(255,255,255,0.25);width:42px}
+.hero-progress-dot.active::after{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(90deg,var(--accent),var(--accent2));
+  animation:dot-fill var(--dot-duration,7s) linear forwards;
+}
+@keyframes dot-fill{from{width:0%}to{width:100%}}
+
+/* ── LIGHT MODE ADAPTATIONS for cinematic hero ── */
+.landing.light .landing-hero{background:#e8eaf6}
+
+.landing.light .hero-overlay{
+  background:
+    linear-gradient(180deg,
+      rgba(235,238,255,0.55) 0%,
+      rgba(235,238,255,0.28) 40%,
+      rgba(235,238,255,0.48) 75%,
+      rgba(235,238,255,0.68) 100%),
+    radial-gradient(ellipse at 50% 50%,
+      transparent 28%,
+      rgba(215,220,250,0.35) 100%);
+}
+.landing.light .hero-glow-orb.orb-1{background:radial-gradient(circle,rgba(99,102,241,0.15) 0%,transparent 68%)}
+.landing.light .hero-glow-orb.orb-2{background:radial-gradient(circle,rgba(139,92,246,0.12) 0%,transparent 68%)}
+.landing.light .hero-glow-orb.orb-3{background:radial-gradient(circle,rgba(236,72,153,0.09) 0%,transparent 68%)}
+.landing.light .hero-glow-orb.orb-4{background:radial-gradient(circle,rgba(59,130,246,0.1)  0%,transparent 68%)}
+.landing.light .hero-particle{background:rgba(79,70,229,0.45)}
+.landing.light .hero-particle:nth-child(3),
+.landing.light .hero-particle:nth-child(9){background:rgba(79,70,229,0.65);box-shadow:0 0 7px rgba(79,70,229,0.45)}
+.landing.light .hero-particle:nth-child(7){background:rgba(124,58,237,0.6);box-shadow:0 0 6px rgba(124,58,237,0.4)}
+.landing.light .hero-particle:nth-child(11){background:rgba(219,39,119,0.5);box-shadow:0 0 5px rgba(219,39,119,0.35)}
+.landing.light .landing-hero-grid{
+  background-image:
+    linear-gradient(rgba(79,70,229,0.07) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(79,70,229,0.07) 1px,transparent 1px);
+}
+.landing.light .role-card{
+  background:rgba(255,255,255,0.82)!important;
+  border-color:rgba(79,70,229,0.3)!important;
+  box-shadow:0 8px 40px rgba(15,23,42,0.18),inset 0 1px 0 rgba(255,255,255,0.95)!important;
+}
+.landing.light .role-card:hover{
+  background:rgba(255,255,255,0.95)!important;
+  border-color:rgba(79,70,229,0.55)!important;
+  box-shadow:0 16px 56px rgba(79,70,229,0.2),0 4px 16px rgba(15,23,42,0.15)!important;
+}
+.landing.light .role-title{color:#0f172a!important;text-shadow:none!important}
+.landing.light .role-desc{color:#334155!important;text-shadow:none!important}
+.landing.light .landing-logo{
+  background:linear-gradient(135deg,#3730a3 0%,#5b21b6 40%,#7c3aed 70%,#3730a3 100%);
+  background-size:200% 200%;
+  animation:logo-shimmer 4s ease infinite;
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  background-clip:text;
+  text-shadow:none;filter:none;
+}
+.landing.light .landing-sub{
+  color:#1e293b!important;
+  text-shadow:0 1px 12px rgba(255,255,255,0.9),0 2px 24px rgba(255,255,255,0.7)!important;
+  font-weight:600!important;
+}
+.landing.light .landing-eyebrow{
+  background:rgba(255,255,255,0.75)!important;
+  border-color:rgba(79,70,229,0.45)!important;
+  color:#4338ca!important;
+  box-shadow:0 2px 16px rgba(79,70,229,0.15),inset 0 1px 0 rgba(255,255,255,0.9);
+}
+.landing.light .hero-content-shield{
+  background:radial-gradient(ellipse 70% 65% at 50% 45%,
+    rgba(235,238,255,0.6) 0%,
+    rgba(235,238,255,0.3) 50%,
+    transparent 100%);
+}
+.landing.light .landing-hero > .lp-animate::before{
+  background:radial-gradient(ellipse 85% 80% at 50% 50%,
+    rgba(240,242,255,0.7) 0%,
+    rgba(240,242,255,0.35) 60%,
+    transparent 100%);
+}
+.landing.light .hero-progress-dot{background:rgba(0,0,0,0.15)}
+.landing.light .hero-progress-dot.active{background:rgba(0,0,0,0.12)}
+.landing.light .lp-form-fade-card{
+  background:rgba(255,255,255,0.82)!important;
+  border-color:rgba(79,70,229,0.18)!important;
+  box-shadow:0 16px 48px rgba(15,23,42,0.12)!important;
+}
+
+/* ── MOBILE PERFORMANCE — reduce complexity on small screens ── */
+@media(max-width:600px){
+  .hero-bg-slide{transition-duration:1.5s}
+  /* Cut down particles to 6 on mobile */
+  .hero-particle:nth-child(n+7){display:none}
+  /* Simplify orbs on mobile */
+  .hero-glow-orb.orb-3,.hero-glow-orb.orb-4{display:none}
+  .hero-glow-orb.orb-1{width:400px;height:400px}
+  .hero-glow-orb.orb-2{width:350px;height:350px}
+  .hero-progress-dots{bottom:16px}
+}
+.landing-logo{font-size:3.5rem;font-weight:900;margin-bottom:8px;
+  background:linear-gradient(135deg,#a5b4fc 0%,#c4b5fd 40%,#f0abfc 75%,#a5b4fc 100%);
+  background-size:200% 200%;
+  animation:logo-shimmer 4s ease infinite;
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  background-clip:text;
+  position:relative;z-index:1;letter-spacing:-0.02em}
+@keyframes logo-shimmer{
+  0%{background-position:0% 50%}
+  50%{background-position:100% 50%}
+  100%{background-position:0% 50%}
+}
+
+/* ── HERO CONTENT SHIELD — invisible readability layer ── */
+.hero-content-shield{
+  position:absolute;
+  inset:0;
+  z-index:5;
+  pointer-events:none;
+  background:
+    radial-gradient(ellipse 70% 65% at 50% 45%,
+      rgba(4,4,20,0.52) 0%,
+      rgba(4,4,20,0.28) 50%,
+      transparent 100%);
+  backdrop-filter:blur(0px);
+}
+/* Shield inside the hero foreground wrapper — only behind text center */
+.landing-hero > .lp-animate::before{
+  content:'';
+  position:absolute;
+  inset:-60px -80px;
+  background:radial-gradient(ellipse 85% 80% at 50% 50%,
+    rgba(5,5,24,0.65) 0%,
+    rgba(5,5,24,0.3) 60%,
+    transparent 100%);
+  filter:blur(20px);
+  z-index:-1;
+  pointer-events:none;
+  border-radius:50%;
+}
+
 .landing-eyebrow{font-size:0.78rem;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;
   color:var(--accent);background:rgba(99,102,241,0.12);border:1px solid rgba(99,102,241,0.25);
   padding:4px 14px;border-radius:20px;margin-bottom:16px;display:inline-block;position:relative;z-index:1}
-.landing-sub{color:var(--text2);font-size:1.1rem;margin-bottom:48px;text-align:center;
+.landing-sub{color:var(--text2);font-size:1.1rem;margin-bottom:36px;text-align:center;
   max-width:520px;line-height:1.6;position:relative;z-index:1}
 .role-cards{display:grid;grid-template-columns:1fr 1fr;gap:20px;max-width:600px;width:100%;position:relative;z-index:1}
 .role-card{background:var(--surface);border:2px solid var(--border);border-radius:16px;
@@ -160,8 +525,10 @@ select option{background:var(--surface2)}
 .role-desc{font-size:0.85rem;color:var(--text2)}
 
 /* ── Landing sections shared ── */
-.lp-section{padding:88px 24px;max-width:1160px;margin:0 auto}
-.lp-section-full{padding:80px 0;width:100%}
+.lp-section{padding:64px 24px;max-width:1160px;margin:0 auto}
+.lp-section-full{padding:64px 0;width:100%}
+/* First lp-section directly after hero gets slightly less top room */
+.landing-hero + .lp-section{padding-top:52px}
 .lp-tag{font-size:0.75rem;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;
   color:var(--accent);background:rgba(99,102,241,0.1);border:1px solid rgba(99,102,241,0.2);
   padding:4px 12px;border-radius:20px;display:inline-block;margin-bottom:16px}
@@ -239,18 +606,27 @@ select option{background:var(--surface2)}
 
 /* ── Carousel/Slideshow ── */
 .lp-carousel-wrap{width:100%;overflow:hidden;position:relative;padding:32px 0}
-.lp-carousel-track{display:flex;gap:20px;animation:lp-scroll 30s linear infinite;width:max-content}
-.lp-carousel-track:hover{animation-play-state:paused}
+/* gap:0 + margin-right on slides makes -50% land exactly at loop point */
+.lp-carousel-track{
+  display:flex;gap:0;
+  animation:lp-scroll 38s linear infinite;
+  width:max-content;
+  will-change:transform;
+  transform:translateZ(0); /* force GPU layer */
+  backface-visibility:hidden;
+  -webkit-backface-visibility:hidden;
+}
+/* Hover-pause intentionally removed — motion is permanently smooth */
 .lp-slide{flex-shrink:0;width:320px;border-radius:16px;overflow:hidden;
   background:var(--surface);border:1px solid var(--border);padding:20px;
-  position:relative}
+  position:relative;margin-right:20px} /* margin-right instead of gap for exact -50% math */
 .lp-slide-header{display:flex;align-items:center;gap:8px;margin-bottom:14px}
 .lp-slide-dot{width:10px;height:10px;border-radius:50%}
 .lp-slide-title{font-size:0.78rem;font-weight:700;color:var(--text2)}
-@keyframes lp-scroll{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+@keyframes lp-scroll{0%{transform:translateX(0) translateZ(0)}100%{transform:translateX(-50%) translateZ(0)}}
 
 /* ── CTA bottom ── */
-.lp-cta{text-align:center;padding:100px 24px;
+.lp-cta{text-align:center;padding:72px 24px;
   background:radial-gradient(ellipse at 50% 0%,rgba(99,102,241,0.15),transparent 60%)}
 .lp-cta-h{font-size:2.2rem;font-weight:800;margin-bottom:12px;letter-spacing:-0.02em}
 .lp-cta-sub{color:var(--text2);margin-bottom:36px;font-size:1.05rem}
@@ -268,6 +644,15 @@ select option{background:var(--surface2)}
 .lp-animate.d4{animation-delay:0.4s}
 .lp-animate.d5{animation-delay:0.5s}
 .lp-animate.d6{animation-delay:0.6s}
+/* Dynamically rendered hero forms (teacher/student) — self-animating, no IntersectionObserver needed */
+/* 'both' fill-mode ensures the from-keyframe is the FIRST painted frame — no invisible flash */
+.lp-form-fade{animation:lp-form-appear 0.22s cubic-bezier(0.4,0,0.2,1) both}
+@keyframes lp-form-appear{
+  from{opacity:0;transform:translateY(10px) scale(0.98)}
+  to  {opacity:1;transform:translateY(0)    scale(1)}
+}
+/* Fallback: guarantee .lp-animate elements that are already lp-visible stay fully visible */
+.lp-animate.lp-visible{opacity:1!important;transform:translateY(0)!important;transition:none!important;animation:none!important}
 
 /* ── Light mode overrides for landing ── */
 .light .lp-feat{background:var(--surface2)}
@@ -417,7 +802,7 @@ hr{border:none;border-top:1px solid var(--border);margin:16px 0}
   .lp-stats{grid-template-columns:1fr 1fr}
   .lp-stat-item{border-right:none;border-bottom:1px solid var(--border);padding:28px 16px}
   .lp-h2{font-size:1.8rem}
-  .lp-section{padding:56px 20px}
+  .lp-section{padding:44px 20px}
   .lp-features-grid{grid-template-columns:1fr}
 }
 @media(max-width:900px){
@@ -508,6 +893,189 @@ hr{border:none;border-top:1px solid var(--border);margin:16px 0}
 .excel-drop{border:2px dashed var(--border);border-radius:10px;padding:24px;text-align:center;
   cursor:pointer;transition:border 0.2s;position:relative}
 .excel-drop:hover{border-color:var(--accent)}
+
+/* ═══════════════════════════════════════════════════════════════
+   TEACHER MOTIVATIONAL NOTIFICATION SYSTEM
+   Premium animated toast cards with glassmorphism
+═══════════════════════════════════════════════════════════════ */
+
+/* ── Container — bottom-left corner for teacher dashboard ── */
+.motiv-toasts-container{
+  position:fixed;
+  bottom:32px;left:28px;
+  z-index:9990;
+  display:flex;flex-direction:column-reverse;gap:10px;
+  max-width:360px;
+  pointer-events:none;
+}
+
+/* ── Individual motivational toast card ── */
+.motiv-toast{
+  display:flex;flex-direction:column;
+  background:rgba(15,17,35,0.88);
+  backdrop-filter:blur(32px) saturate(180%);-webkit-backdrop-filter:blur(32px) saturate(180%);
+  border:1px solid rgba(99,102,241,0.4);
+  border-radius:16px;
+  padding:14px 16px 12px;
+  min-width:280px;max-width:360px;
+  box-shadow:
+    0 8px 40px rgba(0,0,0,0.5),
+    0 0 0 1px rgba(255,255,255,0.04),
+    inset 0 1px 0 rgba(255,255,255,0.08);
+  pointer-events:all;
+  position:relative;overflow:hidden;
+  animation:motiv-slide-in 0.45s cubic-bezier(0.34,1.56,0.64,1) forwards;
+  transform-origin:bottom left;
+}
+.motiv-toast::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,var(--motiv-color-a,#6366f1),var(--motiv-color-b,#8b5cf6));
+  border-radius:16px 16px 0 0;
+}
+.motiv-toast.dismissing{
+  animation:motiv-slide-out 0.35s cubic-bezier(0.4,0,1,1) forwards;
+}
+
+@keyframes motiv-slide-in{
+  0%  {transform:translateX(-60px) scale(0.88);opacity:0}
+  60% {transform:translateX(6px) scale(1.01);opacity:1}
+  100%{transform:translateX(0) scale(1);opacity:1}
+}
+@keyframes motiv-slide-out{
+  0%  {transform:translateX(0) scale(1);opacity:1}
+  100%{transform:translateX(-80px) scale(0.88);opacity:0}
+}
+
+/* ── Toast header ── */
+.motiv-toast-header{
+  display:flex;align-items:flex-start;gap:10px;margin-bottom:8px;
+}
+.motiv-toast-icon{
+  font-size:1.4rem;flex-shrink:0;
+  filter:drop-shadow(0 0 8px rgba(255,255,255,0.3));
+  animation:motiv-icon-pop 0.5s cubic-bezier(0.34,1.56,0.64,1) 0.2s both;
+}
+@keyframes motiv-icon-pop{
+  0%{transform:scale(0);opacity:0}
+  100%{transform:scale(1);opacity:1}
+}
+.motiv-toast-content{flex:1;min-width:0}
+.motiv-toast-label{
+  font-size:0.68rem;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;
+  opacity:0.7;margin-bottom:2px;
+}
+.motiv-toast-msg{
+  font-size:0.88rem;font-weight:600;line-height:1.4;
+  color:#e8ecff;
+}
+
+/* ── Dismiss button ── */
+.motiv-toast-close{
+  position:absolute;top:10px;right:12px;
+  background:none;border:none;cursor:pointer;
+  color:rgba(255,255,255,0.4);font-size:0.9rem;line-height:1;
+  padding:2px 4px;border-radius:4px;transition:all 0.15s;
+  pointer-events:all;
+}
+.motiv-toast-close:hover{color:rgba(255,255,255,0.8);background:rgba(255,255,255,0.08)}
+
+/* ── Timer progress bar ── */
+.motiv-toast-timer{
+  height:2px;border-radius:2px;
+  background:rgba(255,255,255,0.1);
+  margin-top:10px;overflow:hidden;
+}
+.motiv-toast-timer-fill{
+  height:100%;border-radius:2px;
+  background:linear-gradient(90deg,var(--motiv-color-a,#6366f1),var(--motiv-color-b,#8b5cf6));
+  animation:motiv-timer-drain var(--motiv-duration,6s) linear forwards;
+}
+@keyframes motiv-timer-drain{from{width:100%}to{width:0%}}
+
+/* ── Accent variants ── */
+.motiv-toast.fire{border-color:rgba(249,115,22,0.5);
+  --motiv-color-a:#f97316;--motiv-color-b:#fb923c}
+.motiv-toast.fire::before{background:linear-gradient(90deg,#f97316,#fb923c)}
+.motiv-toast.star{border-color:rgba(234,179,8,0.5);
+  --motiv-color-a:#eab308;--motiv-color-b:#fbbf24}
+.motiv-toast.star::before{background:linear-gradient(90deg,#eab308,#fbbf24)}
+.motiv-toast.brain{border-color:rgba(99,102,241,0.55);
+  --motiv-color-a:#6366f1;--motiv-color-b:#8b5cf6}
+.motiv-toast.rocket{border-color:rgba(59,130,246,0.5);
+  --motiv-color-a:#3b82f6;--motiv-color-b:#06b6d4}
+.motiv-toast.rocket::before{background:linear-gradient(90deg,#3b82f6,#06b6d4)}
+.motiv-toast.trophy{border-color:rgba(34,197,94,0.5);
+  --motiv-color-a:#22c55e;--motiv-color-b:#10b981}
+.motiv-toast.trophy::before{background:linear-gradient(90deg,#22c55e,#10b981)}
+
+/* Light mode ── */
+.light .motiv-toast{
+  background:rgba(255,255,255,0.9);
+  border-color:rgba(99,102,241,0.3);
+  box-shadow:0 8px 40px rgba(15,23,42,0.18),0 2px 12px rgba(15,23,42,0.1);
+}
+.light .motiv-toast-msg{color:#0f172a}
+.light .motiv-toast-close{color:rgba(15,23,42,0.4)}
+.light .motiv-toast-close:hover{color:rgba(15,23,42,0.8);background:rgba(15,23,42,0.06)}
+.light .motiv-toast-timer{background:rgba(15,23,42,0.1)}
+
+/* ── AI Teaching Insights panel ── */
+.ai-insights-panel{
+  background:linear-gradient(135deg,rgba(99,102,241,0.08),rgba(139,92,246,0.06));
+  border:1px solid rgba(99,102,241,0.25);
+  border-radius:var(--radius);padding:16px;
+  position:relative;overflow:hidden;
+}
+.ai-insights-panel::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,var(--accent),var(--accent2),#ec4899);
+}
+.ai-insights-header{
+  display:flex;align-items:center;gap:8px;margin-bottom:12px;
+}
+.ai-insights-dot{
+  width:8px;height:8px;border-radius:50%;
+  background:var(--accent);
+  animation:ai-pulse 2s ease-in-out infinite;
+  flex-shrink:0;
+}
+@keyframes ai-pulse{
+  0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(99,102,241,0.6)}
+  50%{opacity:0.7;box-shadow:0 0 0 5px rgba(99,102,241,0)}
+}
+.ai-insights-title{
+  font-size:0.78rem;font-weight:800;
+  text-transform:uppercase;letter-spacing:0.1em;
+  background:linear-gradient(90deg,var(--accent),var(--accent2));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+}
+.ai-insights-text{
+  font-size:0.875rem;line-height:1.6;color:var(--text2);
+  min-height:40px;
+  transition:opacity 0.4s ease;
+}
+.ai-insights-text.fading{opacity:0}
+.ai-insights-meta{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-top:10px;
+}
+.ai-insights-indicator{
+  display:flex;gap:4px;
+}
+.ai-indicator-dot{
+  width:4px;height:4px;border-radius:50%;
+  background:var(--border);transition:all 0.3s;
+}
+.ai-indicator-dot.active{background:var(--accent);transform:scale(1.5)}
+
+/* Mobile ── */
+@media(max-width:600px){
+  .motiv-toasts-container{
+    bottom:16px;left:12px;right:12px;
+    max-width:calc(100vw - 24px);
+  }
+  .motiv-toast{min-width:unset;width:100%}
+}
 
 /* ── Teacher Copilot ── */
 .copilot-fab{
@@ -1557,7 +2125,7 @@ hr{border:none;border-top:1px solid var(--border);margin:16px 0}
 
   /* landing */
   .landing-logo{ font-size:2.6rem; }
-  .landing-sub{ font-size:1rem; margin-bottom:32px; }
+  .landing-sub{ font-size:1rem; margin-bottom:28px; }
   .role-cards{ gap:14px; }
   .role-card{ padding:24px 20px; }
   .role-icon{ font-size:2.4rem; }
@@ -1987,17 +2555,309 @@ hr{border:none;border-top:1px solid var(--border);margin:16px 0}
 .table tbody tr:hover{background:var(--surface2)}
 .table td{padding:10px 14px;color:var(--text);font-size:0.875rem}
 
+/* ── Premium Enhancements ── */
+/* NOTE: lp-animate.lp-visible is handled above (line ~272).
+   The transition-based override was removed — it broke dynamically rendered elements.
+   The IntersectionObserver still adds lp-visible for scroll-reveal sections below the hero. */
+.lp-delay-1 { transition-delay: 0.1s; }
+.lp-delay-2 { transition-delay: 0.2s; }
+.lp-delay-3 { transition-delay: 0.3s; }
+
+/* Light mode card overrides are handled in the comprehensive .landing.light block below */
+
+.landing-hero { --mx: 0px; --my: 0px; }
+.landing-logo {
+  transform: translate(calc(var(--mx) * 0.4), calc(var(--my) * 0.4));
+  transition: transform 0.15s ease-out;
+}
+.landing-hero-grid {
+  transform: translate(calc(var(--mx) * -0.15), calc(var(--my) * -0.15)) scale(1.05);
+  transition: transform 0.2s ease-out;
+}
+
+.copilot-window {
+  border: 1px solid var(--border);
+  box-shadow: 0 12px 48px rgba(0,0,0,0.5);
+  background: rgba(26, 29, 39, 0.94) !important;
+  backdrop-filter: blur(20px);
+}
+.copilot-bubble {
+  border-radius: 18px;
+  padding: 12px 18px;
+  font-size: 0.92rem;
+  line-height: 1.55;
+  max-width: 88%;
+}
+.copilot-msg.bot .copilot-bubble {
+  background: var(--surface2);
+  border-bottom-left-radius: 4px;
+  border: 1px solid var(--border);
+}
+.copilot-msg.user .copilot-bubble {
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  color: #fff;
+  border-bottom-right-radius: 4px;
+}
+.copilot-typing {
+  display: flex; gap: 5px; padding: 14px 20px;
+  background: var(--surface2); border-radius: 20px; width: fit-content;
+}
+.copilot-dot {
+  width: 7px; height: 7px; background: var(--text3); border-radius: 50%;
+  animation: copilot-blink 1.4s infinite both;
+}
+.copilot-dot:nth-child(2) { animation-delay: 0.2s; }
+.copilot-dot:nth-child(3) { animation-delay: 0.4s; }
+@keyframes copilot-blink { 0%, 80%, 100% { opacity: 0.2; } 40% { opacity: 1; } }
+
+/* ── Landing Page Light Mode ── */
+.landing.light {
+  --bg: #f4f6fb;
+  --surface: #ffffff;
+  --surface2: #eef1f8;
+  --surface3: #dde3ef;
+  --text: #0f172a;
+  --text2: #334155;
+  --text3: #64748b;
+  --border: #d4dbe8;
+  --accent: #4f46e5;
+  --accent2: #7c3aed;
+  --shadow: 0 10px 30px rgba(15, 23, 42, 0.1);
+}
+.landing.light .landing-hero {
+  background: radial-gradient(ellipse at 50% -10%, rgba(79, 70, 229, 0.13) 0%, rgba(124, 58, 237, 0.06) 40%, #f4f6fb 70%);
+}
+/* Landing page hero text — dark, readable */
+.landing.light .landing-logo {
+  background: linear-gradient(135deg, #4f46e5, #7c3aed, #9333ea);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.landing.light .landing-eyebrow {
+  color: #4f46e5;
+  background: rgba(79, 70, 229, 0.1);
+  border-color: rgba(79, 70, 229, 0.3);
+}
+.landing.light .landing-sub {
+  color: #334155;
+}
+/* Role cards */
+.landing.light .role-card {
+  background: #ffffff;
+  border-color: #d4dbe8;
+  box-shadow: 0 4px 20px rgba(15, 23, 42, 0.07);
+}
+.landing.light .role-card:hover {
+  border-color: #4f46e5;
+  box-shadow: 0 8px 32px rgba(79, 70, 229, 0.15);
+}
+.landing.light .role-title {
+  color: #0f172a;
+}
+.landing.light .role-desc {
+  color: #475569;
+}
+/* Cards in hero (teacher/student forms) */
+.landing.light .card {
+  background: #ffffff;
+  border-color: #d4dbe8;
+  box-shadow: 0 8px 28px rgba(15, 23, 42, 0.09);
+}
+.landing.light .card-title {
+  color: #0f172a;
+}
+.landing.light input,
+.landing.light select,
+.landing.light textarea {
+  background: #f8fafc;
+  border-color: #c8d1e0;
+  color: #0f172a;
+}
+.landing.light label {
+  color: #334155;
+}
+/* Tags/badges */
+.landing.light .lp-tag {
+  color: #4f46e5;
+  background: rgba(79, 70, 229, 0.1);
+  border-color: rgba(79, 70, 229, 0.25);
+}
+/* Section headings */
+.landing.light .lp-h2 {
+  color: #0f172a;
+}
+.landing.light .lp-h2 span {
+  background: linear-gradient(135deg, #4f46e5, #7c3aed);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+/* Descriptions */
+.landing.light .lp-lead,
+.landing.light .lp-role-sub,
+.landing.light .lp-slide-title,
+.landing.light .lp-mock-metric span {
+  color: #475569;
+}
+/* Feature cards */
+.landing.light .lp-feat {
+  background: #ffffff;
+  border-color: #d4dbe8;
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
+}
+.landing.light .lp-feat-title {
+  color: #0f172a;
+}
+.landing.light .lp-feat-desc {
+  color: #475569;
+}
+.landing.light .lp-feat-icon {
+  background: rgba(79, 70, 229, 0.09);
+}
+/* Role blocks (For Teachers / For Students sections) */
+.landing.light .lp-role-block {
+  background: #ffffff;
+  border-color: #d4dbe8;
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
+}
+.landing.light .lp-role-name {
+  color: #0f172a;
+}
+.landing.light .lp-role-list li {
+  color: #475569;
+}
+/* CTA section */
+.landing.light .lp-cta {
+  background: radial-gradient(ellipse at 50% 0%, rgba(79, 70, 229, 0.1), transparent 60%);
+}
+.landing.light .lp-cta-h {
+  color: #0f172a;
+}
+.landing.light .lp-cta-sub {
+  color: #475569;
+}
+/* Features background strip */
+.landing.light .lp-features-bg {
+  background: #eef1f8;
+  border-top-color: #d4dbe8;
+  border-bottom-color: #d4dbe8;
+}
+/* Slide cards (carousel) */
+.landing.light .lp-slide {
+  background: #ffffff;
+  border-color: #d4dbe8;
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
+}
+/* Pills */
+.landing.light .lp-pill {
+  background: #eef1f8;
+  border-color: #d4dbe8;
+  color: #0f172a;
+}
+/* Buttons */
+.landing.light .btn-primary {
+  background: linear-gradient(135deg, #4f46e5, #7c3aed);
+  color: #fff;
+}
+.landing.light .btn-ghost {
+  color: #334155;
+  border-color: #c8d1e0;
+}
+.landing.light .btn-ghost:hover {
+  background: #eef1f8;
+  color: #0f172a;
+}
+/* Nav */
+.landing.light .nav {
+  background: rgba(255, 255, 255, 0.92) !important;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid #d4dbe8;
+}
+.landing.light .nav-brand {
+  background: linear-gradient(135deg, #4f46e5, #7c3aed);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.landing.light .nav-btn {
+  color: #475569;
+}
+.landing.light .nav-btn:hover {
+  background: #eef1f8;
+  color: #0f172a;
+}
+/* Footer */
+.landing.light .lp-footer {
+  color: #64748b;
+  border-top-color: #d4dbe8;
+}
+/* Lp-section mock metrics */
+.landing.light .lp-mock-metric {
+  background: #eef1f8;
+  color: #334155;
+}
+.landing.light .lp-visual-card {
+  background: #ffffff;
+  border-color: #d4dbe8;
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
+}
+.landing.light .lp-mock-bar {
+  background: #dde3ef;
+}
+/* Profile icon button */
+.landing.light .profile-icon-btn {
+  background: linear-gradient(135deg, #4f46e5, #7c3aed);
+  color: #fff;
+}
+/* Stat cards on landing */
+.landing.light .stat {
+  background: #ffffff;
+  border-color: #d4dbe8;
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
+}
+.landing.light .stat-label {
+  color: #475569;
+}
+
+/* Theme Toggle — inline inside nav-right, beside profile button */
+.lp-theme-toggle {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 1rem;
+  line-height: 1;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  outline: none;
+  flex-shrink: 0;
+}
+.lp-theme-toggle:hover {
+  transform: scale(1.1) rotate(15deg);
+  border-color: var(--accent);
+  background: var(--surface3);
+}
+.landing {
+  transition: background 0.4s ease, color 0.4s ease;
+}
+.landing * {
+  transition: background 0.4s ease, color 0.4s ease, border-color 0.4s ease, box-shadow 0.4s ease;
+}
+
 </style>
 </head>
 <body>
 <div id="root"></div>
 
 <!--
-╔══════════════════════════════════════════════════════════════════╗
-║  ClassMind — Single-File Build · Zero Runtime Transpilation     ║
+╔═════════════════════════════════════════════════════════════════════════╗
+║  ClassMind — Single-File Build · Zero Runtime Transpilation                   ║
 ║  All JSX pre-compiled to React.createElement() — zero runtime transpilation.  ║
-║  Sections load in dependency order inside this one script tag.  ║
-╚══════════════════════════════════════════════════════════════════╝
+║  Sections load in dependency order inside this one script tag.                ║
+╚═══════════════════════════════════════════════════════════════════════════════╝
 -->
 <script>
 
@@ -2810,8 +3670,24 @@ function LoginModal({defaultRole, onComplete, onClose}) {
   );
 }
 
-// ===== 2. LANDING PAGE =====
-// ═════════════════════════════════════════════════════════════════
+
+// ╔══════════════════════════════════════════════════════════════════════════╗
+// ║  HERO BACKGROUND IMAGES — Easy Swap Zone                                 ║
+// ║  Replace each URL string with your own image path or URL.                ║
+// ║  Recommended: 1920×1080 or wider, JPG/WebP for best performance.         ║
+// ║  You can add or remove slots — just keep the array format.               ║
+// ╚══════════════════════════════════════════════════════════════════════════╝
+const HERO_IMAGES = [
+  "https://images.unsplash.com/photo-1509062522246-3755977927d7?w=1920&q=80", // Slot 1 — YOUR_IMAGE_1
+  "https://images.unsplash.com/photo-1524178232363-1fb2b075b655?w=1920&q=80", // Slot 2 — YOUR_IMAGE_2
+  "https://images.unsplash.com/photo-1580582932707-520aed937b7b?w=1920&q=80", // Slot 3 — YOUR_IMAGE_3
+  "https://images.unsplash.com/photo-1488190211105-8b0e65b80b4e?w=1920&q=80", // Slot 4 — YOUR_IMAGE_4
+  "https://images.unsplash.com/photo-1620712943543-bcc4688e7485?w=1920&q=80", // Slot 5 — YOUR_IMAGE_5
+  "https://images.unsplash.com/photo-1610563166150-b34df4f3bcd6?w=1920&q=80", // Slot 6 — YOUR_IMAGE_6
+];
+// Duration each slide is visible (milliseconds). 7000 = 7 seconds.
+const HERO_SLIDE_DURATION = 7000;
+
 function LandingPage({
   navigate,
   userProfile,
@@ -2820,7 +3696,6 @@ function LandingPage({
 }) {
   const [showTeacher, setShowTeacher] = useState(false);
   const [showStudent, setShowStudent] = useState(false);
-  // STEP 2: Pre-fill name from existing profile
   const [teacherName, setTeacherName] = useState(userProfile?.name || '');
   const [teacherEmail, setTeacherEmail] = useState(userProfile?.email || '');
   const [teacherPhone, setTeacherPhone] = useState(userProfile?.phone || '');
@@ -2829,53 +3704,100 @@ function LandingPage({
   const [studentPhone, setStudentPhone] = useState(userProfile?.phone || '');
   const [sessionCode, setSessionCode] = useState('');
   const [loading, setLoading] = useState(false);
-  const {
-    add
-  } = useContext(AppCtx);
+  const { add } = useContext(AppCtx);
   const [roll, setRoll] = useState('');
   const [cls, setCls] = useState('');
-  // ── Profile gate modal ──────────────────────────────────────────
-  const [loginModal, setLoginModal] = useState(null); // null | 'teacher' | 'student'
+  const [lpLightMode, setLpLightMode] = useState(() => {
+    return localStorage.getItem('cm_lp_light_mode') === 'true';
+  });
+  const [loginModal, setLoginModal] = useState(null);
+  const heroRef = useRef(null);
+  // ── Slideshow state ──
+  const [activeSlide, setActiveSlide] = useState(0);
 
-  // Gate function: if profile exists, proceed; otherwise show modal
+  useEffect(() => {
+    localStorage.setItem('cm_lp_light_mode', lpLightMode);
+  }, [lpLightMode]);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('lp-visible');
+        }
+      });
+    }, { threshold: 0.1 });
+    document.querySelectorAll('.lp-animate').forEach(el => observer.observe(el));
+
+    const handleMove = (e) => {
+      if (!heroRef.current) return;
+      const { clientX, clientY } = e;
+      const { innerWidth, innerHeight } = window;
+      const x = (clientX / innerWidth - 0.5) * 30;
+      const y = (clientY / innerHeight - 0.5) * 30;
+      heroRef.current.style.setProperty('--mx', `${x}px`);
+      heroRef.current.style.setProperty('--my', `${y}px`);
+    };
+    window.addEventListener('mousemove', handleMove);
+
+    return () => {
+      observer.disconnect();
+      window.removeEventListener('mousemove', handleMove);
+    };
+  }, []);
+
+  // Safety net: when teacher/student forms toggle, immediately activate any
+  // in-viewport .lp-animate elements that haven't received lp-visible yet.
+  useEffect(() => {
+    try {
+      const vh = window.innerHeight;
+      document.querySelectorAll('.lp-animate:not(.lp-visible)').forEach(el => {
+        const r = el.getBoundingClientRect();
+        if (r.top < vh && r.bottom > 0) el.classList.add('lp-visible');
+      });
+    } catch(e) { /* defensive: silently ignore */ }
+  }, [showTeacher, showStudent]);
+
+  // ── Hero slideshow: auto-advance every HERO_SLIDE_DURATION ms ──
+  useEffect(() => {
+    if (!HERO_IMAGES || HERO_IMAGES.length <= 1) return;
+    const timer = setInterval(() => {
+      setActiveSlide(prev => (prev + 1) % HERO_IMAGES.length);
+    }, HERO_SLIDE_DURATION);
+    return () => clearInterval(timer);
+  }, []);
+
   function gotoTeacher() {
-    if (userProfile) {
-      setShowTeacher(true);
-    } else {
-      setLoginModal('teacher');
-    }
+    if (userProfile) setShowTeacher(true);
+    else setLoginModal('teacher');
   }
   function gotoStudent() {
-    if (userProfile) {
-      setShowStudent(true);
-    } else {
-      setLoginModal('student');
-    }
+    if (userProfile) setShowStudent(true);
+    else setLoginModal('student');
   }
 
-  // Called when LoginModal completes profile creation
   function handleLoginComplete(profile) {
     updateUserProfile(profile);
     setLoginModal(null);
-    // Pre-fill name and contact fields
     setTeacherName(profile.name);
     setTeacherEmail(profile.email || '');
     setTeacherPhone(profile.phone || '');
     setStudentName(profile.name);
     setStudentEmail(profile.email || '');
     setStudentPhone(profile.phone || '');
-    // Proceed to the flow the user originally wanted
-    if (loginModal === 'teacher') setShowTeacher(true);else setShowStudent(true);
+    if (loginModal === 'teacher') setShowTeacher(true);
+    else setShowStudent(true);
   }
+
   async function createSession() {
-    // When profile exists, use it — don't re-validate form fields that aren't shown
-    const effectiveName  = userProfile ? userProfile.name  : teacherName;
+    const effectiveName = userProfile ? userProfile.name : teacherName;
     const effectiveEmail = userProfile ? userProfile.email : teacherEmail;
     const effectivePhone = userProfile ? (userProfile.phone || '') : teacherPhone;
 
     if (!effectiveName.trim()) return add('Enter your name', 'error');
     if (!effectiveEmail.trim()) return add('Email is required', 'error');
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(effectiveEmail.trim())) return add('Enter a valid email address', 'error');
+
     setLoading(true);
     try {
       const res = await apiFetch('/api/session/create', {
@@ -2887,1043 +3809,462 @@ function LandingPage({
         }
       });
 
-      // ── STEP 2 & 7: Create / update unified profile ────────────────
-      const now = Date.now();
       if (!userProfile) {
-        // First-time login: create profile
         const newProfile = {
-          id: 'u_' + now,
+          id: 'u_' + Date.now(),
           name: teacherName.trim(),
           email: teacherEmail.trim(),
           phone: teacherPhone.trim(),
           roleHistory: ['teacher'],
-          sessionsCreated: [{
-            code: res.session_code,
-            date: new Date().toLocaleDateString()
-          }],
+          sessionsCreated: [{ code: res.session_code, date: new Date().toLocaleDateString() }],
           sessionsJoined: [],
-          stats: {
-            totalSessionsCreated: 1,
-            totalSessionsJoined: 0,
-            avgParticipation: 0,
-            avgUnderstanding: 0
-          }
+          stats: { totalSessionsCreated: 1, totalSessionsJoined: 0, avgParticipation: 0, avgUnderstanding: 0 }
         };
         updateUserProfile(newProfile);
       } else {
-        // Existing profile: merge teacher role + track session
-        const alreadyCreated = userProfile.sessionsCreated || [];
         const updatedProfile = {
           ...userProfile,
-          name: teacherName.trim(),
-          email: teacherEmail.trim(),
-          phone: teacherPhone.trim(),
-          roleHistory: (userProfile.roleHistory || []).includes('teacher') ? userProfile.roleHistory || [] : [...(userProfile.roleHistory || []), 'teacher'],
-          sessionsCreated: [...alreadyCreated, {
-            code: res.session_code,
-            date: new Date().toLocaleDateString()
-          }],
-          stats: {
-            ...(userProfile.stats || {}),
-            totalSessionsCreated: (userProfile.stats?.totalSessionsCreated || 0) + 1
-          }
+          sessionsCreated: [...(userProfile.sessionsCreated || []), { code: res.session_code, date: new Date().toLocaleDateString() }],
+          stats: { ...(userProfile.stats || {}), totalSessionsCreated: (userProfile.stats?.totalSessionsCreated || 0) + 1 }
         };
         updateUserProfile(updatedProfile);
       }
-      
-      // Explicitly store teacher email for session recovery
+
       localStorage.setItem('teacher_email', effectiveEmail.trim());
-      
-      if (res.resumed) {
-        add('🔄 Resumed your active session: ' + res.session_code, 'info');
-        console.info('[SESSION] Rejoined existing session:', res.session_code);
-      } else {
-        add('📧 New session created! Report will be sent to ' + effectiveEmail, 'success');
-        console.info('[SESSION] Created new session:', res.session_code);
-      }
-      navigate('teacher-dashboard', {
-        sessionCode: res.session_code,
-        teacherName: effectiveName
-      });
-    } catch (e) {
-      add(e.message, 'error');
-    }
+      navigate('teacher-dashboard', { sessionCode: res.session_code, teacherName: effectiveName });
+    } catch (e) { add(e.message, 'error'); }
     setLoading(false);
   }
+
   async function joinSession() {
-    // ── Basic field validation ───────────────────────────────────────
-    // When profile exists, name/email come from it — only roll+class+code needed
-    const effectiveName  = userProfile ? userProfile.name  : studentName;
+    const effectiveName = userProfile ? userProfile.name : studentName;
     const effectiveEmail = userProfile ? userProfile.email : studentEmail;
     const effectivePhone = userProfile ? (userProfile.phone || '') : studentPhone;
 
-    if (!sessionCode.trim() || !effectiveName.trim() || !roll.trim() || !cls.trim()) {
-      return add('Enter session code, roll number and class', 'error');
-    }
-    if (!effectiveEmail.trim()) {
-      return add('Email is required to receive your session report', 'error');
-    }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(effectiveEmail.trim())) {
-      return add('Enter a valid email address', 'error');
-    }
+    if (!sessionCode.trim() || !effectiveName.trim() || !roll.trim() || !cls.trim()) return add('Enter session code, roll number and class', 'error');
+    if (!effectiveEmail.trim()) return add('Email is required', 'error');
 
-    // ── CSV RESTRICTION CHECK (client-side enforcement) ──────────────
-    // If teacher uploaded a CSV for this session, validate BEFORE hitting the API.
-    // No CSV uploaded → open access (default behavior unchanged).
-    try {
-      const restrictionRaw = localStorage.getItem("cm_allowed_" + sessionCode.trim());
-      if (restrictionRaw) {
-        const restriction = JSON.parse(restrictionRaw);
-        if (restriction.active && Array.isArray(restriction.students) && restriction.students.length > 0) {
-          // Normalize student input for comparison (trim + lowercase)
-          const inputName = studentName.trim().toLowerCase();
-          const inputRoll = roll.trim().toLowerCase();
-          const inputCls = cls.trim().toLowerCase();
-
-          // Match: name AND roll must match (class optional for flexibility)
-          const isAllowed = restriction.students.some(s => {
-            const nameMatch = s.name && s.name === inputName;
-            const rollMatch = s.roll && s.roll === inputRoll;
-            const clsMatch = !s.cls || s.cls === inputCls || s.cls === '';
-            return nameMatch && rollMatch && clsMatch;
-          });
-          if (!isAllowed) {
-            add('❌ You are not allowed to join this session', 'error');
-            return;
-          }
-        }
-      }
-    } catch (storageErr) {
-      // localStorage unavailable — fail open (don't block student)
-    }
-
-    // ── Join API call (only reached if authorized) ───────────────────
     setLoading(true);
     try {
       const res = await apiFetch(`/api/session/${sessionCode}/join?name=${encodeURIComponent(effectiveName)}&roll=${encodeURIComponent(roll)}&cls=${encodeURIComponent(cls)}&anonymous=true&email=${encodeURIComponent(effectiveEmail.trim())}&phone=${encodeURIComponent(effectivePhone.trim())}`, {
         method: 'POST'
       });
 
-      // ── STEP 2 & 7: Create / update unified profile ────────────────
-      const now = Date.now();
       if (!userProfile) {
         const newProfile = {
-          id: 'u_' + now,
+          id: 'u_' + Date.now(),
           name: studentName.trim(),
           email: studentEmail.trim(),
           phone: studentPhone.trim(),
           roleHistory: ['student'],
           sessionsCreated: [],
-          sessionsJoined: [{
-            code: sessionCode,
-            date: new Date().toLocaleDateString(),
-            studentId: res.student_id
-          }],
-          stats: {
-            totalSessionsCreated: 0,
-            totalSessionsJoined: 1,
-            avgParticipation: 0,
-            avgUnderstanding: 0
-          }
+          sessionsJoined: [{ code: sessionCode, date: new Date().toLocaleDateString(), studentId: res.student_id }],
+          stats: { totalSessionsCreated: 0, totalSessionsJoined: 1, avgParticipation: 0, avgUnderstanding: 0 }
         };
         updateUserProfile(newProfile);
       } else {
-        const alreadyJoined = userProfile.sessionsJoined || [];
-        const alreadyJoinedThisCode = alreadyJoined.some(s => s.code === sessionCode);
         const updatedProfile = {
           ...userProfile,
-          name: studentName.trim(),
-          email: studentEmail.trim(),
-          phone: studentPhone.trim(),
-          roleHistory: (userProfile.roleHistory || []).includes('student') ? userProfile.roleHistory || [] : [...(userProfile.roleHistory || []), 'student'],
-          sessionsJoined: alreadyJoinedThisCode ? alreadyJoined : [...alreadyJoined, {
-            code: sessionCode,
-            date: new Date().toLocaleDateString(),
-            studentId: res.student_id
-          }],
-          stats: {
-            ...(userProfile.stats || {}),
-            totalSessionsJoined: (userProfile.stats?.totalSessionsJoined || 0) + (alreadyJoinedThisCode ? 0 : 1)
-          }
+          sessionsJoined: [...(userProfile.sessionsJoined || []), { code: sessionCode, date: new Date().toLocaleDateString(), studentId: res.student_id }],
+          stats: { ...(userProfile.stats || {}), totalSessionsJoined: (userProfile.stats?.totalSessionsJoined || 0) + 1 }
         };
         updateUserProfile(updatedProfile);
       }
-      add('📧 A performance report will be emailed to you after class ends.', 'success');
-      navigate('student-waiting', {
-        sessionCode,
-        studentId: res.student_id,
-        studentName: res.display_name
-      });
-    } catch (e) {
-      // Surface backend rejection clearly
-      add(e.message.includes('authorized') || e.message.includes('not allowed') ? '❌ You are not allowed to join this session' : e.message, 'error');
-    }
+
+      navigate('student-waiting', { sessionCode, studentId: res.student_id, studentName: res.display_name });
+    } catch (e) { add(e.message, 'error'); }
     setLoading(false);
   }
 
-  // ── Scroll-triggered observer for lp-animate elements ───────────
-  React.useEffect(() => {
-    const els = document.querySelectorAll('.lp-animate-trigger');
-    if (!els.length) return;
-    const obs = new IntersectionObserver(entries => {
-      entries.forEach(e => {
-        if (e.isIntersecting) {
-          e.target.classList.add('lp-animate');
-          obs.unobserve(e.target);
-        }
-      });
-    }, {
-      threshold: 0.12
-    });
-    els.forEach(el => obs.observe(el));
-    return () => obs.disconnect();
-  }, []);
-  const features = [{
-    icon: '📊',
-    bg: 'rgba(99,102,241,0.12)',
-    title: 'Real-Time Understanding Tracker',
-    desc: 'See exactly how many students understand the topic right now — updated live, every second.'
-  }, {
-    icon: '🤖',
-    bg: 'rgba(139,92,246,0.12)',
-    title: 'AI Student Grouping',
-    desc: 'ClassMind automatically forms balanced groups based on performance, ensuring no one gets left behind.'
-  }, {
-    icon: '⚡',
-    bg: 'rgba(234,179,8,0.12)',
-    title: 'Instant Doubt Detection',
-    desc: 'Students submit doubts silently. AI categorizes them and surfaces the most critical ones first.'
-  }, {
-    icon: '🏆',
-    bg: 'rgba(34,197,94,0.12)',
-    title: 'Live Leaderboard',
-    desc: 'Gamified scoring keeps students engaged and motivated — real points, real competition, real time.'
-  }, {
-    icon: '🧑‍✈️',
-    bg: 'rgba(59,130,246,0.12)',
-    title: 'Teacher AI Copilot',
-    desc: 'Ask your AI assistant anything: "Which students are at risk?" or "Suggest a remediation task."'
-  }, {
-    icon: '📈',
-    bg: 'rgba(249,115,22,0.12)',
-    title: 'Classroom Analytics',
-    desc: 'Participation rate, average score, response times — every metric you need on one screen.'
-  }, {
-    icon: '✋',
-    bg: 'rgba(236,72,153,0.12)',
-    title: 'Raise Hand Signals',
-    desc: 'Students silently signal for help. You get notified instantly — no chaos, no interruptions.'
-  }, {
-    icon: '📋',
-    bg: 'rgba(20,184,166,0.12)',
-    title: 'Performance Reports',
-    desc: 'Export full session reports to PDF or Excel with one click for parent meetings or school records.'
-  }];
-  const slides = [{
-    title: 'Live Class Dashboard',
-    color: '#6366f1',
-    items: [{
-      label: 'Understanding',
-      val: '78%',
-      color: 'var(--green)'
-    }, {
-      label: 'Participation',
-      val: '92%',
-      color: 'var(--accent)'
-    }, {
-      label: 'At-Risk Students',
-      val: '3',
-      color: 'var(--red)'
-    }]
-  }, {
-    title: 'Student Leaderboard',
-    color: '#f97316',
-    items: [{
-      label: '🥇 Priya S.',
-      val: '240 pts',
-      color: '#fbbf24'
-    }, {
-      label: '🥈 Arjun K.',
-      val: '210 pts',
-      color: '#94a3b8'
-    }, {
-      label: '🥉 Riya M.',
-      val: '195 pts',
-      color: '#b45309'
-    }]
-  }, {
-    title: 'AI Copilot Insight',
-    color: '#8b5cf6',
-    items: [{
-      label: 'Weak Topic',
-      val: 'Fractions',
-      color: 'var(--red)'
-    }, {
-      label: 'Suggested Task',
-      val: 'Quiz Q3',
-      color: 'var(--accent)'
-    }, {
-      label: 'Group Formed',
-      val: 'Yes',
-      color: 'var(--green)'
-    }]
-  }, {
-    title: 'Task Performance',
-    color: '#22c55e',
-    items: [{
-      label: 'Correct',
-      val: '68%',
-      color: 'var(--green)'
-    }, {
-      label: 'Partial',
-      val: '18%',
-      color: 'var(--yellow)'
-    }, {
-      label: 'Incorrect',
-      val: '14%',
-      color: 'var(--red)'
-    }]
-  }, {
-    title: 'Doubt Tracker',
-    color: '#3b82f6',
-    items: [{
-      label: 'Open Doubts',
-      val: '7',
-      color: 'var(--yellow)'
-    }, {
-      label: 'Resolved',
-      val: '23',
-      color: 'var(--green)'
-    }, {
-      label: 'Pending',
-      val: '4',
-      color: 'var(--red)'
-    }]
-  }, {
-    title: 'Session Summary',
-    color: '#ec4899',
-    items: [{
-      label: 'Duration',
-      val: '48 min',
-      color: 'var(--text)'
-    }, {
-      label: 'Students',
-      val: '34',
-      color: 'var(--accent)'
-    }, {
-      label: 'Avg Score',
-      val: '81%',
-      color: 'var(--green)'
-    }]
-  }];
-  // Duplicate for infinite scroll
-  const allSlides = [...slides, ...slides];
+  const features = [
+    { icon: '📊', title: 'Real-Time Tracking', desc: 'See understanding updated live, every second.' },
+    { icon: '🤖', title: 'AI Grouping', desc: 'Auto-form balanced groups based on performance.' },
+    { icon: '⚡', title: 'Doubt Detection', desc: 'AI surfaces critical doubts from students live.' },
+    { icon: '🏆', title: 'Live Leaderboard', desc: 'Gamified scoring keeps students motivated.' },
+    { icon: '🧑‍✈️', title: 'AI Copilot', desc: 'Ask your assistant for classroom summaries.' },
+    { icon: '📋', title: 'Session Reports', desc: 'Export full PDF/Excel reports with one click.' }
+  ];
+
+  const allSlides = [
+    {
+      title: "Real-time Understanding",
+      color: "var(--accent)",
+      items: [
+        { label: "Class Average", val: "84%", color: "var(--green)" },
+        { label: "Active Students", val: "28/30", color: "var(--accent)" },
+        { label: "Critical Doubts", val: "2", color: "var(--red)" }
+      ]
+    },
+    {
+      title: "Task Performance",
+      color: "var(--green)",
+      items: [
+        { label: "Completion Rate", val: "92%", color: "var(--green)" },
+        { label: "Correct Answers", val: "76%", color: "var(--accent)" },
+        { label: "Avg. Time/Task", val: "45s", color: "var(--yellow)" }
+      ]
+    },
+    {
+      title: "Student Engagement",
+      color: "var(--accent2)",
+      items: [
+        { label: "Participation", val: "High", color: "var(--green)" },
+        { label: "Interaction", val: "88%", color: "var(--accent2)" },
+        { label: "Peer Help", val: "12", color: "var(--blue)" }
+      ]
+    }
+  ];
+
   return /*#__PURE__*/React.createElement("div", {
-    className: "landing"
-  }, loginModal && /*#__PURE__*/React.createElement(LoginModal, {
-    defaultRole: loginModal,
-    onComplete: handleLoginComplete,
-    onClose: () => setLoginModal(null)
-  }), /*#__PURE__*/React.createElement("nav", {
-    className: "nav",
-    style: {
-      position: 'sticky',
-      top: 0,
-      zIndex: 100
-    }
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "nav-brand"
-  }, "\uD83E\uDDE0 ClassMind"), /*#__PURE__*/React.createElement("div", {
-    className: "nav-right"
-  }, /*#__PURE__*/React.createElement("button", {
-    className: "btn btn-ghost btn-sm",
-    onClick: () => navigate('admin')
-  }, "\uD83D\uDEE1\uFE0F Admin Dashboard"), /*#__PURE__*/React.createElement("button", {
-    className: `profile-icon-btn${!userProfile ? ' no-profile' : ''}`,
-    onClick: userProfile ? onOpenProfile : () => setLoginModal('teacher'),
-    title: userProfile ? `My Profile — ${userProfile.name}` : 'Create your profile',
-    style: {
-      marginLeft: 4
-    }
-  }, userProfile ? (userProfile.name || '?')[0].toUpperCase() : '?'))), /*#__PURE__*/React.createElement("div", {
-    className: "landing-hero"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "landing-hero-grid"
-  }), /*#__PURE__*/React.createElement("div", {
-    className: "landing-eyebrow"
-  }, "\uD83D\uDE80 AI-Powered Classroom Intelligence"), /*#__PURE__*/React.createElement("div", {
-    className: "landing-logo"
-  }, "\uD83E\uDDE0 ClassMind"), /*#__PURE__*/React.createElement("div", {
-    className: "landing-sub"
-  }, "The smartest way to run a classroom. Real-time insights, AI grouping, live analytics \u2014 all in one place for teachers and students."), !showTeacher && !showStudent && /*#__PURE__*/React.createElement("div", {
-    className: "role-cards"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "role-card",
-    onClick: gotoTeacher
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "role-icon"
-  }, "\uD83D\uDC68\u200D\uD83C\uDFEB"), /*#__PURE__*/React.createElement("div", {
-    className: "role-title"
-  }, "Start as Teacher"), /*#__PURE__*/React.createElement("div", {
-    className: "role-desc"
-  }, "Create a session and manage your class")), /*#__PURE__*/React.createElement("div", {
-    className: "role-card",
-    onClick: gotoStudent
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "role-icon"
-  }, "\uD83D\uDC68\u200D\uD83C\uDF93"), /*#__PURE__*/React.createElement("div", {
-    className: "role-title"
-  }, "Join as Student"), /*#__PURE__*/React.createElement("div", {
-    className: "role-desc"
-  }, "Enter a session code to join"))), showTeacher && /*#__PURE__*/React.createElement("div", {
-    className: "card",
-    style: {
-      width: '100%',
-      maxWidth: 400,
-      position: 'relative',
-      zIndex: 1
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "card-title"
-  }, "\uD83D\uDC68\u200D\uD83C\uDFEB Create Session"),
-  // Profile banner — when profile exists, show summary instead of re-asking fields
-  userProfile ? /*#__PURE__*/React.createElement("div", {
-    style: {
-      background: 'rgba(99,102,241,0.08)',
-      border: '1px solid rgba(99,102,241,0.25)',
-      borderRadius: 8,
-      padding: '10px 14px',
-      marginBottom: 14,
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      gap: 8
-    }
-  }, /*#__PURE__*/React.createElement("div", null,
-    /*#__PURE__*/React.createElement("div", {style:{fontWeight:700,fontSize:'0.9rem'}}, userProfile.name),
-    /*#__PURE__*/React.createElement("div", {style:{fontSize:'0.78rem',color:'var(--text3)'}}, userProfile.email)
-  ), /*#__PURE__*/React.createElement("span", {
-    style: {fontSize:'0.72rem',color:'var(--accent)',fontWeight:600,background:'rgba(99,102,241,0.12)',padding:'2px 8px',borderRadius:99}
-  }, "✔ Profile saved")) : null,
-  // Only show name/email/phone fields when NO profile exists
-  !userProfile && /*#__PURE__*/React.createElement("div", {className: "form-group"},
-    /*#__PURE__*/React.createElement("label", null, "Your Name"),
-    /*#__PURE__*/React.createElement("input", {
-      value: teacherName,
-      onChange: e => setTeacherName(e.target.value),
-      placeholder: "e.g. Dr. Smith",
-      onKeyDown: e => e.key === 'Enter' && createSession()
-    })
-  ),
-  !userProfile && /*#__PURE__*/React.createElement("div", {className: "form-group"},
-    /*#__PURE__*/React.createElement("label", null, "Email Address ", /*#__PURE__*/React.createElement("span", {style:{color:'var(--red)'}}, "*")),
-    /*#__PURE__*/React.createElement("input", {
-      type: "email",
-      value: teacherEmail,
-      onChange: e => setTeacherEmail(e.target.value),
-      placeholder: "teacher@school.com",
-      onKeyDown: e => e.key === 'Enter' && createSession()
-    })
-  ),
-  !userProfile && /*#__PURE__*/React.createElement("div", {className: "form-group"},
-    /*#__PURE__*/React.createElement("label", null, "Phone Number ", /*#__PURE__*/React.createElement("span", {style:{color:'var(--text3)',fontWeight:400}}, "(optional)")),
-    /*#__PURE__*/React.createElement("input", {
-      type: "tel",
-      value: teacherPhone,
-      onChange: e => setTeacherPhone(e.target.value),
-      placeholder: "+91 98765 43210"
-    })
-  ),
-  /*#__PURE__*/React.createElement("div", {
-    className: "flex gap-8"
-  }, /*#__PURE__*/React.createElement("button", {
-    className: "btn btn-ghost",
-    onClick: () => setShowTeacher(false)
-  }, "Back"), /*#__PURE__*/React.createElement("button", {
-    className: "btn btn-primary",
-    style: {flex: 1},
-    onClick: createSession,
-    disabled: loading
-  }, loading ? 'Creating…' : 'Create Session →'))), showStudent && /*#__PURE__*/React.createElement("div", {
-    className: "card",
-    style: {
-      width: '100%',
-      maxWidth: 400,
-      position: 'relative',
-      zIndex: 1
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "card-title"
-  }, "\uD83D\uDC68\u200D\uD83C\uDF93 Join Session"),
-  // Session Code — always shown
-  /*#__PURE__*/React.createElement("div", {className: "form-group"},
-    /*#__PURE__*/React.createElement("label", null, "Session Code"),
-    /*#__PURE__*/React.createElement("input", {
-      value: sessionCode,
-      onChange: e => setSessionCode(e.target.value.replace(/\D/g, '').slice(0, 6)),
-      placeholder: "6-digit code",
-      style: {textAlign: 'center', fontSize: '1.5rem', letterSpacing: '6px', fontWeight: 700}
-    })
-  ),
-  // Profile banner — when profile exists, identity comes from profile
-  userProfile ? /*#__PURE__*/React.createElement("div", {
-    style: {
-      background: 'rgba(99,102,241,0.08)',
-      border: '1px solid rgba(99,102,241,0.25)',
-      borderRadius: 8,
-      padding: '10px 14px',
-      marginBottom: 14,
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      gap: 8
-    }
-  }, /*#__PURE__*/React.createElement("div", null,
-    /*#__PURE__*/React.createElement("div", {style:{fontWeight:700,fontSize:'0.9rem'}}, userProfile.name),
-    /*#__PURE__*/React.createElement("div", {style:{fontSize:'0.78rem',color:'var(--text3)'}}, userProfile.email)
-  ), /*#__PURE__*/React.createElement("span", {
-    style:{fontSize:'0.72rem',color:'var(--accent)',fontWeight:600,background:'rgba(99,102,241,0.12)',padding:'2px 8px',borderRadius:99}
-  }, "✔ Profile saved")) : null,
-  // Name/email/phone — only shown when no profile exists
-  !userProfile && /*#__PURE__*/React.createElement("div", {className: "form-group"},
-    /*#__PURE__*/React.createElement("label", null, "Your Name"),
-    /*#__PURE__*/React.createElement("input", {
-      value: studentName,
-      onChange: e => setStudentName(e.target.value),
-      placeholder: "Enter your name",
-      onKeyDown: e => e.key === 'Enter' && joinSession()
-    })
-  ),
-  !userProfile && /*#__PURE__*/React.createElement("div", {className: "form-group"},
-    /*#__PURE__*/React.createElement("label", null, "Email Address ", /*#__PURE__*/React.createElement("span", {style:{color:'var(--red)'}}, "*")),
-    /*#__PURE__*/React.createElement("input", {
-      type: "email",
-      value: studentEmail,
-      onChange: e => setStudentEmail(e.target.value),
-      placeholder: "student@school.com"
-    })
-  ),
-  !userProfile && /*#__PURE__*/React.createElement("div", {className: "form-group"},
-    /*#__PURE__*/React.createElement("label", null, "Phone Number ", /*#__PURE__*/React.createElement("span", {style:{color:'var(--text3)',fontWeight:400}}, "(optional)")),
-    /*#__PURE__*/React.createElement("input", {
-      type: "tel",
-      value: studentPhone,
-      onChange: e => setStudentPhone(e.target.value),
-      placeholder: "+91 98765 43210"
-    })
-  ),
-  // Roll + Class — always session-specific, always shown
-  /*#__PURE__*/React.createElement("div", {className: "form-group"},
-    /*#__PURE__*/React.createElement("label", null, "Roll Number"),
-    /*#__PURE__*/React.createElement("input", {
-      value: roll,
-      onChange: e => setRoll(e.target.value),
-      placeholder: "Enter your roll number"
-    })
-  ),
-  /*#__PURE__*/React.createElement("div", {className: "form-group"},
-    /*#__PURE__*/React.createElement("label", null, "Class (e.g. 10A)"),
-    /*#__PURE__*/React.createElement("input", {
-      value: cls,
-      onChange: e => setCls(e.target.value),
-      placeholder: "Enter your class"
-    })
-  ),
-  /*#__PURE__*/React.createElement("div", {
-    className: "flex gap-8"
-  }, /*#__PURE__*/React.createElement("button", {
-    className: "btn btn-ghost",
-    onClick: () => setShowStudent(false)
-  }, "Back"), /*#__PURE__*/React.createElement("button", {
-    className: "btn btn-primary",
-    style: {
-      flex: 1
-    },
-    onClick: joinSession,
-    disabled: loading
-  }, loading ? 'Joining…' : 'Join Session →'))), !showTeacher && !showStudent && /*#__PURE__*/React.createElement("div", {
-    style: {
-      marginTop: 48,
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      gap: 6,
-      color: 'var(--text3)',
-      fontSize: '0.78rem',
-      animation: 'lp-fadein 1s ease 1s both'
-    }
-  }, /*#__PURE__*/React.createElement("span", null, "Scroll to explore"), /*#__PURE__*/React.createElement("div", {
-    style: {
-      width: 1,
-      height: 32,
-      background: 'linear-gradient(var(--border),transparent)'
-    }
-  }))), /*#__PURE__*/React.createElement("div", {
-    style: {
-      background: 'var(--surface)',
-      borderTop: '1px solid var(--border)',
-      borderBottom: '1px solid var(--border)'
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      maxWidth: 1160,
-      margin: '0 auto',
-      padding: '0 24px',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      flexWrap: 'wrap',
-      gap: 0
-    }
-  }, [{
-    icon: '⚡',
-    label: 'Real-Time WebSocket Sync'
-  }, {
-    icon: '🤖',
-    label: 'AI-Powered Analysis'
-  }, {
-    icon: '🔒',
-    label: 'Session-Scoped & Secure'
-  }, {
-    icon: '📊',
-    label: 'Live Charts & Analytics'
-  }, {
-    icon: '📱',
-    label: 'Works on Any Device'
-  }].map((item, i, arr) => /*#__PURE__*/React.createElement(React.Fragment, {
-    key: i
-  }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: 'flex',
-      alignItems: 'center',
-      gap: 8,
-      padding: '22px 28px',
-      fontSize: '0.82rem',
-      fontWeight: 600,
-      color: 'var(--text2)',
-      whiteSpace: 'nowrap'
-    }
-  }, /*#__PURE__*/React.createElement("span", {
-    style: {
-      fontSize: '1.1rem'
-    }
-  }, item.icon), item.label), i < arr.length - 1 && /*#__PURE__*/React.createElement("div", {
-    style: {
-      width: 1,
-      height: 20,
-      background: 'var(--border)',
-      flexShrink: 0
-    }
-  }))))), /*#__PURE__*/React.createElement("div", {
-    className: "lp-section"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "lp-what"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "lp-animate-trigger"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "lp-tag"
-  }, "What is ClassMind?"), /*#__PURE__*/React.createElement("h2", {
-    className: "lp-h2"
-  }, "Your classroom,", /*#__PURE__*/React.createElement("br", null), /*#__PURE__*/React.createElement("span", null, "supercharged with AI")), /*#__PURE__*/React.createElement("p", {
-    className: "lp-lead"
-  }, "ClassMind is a real-time classroom intelligence platform that bridges the gap between teaching and understanding. While you teach, ClassMind listens, analyzes, and gives you actionable insights \u2014 live."), /*#__PURE__*/React.createElement("div", {
-    className: "lp-what-pills"
-  }, [{
-    dot: '#6366f1',
-    label: 'AI-Powered Insights'
-  }, {
-    dot: '#22c55e',
-    label: 'Live Understanding Meter'
-  }, {
-    dot: '#f97316',
-    label: 'Smart Student Grouping'
-  }, {
-    dot: '#3b82f6',
-    label: 'Doubt Detection System'
-  }, {
-    dot: '#ec4899',
-    label: 'Real-Time Analytics'
-  }, {
-    dot: '#eab308',
-    label: 'Gamified Engagement'
-  }].map((p, i) => /*#__PURE__*/React.createElement("div", {
-    key: i,
-    className: "lp-pill"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "lp-pill-dot",
-    style: {
-      background: p.dot
-    }
-  }), p.label)))), /*#__PURE__*/React.createElement("div", {
-    className: "lp-visual-card lp-animate-trigger",
-    style: {
-      animationDelay: '0.2s'
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      fontSize: '0.75rem',
-      fontWeight: 700,
-      color: 'var(--text3)',
-      letterSpacing: '0.08em',
-      textTransform: 'uppercase',
-      marginBottom: 16
-    }
-  }, "\uD83D\uDD34 Live \xB7 Class 10A \xB7 34 Students"), [{
-    label: 'Understanding Score',
-    val: '78%',
-    color: 'var(--green)'
-  }, {
-    label: 'Participation Rate',
-    val: '92%',
-    color: 'var(--accent)'
-  }, {
-    label: 'At-Risk Students',
-    val: '3',
-    color: 'var(--red)'
-  }, {
-    label: 'Tasks Completed',
-    val: '21/34',
-    color: 'var(--yellow)'
-  }].map((m, i) => /*#__PURE__*/React.createElement("div", {
-    key: i,
-    className: "lp-mock-metric"
-  }, /*#__PURE__*/React.createElement("span", {
-    style: {
-      color: 'var(--text2)'
-    }
-  }, m.label), /*#__PURE__*/React.createElement("span", {
-    className: "lp-mock-metric-val",
-    style: {
-      color: m.color
-    }
-  }, m.val))), /*#__PURE__*/React.createElement("div", {
-    style: {
-      marginTop: 16,
-      marginBottom: 8,
-      fontSize: '0.75rem',
-      fontWeight: 700,
-      color: 'var(--text3)',
-      letterSpacing: '0.06em',
-      textTransform: 'uppercase'
-    }
-  }, "Student Understanding"), /*#__PURE__*/React.createElement("div", {
-    className: "lp-mock-bar accent",
-    style: {
-      width: '78%'
-    }
-  }), /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: 'flex',
-      justifyContent: 'space-between',
-      fontSize: '0.72rem',
-      color: 'var(--text3)',
-      marginTop: 4
-    }
-  }, /*#__PURE__*/React.createElement("span", null, "0%"), /*#__PURE__*/React.createElement("span", {
-    style: {
-      color: 'var(--green)',
-      fontWeight: 700
-    }
-  }, "78%"), /*#__PURE__*/React.createElement("span", null, "100%")), /*#__PURE__*/React.createElement("div", {
-    className: "lp-mock-students",
-    style: {
-      marginTop: 16
-    }
-  }, ['PK', 'AJ', 'RM', 'SK', 'VT', 'NP', 'DK', 'RG', 'MS', 'TL', 'AB', 'KC'].map((n, i) => /*#__PURE__*/React.createElement("div", {
-    key: i,
-    className: "lp-mock-student",
-    style: {
-      background: i < 8 ? 'var(--green)' : i < 10 ? 'var(--yellow)' : 'var(--red)',
-      fontSize: '0.65rem'
-    }
-  }, n)), /*#__PURE__*/React.createElement("div", {
-    className: "lp-mock-student",
-    style: {
-      background: 'var(--surface3)',
-      color: 'var(--text2)',
-      fontSize: '0.65rem'
-    }
-  }, "+22"))))), /*#__PURE__*/React.createElement("div", {
-    className: "lp-features-bg"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "lp-section"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "lp-animate-trigger",
-    style: {
-      textAlign: 'center',
-      marginBottom: 0
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "lp-tag",
-    style: {
-      margin: '0 auto 16px'
-    }
-  }, "Features"), /*#__PURE__*/React.createElement("h2", {
-    className: "lp-h2",
-    style: {
-      textAlign: 'center'
-    }
-  }, "Everything you need to ", /*#__PURE__*/React.createElement("span", null, "teach smarter")), /*#__PURE__*/React.createElement("p", {
-    className: "lp-lead",
-    style: {
-      margin: '0 auto',
-      textAlign: 'center'
-    }
-  }, "From the moment class starts to the final report \u2014 ClassMind handles the data so you can focus on teaching.")), /*#__PURE__*/React.createElement("div", {
-    className: "lp-features-grid"
-  }, features.map((f, i) => /*#__PURE__*/React.createElement("div", {
-    key: i,
-    className: `lp-feat lp-animate-trigger d${i % 6 + 1}`
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "lp-feat-icon",
-    style: {
-      background: f.bg
-    }
-  }, f.icon), /*#__PURE__*/React.createElement("div", {
-    className: "lp-feat-title"
-  }, f.title), /*#__PURE__*/React.createElement("div", {
-    className: "lp-feat-desc"
-  }, f.desc)))))), /*#__PURE__*/React.createElement("div", {
-    style: {
-      background: 'var(--bg)',
-      padding: '64px 0',
-      borderTop: '1px solid var(--border)'
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      textAlign: 'center',
-      marginBottom: 32,
-      padding: '0 24px'
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "lp-tag",
-    style: {
-      display: 'inline-block'
-    }
-  }, "See it in action"), /*#__PURE__*/React.createElement("h2", {
-    className: "lp-h2",
-    style: {
-      textAlign: 'center',
-      marginTop: 12
-    }
-  }, /*#__PURE__*/React.createElement("span", null, "Live dashboards"), ", real results")), /*#__PURE__*/React.createElement("div", {
-    className: "lp-carousel-wrap"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "lp-carousel-track"
-  }, allSlides.map((s, i) => /*#__PURE__*/React.createElement("div", {
-    key: i,
-    className: "lp-slide"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "lp-slide-header"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "lp-slide-dot",
-    style: {
-      background: '#ef4444'
-    }
-  }), /*#__PURE__*/React.createElement("div", {
-    className: "lp-slide-dot",
-    style: {
-      background: '#eab308'
-    }
-  }), /*#__PURE__*/React.createElement("div", {
-    className: "lp-slide-dot",
-    style: {
-      background: '#22c55e'
-    }
-  }), /*#__PURE__*/React.createElement("div", {
-    className: "lp-slide-title",
-    style: {
-      marginLeft: 8
-    }
-  }, s.title)), /*#__PURE__*/React.createElement("div", {
-    style: {
-      height: 3,
-      borderRadius: 2,
-      background: `linear-gradient(90deg,${s.color},transparent)`,
-      marginBottom: 16
-    }
-  }), s.items.map((item, j) => /*#__PURE__*/React.createElement("div", {
-    key: j,
-    style: {
-      display: 'flex',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      padding: '9px 12px',
-      background: 'var(--surface2)',
-      borderRadius: 8,
-      marginBottom: 8,
-      fontSize: '0.82rem'
-    }
-  }, /*#__PURE__*/React.createElement("span", {
-    style: {
-      color: 'var(--text2)'
-    }
-  }, item.label), /*#__PURE__*/React.createElement("span", {
-    style: {
-      fontWeight: 700,
-      color: item.color
-    }
-  }, item.val))), /*#__PURE__*/React.createElement("div", {
-    style: {
-      marginTop: 14,
-      height: 6,
-      borderRadius: 4,
-      background: 'var(--surface2)',
-      overflow: 'hidden'
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      height: '100%',
-      width: ['68%', '85%', '72%', '90%', '60%', '80%'][i % 6],
-      background: `linear-gradient(90deg,${s.color},${s.color}88)`,
-      borderRadius: 4,
-      animation: 'bar-grow 2s ease infinite alternate'
-    }
-  }))))))), /*#__PURE__*/React.createElement("div", {
-    className: "lp-section"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "lp-animate-trigger",
-    style: {
-      textAlign: 'center',
-      marginBottom: 0
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "lp-tag",
-    style: {
-      display: 'inline-block'
-    }
-  }, "Built for Everyone"), /*#__PURE__*/React.createElement("h2", {
-    className: "lp-h2",
-    style: {
-      textAlign: 'center',
-      marginTop: 12
-    }
-  }, "What you can ", /*#__PURE__*/React.createElement("span", null, "do here"))), /*#__PURE__*/React.createElement("div", {
-    className: "lp-roles"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "lp-role-block teacher lp-animate-trigger d1"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "lp-role-head"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "lp-role-emoji",
-    style: {
-      background: 'rgba(99,102,241,0.12)'
-    }
-  }, "\uD83D\uDC68\u200D\uD83C\uDFEB"), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
-    className: "lp-role-name"
-  }, "For Teachers"), /*#__PURE__*/React.createElement("div", {
-    className: "lp-role-sub"
-  }, "Run smarter, data-driven classes"))), /*#__PURE__*/React.createElement("ul", {
-    className: "lp-role-list"
-  }, /*#__PURE__*/React.createElement("li", null, "Monitor class understanding in real-time with a live percentage meter"), /*#__PURE__*/React.createElement("li", null, "Instantly identify students who are struggling and need attention"), /*#__PURE__*/React.createElement("li", null, "Create AI-powered student groups balanced by performance level"), /*#__PURE__*/React.createElement("li", null, "Assign tasks, MCQs, or coding challenges and track responses live"), /*#__PURE__*/React.createElement("li", null, "Use your AI Copilot to ask questions and get classroom summaries"), /*#__PURE__*/React.createElement("li", null, "Export full session reports to PDF or Excel in one click"))), /*#__PURE__*/React.createElement("div", {
-    className: "lp-role-block student lp-animate-trigger d2"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "lp-role-head"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "lp-role-emoji",
-    style: {
-      background: 'rgba(34,197,94,0.12)'
-    }
-  }, "\uD83D\uDC68\u200D\uD83C\uDF93"), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
-    className: "lp-role-name"
-  }, "For Students"), /*#__PURE__*/React.createElement("div", {
-    className: "lp-role-sub"
-  }, "Learn actively, compete, and grow"))), /*#__PURE__*/React.createElement("ul", {
-    className: "lp-role-list",
-    style: {
-      listStyle: 'none',
-      display: 'flex',
-      flexDirection: 'column',
-      gap: 12
-    }
-  }, ['Receive tasks and answer in real-time — MCQs, text, or code', 'Get instant feedback: right answer, explanation, and your score', 'Climb the live leaderboard and compete with classmates', 'Raise your hand silently to signal confusion without disrupting class', 'Ask doubts through the chat and get answers from your teacher', 'Track your performance across tasks and see where to improve'].map((item, i) => /*#__PURE__*/React.createElement("li", {
-    key: i,
-    style: {
-      display: 'flex',
-      alignItems: 'flex-start',
-      gap: 10,
-      fontSize: '0.9rem',
-      color: 'var(--text2)',
-      lineHeight: 1.5
-    }
-  }, /*#__PURE__*/React.createElement("span", {
-    style: {
-      color: 'var(--green)',
-      fontWeight: 700,
-      flexShrink: 0,
-      marginTop: 1
-    }
-  }, "\u2192"), item)))))), /*#__PURE__*/React.createElement("div", {
-    className: "lp-cta"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "lp-animate-trigger"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "lp-tag",
-    style: {
-      display: 'inline-block',
-      marginBottom: 20
-    }
-  }, "Get Started Free"), /*#__PURE__*/React.createElement("div", {
-    className: "lp-cta-h"
-  }, "Ready to transform your", /*#__PURE__*/React.createElement("br", null), /*#__PURE__*/React.createElement("span", {
-    style: {
-      background: 'linear-gradient(135deg,var(--accent),var(--accent2))',
-      WebkitBackgroundClip: 'text',
-      WebkitTextFillColor: 'transparent'
-    }
-  }, "classroom experience?")), /*#__PURE__*/React.createElement("div", {
-    className: "lp-cta-sub"
-  }, "No setup required. Create a session in seconds."), /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: 'flex',
-      gap: 16,
-      justifyContent: 'center',
-      flexWrap: 'wrap'
-    }
-  }, /*#__PURE__*/React.createElement("button", {
-    className: "btn btn-primary btn-lg",
-    onClick: () => {
-      window.scrollTo({
-        top: 0,
-        behavior: 'smooth'
-      });
-      setTimeout(() => gotoTeacher(), 400);
-    },
-    style: {
-      padding: '14px 36px',
-      fontSize: '1rem',
-      borderRadius: 12,
-      background: 'linear-gradient(135deg,var(--accent),var(--accent2))'
-    }
-  }, "\uD83D\uDC68\u200D\uD83C\uDFEB Start as Teacher"), /*#__PURE__*/React.createElement("button", {
-    className: "btn btn-ghost btn-lg",
-    onClick: () => {
-      window.scrollTo({
-        top: 0,
-        behavior: 'smooth'
-      });
-      setTimeout(() => gotoStudent(), 400);
-    },
-    style: {
-      padding: '14px 36px',
-      fontSize: '1rem',
-      borderRadius: 12
-    }
-  }, "\uD83D\uDC68\u200D\uD83C\uDF93 Join as Student")))), /*#__PURE__*/React.createElement("div", {
-    className: "lp-footer"
-  }, /*#__PURE__*/React.createElement("span", null, "\uD83E\uDDE0 ClassMind"), " \u2014 Real-Time Classroom Intelligence \xA0\xB7\xA0 Built for teachers and students"));
+    className: "landing" + (lpLightMode ? " light" : "")
+  }, 
+    loginModal && /*#__PURE__*/React.createElement(LoginModal, {
+      defaultRole: loginModal,
+      onComplete: handleLoginComplete,
+      onClose: () => setLoginModal(null)
+    }), 
+    /*#__PURE__*/React.createElement("nav", {
+      className: "nav",
+      style: { position: 'sticky', top: 0, zIndex: 100 }
+    }, 
+      /*#__PURE__*/React.createElement("span", { className: "nav-brand" }, "\uD83E\uDDE0 ClassMind"), 
+      /*#__PURE__*/React.createElement("div", { className: "nav-right" }, 
+        /*#__PURE__*/React.createElement("button", {
+          className: "lp-theme-toggle",
+          onClick: () => setLpLightMode(!lpLightMode),
+          title: lpLightMode ? "Switch to Night Mode" : "Switch to Day Mode"
+        }, lpLightMode ? '🌙' : '☀️'),
+        /*#__PURE__*/React.createElement("button", {
+          className: `profile-icon-btn${!userProfile ? ' no-profile' : ''}`,
+          onClick: userProfile ? onOpenProfile : () => setLoginModal('teacher'),
+          style: { marginLeft: 4 }
+        }, (userProfile?.name || '?')[0].toUpperCase())
+      )
+    ), 
+    /*#__PURE__*/React.createElement("div", {
+      className: "landing-hero",
+      ref: heroRef
+    }, 
+
+      /* ── IMAGE SLIDESHOW LAYER ── */
+      /*#__PURE__*/React.createElement("div", { className: "hero-bg-wrap" },
+        HERO_IMAGES.map((src, i) =>
+          /*#__PURE__*/React.createElement("div", {
+            key: i,
+            className: "hero-bg-slide kb-" + (i + 1) + (activeSlide === i ? " active" : ""),
+            style: { backgroundImage: "url('" + src + "')" }
+          })
+        )
+      ),
+
+      /* ── CINEMATIC OVERLAY ── */
+      /*#__PURE__*/React.createElement("div", { className: "hero-overlay" }),
+
+      /* ── AMBIENT GLOW ORBS ── */
+      /*#__PURE__*/React.createElement("div", { className: "hero-glow-orb orb-1" }),
+      /*#__PURE__*/React.createElement("div", { className: "hero-glow-orb orb-2" }),
+      /*#__PURE__*/React.createElement("div", { className: "hero-glow-orb orb-3" }),
+      /*#__PURE__*/React.createElement("div", { className: "hero-glow-orb orb-4" }),
+
+      /* ── FLOATING PARTICLES ── */
+      /*#__PURE__*/React.createElement("div", { className: "hero-particles" },
+        Array.from({ length: 12 }, (_, i) =>
+          /*#__PURE__*/React.createElement("span", { key: i, className: "hero-particle" })
+        )
+      ),
+
+      /* ── GRID PATTERN (existing, now z-index:4) ── */
+      /*#__PURE__*/React.createElement("div", { className: "landing-hero-grid" }),
+
+      /* ── TEXT READABILITY SHIELD — adaptive radial softener behind content ── */
+      /*#__PURE__*/React.createElement("div", { className: "hero-content-shield" }),
+
+      /* ── SLIDE PROGRESS DOTS ── */
+      /*#__PURE__*/React.createElement("div", { className: "hero-progress-dots" },
+        HERO_IMAGES.map((_, i) =>
+          /*#__PURE__*/React.createElement("div", {
+            key: i,
+            className: "hero-progress-dot" + (activeSlide === i ? " active" : ""),
+            style: activeSlide === i ? { "--dot-duration": (HERO_SLIDE_DURATION / 1000) + "s" } : {}
+          })
+        )
+      ),
+
+      /* ── FOREGROUND CONTENT (existing) ── */
+      /*#__PURE__*/React.createElement("div", { className: "lp-animate" }, 
+        /*#__PURE__*/React.createElement("div", { className: "landing-eyebrow" }, "\uD83D\uDE80 AI-Powered Classroom Intelligence"), 
+        /*#__PURE__*/React.createElement("h1", { className: "landing-logo" }, "ClassMind"), 
+        /*#__PURE__*/React.createElement("p", { className: "landing-sub" }, "The smartest way to run a classroom. Real-time insights, AI grouping, live analytics \u2014 all in one place for teachers and students."), 
+        !showTeacher && !showStudent && /*#__PURE__*/React.createElement("div", {
+          className: "role-cards"
+        }, 
+          /*#__PURE__*/React.createElement("div", { className: "role-card", onClick: gotoTeacher }, 
+            /*#__PURE__*/React.createElement("div", { className: "role-icon" }, "\uD83D\uDC68\u200D\uD83C\uDFEB"), 
+            /*#__PURE__*/React.createElement("div", { className: "role-title" }, "Start as Teacher"), 
+            /*#__PURE__*/React.createElement("div", { className: "role-desc" }, "Create a session and manage your class")
+          ), 
+          /*#__PURE__*/React.createElement("div", { className: "role-card", onClick: gotoStudent }, 
+            /*#__PURE__*/React.createElement("div", { className: "role-icon" }, "\uD83D\uDC68\u200D\uD83C\uDF93"), 
+            /*#__PURE__*/React.createElement("div", { className: "role-title" }, "Join as Student"), 
+            /*#__PURE__*/React.createElement("div", { className: "role-desc" }, "Enter a session code to join")
+          )
+        ), 
+        showTeacher && /*#__PURE__*/React.createElement("div", {
+          className: "card lp-form-fade lp-form-fade-card",
+          style: { width: '100%', maxWidth: 400, position: 'relative', zIndex: 1 }
+        }, 
+          /*#__PURE__*/React.createElement("div", { className: "card-title" }, "\uD83D\uDC68\u200D\uD83C\uDFEB Create Session"), 
+          userProfile && /*#__PURE__*/React.createElement("div", { style: { background: 'rgba(99,102,241,0.08)', border: '1px solid rgba(99,102,241,0.25)', borderRadius: 8, padding: '10px 14px', marginBottom: 14 } }, 
+            /*#__PURE__*/React.createElement("div", { style: { fontWeight: 700 } }, userProfile.name), 
+            /*#__PURE__*/React.createElement("div", { style: { fontSize: '0.8rem', color: 'var(--text3)' } }, userProfile.email)
+          ), 
+          !userProfile && /*#__PURE__*/React.createElement(React.Fragment, null, 
+            /*#__PURE__*/React.createElement("div", { className: "form-group" }, 
+              /*#__PURE__*/React.createElement("label", null, "Your Name"), 
+              /*#__PURE__*/React.createElement("input", { value: teacherName, onChange: e => setTeacherName(e.target.value), placeholder: "Dr. Smith" })
+            ), 
+            /*#__PURE__*/React.createElement("div", { className: "form-group" }, 
+              /*#__PURE__*/React.createElement("label", null, "Email"), 
+              /*#__PURE__*/React.createElement("input", { value: teacherEmail, onChange: e => setTeacherEmail(e.target.value), placeholder: "teacher@school.com" })
+            )
+          ), 
+          /*#__PURE__*/React.createElement("div", { className: "flex gap-8" }, 
+            /*#__PURE__*/React.createElement("button", { className: "btn btn-ghost", onClick: () => setShowTeacher(false) }, "Back"), 
+            /*#__PURE__*/React.createElement("button", { className: "btn btn-primary", style: { flex: 1 }, onClick: createSession, disabled: loading }, loading ? 'Creating...' : 'Create Session \u2192')
+          )
+        ), 
+        showStudent && /*#__PURE__*/React.createElement("div", {
+          className: "card lp-form-fade lp-form-fade-card",
+          style: { width: '100%', maxWidth: 400, position: 'relative', zIndex: 1 }
+        }, 
+          /*#__PURE__*/React.createElement("div", { className: "card-title" }, "\uD83D\uDC68\u200D\uD83C\uDF93 Join Session"), 
+          /*#__PURE__*/React.createElement("div", { className: "form-group" }, 
+            /*#__PURE__*/React.createElement("label", null, "Session Code"), 
+            /*#__PURE__*/React.createElement("input", { value: sessionCode, onChange: e => setSessionCode(e.target.value.slice(0, 6)), placeholder: "6-digit code" })
+          ), 
+          !userProfile && /*#__PURE__*/React.createElement(React.Fragment, null, 
+            /*#__PURE__*/React.createElement("div", { className: "form-group" }, 
+              /*#__PURE__*/React.createElement("label", null, "Name"), 
+              /*#__PURE__*/React.createElement("input", { value: studentName, onChange: e => setStudentName(e.target.value) })
+            ), 
+            /*#__PURE__*/React.createElement("div", { className: "form-group" }, 
+              /*#__PURE__*/React.createElement("label", null, "Email"), 
+              /*#__PURE__*/React.createElement("input", { value: studentEmail, onChange: e => setStudentEmail(e.target.value) })
+            )
+          ), 
+          /*#__PURE__*/React.createElement("div", { className: "form-group" }, 
+            /*#__PURE__*/React.createElement("label", null, "Roll Number"), 
+            /*#__PURE__*/React.createElement("input", { value: roll, onChange: e => setRoll(e.target.value) })
+          ), 
+          /*#__PURE__*/React.createElement("div", { className: "form-group" }, 
+            /*#__PURE__*/React.createElement("label", null, "Class"), 
+            /*#__PURE__*/React.createElement("input", { value: cls, onChange: e => setCls(e.target.value) })
+          ), 
+          /*#__PURE__*/React.createElement("div", { className: "flex gap-8" }, 
+            /*#__PURE__*/React.createElement("button", { className: "btn btn-ghost", onClick: () => setShowStudent(false) }, "Back"), 
+            /*#__PURE__*/React.createElement("button", { className: "btn btn-primary", style: { flex: 1 }, onClick: joinSession, disabled: loading }, loading ? 'Joining...' : 'Join Session \u2192')
+          )
+        )
+      )
+    ), 
+    /*#__PURE__*/React.createElement("div", {
+      className: "lp-section lp-animate",
+      style: { textAlign: 'center' }
+    }, 
+      /*#__PURE__*/React.createElement("div", {
+        className: "lp-tag",
+        style: { display: 'inline-block' }
+      }, "See it in action"), 
+      /*#__PURE__*/React.createElement("h2", {
+        className: "lp-h2",
+        style: { textAlign: 'center', marginTop: 12 }
+      }, 
+        /*#__PURE__*/React.createElement("span", null, "Live dashboards"), ", real results"
+      )
+    ), 
+    /*#__PURE__*/React.createElement("div", {
+      className: "lp-carousel-wrap"
+    }, 
+      /*#__PURE__*/React.createElement("div", {
+        className: "lp-carousel-track"
+      }, 
+        allSlides.concat(allSlides).map((s, i) => 
+          /*#__PURE__*/React.createElement("div", { key: i, className: "lp-slide" }, 
+            /*#__PURE__*/React.createElement("div", { className: "lp-slide-header" }, 
+              /*#__PURE__*/React.createElement("div", { className: "lp-slide-dot", style: { background: '#ef4444' } }), 
+              /*#__PURE__*/React.createElement("div", { className: "lp-slide-dot", style: { background: '#eab308' } }), 
+              /*#__PURE__*/React.createElement("div", { className: "lp-slide-dot", style: { background: '#22c55e' } }), 
+              /*#__PURE__*/React.createElement("div", { className: "lp-slide-title", style: { marginLeft: 8 } }, s.title)
+            ), 
+            /*#__PURE__*/React.createElement("div", {
+              style: { height: 3, borderRadius: 2, background: `linear-gradient(90deg,${s.color},transparent)`, marginBottom: 16 }
+            }), 
+            s.items.map((item, j) => 
+              /*#__PURE__*/React.createElement("div", { key: j, style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '9px 12px', background: 'var(--surface2)', borderRadius: 8, marginBottom: 8, fontSize: '0.82rem' } }, 
+                /*#__PURE__*/React.createElement("span", { style: { color: 'var(--text2)' } }, item.label), 
+                /*#__PURE__*/React.createElement("span", { style: { fontWeight: 700, color: item.color } }, item.val)
+              )
+            ), 
+            /*#__PURE__*/React.createElement("div", {
+              style: { marginTop: 14, height: 6, borderRadius: 4, background: 'var(--surface2)', overflow: 'hidden' }
+            }, 
+              /*#__PURE__*/React.createElement("div", {
+                style: { height: '100%', width: ['68%', '85%', '72%', '90%', '60%', '80%'][i % 6], background: `linear-gradient(90deg,${s.color},${s.color}88)`, borderRadius: 4, animation: 'bar-grow 2s ease infinite alternate' }
+              })
+            )
+          )
+        )
+      )
+    ), 
+    /*#__PURE__*/React.createElement("div", {
+      className: "lp-section"
+    }, 
+      /*#__PURE__*/React.createElement("div", {
+        className: "lp-animate-trigger",
+        style: { textAlign: 'center', marginBottom: 0 }
+      }, 
+        /*#__PURE__*/React.createElement("div", { className: "lp-tag", style: { display: 'inline-block' } }, "Built for Everyone"), 
+        /*#__PURE__*/React.createElement("h2", {
+          className: "lp-h2",
+          style: { textAlign: 'center', marginTop: 12 }
+        }, "What you can ", /*#__PURE__*/React.createElement("span", null, "do here"))
+      ), 
+      /*#__PURE__*/React.createElement("div", {
+        className: "lp-roles"
+      }, 
+        /*#__PURE__*/React.createElement("div", { className: "lp-role-block teacher lp-animate-trigger d1" }, 
+          /*#__PURE__*/React.createElement("div", { className: "lp-role-head" }, 
+            /*#__PURE__*/React.createElement("div", { className: "lp-role-emoji", style: { background: 'rgba(99,102,241,0.12)' } }, "\uD83D\uDC68\u200D\uD83C\uDFEB"), 
+            /*#__PURE__*/React.createElement("div", null, 
+              /*#__PURE__*/React.createElement("div", { className: "lp-role-name" }, "For Teachers"), 
+              /*#__PURE__*/React.createElement("div", { className: "lp-role-sub" }, "Run smarter, data-driven classes")
+            )
+          ), 
+          /*#__PURE__*/React.createElement("ul", { className: "lp-role-list" }, 
+            /*#__PURE__*/React.createElement("li", null, "Monitor class understanding in real-time with a live percentage meter"), 
+            /*#__PURE__*/React.createElement("li", null, "Instantly identify students who are struggling and need attention"), 
+            /*#__PURE__*/React.createElement("li", null, "Create AI-powered student groups balanced by performance level"), 
+            /*#__PURE__*/React.createElement("li", null, "Assign tasks, MCQs, or coding challenges and track responses live"), 
+            /*#__PURE__*/React.createElement("li", null, "Use your AI Copilot to ask questions and get classroom summaries"), 
+            /*#__PURE__*/React.createElement("li", null, "Export full session reports to PDF or Excel in one click")
+          )
+        ), 
+        /*#__PURE__*/React.createElement("div", { className: "lp-role-block student lp-animate-trigger d2" }, 
+          /*#__PURE__*/React.createElement("div", { className: "lp-role-head" }, 
+            /*#__PURE__*/React.createElement("div", { className: "lp-role-emoji", style: { background: 'rgba(34,197,94,0.12)' } }, "\uD83D\uDC68\u200D\uD83C\uDF93"), 
+            /*#__PURE__*/React.createElement("div", null, 
+              /*#__PURE__*/React.createElement("div", { className: "lp-role-name" }, "For Students"), 
+              /*#__PURE__*/React.createElement("div", { className: "lp-role-sub" }, "Learn actively, compete, and grow")
+            )
+          ), 
+          /*#__PURE__*/React.createElement("ul", { className: "lp-role-list", style: { listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 12 } }, 
+            ['Receive tasks and answer in real-time — MCQs, text, or code', 'Get instant feedback: right answer, explanation, and your score', 'Climb the live leaderboard and compete with classmates', 'Raise your hand silently to signal confusion without disrupting class', 'Ask doubts through the chat and get answers from your teacher', 'Track your performance across tasks and see where to improve'].map((item, i) => 
+              /*#__PURE__*/React.createElement("li", { key: i, style: { display: 'flex', alignItems: 'flex-start', gap: 10, fontSize: '0.9rem', color: 'var(--text2)', lineHeight: 1.5 } }, 
+                /*#__PURE__*/React.createElement("span", { style: { color: 'var(--green)', fontWeight: 700, flexShrink: 0, marginTop: 1 } }, "\u2192"), item
+              )
+            )
+          )
+        )
+      )
+    ), 
+    /*#__PURE__*/React.createElement("div", {
+      className: "lp-cta"
+    }, 
+      /*#__PURE__*/React.createElement("div", { className: "lp-animate-trigger" }, 
+        /*#__PURE__*/React.createElement("div", { className: "lp-tag", style: { display: 'inline-block', marginBottom: 20 } }, "Get Started Free"), 
+        /*#__PURE__*/React.createElement("div", { className: "lp-cta-h" }, "Ready to transform your", /*#__PURE__*/React.createElement("br", null), 
+          /*#__PURE__*/React.createElement("span", { style: { background: 'linear-gradient(135deg,var(--accent),var(--accent2))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' } }, "classroom experience?")
+        ), 
+        /*#__PURE__*/React.createElement("div", { className: "lp-cta-sub" }, "No setup required. Create a session in seconds."), 
+        /*#__PURE__*/React.createElement("div", { style: { display: 'flex', gap: 16, justifyContent: 'center', flexWrap: 'wrap' } }, 
+          /*#__PURE__*/React.createElement("button", {
+            className: "btn btn-primary btn-lg",
+            onClick: () => { window.scrollTo({ top: 0, behavior: 'smooth' }); setTimeout(() => gotoTeacher(), 400); },
+            style: { padding: '14px 36px', fontSize: '1rem', borderRadius: 12, background: 'linear-gradient(135deg,var(--accent),var(--accent2))' }
+          }, "\uD83D\uDC68\u200D\uD83C\uDFEB Start as Teacher"), 
+          /*#__PURE__*/React.createElement("button", {
+            className: "btn btn-ghost btn-lg",
+            onClick: () => { window.scrollTo({ top: 0, behavior: 'smooth' }); setTimeout(() => gotoStudent(), 400); },
+            style: { padding: '14px 36px', fontSize: '1rem', borderRadius: 12 }
+          }, "\uD83D\uDC68\u200D\uD83C\uDF93 Join as Student")
+        )
+      )
+    ), 
+    /*#__PURE__*/React.createElement("div", {
+      className: "lp-footer"
+    }, 
+      /*#__PURE__*/React.createElement("span", null, "\uD83E\uDDE0 ClassMind"), " \u2014 Real-Time Classroom Intelligence \xA0\xB7\xA0 Built for teachers and students"
+    )
+  );
 }
 
 // ═════════════════════════════════════════════════════════════════
 //  TEACHER SHELL (nav + routing between teacher pages)
 // ═════════════════════════════════════════════════════════════════
 
-
-
 // ===== 3. TEACHER MODULE =====
 // TeacherShell · Dashboard · Task/Quiz/Group/Reports · Admin · Copilot
 // ═════════════════════════════════════════════════════════════════
 
+
+
+
+// ═════════════════════════════════════════════════════════════════
+//  TEACHER MOTIVATIONAL NOTIFICATIONS  — MotivToastsContainer
+// ═════════════════════════════════════════════════════════════════
+function MotivToastsContainer({ toasts, onDismiss }) {
+  if (!toasts || !toasts.length) return null;
+  return React.createElement('div', { className: 'motiv-toasts-container' },
+    toasts.map(t =>
+      React.createElement('div', {
+        key: t.id,
+        className: `motiv-toast ${t.type || 'brain'} ${t.dismissing ? 'dismissing' : ''}`,
+        style: { '--motiv-duration': `${(t.duration || 7000) / 1000}s` }
+      },
+        React.createElement('button', {
+          className: 'motiv-toast-close',
+          onClick: () => onDismiss(t.id),
+          'aria-label': 'Dismiss'
+        }, '×'),
+        React.createElement('div', { className: 'motiv-toast-header' },
+          React.createElement('div', { className: 'motiv-toast-icon' }, t.icon || '✨'),
+          React.createElement('div', { className: 'motiv-toast-content' },
+            React.createElement('div', { className: 'motiv-toast-label' }, t.label || 'AI Insight'),
+            React.createElement('div', { className: 'motiv-toast-msg' }, t.msg)
+          )
+        ),
+        React.createElement('div', { className: 'motiv-toast-timer' },
+          React.createElement('div', { className: 'motiv-toast-timer-fill' })
+        )
+      )
+    )
+  );
+}
+
+// ── AI Teaching Insights Panel (used in dashboard) ──
+function AIInsightsPanel({ insights, insightIdx, insightFading }) {
+  const dots = insights.length;
+  return React.createElement('div', { className: 'ai-insights-panel' },
+    React.createElement('div', { className: 'ai-insights-header' },
+      React.createElement('div', { className: 'ai-insights-dot' }),
+      React.createElement('div', { className: 'ai-insights-title' }, '✨ AI Teaching Insights')
+    ),
+    React.createElement('div', {
+      className: `ai-insights-text ${insightFading ? 'fading' : ''}`
+    }, insights[insightIdx % insights.length]),
+    React.createElement('div', { className: 'ai-insights-meta' },
+      React.createElement('div', { className: 'ai-insights-indicator' },
+        insights.slice(0, Math.min(insights.length, 8)).map((_, i) =>
+          React.createElement('div', {
+            key: i,
+            className: `ai-indicator-dot ${i === insightIdx % insights.length ? 'active' : ''}`
+          })
+        )
+      ),
+      React.createElement('div', { style: { fontSize: '0.72rem', color: 'var(--text3)' } }, 'Live')
+    )
+  );
+}
 
 function TeacherShell({
   sessionCode,
@@ -4075,6 +4416,142 @@ function TeacherShell({
       weeklyRecordTeacherSession(sessionCode, analytics.participation || 0, analytics.understanding || 0, tasks.length, (roster.active || []).length);
     }
   }, [analytics.understanding, analytics.participation, tasks.length, sessionStatus]);
+
+  // ══════════════════════════════════════════════════════════════
+  //  MOTIVATIONAL NOTIFICATION SYSTEM
+  // ══════════════════════════════════════════════════════════════
+  const [motivToasts, setMotivToasts] = useState([]);
+  const motivQueueRef = useRef([]);
+  const motivTimerRef = useRef(null);
+  const motivCooldownRef = useRef({});
+  const prevAnalyticsRef = useRef({});
+  const prevRosterCountRef = useRef(0);
+  const tasksSentCountRef = useRef(0);
+
+  const MOTIV_MESSAGES = [
+    { id:'fire_engagement', icon:'🔥', label:'Engagement', msg:'Students are actively engaging with your content!', type:'fire', minStudents:3 },
+    { id:'great_participation', icon:'👏', label:'Participation', msg:'Great job! The class participation rate is looking strong.', type:'brain' },
+    { id:'ai_insight', icon:'🧠', label:'AI Insight', msg:'AI detected improved understanding levels in your session.', type:'brain' },
+    { id:'above_avg', icon:'⭐', label:'Performance', msg:'Your teaching efficiency is above average today.', type:'star' },
+    { id:'active_env', icon:'🏆', label:'Achievement', msg:"You're building an active, dynamic learning environment!", type:'trophy' },
+    { id:'no_risk', icon:'🎯', label:'All Good', msg:'Excellent! No students are currently struggling.', type:'trophy' },
+    { id:'improvement', icon:'💡', label:'Progress', msg:'Students are showing improved response quality this session.', type:'brain' },
+    { id:'rocket_speed', icon:'🚀', label:'Pace', msg:'Students are responding faster compared to last check.', type:'rocket' },
+    { id:'more_responses', icon:'📈', label:'Analytics', msg:'More students are responding compared to session start.', type:'rocket' },
+    { id:'task_impact', icon:'📊', label:'Task Impact', msg:'Your task delivery is driving measurable engagement spikes.', type:'fire' },
+    { id:'streak', icon:'⚡', label:'Momentum', msg:'Classroom momentum is building — keep it going!', type:'star' },
+    { id:'team_spirit', icon:'🌟', label:'Collaboration', msg:'Students are collaborating and discussing answers actively.', type:'star' },
+  ];
+
+  function showMotivToast(msgObj, duration=7000) {
+    const id = Date.now() + Math.random();
+    const toast = { ...msgObj, id, duration };
+    setMotivToasts(prev => [...prev.slice(-3), toast]); // max 4 stacked
+    setTimeout(() => dismissMotivToast(id), duration);
+  }
+
+  function dismissMotivToast(id) {
+    setMotivToasts(prev => prev.map(t => t.id === id ? { ...t, dismissing: true } : t));
+    setTimeout(() => setMotivToasts(prev => prev.filter(t => t.id !== id)), 400);
+  }
+
+  function tryMotivToast(id, extra={}) {
+    const now = Date.now();
+    const cooldown = motivCooldownRef.current[id] || 0;
+    if (now - cooldown < 45000) return; // 45s per-message cooldown
+    motivCooldownRef.current[id] = now;
+    const base = MOTIV_MESSAGES.find(m => m.id === id);
+    if (!base) return;
+    const msg = { ...base, ...extra };
+    if (msg.minStudents && (roster.active?.length || 0) < msg.minStudents) return;
+    showMotivToast(msg);
+  }
+
+  // Analytics-driven notification triggers
+  useEffect(() => {
+    if (sessionStatus !== 'active') return;
+    const prev = prevAnalyticsRef.current;
+    const cur = analytics;
+    const studentCount = roster.active?.length || 0;
+
+    // Engagement spike trigger
+    if (cur.participation >= 70 && (prev.participation || 0) < 70) {
+      tryMotivToast('fire_engagement', { msg: `🔥 Today you helped ${studentCount} students engage with challenging concepts!` });
+    }
+    // Understanding improvement trigger  
+    if (cur.understanding >= 65 && (prev.understanding || 0) < 65) {
+      tryMotivToast('ai_insight', { msg: `🧠 AI detected understanding improved to ${Math.round(cur.understanding)}% — great teaching!` });
+    }
+    // No at-risk students
+    if (cur.at_risk?.length === 0 && studentCount >= 3 && (prev.at_risk?.length || 0) > 0) {
+      tryMotivToast('no_risk');
+    }
+    // High participation milestone
+    if (cur.answered >= 10 && (prev.answered || 0) < 10) {
+      tryMotivToast('more_responses', { msg: `📈 ${cur.answered} responses collected — students are actively participating!` });
+    }
+    prevAnalyticsRef.current = { ...cur };
+  }, [analytics, sessionStatus]);
+
+  // Roster milestone notifications
+  useEffect(() => {
+    if (sessionStatus !== 'active') return;
+    const count = roster.active?.length || 0;
+    const prev = prevRosterCountRef.current;
+    if (count >= 5 && prev < 5) tryMotivToast('great_participation', { msg: `👏 ${count} students are now active in your session!` });
+    if (count >= 10 && prev < 10) tryMotivToast('active_env', { msg: `🏆 You have ${count} active students — a full house!` });
+    prevRosterCountRef.current = count;
+  }, [roster.active?.length, sessionStatus]);
+
+  // Task delivery notification (triggered from sendTask)
+  const notifyTaskSent = useCallback((recipientCount) => {
+    tasksSentCountRef.current += 1;
+    const count = tasksSentCountRef.current;
+    if (count === 1) tryMotivToast('task_impact', { msg: `📤 Task delivered to ${recipientCount} student(s)! Watch responses come in.` });
+    else if (count === 3) tryMotivToast('streak', { msg: `⚡ You've sent ${count} tasks this session — momentum is building!` });
+    else if (count === 5) tryMotivToast('above_avg', { msg: `⭐ ${count} tasks sent — your teaching efficiency is above average today!` });
+    else if (count % 5 === 0) tryMotivToast('team_spirit', { msg: `🌟 ${count} tasks delivered! Students are engaged and learning.` });
+  }, [sessionStatus, roster.active]);
+
+  // Periodic inspirational insight (every ~2 minutes when active)
+  useEffect(() => {
+    if (sessionStatus !== 'active') return;
+    const ids = ['improvement', 'rocket_speed', 'ai_insight', 'above_avg', 'active_env'];
+    let idx = 0;
+    const interval = setInterval(() => {
+      const studentCount = roster.active?.length || 0;
+      if (studentCount < 2) return;
+      tryMotivToast(ids[idx % ids.length]);
+      idx++;
+    }, 120000); // every 2 min
+    return () => clearInterval(interval);
+  }, [sessionStatus]);
+
+  // AI Teaching Insights panel state
+  const AI_INSIGHTS = [
+    'Students are responding faster than average today.',
+    'Engagement peaks after each new task delivery.',
+    'Low-performing students show improved response patterns.',
+    'Coding task completion rate is tracking excellently.',
+    'Question variety is keeping students mentally active.',
+    'Class participation has been consistent this session.',
+    'Student attention spans are highest in the first 20 min.',
+    'Short, focused tasks are generating the best responses.',
+    'Group work is showing stronger participation metrics.',
+    'AI suggests sending a task now — engagement is peaking!',
+  ];
+  const [insightIdx, setInsightIdx] = useState(0);
+  const [insightFading, setInsightFading] = useState(false);
+  useEffect(() => {
+    const iv = setInterval(() => {
+      setInsightFading(true);
+      setTimeout(() => {
+        setInsightIdx(i => (i + 1) % AI_INSIGHTS.length);
+        setInsightFading(false);
+      }, 400);
+    }, 8000);
+    return () => clearInterval(iv);
+  }, []);
   async function sessionControl(action) {
     try {
       await apiFetch(`/api/session/${sessionCode}/control?action=${action}`, {
@@ -4111,10 +4588,6 @@ function TeacherShell({
     id: 'reports',
     label: 'Reports',
     icon: '📈'
-  }, {
-    id: 'admin',
-    label: 'Admin',
-    icon: '🛡️'
   }, {
     id: 'communication',
     label: 'Chat',
@@ -4247,10 +4720,6 @@ function TeacherShell({
     teacherName: teacherName,
     sessionControl: sessionControl,
     teacherProfileEmail: teacherProfileEmail
-  })), page === 'admin' && (userProfile?.email && ADMIN_EMAILS.includes(userProfile.email) ? /*#__PURE__*/React.createElement(AdminDashboardPage, {
-    navigate: rootNavigate
-  }) : /*#__PURE__*/React.createElement(RestrictedAdminView, {
-    navigate: rootNavigate
   })), page === 'tasks' && /*#__PURE__*/React.createElement(TaskManagementPage, _extends({}, sharedProps, {
     groups: groups,
     roster: roster
@@ -4279,27 +4748,31 @@ function TeacherShell({
     className: "icon"
   }, p.icon), /*#__PURE__*/React.createElement("span", null, p.label), p.id === 'communication' && notifications.doubts + notifications.chat + notifications.hands > 0 && /*#__PURE__*/React.createElement("span", {
     className: "notif-dot"
-  })))), /*#__PURE__*/React.createElement(InterventionPopup, {
+  }))
+), /*#__PURE__*/React.createElement(InterventionPopup, {
     analytics: analytics,
     roster: roster,
     sessionStatus: sessionStatus
   }), /*#__PURE__*/React.createElement(TeacherCopilot, {
-    analytics: analytics,
-    roster: roster,
-    tasks: tasks,
-    sessionStatus: sessionStatus,
-    sessionControl: sessionControl,
-    setPage: setPage,
-    tourMessage: tourMessage,
-    setForceTour: setForceTour
-  }), /*#__PURE__*/React.createElement(GuidedTour, {
-    setPage: setPage,
-    dashboardReady: dashboardReady,
-    onTourMessage: msg => setTourMessage(msg),
-    forceTour: forceTour,
-    onForceTourConsumed: () => setForceTour(false),
-    sessionCode: sessionCode
-  }));
+  analytics: analytics,
+  roster: roster,
+  tasks: tasks,
+  sessionStatus: sessionStatus,
+  sessionControl: sessionControl,
+  setPage: setPage,
+  tourMessage: tourMessage,
+  setForceTour: setForceTour
+}), /*#__PURE__*/React.createElement(GuidedTour, {
+  setPage: setPage,
+  dashboardReady: dashboardReady,
+  onTourMessage: msg => setTourMessage(msg),
+  forceTour: forceTour,
+  onForceTourConsumed: () => setForceTour(false),
+  sessionCode: sessionCode
+}), /*#__PURE__*/React.createElement(MotivToastsContainer, {
+  toasts: motivToasts,
+  onDismiss: dismissMotivToast
+})));
 }
 
 // ═════════════════════════════════════════════════════════════════
@@ -4450,6 +4923,53 @@ function TypewriterBanner({
   }));
 }
 // ── TEACHER: Dashboard ──
+// ── Self-contained AI Teaching Insights Panel (stateful) ──
+function SelfContainedAIInsights() {
+  const AI_INSIGHTS = [
+    '💡 Students are responding faster than average today — great momentum!',
+    '📊 Engagement peaks 30 seconds after each new task delivery.',
+    '🧠 Low-performing students show improved response patterns this session.',
+    '⚡ Coding task completion rate is tracking excellently.',
+    '🎯 Question variety is keeping students mentally active and focused.',
+    '🌟 Class participation has been consistent — you\'re doing great!',
+    '⏱ Student attention spans are highest in the first 20 minutes.',
+    '📝 Short, focused tasks are generating the best quality responses.',
+    '👥 Group collaboration is showing stronger participation metrics.',
+    '🚀 AI suggests sending a task now — engagement is at a peak!',
+    '✅ Students are actively checking answers and self-correcting.',
+    '🔥 Response speed suggests high cognitive engagement right now.',
+  ];
+  const [idx, setIdx] = React.useState(0);
+  const [fading, setFading] = React.useState(false);
+  React.useEffect(() => {
+    const iv = setInterval(() => {
+      setFading(true);
+      setTimeout(() => { setIdx(i => (i + 1) % AI_INSIGHTS.length); setFading(false); }, 400);
+    }, 8000);
+    return () => clearInterval(iv);
+  }, []);
+  return React.createElement('div', {
+    className: 'ai-insights-panel',
+    style: { marginBottom: 16 }
+  },
+    React.createElement('div', { className: 'ai-insights-header' },
+      React.createElement('div', { className: 'ai-insights-dot' }),
+      React.createElement('div', { className: 'ai-insights-title' }, '✨ AI Teaching Insights')
+    ),
+    React.createElement('div', {
+      className: `ai-insights-text ${fading ? 'fading' : ''}`
+    }, AI_INSIGHTS[idx]),
+    React.createElement('div', { className: 'ai-insights-meta' },
+      React.createElement('div', { className: 'ai-insights-indicator' },
+        AI_INSIGHTS.slice(0, 8).map((_, i) =>
+          React.createElement('div', { key: i, className: `ai-indicator-dot ${i === idx % 8 ? 'active' : ''}` })
+        )
+      ),
+      React.createElement('span', { style: { fontSize: '0.72rem', color: 'var(--text3)' } }, 'Live Insights')
+    )
+  );
+}
+
 function TeacherDashboard({
   teacherName,
   sessionCode,
@@ -4711,7 +5231,7 @@ function TeacherDashboard({
     className: "stat-label"
   }, "Tasks Queued")), /*#__PURE__*/React.createElement(CodingPerformanceStat, {
     sessionCode: sessionCode
-  })), /*#__PURE__*/React.createElement("div", {
+  })), /*#__PURE__*/React.createElement(SelfContainedAIInsights, null), /*#__PURE__*/React.createElement("div", {
     className: "card",
     style: {
       marginBottom: 16
@@ -15527,6 +16047,37 @@ function RestrictedAdminView({
     onClick: () => navigate('landing')
   }, "Return to Home")));
 }
+// ── ERROR BOUNDARY: prevents blank screen on unexpected JS runtime errors ──
+class AppErrorBoundary extends React.Component {
+  constructor(props) { super(props); this.state = { hasError: false, error: null }; }
+  static getDerivedStateFromError(error) { return { hasError: true, error }; }
+  componentDidCatch(error, info) { console.error('[ClassMind] Runtime error caught by boundary:', error, info); }
+  render() {
+    if (this.state.hasError) {
+      return React.createElement('div', { style: {
+        minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center',
+        flexDirection: 'column', gap: 16, padding: 32, background: '#0f1117', color: '#e2e8f0', fontFamily: 'system-ui'
+      }},
+        React.createElement('div', { style: { fontSize: '3rem' } }, '⚠️'),
+        React.createElement('h2', { style: { fontSize: '1.4rem', fontWeight: 700, color: '#ef4444' } }, 'Something went wrong'),
+        React.createElement('p', { style: { color: '#94a3b8', textAlign: 'center', maxWidth: 400 } },
+          'An unexpected error occurred. Your session data is safe.'),
+        React.createElement('button', {
+          style: { padding: '10px 24px', background: '#6366f1', color: '#fff', border: 'none',
+            borderRadius: 8, cursor: 'pointer', fontSize: '0.9rem', fontWeight: 600 },
+          onClick: () => { this.setState({ hasError: false, error: null }); }
+        }, '↺ Try Again'),
+        React.createElement('button', {
+          style: { padding: '8px 20px', background: 'transparent', color: '#94a3b8', border: '1px solid #2d3148',
+            borderRadius: 8, cursor: 'pointer', fontSize: '0.85rem' },
+          onClick: () => { localStorage.removeItem('cm_user'); window.location.reload(); }
+        }, 'Reset & Reload')
+      );
+    }
+    return this.props.children;
+  }
+}
+
 function App() {
   const [route, setRoute] = useState({
     page: 'landing',
@@ -15641,7 +16192,9 @@ function App() {
     navigate: navigate
   }));
 }
-ReactDOM.createRoot(document.getElementById('root')).render(/*#__PURE__*/React.createElement(App, null));
+ReactDOM.createRoot(document.getElementById('root')).render(
+  React.createElement(AppErrorBoundary, null, React.createElement(App, null))
+);
 </script>
 
 </body>

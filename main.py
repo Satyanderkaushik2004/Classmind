@@ -1508,6 +1508,9 @@ async def create_task(req: CreateTaskReq):
     task = new_task(normalize_task_input(req.model_dump()))
     async with session_lock(req.session_code):
         s["tasks"].append(task)
+    log.info("[AI TASK SAVED] Task %s (%s) added to session %s — total: %d",
+             task["id"], task["type"], req.session_code, len(s["tasks"]))
+    save_session(req.session_code)
     await ws_teacher(s, {"type": "task_created", "task": task, "tasks": s["tasks"]})
     return task
 
@@ -1534,6 +1537,9 @@ async def upload_tasks_json(session_code: str = Form(...), file: UploadFile = Fi
             created.append(task)
 
     if created:
+        log.info("[AI TASK SAVED] %d tasks imported to session %s — total: %d",
+                 len(created), session_code, len(s["tasks"]))
+        save_session(session_code)
         await ws_teacher(s, {"type": "tasks_imported", "tasks": s["tasks"], "created": len(created)})
     return {"created": len(created), "tasks": created}
 
@@ -1599,6 +1605,235 @@ async def send_specific_task(
             raise HTTPException(422, "task_id and target_type are required")
         req = SendTaskReq(task_id=task_id, target_type=target_type, target_id=target_id)
     return await deliver_task_request(code, req)
+
+
+# ══════════════════════════════════════════════════════════════════
+#  AI EXPLAIN / SIMPLIFY ROUTES
+# ══════════════════════════════════════════════════════════════════
+
+# In-memory explanation cache: task_id -> {mode -> explanation_text}
+_explain_cache: Dict[str, Dict[str, str]] = {}
+
+_EXPLAIN_PROMPTS = {
+    "simplified": {
+        "mcq": (
+            "You are a friendly teacher explaining a question to a struggling student.\n"
+            "Question: {question}\nOptions: {options}\nCorrect Answer: {correct_answer}\n\n"
+            "Give a SHORT, SIMPLE explanation (3-5 sentences):\n"
+            "1. What concept this question tests\n"
+            "2. Why '{correct_answer}' is correct in easy language\n"
+            "3. A quick memory tip\n"
+            "Use simple words, no jargon."
+        ),
+        "short": (
+            "You are a friendly teacher helping a student understand a short-answer question.\n"
+            "Question: {question}\n\n"
+            "In simple, easy language (3-5 sentences):\n"
+            "1. What this question is asking\n"
+            "2. The key concept to understand\n"
+            "3. How to frame a good answer\n"
+            "Avoid technical language."
+        ),
+        "long": (
+            "You are a teacher helping a student write a long-answer/essay response.\n"
+            "Question: {question}\n\n"
+            "Explain simply:\n"
+            "1. What the question wants (2 sentences)\n"
+            "2. Key points to cover (bullet list, max 5)\n"
+            "3. A suggested structure for the answer\n"
+            "Keep it student-friendly."
+        ),
+    },
+    "detailed": {
+        "mcq": (
+            "You are an expert teacher giving a detailed explanation of a MCQ.\n"
+            "Question: {question}\nOptions: {options}\nCorrect Answer: {correct_answer}\n\n"
+            "Provide:\n"
+            "**Concept Explanation**: What concept does this test?\n"
+            "**Why Correct**: Explain in detail why '{correct_answer}' is right\n"
+            "**Why Wrong**: For each wrong option, briefly explain why it's incorrect\n"
+            "**Key Insight**: One key takeaway for the student"
+        ),
+        "short": (
+            "You are an expert teacher giving a detailed explanation for a short-answer question.\n"
+            "Question: {question}\n\n"
+            "Provide:\n"
+            "**Concept**: The underlying concept being tested\n"
+            "**Step-by-Step**: How to approach answering this\n"
+            "**Key Points**: What a good answer must include\n"
+            "**Example**: A model answer (2-4 sentences)\n"
+            "**Common Mistakes**: 2-3 errors students typically make"
+        ),
+        "long": (
+            "You are an expert teacher explaining how to write a long-answer essay response.\n"
+            "Question: {question}\n\n"
+            "Provide:\n"
+            "**Understanding the Question**: Break down what is being asked\n"
+            "**Important Keywords**: List 5-8 key terms to include\n"
+            "**Answer Structure**: Introduction → Body points → Conclusion framework\n"
+            "**Important Points**: Bullet list of must-cover content\n"
+            "**Exam Strategy**: Tips to score maximum marks\n"
+            "**Model Answer Outline**: A brief structural outline"
+        ),
+    },
+    "exam_style": {
+        "mcq": (
+            "You are a seasoned exam coach. The student needs to master this MCQ for their exam.\n"
+            "Question: {question}\nOptions: {options}\nCorrect Answer: {correct_answer}\n\n"
+            "Give an EXAM-FOCUSED breakdown:\n"
+            "**Quick Recall Trick**: A memory device or trick to remember the answer\n"
+            "**Similar Question Patterns**: What variations of this question might appear\n"
+            "**Time-Saver Tip**: How to quickly identify the correct answer in an exam\n"
+            "**Trap to Avoid**: What mistake do most students make on this type?"
+        ),
+        "short": (
+            "You are a seasoned exam coach helping a student ace a short-answer question.\n"
+            "Question: {question}\n\n"
+            "**Model Answer** (exam-ready, 3-4 sentences):\n"
+            "**Keywords to Include**: List 4-6 technical keywords that earn marks\n"
+            "**Time Estimate**: How long should a student spend on this?\n"
+            "**Marking Scheme Insight**: What 3-4 points would an examiner look for?\n"
+            "**Do & Don't**: One thing to do, one to avoid"
+        ),
+        "long": (
+            "You are a seasoned exam coach for long-answer/essay questions.\n"
+            "Question: {question}\n\n"
+            "**Full Model Answer** (structured, exam-ready):\nWrite a complete model answer.\n\n"
+            "**Marking Breakdown**: How marks would typically be allocated\n"
+            "**Time Management**: How many minutes to spend and on what\n"
+            "**Scoring Keywords**: 8-10 keywords/phrases that maximize marks\n"
+            "**Presentation Tips**: How to format for maximum marks"
+        ),
+    },
+    "teacher_notes": {
+        "mcq": (
+            "You are creating teacher notes for a MCQ classroom discussion.\n"
+            "Question: {question}\nOptions: {options}\nCorrect Answer: {correct_answer}\n\n"
+            "Provide teacher-facing notes:\n"
+            "**Teaching Point**: Core concept this question reinforces\n"
+            "**Discussion Prompt**: A follow-up question to ask the class\n"
+            "**Common Misconceptions**: Top 2-3 misconceptions students have\n"
+            "**Differentiation**: How to explain this differently for weaker/stronger students\n"
+            "**Real-World Link**: A relatable real-world example"
+        ),
+        "short": (
+            "You are creating teacher notes for a short-answer classroom question.\n"
+            "Question: {question}\n\n"
+            "**Learning Objective**: What skill/knowledge this assesses\n"
+            "**Suggested Time**: How long students should get\n"
+            "**Model Answer** (for teacher reference):\n"
+            "**Marking Guide**: What earns full/partial marks\n"
+            "**Extension Question**: A harder follow-up for advanced students\n"
+            "**Simplification**: How to rephrase for struggling students"
+        ),
+        "long": (
+            "You are creating teacher notes for a long-answer classroom essay question.\n"
+            "Question: {question}\n\n"
+            "**Curriculum Link**: What topic/chapter this covers\n"
+            "**Learning Outcomes**: 3-4 outcomes this question assesses\n"
+            "**Full Model Answer** (complete, for teacher reference):\n"
+            "**Rubric**: Simple 3-level rubric (excellent/satisfactory/needs work)\n"
+            "**Common Errors**: 3 common mistakes to watch for when marking\n"
+            "**Peer Assessment Tip**: How students can evaluate each other's answers"
+        ),
+    },
+}
+
+
+@app.post("/api/ai/explain-question")
+async def ai_explain_question(
+    task_id:      str  = Body(...),
+    session_code: str  = Body(...),
+    mode:         str  = Body("simplified"),   # simplified|detailed|exam_style|teacher_notes
+    api_key:      Optional[str] = Body(None),  # OpenRouter key (optional, from client)
+    force_regen:  bool = Body(False),
+):
+    """
+    Generate an AI explanation for a question.
+    Uses OpenRouter if api_key is supplied, otherwise returns a structured placeholder.
+    """
+    s    = _S(session_code)
+    task = _T(s, task_id)
+
+    if mode not in _EXPLAIN_PROMPTS:
+        raise HTTPException(400, f"mode must be one of: {', '.join(_EXPLAIN_PROMPTS)}")
+
+    # Serve from cache unless force_regen
+    cache_key = f"{task_id}:{mode}"
+    if not force_regen and cache_key in _explain_cache:
+        log.info("[AI EXPLAIN GENERATED] Cache hit for task %s mode=%s", task_id, mode)
+        return {"explanation": _explain_cache[cache_key], "cached": True, "mode": mode}
+
+    q_type     = "long" if task.get("long_answer") else task.get("type", "mcq")
+    if q_type not in _EXPLAIN_PROMPTS[mode]:
+        q_type = "short"   # fallback for coding
+
+    options_str = ""
+    if task.get("options"):
+        options_str = ", ".join(
+            f"{chr(65+i)}. {o}" for i, o in enumerate(task["options"])
+        )
+
+    prompt_tmpl = _EXPLAIN_PROMPTS[mode][q_type]
+    prompt = prompt_tmpl.format(
+        question=task.get("question", ""),
+        options=options_str or "N/A",
+        correct_answer=task.get("correct_answer", ""),
+    )
+
+    explanation = ""
+
+    if api_key:
+        try:
+            import httpx
+            async with httpx.AsyncClient(timeout=30) as client:
+                resp = await client.post(
+                    "https://openrouter.ai/api/v1/chat/completions",
+                    headers={
+                        "Content-Type":  "application/json",
+                        "Authorization": f"Bearer {api_key}",
+                        "HTTP-Referer":  "https://classmind.app",
+                        "X-Title":       "ClassMind AI Explain",
+                    },
+                    json={
+                        "model":    "openai/gpt-4o-mini",
+                        "messages": [{"role": "user", "content": prompt}],
+                        "max_tokens": 800,
+                    },
+                )
+            data = resp.json()
+            explanation = (
+                data.get("choices", [{}])[0]
+                .get("message", {})
+                .get("content", "")
+                .strip()
+            )
+        except Exception as exc:
+            log.warning("[AI EXPLAIN] OpenRouter call failed: %s", exc)
+            explanation = ""
+
+    # Fallback: structured placeholder so the UI always has something to show
+    if not explanation:
+        type_labels = {"mcq": "MCQ", "short": "Short Answer", "long": "Long Answer"}
+        explanation = (
+            f"**{type_labels.get(q_type, 'Question')} Explanation** _{mode.replace('_',' ').title()}_\n\n"
+            f"**Question**: {task.get('question', '')}\n\n"
+        )
+        if q_type == "mcq" and task.get("options"):
+            for i, o in enumerate(task["options"]):
+                mark = " ✅" if chr(65+i) == str(task.get("correct_answer","")).upper() else ""
+                explanation += f"{chr(65+i)}. {o}{mark}\n"
+            explanation += f"\n**Correct Answer**: {task.get('correct_answer','')}\n\n"
+        explanation += (
+            "_No AI key provided — add an OpenRouter API key to generate real explanations._\n\n"
+            "**Tip for students**: Re-read the question carefully, identify keywords, "
+            "and recall related concepts before answering."
+        )
+
+    _explain_cache[cache_key] = explanation
+    log.info("[AI EXPLAIN GENERATED] task=%s mode=%s type=%s len=%d",
+             task_id, mode, q_type, len(explanation))
+    return {"explanation": explanation, "cached": False, "mode": mode}
 
 
 # ── Responses ──────────────────────────────────────────────────────

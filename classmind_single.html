@@ -2846,6 +2846,76 @@ hr{border:none;border-top:1px solid var(--border);margin:16px 0}
 .landing * {
   transition: background 0.4s ease, color 0.4s ease, border-color 0.4s ease, box-shadow 0.4s ease;
 }
+/* ── AI Explain Modal ── */
+.ai-explain-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,0.7);
+  z-index:9000;display:flex;align-items:center;justify-content:center;
+  padding:16px;animation:fadeIn 0.18s ease;
+}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.ai-explain-modal{
+  background:linear-gradient(145deg,var(--surface),var(--surface2));
+  border:1px solid rgba(99,102,241,0.4);
+  border-radius:18px;max-width:680px;width:100%;
+  max-height:90vh;display:flex;flex-direction:column;
+  box-shadow:0 24px 64px rgba(0,0,0,0.5);overflow:hidden;
+}
+.ai-explain-header{
+  background:linear-gradient(135deg,rgba(99,102,241,0.2),rgba(139,92,246,0.15));
+  border-bottom:1px solid rgba(99,102,241,0.3);
+  padding:18px 20px 14px;
+}
+.ai-explain-title{
+  font-size:1.05rem;font-weight:800;
+  background:linear-gradient(135deg,#6366f1,#8b5cf6);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  margin-bottom:4px;
+}
+.ai-explain-question{
+  font-size:0.82rem;color:var(--text2);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.ai-explain-tabs{
+  display:flex;gap:4px;padding:12px 20px 0;
+  border-bottom:1px solid var(--border);flex-wrap:wrap;
+}
+.ai-explain-tab{
+  padding:7px 14px;border-radius:8px 8px 0 0;border:none;
+  background:transparent;color:var(--text2);cursor:pointer;
+  font-size:0.8rem;font-weight:600;font-family:inherit;
+  border:1px solid transparent;border-bottom:none;transition:all 0.15s;
+}
+.ai-explain-tab:hover{background:var(--surface3);color:var(--text)}
+.ai-explain-tab.active{
+  background:var(--surface);color:var(--accent);
+  border-color:var(--border);border-bottom-color:var(--surface);
+}
+.ai-explain-body{
+  flex:1;overflow-y:auto;padding:20px;
+}
+.ai-explain-content{
+  font-size:0.9rem;line-height:1.7;color:var(--text);
+  white-space:pre-wrap;word-break:break-word;
+}
+.ai-explain-content strong,.ai-explain-content b{color:var(--accent);font-weight:700}
+.ai-typing-cursor{
+  display:inline-block;width:2px;height:1em;background:var(--accent);
+  margin-left:2px;vertical-align:middle;
+  animation:blink 0.7s step-end infinite;
+}
+.ai-explain-footer{
+  padding:12px 20px;border-top:1px solid var(--border);
+  display:flex;justify-content:space-between;align-items:center;gap:8px;
+  background:var(--surface);flex-wrap:wrap;
+}
+.ai-explain-btn-explain{
+  background:linear-gradient(135deg,#6366f1,#8b5cf6);
+  color:#fff;border:none;padding:8px 18px;border-radius:8px;
+  cursor:pointer;font-weight:700;font-size:0.82rem;font-family:inherit;
+  transition:opacity 0.15s;
+}
+.ai-explain-btn-explain:hover{opacity:0.85}
+.ai-explain-btn-explain:disabled{opacity:0.5;cursor:not-allowed}
 
 </style>
 </head>
@@ -5636,6 +5706,166 @@ function TimerPresets({
   }, "Students will see a countdown. Auto-submits at 0."));
 }
 
+// ─── AI Explain / Simplify Modal ─────────────────────────────────
+const AI_EXPLAIN_TABS = [
+  { id: 'simplified',    label: '✨ Simplified',   emoji: '✨' },
+  { id: 'detailed',      label: '🔬 Detailed',      emoji: '🔬' },
+  { id: 'exam_style',    label: '📝 Exam Style',    emoji: '📝' },
+  { id: 'teacher_notes', label: '🏫 Teacher Notes', emoji: '🏫' },
+];
+
+function AIExplainModal({ task, sessionCode, apiKey, onClose }) {
+  const [activeTab,    setActiveTab]    = useState('simplified');
+  const [loading,      setLoading]      = useState(false);
+  const [explanations, setExplanations] = useState({});
+  const [displayText,  setDisplayText]  = useState('');
+  const [typing,       setTyping]       = useState(false);
+  const { add } = React.useContext(AppCtx);
+
+  // Typing animation effect
+  function animateTyping(text) {
+    setDisplayText('');
+    setTyping(true);
+    const CHUNK = 4;
+    let i = 0;
+    const interval = setInterval(() => {
+      i += CHUNK;
+      setDisplayText(text.slice(0, i));
+      if (i >= text.length) {
+        clearInterval(interval);
+        setDisplayText(text);
+        setTyping(false);
+      }
+    }, 18);
+    return () => clearInterval(interval);
+  }
+
+  async function fetchExplanation(mode, forceRegen) {
+    const cached = explanations[mode];
+    if (cached && !forceRegen) {
+      animateTyping(cached);
+      return;
+    }
+    setLoading(true);
+    setDisplayText('');
+    try {
+      const res = await fetch(`${API}/api/ai/explain-question`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          task_id:      task.id,
+          session_code: sessionCode,
+          mode,
+          api_key:      apiKey || null,
+          force_regen:  !!forceRegen,
+        }),
+      });
+      if (!res.ok) throw new Error(`Server error ${res.status}`);
+      const data = await res.json();
+      const text = data.explanation || 'No explanation generated.';
+      setExplanations(prev => ({ ...prev, [mode]: text }));
+      animateTyping(text);
+    } catch (e) {
+      add('Explain failed: ' + e.message, 'error');
+      setDisplayText('❌ Could not generate explanation. Please try again.');
+      setTyping(false);
+    }
+    setLoading(false);
+  }
+
+  // Auto-load on open
+  React.useEffect(() => { fetchExplanation('simplified', false); }, []);
+
+  function switchTab(tabId) {
+    setActiveTab(tabId);
+    fetchExplanation(tabId, false);
+  }
+
+  // Render markdown-like bold (**text**) simply
+  function renderContent(text) {
+    const parts = text.split(/(\*\*[^*]+\*\*)/g);
+    return parts.map((p, i) => {
+      if (p.startsWith('**') && p.endsWith('**')) {
+        return React.createElement('strong', { key: i }, p.slice(2, -2));
+      }
+      return p;
+    });
+  }
+
+  function copyText() {
+    const text = explanations[activeTab] || displayText;
+    if (!text) return;
+    navigator.clipboard.writeText(text).then(() => add('Copied!', 'success'));
+  }
+
+  const typeLabel = task.long_answer ? 'Long Answer' :
+    task.type === 'mcq' ? 'MCQ' : task.type === 'coding' ? 'Coding' : 'Short Answer';
+
+  return React.createElement('div', {
+    className: 'ai-explain-overlay',
+    onClick: e => { if (e.target === e.currentTarget) onClose(); }
+  },
+    React.createElement('div', { className: 'ai-explain-modal' },
+      // Header
+      React.createElement('div', { className: 'ai-explain-header' },
+        React.createElement('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' } },
+          React.createElement('div', null,
+            React.createElement('div', { className: 'ai-explain-title' }, '🤖 AI Question Explainer'),
+            React.createElement('div', { className: 'ai-explain-question' },
+              React.createElement('span', { className: 'badge badge-purple', style: { fontSize: '0.7rem', marginRight: 6 } }, typeLabel),
+              task.question
+            )
+          ),
+          React.createElement('button', {
+            onClick: onClose,
+            style: { background: 'none', border: 'none', color: 'var(--text2)', cursor: 'pointer', fontSize: '1.2rem', padding: '0 4px' }
+          }, '✕')
+        )
+      ),
+      // Tabs
+      React.createElement('div', { className: 'ai-explain-tabs' },
+        AI_EXPLAIN_TABS.map(tab =>
+          React.createElement('button', {
+            key: tab.id,
+            className: `ai-explain-tab ${activeTab === tab.id ? 'active' : ''}`,
+            onClick: () => switchTab(tab.id),
+          }, tab.label)
+        )
+      ),
+      // Body
+      React.createElement('div', { className: 'ai-explain-body' },
+        loading
+          ? React.createElement('div', { style: { textAlign: 'center', padding: '40px 0', color: 'var(--text2)' } },
+              React.createElement('div', { style: { fontSize: '2rem', marginBottom: 12 } }, '🤖'),
+              React.createElement('div', null, 'Generating explanation…')
+            )
+          : React.createElement('div', { className: 'ai-explain-content' },
+              renderContent(displayText || ''),
+              typing && React.createElement('span', { className: 'ai-typing-cursor' })
+            )
+      ),
+      // Footer
+      React.createElement('div', { className: 'ai-explain-footer' },
+        React.createElement('div', { style: { fontSize: '0.75rem', color: 'var(--text3)' } },
+          apiKey ? '⚡ AI-powered' : '💡 Add an AI key for real explanations'
+        ),
+        React.createElement('div', { style: { display: 'flex', gap: 8 } },
+          React.createElement('button', {
+            className: 'btn btn-ghost btn-sm',
+            onClick: copyText,
+            disabled: !displayText
+          }, '📋 Copy'),
+          React.createElement('button', {
+            className: 'ai-explain-btn-explain',
+            onClick: () => fetchExplanation(activeTab, true),
+            disabled: loading
+          }, loading ? '⏳ Generating…' : '🔄 Regenerate')
+        )
+      )
+    )
+  );
+}
+
 // ─── AI question generator ────────────────────────────────────────
 // ── AI inline editor for a single generated question ──────────────
 function AIQuestionEditor({
@@ -6093,9 +6323,14 @@ No markdown, no explanation, just the raw JSON array.`
   }, "Clear all"), /*#__PURE__*/React.createElement("button", {
     className: "btn btn-success btn-sm",
     onClick: async () => {
-      for (const q of results) await onAdd(q);
+      const snapshot = [...results];
+      console.log('[AI TASK GENERATED] Adding', snapshot.length, 'questions');
+      let added = 0;
+      for (const q of snapshot) {
+        try { await onAdd(q); added++; } catch(_) {}
+      }
       setResults([]);
-      add(`Added ${results.length} questions`, 'success');
+      add(`✅ Added ${added} of ${snapshot.length} questions to Tasks`, added > 0 ? 'success' : 'error');
     }
   }, "\u271A Add All"))), results.map((q, i) => /*#__PURE__*/React.createElement(AIQuestionEditor, {
     key: i,
@@ -6334,6 +6569,7 @@ function TaskManagementPage({
     } catch {}
   }
   const [sendingTaskId, setSendingTaskId] = useState(null);
+  const [explainTask, setExplainTask] = useState(null); // task to explain in modal
 
   // ── upload JSON ───────────────────────────────────────────────
   async function uploadJSON() {
@@ -6396,21 +6632,40 @@ function TaskManagementPage({
   // ── AI add handler ────────────────────────────────────────────
   async function addAIQuestion(q) {
     try {
-      await saveTask({
-        question: q.question,
-        type: 'mcq',
-        options: q.options || ['A', 'B', 'C', 'D'],
-        correct_answer: q.correct_answer || 'A',
-        hint: q.hint || '',
+      const qType = (q.type || 'mcq').toLowerCase();
+      // Normalise: 'long' is saved as type:'short' with long_answer:true (matches backend)
+      const isLong  = qType === 'long';
+      const apiType = isLong ? 'short' : (qType === 'short' ? 'short' : (qType === 'coding' ? 'coding' : 'mcq'));
+
+      const payload = {
+        question:        q.question,
+        type:            apiType,
+        long_answer:     isLong,
+        options:         apiType === 'mcq' ? (q.options?.filter(o => String(o).trim()) || ['Option A', 'Option B', 'Option C', 'Option D']) : [],
+        correct_answer:  apiType === 'mcq' ? (q.correct_answer || 'A') : (q.correct_answer || ''),
+        hint:            q.hint || '',
         hint_visibility: 'on_request',
-        difficulty: 'medium',
-        topic: '',
-        time_limit: ''
-      });
+        difficulty:      q.difficulty || 'medium',
+        topic:           q.topic || '',
+        time_limit:      null,
+      };
+
+      // Validate MCQ correct_answer is a single letter matching options count
+      if (apiType === 'mcq') {
+        const letters = payload.options.map((_, i) => String.fromCharCode(65 + i));
+        if (!letters.includes(String(payload.correct_answer).toUpperCase())) {
+          payload.correct_answer = 'A'; // safe fallback
+        }
+        payload.correct_answer = payload.correct_answer.toUpperCase();
+      }
+
+      log.info && console.log('[AI TASK GENERATED]', qType, payload.question?.slice(0, 60));
+      await saveTask(payload);
       add('Question added ✓', 'success');
       loadTasks();
     } catch (e) {
-      add(e.message, 'error');
+      console.error('[AI TASK] Save failed:', e.message);
+      add('Failed to add: ' + e.message, 'error');
     }
   }
 
@@ -6710,6 +6965,11 @@ function TaskManagementPage({
     className: "task-send-dropdown-item",
     onClick: () => setOpenDropdown({})
   }, "\u2715 Cancel"))), /*#__PURE__*/React.createElement("button", {
+    className: "btn btn-sm",
+    style: { background: 'linear-gradient(135deg,#6366f1,#8b5cf6)', color: '#fff' },
+    title: "AI Explain this question",
+    onClick: () => setExplainTask(t)
+  }, "\uD83E\uDD16 Explain"), /*#__PURE__*/React.createElement("button", {
     className: "btn btn-danger btn-sm",
     onClick: () => deleteTask(t.id)
   }, "\uD83D\uDDD1"))))), tasks.length > 0 && /*#__PURE__*/React.createElement("div", {
@@ -6720,7 +6980,13 @@ function TaskManagementPage({
     }
   }, /*#__PURE__*/React.createElement("div", {
     className: "text-sm text-muted"
-  }, "\uD83D\uDCE4 Use ", /*#__PURE__*/React.createElement("strong", null, "All"), " to send to the whole class, ", /*#__PURE__*/React.createElement("strong", null, "\uD83C\uDFAF Group"), " to target a group, or ", /*#__PURE__*/React.createElement("strong", null, "\uD83D\uDC64 Student"), " for an individual. Or use ", /*#__PURE__*/React.createElement("strong", null, "\"Send Next Task\""), " above to push sequentially."))), tab === 'create' && /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+  }, "\uD83D\uDCE4 Use ", /*#__PURE__*/React.createElement("strong", null, "All"), " to send to the whole class, ", /*#__PURE__*/React.createElement("strong", null, "\uD83C\uDFAF Group"), " to target a group, or ", /*#__PURE__*/React.createElement("strong", null, "\uD83D\uDC64 Student"), " for an individual. Or use ", /*#__PURE__*/React.createElement("strong", null, "\"Send Next Task\""), " above to push sequentially.")),
+  explainTask && /*#__PURE__*/React.createElement(AIExplainModal, {
+    task: explainTask,
+    sessionCode: sessionCode,
+    apiKey: localStorage.getItem('cm_gemini_key') || '',
+    onClose: () => setExplainTask(null)
+  })), tab === 'create' && /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
     className: "card",
     style: {
       marginBottom: 16

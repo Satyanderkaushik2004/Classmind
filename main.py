@@ -1,12 +1,10 @@
-"""
-main.py  ─  ClassMind Backend  (portable, cross-platform)
+"""main.py  ─  ClassMind Backend  (portable, cross-platform)
 Run:  uvicorn main:app --host 0.0.0.0 --port 8000 --reload
 
 WebSocket endpoints
   ws://host/ws/teacher/{session_code}
   ws://host/ws/student/{session_code}/{student_id}
 """
-
 from __future__ import annotations
 
 # ── Load environment variables FIRST ──────────────────────────────

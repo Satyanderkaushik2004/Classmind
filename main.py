@@ -879,7 +879,8 @@ app = FastAPI(
     docs_url="/docs",
     redoc_url="/redoc",
 )
-
+from webrtc_signaling import vc_router
+app.include_router(vc_router)
 def google_authorized(
     credentials: Optional[HTTPAuthorizationCredentials] = Depends(HTTPBearer(auto_error=False)),
 ) -> str:
@@ -2796,37 +2797,6 @@ async def teacher_ws_endpoint(ws: WebSocket, session_code: str):
                 await ws_all_students(s, {"type": "chat_toggle", "enabled": enabled})
                 await ws_send(ws, {"type": "chat_toggle_ack", "enabled": enabled})
 
-            # ── VC Signaling ──────────────────────────────────────────────────
-            elif cmd == "vc_join":
-                # Teacher joined VC — broadcast to all students so they can call back
-                log.info("[VC] Teacher joined VC in session %s (peer: %s)", session_code, data.get("peer_id"))
-                await ws_all_students(s, {
-                    "type":        "vc_join",
-                    "peer_id":     data.get("peer_id"),
-                    "name":        data.get("name", "Teacher"),
-                    "is_teacher":  True,
-                    "session_code": session_code,
-                })
-            elif cmd == "vc_leave":
-                log.info("[VC] Teacher left VC in session %s", session_code)
-                await ws_all_students(s, {"type": "vc_leave", "session_code": session_code})
-            elif cmd == "vc_mute_all":
-                log.info("[VC] Teacher muted all students in session %s", session_code)
-                await ws_all_students(s, {"type": "vc_mute_all", "session_code": session_code})
-            elif cmd == "vc_kick":
-                target = data.get("target_peer")
-                log.info("[VC] Teacher kicked peer %s in session %s", target, session_code)
-                await ws_all_students(s, {"type": "vc_kick", "target_peer": target, "session_code": session_code})
-            elif cmd == "vc_state":
-                # Teacher toggled mic/cam — relay to students (informational)
-                await ws_all_students(s, {
-                    "type": "vc_state",
-                    "peer_id": data.get("peer_id", "teacher"),
-                    "mic": data.get("mic", True),
-                    "cam": data.get("cam", True),
-                    "session_code": session_code,
-                })
-
     except WebSocketDisconnect:
         log.info("Teacher disconnected: %s", session_code)
     finally:
@@ -2985,41 +2955,6 @@ async def student_ws_endpoint(ws: WebSocket, session_code: str, student_id: str)
                         "task_id":     data.get("task_id", ""),
                         "student_id":  student_id,
                     })
-
-            # ── VC Signaling (student → teacher + other students) ─────────────
-            elif cmd == "vc_join":
-                # Student joined VC — tell teacher so teacher can call back
-                log.info("[VC] Student %s joined VC in session %s (peer: %s)", student_id, session_code, data.get("peer_id"))
-                peer_name = s["students"].get(student_id, {}).get("name", data.get("name", "Student"))
-                join_payload = {
-                    "type":        "vc_join",
-                    "peer_id":     data.get("peer_id"),
-                    "name":        peer_name,
-                    "is_teacher":  False,
-                    "session_code": session_code,
-                    "student_id":  student_id,
-                }
-                # Notify teacher
-                await ws_teacher(s, join_payload)
-                # Notify all other students (peer mesh)
-                for sid, client_ws in list(s.get("ws_clients", {}).items()):
-                    if sid != student_id:
-                        await ws_send(client_ws, join_payload)
-            elif cmd == "vc_leave":
-                await ws_teacher(s, {"type": "vc_leave", "student_id": student_id, "session_code": session_code})
-                for sid, client_ws in list(s.get("ws_clients", {}).items()):
-                    if sid != student_id:
-                        await ws_send(client_ws, {"type": "vc_leave", "student_id": student_id, "session_code": session_code})
-            elif cmd == "vc_state":
-                # Student toggled mic/cam — relay to teacher (informational)
-                await ws_teacher(s, {
-                    "type":      "vc_state",
-                    "student_id": student_id,
-                    "peer_id":   data.get("peer_id", student_id),
-                    "mic":       data.get("mic", True),
-                    "cam":       data.get("cam", True),
-                    "session_code": session_code,
-                })
 
     except WebSocketDisconnect:
         log.info("Student %s disconnected: %s", student_id, session_code)

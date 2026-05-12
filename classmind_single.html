@@ -3946,15 +3946,20 @@ function LandingPage({
   }
 
   function handleLoginComplete(profile) {
+    // FIX 1: capture destination BEFORE any setState calls.
+    // React 18 automatic batching means `loginModal` in a closure reads the
+    // render-snapshot value; capturing it explicitly makes the intent clear
+    // and safe regardless of batching behaviour.
+    const dest = loginModal;
     updateUserProfile(profile);
     setLoginModal(null);
-    setTeacherName(profile.name);
+    setTeacherName(profile.name || '');
     setTeacherEmail(profile.email || '');
     setTeacherPhone(profile.phone || '');
-    setStudentName(profile.name);
+    setStudentName(profile.name || '');
     setStudentEmail(profile.email || '');
     setStudentPhone(profile.phone || '');
-    if (loginModal === 'teacher') setShowTeacher(true);
+    if (dest === 'teacher') setShowTeacher(true);
     else setShowStudent(true);
   }
 
@@ -4479,7 +4484,10 @@ function TeacherShell({
   const [tourMessage, setTourMessage] = useState(null);
   const [forceTour, setForceTour] = useState(false);
   const [dashboardReady, setDashboardReady] = useState(false);
-  const [lightMode, setLightMode] = useState(false);
+  // FIX 2a: read persisted preference so it survives page transitions.
+  const [lightMode, setLightMode] = useState(() => {
+    try { return localStorage.getItem('cm_teacher_light') === 'true'; } catch { return false; }
+  });
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const {
     add
@@ -4547,6 +4555,10 @@ function TeacherShell({
 
   useEffect(() => {
     document.body.classList.toggle('light', lightMode);
+    // FIX 2b: persist preference; remove class on unmount so it does not
+    // bleed back to the landing page after the teacher navigates away.
+    try { localStorage.setItem('cm_teacher_light', String(lightMode)); } catch {}
+    return () => { document.body.classList.remove('light'); };
   }, [lightMode]);
 
   // ── Signal when dashboard page is fully rendered in DOM ──────────
@@ -10117,7 +10129,10 @@ function RemoteVideoTile({ peerId, peer, isTeacher, onKick }) {
 }
 
 function LiveClassPage({ sessionCode, isTeacher, userName }) {
-  const { useState, useEffect, useRef } = React;
+  // FIX 3: removed `const { useState, useEffect, useRef } = React` that was
+  // mistakenly placed inside the function body.  The module-level destructure
+  // (~line 3045) already exposes these as globals; re-destructuring inside the
+  // component shadows them and can crash silently if React is not fully ready.
   const [vcStatus, setVcStatus]           = useState('idle');
   const [peers, setPeers]                 = useState({});
   const [participants, setParticipants]   = useState([]);
@@ -16959,11 +16974,13 @@ class AppErrorBoundary extends React.Component {
 }
 
 function App() {
+  // FIX 4: toastCtx / AppCtx.Provider now live in AppRoot (above this
+  // component and above the error boundary), so this function no longer
+  // needs to own the toast state or provide the context.
   const [route, setRoute] = useState({
     page: 'landing',
     params: {}
   });
-  const toastCtx = useToasts();
   const [config, setConfig] = useState({ admin_emails: [] });
 
   useEffect(() => {
@@ -17024,12 +17041,9 @@ function App() {
 
   // If no profile yet, render ONLY the LoginModal — nothing else is accessible
   if (showGlobalLoginModal || !userProfile) {
-    return /*#__PURE__*/React.createElement(AppCtx.Provider, {
-      value: toastCtx
-    }, /*#__PURE__*/React.createElement(Toasts, {
-      toasts: toastCtx.toasts,
-      removeToast: toastCtx.removeToast
-    }), /*#__PURE__*/React.createElement(LoginModal, {
+    // FIX 4b: AppCtx.Provider is now provided by AppRoot above; just render
+    // the modal — context is already available via AppRoot's provider.
+    return /*#__PURE__*/React.createElement(LoginModal, {
       defaultRole: 'teacher',
       onComplete: profile => {
         updateUserProfile(profile);
@@ -17037,15 +17051,12 @@ function App() {
       },
       // Profile gate is mandatory — do not allow closing without completing
       onClose: null
-    }));
+    });
   }
 
-  return /*#__PURE__*/React.createElement(AppCtx.Provider, {
-    value: toastCtx
-  }, /*#__PURE__*/React.createElement(Toasts, {
-    toasts: toastCtx.toasts,
-    removeToast: toastCtx.removeToast
-  }), page === 'landing' && /*#__PURE__*/React.createElement(LandingPage, {
+  // FIX 4c: outer provider removed — supplied by AppRoot above the error boundary.
+  return /*#__PURE__*/React.createElement(React.Fragment, null,
+  page === 'landing' && /*#__PURE__*/React.createElement(LandingPage, {
     navigate: navigate,
     userProfile: userProfile,
     updateUserProfile: updateUserProfile,
@@ -17073,8 +17084,29 @@ function App() {
     navigate: navigate
   }));
 }
+// ─── FIX 4d: AppRoot — context provider lives ABOVE the error boundary ────
+// Tree:  AppRoot
+//          AppCtx.Provider  ← toasts context always available
+//            Toasts
+//            AppErrorBoundary  ← catches render errors
+//              App             ← all routing + page rendering
+//
+// Previously AppCtx.Provider was created INSIDE App, so any crash before
+// the provider element was created (or on recovery re-renders) left children
+// without context, producing a secondary "context is null" crash that made
+// the error boundary fallback appear as a blank dark screen.
+function AppRoot() {
+  const toastCtx = useToasts();
+  return React.createElement(AppCtx.Provider, { value: toastCtx },
+    React.createElement(Toasts, { toasts: toastCtx.toasts, removeToast: toastCtx.removeToast }),
+    React.createElement(AppErrorBoundary, null,
+      React.createElement(App, null)
+    )
+  );
+}
+
 ReactDOM.createRoot(document.getElementById('root')).render(
-  React.createElement(AppErrorBoundary, null, React.createElement(App, null))
+  React.createElement(AppRoot, null)
 );
 </script>
 

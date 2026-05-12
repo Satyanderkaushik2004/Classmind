@@ -15,8 +15,6 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
-<!-- PeerJS for WebRTC signaling -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.5.2/peerjs.min.js"></script>
 <!-- ✅ No runtime transpiler needed — all JSX pre-compiled to React.createElement -->
 
 <style>
@@ -2934,57 +2932,89 @@ hr{border:none;border-top:1px solid var(--border);margin:16px 0}
   letter-spacing:normal;font-weight:700;text-transform:none;
 }
 
-/* ══════════════════════════════════════════════════════════════
-   LIVE CLASS VC — Video Room Styles
-══════════════════════════════════════════════════════════════ */
-.vc-root{display:flex;flex-direction:column;height:calc(100vh - 60px);background:var(--bg);overflow:hidden}
-.vc-header{display:flex;align-items:center;gap:12px;padding:12px 20px;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0}
-.vc-header h2{font-size:1rem;font-weight:700;margin:0;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-.vc-live-dot{width:8px;height:8px;border-radius:50%;background:var(--green);animation:blink 1s infinite;flex-shrink:0}
-.vc-status-text{font-size:0.8rem;color:var(--text2)}
-.vc-header-actions{margin-left:auto;display:flex;gap:8px;align-items:center}
-.vc-body{display:flex;flex:1;min-height:0;overflow:hidden}
-.vc-grid-area{flex:1;padding:16px;overflow-y:auto;display:flex;flex-direction:column;gap:12px}
-.vc-grid{display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));align-content:start}
-.vc-tile{background:var(--surface);border:2px solid var(--border);border-radius:14px;overflow:hidden;position:relative;aspect-ratio:16/9;transition:border-color .2s}
-.vc-tile.speaking{border-color:var(--green);box-shadow:0 0 0 2px rgba(34,197,94,.25)}
-.vc-tile.local{border-color:var(--accent)}
-.vc-tile video{width:100%;height:100%;object-fit:cover;display:block;background:#000}
-.vc-tile-overlay{position:absolute;bottom:0;left:0;right:0;padding:6px 10px;background:linear-gradient(transparent,rgba(0,0,0,.7));display:flex;align-items:center;gap:6px}
-.vc-tile-name{font-size:0.75rem;font-weight:600;color:#fff;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.vc-tile-badges{display:flex;gap:4px}
-.vc-mic-off-icon,.vc-cam-off-icon{font-size:0.65rem;background:rgba(239,68,68,.85);padding:2px 5px;border-radius:4px;color:#fff}
-.vc-no-cam{display:flex;align-items:center;justify-content:center;width:100%;height:100%;background:var(--surface2);font-size:2.2rem;color:var(--text3)}
-.vc-sidebar{width:240px;border-left:1px solid var(--border);display:flex;flex-direction:column;background:var(--surface);flex-shrink:0}
-.vc-sidebar-header{padding:12px 14px;font-weight:600;font-size:0.85rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
-.vc-sidebar-body{flex:1;overflow-y:auto;padding:8px}
-.vc-participant-row{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:8px;margin-bottom:2px;transition:background .15s}
-.vc-participant-row:hover{background:var(--surface2)}
-.vc-participant-avatar{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:700;color:#fff;flex-shrink:0}
-.vc-participant-name{font-size:0.8rem;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.vc-participant-icons{display:flex;gap:3px;font-size:0.8rem}
-.vc-controls{display:flex;align-items:center;justify-content:center;gap:12px;padding:14px 20px;background:var(--surface);border-top:1px solid var(--border);flex-shrink:0}
-.vc-ctrl-btn{display:flex;flex-direction:column;align-items:center;gap:3px;border:none;background:var(--surface2);color:var(--text);border-radius:12px;padding:10px 16px;cursor:pointer;font-size:0.7rem;min-width:64px;transition:all .2s;font-family:inherit}
-.vc-ctrl-btn .vc-ctrl-icon{font-size:1.3rem;line-height:1}
-.vc-ctrl-btn:hover{background:var(--surface3)}
+/* ── Live Class (VC) Video Room ─────────────────────────────────── */
+.vc-lobby{display:flex;flex-direction:column;align-items:center;justify-content:center;
+  text-align:center;padding:80px 24px;max-width:480px;margin:0 auto}
+.vc-lobby-icon{font-size:4.5rem;margin-bottom:20px;filter:drop-shadow(0 0 24px rgba(99,102,241,.45))}
+.vc-lobby-title{font-size:1.6rem;font-weight:800;margin-bottom:10px;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.vc-lobby-desc{color:var(--text2);font-size:0.95rem;line-height:1.7;max-width:380px}
+.vc-lobby-actions{display:flex;flex-direction:column;align-items:center;gap:12px;margin-top:24px;width:100%}
+.vc-lobby-actions .btn{min-width:220px;justify-content:center}
+.vc-error-banner{background:rgba(239,68,68,.12);border:1px solid var(--red);
+  color:var(--red);padding:10px 16px;border-radius:8px;margin-top:14px;
+  font-size:.875rem;max-width:400px}
+.vc-room-root{display:flex;flex-direction:column;height:calc(100vh - 60px);
+  background:var(--bg);overflow:hidden}
+.vc-header{display:flex;align-items:center;justify-content:space-between;
+  padding:10px 20px;background:var(--surface);border-bottom:1px solid var(--border);
+  flex-shrink:0;gap:8px}
+.vc-header-left{display:flex;align-items:center;gap:10px;min-width:0}
+.vc-header-right{display:flex;gap:8px;flex-shrink:0}
+.vc-header-title{font-weight:700;font-size:1rem}
+.vc-status-pill{display:flex;align-items:center;gap:6px;
+  background:var(--surface2);border:1px solid var(--border);
+  padding:3px 10px;border-radius:20px;font-size:.8rem;color:var(--text2)}
+.vc-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.vc-dot.live{background:var(--red);animation:blink 1.4s infinite}
+.vc-dot.connecting{background:var(--yellow)}
+.vc-dot.idle{background:var(--text3)}
+.vc-video-grid{flex:1;display:grid;gap:12px;padding:16px;overflow-y:auto;
+  align-content:start;grid-template-columns:repeat(auto-fill,minmax(260px,1fr))}
+.vc-video-tile{background:var(--surface2);border-radius:var(--radius);
+  border:2px solid var(--border);aspect-ratio:16/9;position:relative;
+  overflow:hidden;display:flex;align-items:center;justify-content:center;
+  transition:border-color .25s,box-shadow .25s}
+.vc-video-tile.muted-border{border-color:var(--yellow)}
+.vc-video-el{width:100%;height:100%;object-fit:cover;display:block}
+.vc-video-el.mirrored{transform:scaleX(-1)}
+.vc-avatar{width:76px;height:76px;border-radius:50%;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  color:#fff;display:flex;align-items:center;justify-content:center;
+  font-size:2.2rem;font-weight:700;flex-shrink:0}
+.vc-tile-footer{position:absolute;bottom:0;left:0;right:0;
+  background:linear-gradient(transparent,rgba(0,0,0,.7));
+  padding:20px 10px 8px;display:flex;align-items:center;gap:6px}
+.vc-tile-name{font-size:.78rem;color:#fff;font-weight:600;
+  flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.vc-mute-icon{font-size:.8rem}
+.vc-kick-btn{background:rgba(239,68,68,.8);border:none;color:#fff;
+  width:22px;height:22px;border-radius:50%;font-size:.7rem;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;padding:0;
+  flex-shrink:0;transition:background .2s}
+.vc-kick-btn:hover{background:var(--red)}
+.vc-controls{display:flex;justify-content:center;align-items:center;gap:10px;
+  padding:14px 20px;background:var(--surface);
+  border-top:1px solid var(--border);flex-shrink:0}
+.vc-ctrl-btn{display:flex;flex-direction:column;align-items:center;gap:4px;
+  padding:10px 18px;border-radius:12px;border:none;
+  background:var(--surface2);color:var(--text);cursor:pointer;
+  transition:all .2s;font-family:inherit;min-width:70px;flex-shrink:0}
+.vc-ctrl-btn:hover{background:var(--surface3);transform:translateY(-1px)}
 .vc-ctrl-btn.off{background:rgba(239,68,68,.15);color:var(--red)}
-.vc-ctrl-btn.danger{background:var(--red);color:#fff}
-.vc-ctrl-btn.danger:hover{background:#dc2626}
-.vc-waiting{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;height:100%;color:var(--text2)}
-.vc-waiting-icon{font-size:3.5rem;animation:pulse 2s infinite}
-.vc-waiting h3{font-size:1.2rem;font-weight:600;color:var(--text)}
-.vc-waiting p{font-size:0.9rem;text-align:center;max-width:340px;line-height:1.6}
-.vc-connection-state{font-size:0.75rem;padding:3px 10px;border-radius:20px;font-weight:600}
-.vc-connection-state.connected{background:rgba(34,197,94,.15);color:var(--green)}
-.vc-connection-state.connecting{background:rgba(234,179,8,.15);color:var(--yellow)}
-.vc-connection-state.idle{background:var(--surface2);color:var(--text3)}
-.vc-pip-container{position:fixed;bottom:80px;right:16px;z-index:200;display:flex;flex-direction:column;gap:6px;pointer-events:none}
-.vc-pip-tile{width:160px;height:90px;border-radius:10px;border:2px solid var(--accent);overflow:hidden;pointer-events:all;box-shadow:var(--shadow)}
-.vc-pip-tile video{width:100%;height:100%;object-fit:cover}
-.vc-pip-badge{position:absolute;bottom:4px;left:6px;font-size:0.6rem;color:#fff;background:rgba(0,0,0,.6);padding:1px 5px;border-radius:4px;pointer-events:none}
-@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
-.vc-mute-all-btn{padding:5px 12px;font-size:0.78rem}
-.vc-teacher-badge{font-size:0.65rem;background:rgba(99,102,241,.2);color:var(--accent);padding:1px 6px;border-radius:4px}
+.vc-ctrl-btn.off:hover{background:rgba(239,68,68,.25)}
+.vc-ctrl-btn.leave{background:var(--red);color:#fff}
+.vc-ctrl-btn.leave:hover{background:#dc2626}
+.vc-ctrl-icon{font-size:1.35rem;line-height:1}
+.vc-ctrl-label{font-size:.7rem;font-weight:500;color:inherit}
+.vc-participants-panel{padding:10px 18px;background:var(--surface);
+  border-top:1px solid var(--border);max-height:150px;overflow-y:auto;flex-shrink:0}
+.vc-participants-title{font-size:.82rem;font-weight:700;color:var(--text2);margin-bottom:6px}
+.vc-participant-row{display:flex;align-items:center;padding:5px 0;
+  border-bottom:1px solid var(--border);font-size:.82rem;gap:6px}
+.vc-participant-row:last-child{border-bottom:none}
+.vc-participant-name{flex:1;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+@media(max-width:600px){
+  .vc-video-grid{grid-template-columns:1fr;padding:10px}
+  .vc-ctrl-btn{padding:8px 12px;min-width:58px}
+  .vc-ctrl-label{display:none}
+  .vc-ctrl-icon{font-size:1.5rem}
+}
+@media(min-width:1200px){
+  .vc-video-grid{grid-template-columns:repeat(auto-fill,minmax(320px,1fr))}
+}
+
 </style>
 </head>
 <body>
@@ -4605,15 +4635,6 @@ function TeacherShell({
         // Explicit server acknowledgment that test ended
         stopPersistentTestTimer();
         setActiveTestView('results');
-      } else if (msg.type === 'vc_join') {
-        // Another participant joined VC — fire window event so LiveClassVC can call them
-        window.dispatchEvent(new CustomEvent('cm_vc_join', { detail: msg }));
-      } else if (msg.type === 'vc_leave') {
-        window.dispatchEvent(new CustomEvent('cm_vc_leave', { detail: msg }));
-      } else if (msg.type === 'vc_mute_all') {
-        window.dispatchEvent(new CustomEvent('cm_vc_mute_all', { detail: msg }));
-      } else if (msg.type === 'vc_kick') {
-        window.dispatchEvent(new CustomEvent('cm_vc_kick', { detail: msg }));
       }
     } catch (err) {
       console.error("[WS Error] TeacherShell:", err);
@@ -4835,7 +4856,7 @@ function TeacherShell({
     label: 'Coding Lab',
     icon: '💻'
   }, {
-    id: 'live-class',
+    id: 'liveclass',
     label: 'Live Class',
     icon: '🎥'
   }];
@@ -4986,14 +5007,11 @@ function TeacherShell({
     roster: roster
   })), page === 'content' && /*#__PURE__*/React.createElement(ContentManagementPage, sharedProps), page === 'groups' && /*#__PURE__*/React.createElement(GroupsPage, sharedProps), page === 'reports' && /*#__PURE__*/React.createElement(ReportsPage, sharedProps), page === 'communication' && /*#__PURE__*/React.createElement(CommunicationPage, sharedProps), page === 'test' && /*#__PURE__*/React.createElement(TestModePage, sharedProps), page === 'coding' && /*#__PURE__*/React.createElement(CodingLabPage, _extends({}, sharedProps, {
     isTeacher: true
-  })), page === 'live-class' && /*#__PURE__*/React.createElement(LiveClassVC, {
+  })), page === 'liveclass' && /*#__PURE__*/React.createElement(LiveClassPage, {
     sessionCode: sessionCode,
     isTeacher: true,
-    userName: teacherName || 'Teacher',
-    wsSend: wsSend
-  })), page !== 'live-class' && /*#__PURE__*/React.createElement(VCPipOverlay, {
-    onReturn: () => setPage('live-class')
-  }), /*#__PURE__*/React.createElement(ProfileDrawer, {
+    userName: teacherName
+  }))), /*#__PURE__*/React.createElement(ProfileDrawer, {
     open: profileOpen,
     onClose: () => setProfileOpen(false),
     userName: teacherName,
@@ -5040,7 +5058,7 @@ function TeacherShell({
 }), /*#__PURE__*/React.createElement(MotivToastsContainer, {
   toasts: motivToasts,
   onDismiss: dismissMotivToast
-})));
+}));
 }
 
 // ═════════════════════════════════════════════════════════════════
@@ -10070,6 +10088,281 @@ function TestModePage({
 }
 
 // ═════════════════════════════════════════════════════════════════
+//  LIVE CLASS — WebRTC Video Room
+//  Shared by teacher (isTeacher=true) and student (isTeacher=false)
+//  Props: sessionCode, isTeacher, userName
+// ═════════════════════════════════════════════════════════════════
+function RemoteVideoTile({ peerId, peer, isTeacher, onKick }) {
+  const videoRef = React.useRef(null);
+  React.useEffect(() => {
+    if (videoRef.current && peer.stream && videoRef.current.srcObject !== peer.stream) {
+      videoRef.current.srcObject = peer.stream;
+    }
+  }, [peer.stream]);
+  const initial  = (peer.name || '?')[0].toUpperCase();
+  const roleIcon = peer.role === 'teacher' ? '🧑‍🏫 ' : '👤 ';
+  return React.createElement('div', {
+    className: 'vc-video-tile' + (peer.muted ? ' muted-border' : '')
+  },
+    peer.videoOff
+      ? React.createElement('div', { className: 'vc-avatar' }, initial)
+      : React.createElement('video', { ref: videoRef, autoPlay: true, playsInline: true, className: 'vc-video-el' }),
+    React.createElement('div', { className: 'vc-tile-footer' },
+      React.createElement('span', { className: 'vc-tile-name' }, roleIcon, peer.name || peerId),
+      peer.muted    && React.createElement('span', { className: 'vc-mute-icon' }, '🔇'),
+      peer.videoOff && React.createElement('span', { className: 'vc-mute-icon' }, '📷'),
+      isTeacher && onKick && React.createElement('button', { className: 'vc-kick-btn', onClick: onKick, title: 'Remove' }, '✕')
+    )
+  );
+}
+
+function LiveClassPage({ sessionCode, isTeacher, userName }) {
+  const { useState, useEffect, useRef } = React;
+  const [vcStatus, setVcStatus]           = useState('idle');
+  const [peers, setPeers]                 = useState({});
+  const [participants, setParticipants]   = useState([]);
+  const [muted, setMuted]                 = useState(false);
+  const [videoOff, setVideoOff]           = useState(false);
+  const [localStream, setLocalStream]     = useState(null);
+  const [error, setError]                 = useState('');
+  const sigRef         = useRef(null);
+  const localVideoRef  = useRef(null);
+  const localStreamRef = useRef(null);
+  const peersRef       = useRef({});
+  const peerIdRef      = useRef('vc-' + Math.random().toString(36).slice(2, 10));
+  const peerId         = peerIdRef.current;
+
+  const ICE = { iceServers:[{urls:'stun:stun.l.google.com:19302'},{urls:'stun:stun1.l.google.com:19302'}] };
+
+  function sigSend(msg) {
+    const ws = sigRef.current;
+    if (ws && ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify(msg));
+  }
+  function syncPeers() { setPeers({...peersRef.current}); }
+
+  async function createPC(remotePeerId, remoteName, remoteRole, isInitiator) {
+    if (peersRef.current[remotePeerId]) return;
+    const pc = new RTCPeerConnection(ICE);
+    const remoteStream = new MediaStream();
+    const stream = localStreamRef.current;
+    if (stream) stream.getTracks().forEach(t => pc.addTrack(t, stream));
+    pc.ontrack = evt => {
+      evt.streams[0].getTracks().forEach(t => remoteStream.addTrack(t));
+      if (peersRef.current[remotePeerId]) { peersRef.current[remotePeerId].stream = remoteStream; syncPeers(); }
+    };
+    pc.onicecandidate = evt => { if (evt.candidate) sigSend({type:'ice_candidate',target:remotePeerId,candidate:evt.candidate}); };
+    pc.onconnectionstatechange = () => {
+      if (pc.connectionState==='failed'||pc.connectionState==='disconnected') removePeer(remotePeerId);
+    };
+    peersRef.current[remotePeerId] = { pc, stream:null, name:remoteName, role:remoteRole, muted:false, videoOff:false };
+    syncPeers();
+    if (isInitiator) {
+      const offer = await pc.createOffer();
+      await pc.setLocalDescription(offer);
+      sigSend({type:'offer',target:remotePeerId,sdp:pc.localDescription});
+    }
+  }
+
+  function removePeer(pid) {
+    const e = peersRef.current[pid];
+    if (e && e.pc) { try{e.pc.close();}catch{} }
+    delete peersRef.current[pid];
+    syncPeers();
+    setParticipants(prev => prev.filter(p => p.peer_id !== pid));
+  }
+
+  async function handleSignal(msg) {
+    switch(msg.type) {
+      case 'room_joined':
+        setParticipants(msg.peers||[]);
+        for(const p of (msg.peers||[])) await createPC(p.peer_id,p.name,p.role,true);
+        break;
+      case 'peer_joined':
+        setParticipants(prev=>[...prev.filter(p=>p.peer_id!==msg.peer_id),{peer_id:msg.peer_id,name:msg.name,role:msg.role,muted:false,videoOff:false}]);
+        await createPC(msg.peer_id,msg.name,msg.role,false);
+        break;
+      case 'peer_left':
+        removePeer(msg.peer_id);
+        break;
+      case 'offer': {
+        const {from:rId,from_name,sdp} = msg;
+        if(!peersRef.current[rId]) await createPC(rId,from_name,msg.role||'student',false);
+        const e = peersRef.current[rId]; if(!e) break;
+        await e.pc.setRemoteDescription(new RTCSessionDescription(sdp));
+        const ans = await e.pc.createAnswer();
+        await e.pc.setLocalDescription(ans);
+        sigSend({type:'answer',target:rId,sdp:e.pc.localDescription});
+        break;
+      }
+      case 'answer': {
+        const e = peersRef.current[msg.from];
+        if(e) await e.pc.setRemoteDescription(new RTCSessionDescription(msg.sdp));
+        break;
+      }
+      case 'ice_candidate': {
+        const e = peersRef.current[msg.from];
+        if(e&&msg.candidate) { try{await e.pc.addIceCandidate(new RTCIceCandidate(msg.candidate));}catch{} }
+        break;
+      }
+      case 'peer_mute_state':
+        if(peersRef.current[msg.peer_id]){peersRef.current[msg.peer_id].muted=msg.muted;syncPeers();}
+        setParticipants(prev=>prev.map(p=>p.peer_id===msg.peer_id?{...p,muted:msg.muted}:p));
+        break;
+      case 'peer_video_state':
+        if(peersRef.current[msg.peer_id]){peersRef.current[msg.peer_id].videoOff=msg.video_off;syncPeers();}
+        setParticipants(prev=>prev.map(p=>p.peer_id===msg.peer_id?{...p,videoOff:msg.video_off}:p));
+        break;
+      case 'force_mute': muteLocal(true); break;
+      case 'kicked': leaveCall(); setError('You were removed from the live class by the teacher.'); break;
+      case 'error': setError(msg.message||'Signaling error'); break;
+    }
+  }
+
+  function connectSignaling() {
+    const proto = location.protocol==='https:'?'wss':'ws';
+    const url = `${proto}://${location.host}/ws/vc/${sessionCode}?peer_id=${encodeURIComponent(peerId)}&role=${encodeURIComponent(isTeacher?'teacher':'student')}&name=${encodeURIComponent(userName||'User')}`;
+    const ws = new WebSocket(url);
+    sigRef.current = ws;
+    ws.onopen    = () => setVcStatus('connected');
+    ws.onerror   = () => { setError('Cannot connect to Live Class server.'); setVcStatus('idle'); };
+    ws.onclose   = () => { /* handled by leaveCall */ };
+    ws.onmessage = async evt => { try{ await handleSignal(JSON.parse(evt.data)); }catch(e){ console.error('[VC]',e); } };
+  }
+
+  async function joinCall() {
+    setError(''); setVcStatus('connecting');
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({video:true,audio:true});
+      localStreamRef.current = stream;
+      setLocalStream(stream);
+      connectSignaling();
+    } catch(e) { setError('Camera/microphone access denied: '+e.message); setVcStatus('idle'); }
+  }
+
+  function leaveCall() {
+    if(sigRef.current){try{sigRef.current.close();}catch{} sigRef.current=null;}
+    Object.values(peersRef.current).forEach(({pc})=>{try{pc.close();}catch{}});
+    peersRef.current={}; setPeers({}); setParticipants([]);
+    if(localStreamRef.current){localStreamRef.current.getTracks().forEach(t=>t.stop());localStreamRef.current=null;}
+    setLocalStream(null); setVcStatus('idle');
+  }
+
+  function muteLocal(forceMuted) {
+    const newMuted = forceMuted!==undefined ? forceMuted : !muted;
+    if(localStreamRef.current) localStreamRef.current.getAudioTracks().forEach(t=>{t.enabled=!newMuted;});
+    setMuted(newMuted);
+    sigSend({type:'mute_state',muted:newMuted});
+  }
+
+  function toggleVideo() {
+    const newOff = !videoOff;
+    if(localStreamRef.current) localStreamRef.current.getVideoTracks().forEach(t=>{t.enabled=!newOff;});
+    setVideoOff(newOff);
+    sigSend({type:'video_state',video_off:newOff});
+  }
+
+  function kickPeer(pid) { sigSend({type:'kick_peer',target:pid}); removePeer(pid); }
+
+  useEffect(()=>{ return ()=>leaveCall(); }, []);
+  useEffect(()=>{ if(localVideoRef.current&&localStream) localVideoRef.current.srcObject=localStream; },[localStream]);
+
+  // ── Lobby screen ──────────────────────────────────────────────
+  if(vcStatus==='idle') {
+    return React.createElement('div',{className:'page'},
+      React.createElement('div',{className:'vc-lobby'},
+        React.createElement('div',{className:'vc-lobby-icon'},'🎥'),
+        React.createElement('h2',{className:'vc-lobby-title'},isTeacher?'Start Live Class':'Join Live Class'),
+        React.createElement('p',{className:'vc-lobby-desc',style:{marginTop:8}},
+          isTeacher
+            ? 'Launch a live video session. Students join from their 🎥 Live tab and can still work on tasks, chat, and tests.'
+            : 'Join your teacher\'s live video class. You can still submit tasks, use chat, and take tests while connected.'
+        ),
+        error && React.createElement('div',{className:'vc-error-banner'},'⚠️ ',error),
+        React.createElement('div',{className:'vc-lobby-actions'},
+          React.createElement('button',{className:'btn btn-primary btn-lg',onClick:joinCall},
+            isTeacher?'🎥 Start Live Class':'📹 Join Live Class'
+          ),
+          React.createElement('p',{style:{fontSize:'.78rem',color:'var(--text3)',marginTop:4}},
+            'Your browser will ask for camera & microphone permission.')
+        )
+      )
+    );
+  }
+
+  // ── Video room ────────────────────────────────────────────────
+  const peerEntries = Object.entries(peers);
+  const totalCount  = 1+peerEntries.length;
+  const isConnected = vcStatus==='connected';
+
+  return React.createElement('div',{className:'vc-room-root'},
+    // header
+    React.createElement('div',{className:'vc-header'},
+      React.createElement('div',{className:'vc-header-left'},
+        React.createElement('span',{className:'vc-header-title'},'🎥 Live Class'),
+        React.createElement('div',{className:'vc-status-pill'},
+          React.createElement('span',{className:'vc-dot '+(isConnected?'live':'connecting')}),
+          isConnected ? totalCount+' participant'+(totalCount!==1?'s':'') : 'Connecting…'
+        )
+      ),
+      React.createElement('div',{className:'vc-header-right'},
+        isTeacher && React.createElement('button',{className:'btn btn-warn btn-sm',onClick:()=>sigSend({type:'teacher_mute_all'}),title:'Mute all students'},'🔇 Mute All'),
+        React.createElement('button',{className:'btn btn-danger btn-sm',onClick:leaveCall},'📵 Leave')
+      )
+    ),
+    // video grid
+    React.createElement('div',{className:'vc-video-grid'},
+      // local tile
+      React.createElement('div',{className:'vc-video-tile'+(muted?' muted-border':'')},
+        videoOff
+          ? React.createElement('div',{className:'vc-avatar'},(userName||'You')[0].toUpperCase())
+          : React.createElement('video',{ref:localVideoRef,autoPlay:true,muted:true,playsInline:true,className:'vc-video-el mirrored'}),
+        React.createElement('div',{className:'vc-tile-footer'},
+          React.createElement('span',{className:'vc-tile-name'},isTeacher?'🧑‍🏫 ':'👤 ',(userName||'You'),' (You)'),
+          muted    && React.createElement('span',{className:'vc-mute-icon'},'🔇'),
+          videoOff && React.createElement('span',{className:'vc-mute-icon'},'📷')
+        )
+      ),
+      // remote tiles
+      ...peerEntries.map(([pid,peer])=>
+        React.createElement(RemoteVideoTile,{key:pid,peerId:pid,peer,isTeacher,onKick:isTeacher?()=>kickPeer(pid):null})
+      )
+    ),
+    // controls
+    React.createElement('div',{className:'vc-controls'},
+      React.createElement('button',{className:'vc-ctrl-btn'+(muted?' off':''),onClick:()=>muteLocal()},
+        React.createElement('span',{className:'vc-ctrl-icon'},muted?'🔇':'🎙️'),
+        React.createElement('span',{className:'vc-ctrl-label'},muted?'Unmute':'Mute')
+      ),
+      React.createElement('button',{className:'vc-ctrl-btn'+(videoOff?' off':''),onClick:toggleVideo},
+        React.createElement('span',{className:'vc-ctrl-icon'},videoOff?'📷':'📹'),
+        React.createElement('span',{className:'vc-ctrl-label'},videoOff?'Start Cam':'Stop Cam')
+      ),
+      React.createElement('button',{className:'vc-ctrl-btn leave',onClick:leaveCall},
+        React.createElement('span',{className:'vc-ctrl-icon'},'📵'),
+        React.createElement('span',{className:'vc-ctrl-label'},'Leave')
+      )
+    ),
+    // teacher participant panel
+    isTeacher && peerEntries.length>0 && React.createElement('div',{className:'vc-participants-panel'},
+      React.createElement('div',{className:'vc-participants-title'},'👥 Participants ('+peerEntries.length+')'),
+      peerEntries.map(([pid,p])=>
+        React.createElement('div',{key:pid,className:'vc-participant-row'},
+          React.createElement('span',{className:'vc-participant-name'},(p.role==='teacher'?'🧑‍🏫 ':'👤 '),(p.name||pid)),
+          p.muted    && React.createElement('span',{className:'badge badge-yellow',style:{fontSize:'.7rem'}},'🔇'),
+          p.videoOff && React.createElement('span',{className:'badge badge-red',style:{fontSize:'.7rem',marginLeft:4}},'📷 Off'),
+          React.createElement('button',{
+            className:'btn btn-danger btn-sm',
+            style:{marginLeft:'auto',padding:'2px 8px',fontSize:'.75rem'},
+            onClick:()=>kickPeer(pid)
+          },'Remove')
+        )
+      )
+    ),
+    error && React.createElement('div',{className:'vc-error-banner',style:{margin:'10px 16px'}},'⚠️ ',error)
+  );
+}
+
+// ═════════════════════════════════════════════════════════════════
 //  CODING LAB PAGE (Teacher view + Student coding submission)
 // ═════════════════════════════════════════════════════════════════
 // ── TEACHER: Coding Lab ──
@@ -11481,16 +11774,7 @@ function StudentTaskView({
           }, 1000);
           console.log('[TestEngine] Student restored active test — remaining:', msg.test_state.remaining_secs, 's');
         }
-      } else if (msg.type === 'vc_join') {
-        window.dispatchEvent(new CustomEvent('cm_vc_join', { detail: msg }));
-      } else if (msg.type === 'vc_leave') {
-        window.dispatchEvent(new CustomEvent('cm_vc_leave', { detail: msg }));
-      } else if (msg.type === 'vc_mute_all') {
-        window.dispatchEvent(new CustomEvent('cm_vc_mute_all', { detail: msg }));
-      } else if (msg.type === 'vc_kick') {
-        window.dispatchEvent(new CustomEvent('cm_vc_kick', { detail: msg }));
       }
-    }
     } catch (err) {
       console.error("[WS Error] StudentTaskView:", err);
     }
@@ -11768,8 +12052,8 @@ function StudentTaskView({
     id: 'myreport',
     label: '📊 Report'
   }, {
-    id: 'live-class',
-    label: '🎥 Live Class'
+    id: 'liveclass',
+    label: '🎥 Live'
   }];
   const [mobileStudentNavOpen, setMobileStudentNavOpen] = useState(false);
   const fmtSecs = s => `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
@@ -12481,7 +12765,7 @@ function StudentTaskView({
     studentId: studentId,
     codingLeaderboard: codingLeaderboard,
     studentName: studentName
-  }))), sPage === 'test' && /*#__PURE__*/React.createElement("div", {
+  })), sPage === 'test' && /*#__PURE__*/React.createElement("div", {
     style: {
       minHeight: 'calc(100vh - 60px)',
       background: 'var(--bg)',
@@ -12592,11 +12876,10 @@ function StudentTaskView({
     sessionCode: sessionCode,
     studentId: studentId,
     studentName: studentName
-  }), sPage === 'live-class' && /*#__PURE__*/React.createElement(LiveClassVC, {
+  }), sPage === 'liveclass' && /*#__PURE__*/React.createElement(LiveClassPage, {
     sessionCode: sessionCode,
     isTeacher: false,
-    userName: studentName || 'Student',
-    wsSend: wsSend
+    userName: studentName
   }), sPage === 'result' && /*#__PURE__*/React.createElement("div", {
     className: "page-sm text-center"
   }, /*#__PURE__*/React.createElement("div", {
@@ -12632,9 +12915,7 @@ function StudentTaskView({
   }, "PDF includes all questions, your answers, and correct answers.")), /*#__PURE__*/React.createElement("button", {
     className: "btn btn-ghost mt-24",
     onClick: () => navigate('landing')
-  }, "\u2190 Back to Home"))), sPage !== 'live-class' && /*#__PURE__*/React.createElement(VCPipOverlay, {
-    onReturn: () => setSPage('live-class')
-  }), /*#__PURE__*/React.createElement(ProfileDrawer, {
+  }, "\u2190 Back to Home")))), /*#__PURE__*/React.createElement(ProfileDrawer, {
     open: profileOpen,
     onClose: () => setProfileOpen(false),
     userName: studentName,
@@ -16676,657 +16957,6 @@ class AppErrorBoundary extends React.Component {
     return this.props.children;
   }
 }
-
-/* ══════════════════════════════════════════════════════════════════════
-   LIVE CLASS VC — Full WebRTC Video/Voice Call System
-   Architecture: PeerJS (WebRTC peer mesh) + ClassMind WebSocket signaling
-   ● Teacher creates room, students join by session code
-   ● Peers connect in a mesh (teacher ↔ each student)
-   ● Local state only — no changes to store.py needed
-   ● PiP overlay shows local cam when user navigates away
-══════════════════════════════════════════════════════════════════════ */
-
-const PEERJS_CONFIG = {
-  config: {
-    iceServers: [
-      { urls: 'stun:stun.l.google.com:19302' },
-      { urls: 'stun:stun1.l.google.com:19302' },
-      { urls: 'stun:global.stun.twilio.com:3478' },
-    ],
-  },
-  debug: 0,
-};
-
-// Shared VC session state — module-level singleton so it survives tab switches
-const _vcState = {
-  peer: null,
-  localStream: null,
-  calls: {},          // peerId -> MediaConnection
-  participants: {},   // peerId -> { name, stream, micOn, camOn, isTeacher }
-  roomId: null,
-  listeners: new Set(),
-};
-
-function _vcNotify() {
-  _vcState.listeners.forEach(fn => fn());
-}
-
-function useVCState() {
-  const [, forceRender] = React.useReducer(x => x + 1, 0);
-  React.useEffect(() => {
-    _vcState.listeners.add(forceRender);
-    return () => _vcState.listeners.delete(forceRender);
-  }, []);
-  return _vcState;
-}
-
-// ── PiP overlay: shown when user navigates away from VC page ──────────
-function VCPipOverlay({ onReturn }) {
-  const vc = useVCState();
-  const localRef = React.useRef(null);
-
-  React.useEffect(() => {
-    if (localRef.current && vc.localStream) {
-      localRef.current.srcObject = vc.localStream;
-    }
-  }, [vc.localStream]);
-
-  if (!vc.localStream || !vc.roomId) return null;
-  return React.createElement('div', { className: 'vc-pip-container' },
-    React.createElement('div', {
-      className: 'vc-pip-tile',
-      style: { position: 'relative', cursor: 'pointer' },
-      onClick: onReturn,
-      title: 'Return to Live Class'
-    },
-      React.createElement('video', {
-        ref: localRef,
-        autoPlay: true,
-        muted: true,
-        playsInline: true,
-        style: { width: '100%', height: '100%', objectFit: 'cover' }
-      }),
-      React.createElement('div', { className: 'vc-pip-badge' }, '🎥 Live')
-    )
-  );
-}
-
-// ── Individual video tile ─────────────────────────────────────────────
-function VCTile({ name, stream, isMuted, isCamOff, isLocal, isSpeaking, isTeacher }) {
-  const videoRef = React.useRef(null);
-
-  React.useEffect(() => {
-    if (videoRef.current && stream) {
-      videoRef.current.srcObject = stream;
-    }
-  }, [stream]);
-
-  return React.createElement('div', {
-    className: `vc-tile${isLocal ? ' local' : ''}${isSpeaking ? ' speaking' : ''}`
-  },
-    isCamOff || !stream
-      ? React.createElement('div', { className: 'vc-no-cam' },
-          React.createElement('span', null, name[0]?.toUpperCase() || '?')
-        )
-      : React.createElement('video', {
-          ref: videoRef,
-          autoPlay: true,
-          muted: isLocal,
-          playsInline: true
-        }),
-    React.createElement('div', { className: 'vc-tile-overlay' },
-      React.createElement('span', { className: 'vc-tile-name' },
-        isTeacher ? '👑 ' : '',
-        name,
-        isLocal ? ' (You)' : ''
-      ),
-      React.createElement('div', { className: 'vc-tile-badges' },
-        isMuted && React.createElement('span', { className: 'vc-mic-off-icon' }, '🎤✗'),
-        isCamOff && React.createElement('span', { className: 'vc-cam-off-icon' }, '📷✗')
-      )
-    )
-  );
-}
-
-// ── Participant row in sidebar ─────────────────────────────────────────
-function VCParticipantRow({ name, micOn, camOn, isTeacher, isLocal, onMute, onKick, amTeacher }) {
-  return React.createElement('div', { className: 'vc-participant-row' },
-    React.createElement('div', { className: 'vc-participant-avatar' }, name[0]?.toUpperCase() || '?'),
-    React.createElement('span', { className: 'vc-participant-name' },
-      name,
-      isLocal ? ' (You)' : '',
-      isTeacher ? React.createElement('span', { className: 'vc-teacher-badge', style:{marginLeft:4} }, 'HOST') : null
-    ),
-    React.createElement('div', { className: 'vc-participant-icons' },
-      micOn ? '🎤' : '🔇',
-      camOn ? '📷' : '📵'
-    ),
-    amTeacher && !isLocal && React.createElement('button', {
-      className: 'btn btn-ghost btn-sm',
-      style: { padding: '2px 6px', fontSize: '0.7rem', marginLeft: 4 },
-      onClick: onMute,
-      title: 'Mute'
-    }, micOn ? '🔇' : '🔊'),
-    amTeacher && !isLocal && !isTeacher && React.createElement('button', {
-      className: 'btn btn-danger btn-sm',
-      style: { padding: '2px 6px', fontSize: '0.7rem', marginLeft: 2 },
-      onClick: onKick,
-      title: 'Remove'
-    }, '✕')
-  );
-}
-
-// ── Main LiveClassVC component ────────────────────────────────────────
-function LiveClassVC({ sessionCode, isTeacher, userName, wsSend }) {
-  const vc = useVCState();
-  const [joined, setJoined] = React.useState(!!vc.roomId);
-  const [micOn, setMicOn] = React.useState(true);
-  const [camOn, setCamOn] = React.useState(true);
-  const [connecting, setConnecting] = React.useState(false);
-  const [error, setError] = React.useState('');
-  const [participants, setParticipants] = React.useState({ ..._vcState.participants });
-  const [localName] = React.useState(userName || (isTeacher ? 'Teacher' : 'Student'));
-  const [screenSharing, setScreenSharing] = React.useState(false);
-  const [sidebarOpen, setSidebarOpen] = React.useState(true);
-
-  // Speaking detection via AudioContext analyser
-  const speakingMap = React.useRef({});
-  const audioAnalysers = React.useRef({});
-
-  const refreshParticipants = React.useCallback(() => {
-    setParticipants({ ..._vcState.participants });
-  }, []);
-
-  React.useEffect(() => {
-    _vcState.listeners.add(refreshParticipants);
-    return () => _vcState.listeners.delete(refreshParticipants);
-  }, [refreshParticipants]);
-
-  // ── Helpers ───────────────────────────────────────────────────────
-  function getRoomId() {
-    // Room ID is based on session code so all users in same session auto-join
-    return `classmind-vc-${sessionCode}`;
-  }
-
-  function setupAnalyser(peerId, stream) {
-    try {
-      const ctx = new AudioContext();
-      const src = ctx.createMediaStreamSource(stream);
-      const analyser = ctx.createAnalyser();
-      analyser.fftSize = 512;
-      src.connect(analyser);
-      const data = new Uint8Array(analyser.frequencyBinCount);
-      audioAnalysers.current[peerId] = { ctx, analyser, data };
-    } catch(_) {}
-  }
-
-  // ── Get local media ────────────────────────────────────────────────
-  async function getLocalStream(video = true, audio = true) {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video, audio });
-      return stream;
-    } catch (err) {
-      // Try audio-only fallback
-      if (video) {
-        try {
-          const stream = await navigator.mediaDevices.getUserMedia({ video: false, audio });
-          return stream;
-        } catch {}
-      }
-      return null;
-    }
-  }
-
-  // ── Handle incoming call ────────────────────────────────────────────
-  function handleIncomingCall(call) {
-    const callerMeta = call.metadata || {};
-    call.answer(_vcState.localStream);
-
-    call.on('stream', remoteStream => {
-      _vcState.calls[call.peer] = call;
-      _vcState.participants[call.peer] = {
-        name: callerMeta.name || 'Participant',
-        stream: remoteStream,
-        micOn: true,
-        camOn: true,
-        isTeacher: callerMeta.isTeacher || false,
-      };
-      setupAnalyser(call.peer, remoteStream);
-      _vcNotify();
-    });
-
-    call.on('close', () => {
-      delete _vcState.calls[call.peer];
-      delete _vcState.participants[call.peer];
-      _vcNotify();
-    });
-
-    call.on('error', () => {
-      delete _vcState.calls[call.peer];
-      delete _vcState.participants[call.peer];
-      _vcNotify();
-    });
-  }
-
-  // ── Call a specific peer ────────────────────────────────────────────
-  function callPeer(targetPeerId, targetMeta) {
-    if (!_vcState.peer || !_vcState.localStream) return;
-    if (_vcState.calls[targetPeerId]) return; // already connected
-
-    const call = _vcState.peer.call(targetPeerId, _vcState.localStream, {
-      metadata: { name: localName, isTeacher, sessionCode }
-    });
-
-    if (!call) return;
-
-    call.on('stream', remoteStream => {
-      _vcState.calls[targetPeerId] = call;
-      _vcState.participants[targetPeerId] = {
-        name: targetMeta?.name || 'Participant',
-        stream: remoteStream,
-        micOn: true,
-        camOn: true,
-        isTeacher: targetMeta?.isTeacher || false,
-      };
-      setupAnalyser(targetPeerId, remoteStream);
-      _vcNotify();
-    });
-
-    call.on('close', () => {
-      delete _vcState.calls[targetPeerId];
-      delete _vcState.participants[targetPeerId];
-      _vcNotify();
-    });
-
-    call.on('error', () => {
-      delete _vcState.calls[targetPeerId];
-      delete _vcState.participants[targetPeerId];
-      _vcNotify();
-    });
-  }
-
-  // ── Join the VC room ────────────────────────────────────────────────
-  async function joinRoom() {
-    setConnecting(true);
-    setError('');
-    const roomId = getRoomId();
-
-    try {
-      // Get media
-      const stream = await getLocalStream(true, true);
-      _vcState.localStream = stream;
-
-      // Create PeerJS peer with session-code-based ID for teacher
-      // Students get random IDs, teacher gets stable room-host ID
-      const peerId = isTeacher
-        ? `${roomId}-host`
-        : `${roomId}-s-${Math.random().toString(36).slice(2, 8)}`;
-
-      const peer = new Peer(peerId, PEERJS_CONFIG);
-      _vcState.peer = peer;
-      _vcState.roomId = roomId;
-
-      peer.on('open', openId => {
-        // Broadcast our presence via ClassMind's WS so peers can call us back
-        try {
-          if (wsSend) wsSend({
-            type: 'vc_join',
-            peer_id: openId,
-            name: localName,
-            is_teacher: isTeacher,
-            session_code: sessionCode,
-          });
-        } catch(_) {}
-
-        setJoined(true);
-        setConnecting(false);
-        _vcNotify();
-      });
-
-      peer.on('call', handleIncomingCall);
-
-      peer.on('error', err => {
-        // If ID taken (teacher rejoining), reconnect with random suffix
-        if (err.type === 'unavailable-id') {
-          const fallbackId = `${roomId}-host-${Date.now()}`;
-          const peer2 = new Peer(fallbackId, PEERJS_CONFIG);
-          _vcState.peer = peer2;
-          peer2.on('open', id2 => {
-            try {
-              if (wsSend) wsSend({ type: 'vc_join', peer_id: id2, name: localName, is_teacher: isTeacher, session_code: sessionCode });
-            } catch(_) {}
-            setJoined(true);
-            setConnecting(false);
-            _vcNotify();
-          });
-          peer2.on('call', handleIncomingCall);
-        } else {
-          setError('Connection error: ' + (err.message || err.type));
-          setConnecting(false);
-        }
-      });
-
-      // Listen for vc_join messages from others via WS to call them back
-      // This is handled in useEffect below via a stored callback
-
-    } catch (err) {
-      setError('Could not access camera/mic. Please allow permissions.');
-      setConnecting(false);
-    }
-  }
-
-  // ── Listen for peers joining via WS ─────────────────────────────────
-  // We attach a global handler that listens for vc_join events
-  React.useEffect(() => {
-    // When our peer exists and another person joins, we call them
-    function onVCJoin(e) {
-      if (!_vcState.peer || !_vcState.localStream) return;
-      const { peer_id, name, is_teacher, session_code } = e.detail || {};
-      if (session_code !== sessionCode) return;
-      if (peer_id === _vcState.peer.id) return;
-      setTimeout(() => callPeer(peer_id, { name, isTeacher: is_teacher }), 500);
-    }
-    window.addEventListener('cm_vc_join', onVCJoin);
-    return () => window.removeEventListener('cm_vc_join', onVCJoin);
-  }, [sessionCode]);
-
-  // ── Listen for mute-all (students auto-mute themselves) ──────────────
-  React.useEffect(() => {
-    function onMuteAll(e) {
-      if (isTeacher) return; // teachers don't auto-mute
-      const { session_code } = e.detail || {};
-      if (session_code !== sessionCode) return;
-      if (!_vcState.localStream) return;
-      _vcState.localStream.getAudioTracks().forEach(t => { t.enabled = false; });
-      setMicOn(false);
-    }
-    window.addEventListener('cm_vc_mute_all', onMuteAll);
-    return () => window.removeEventListener('cm_vc_mute_all', onMuteAll);
-  }, [sessionCode, isTeacher]);
-
-  // ── Listen for self-kick ─────────────────────────────────────────────
-  React.useEffect(() => {
-    function onKick(e) {
-      const { target_peer, session_code } = e.detail || {};
-      if (session_code !== sessionCode) return;
-      if (!_vcState.peer) return;
-      if (target_peer === _vcState.peer.id) {
-        leaveRoom();
-      }
-    }
-    window.addEventListener('cm_vc_kick', onKick);
-    return () => window.removeEventListener('cm_vc_kick', onKick);
-  }, [sessionCode]);
-
-  // ── Leave room ────────────────────────────────────────────────────────
-  function leaveRoom() {
-    // Close all calls
-    Object.values(_vcState.calls).forEach(c => { try { c.close(); } catch(_) {} });
-    _vcState.calls = {};
-    _vcState.participants = {};
-
-    // Stop local stream tracks
-    if (_vcState.localStream) {
-      _vcState.localStream.getTracks().forEach(t => t.stop());
-      _vcState.localStream = null;
-    }
-
-    // Destroy peer
-    if (_vcState.peer) {
-      try { _vcState.peer.destroy(); } catch(_) {}
-      _vcState.peer = null;
-    }
-
-    _vcState.roomId = null;
-
-    // Notify others via WS
-    try {
-      if (wsSend) wsSend({ type: 'vc_leave', session_code: sessionCode });
-    } catch(_) {}
-
-    setJoined(false);
-    setScreenSharing(false);
-    _vcNotify();
-  }
-
-  // ── Toggle mic ────────────────────────────────────────────────────────
-  function toggleMic() {
-    if (!_vcState.localStream) return;
-    const audioTracks = _vcState.localStream.getAudioTracks();
-    audioTracks.forEach(t => { t.enabled = !t.enabled; });
-    const newMic = audioTracks[0]?.enabled !== false;
-    setMicOn(newMic);
-    try {
-      if (wsSend) wsSend({ type: 'vc_state', mic: newMic, cam: camOn, session_code: sessionCode });
-    } catch(_) {}
-  }
-
-  // ── Toggle cam ────────────────────────────────────────────────────────
-  function toggleCam() {
-    if (!_vcState.localStream) return;
-    const videoTracks = _vcState.localStream.getVideoTracks();
-    videoTracks.forEach(t => { t.enabled = !t.enabled; });
-    const newCam = videoTracks[0]?.enabled !== false;
-    setCamOn(newCam);
-    try {
-      if (wsSend) wsSend({ type: 'vc_state', mic: micOn, cam: newCam, session_code: sessionCode });
-    } catch(_) {}
-  }
-
-  // ── Screen share (teacher only) ───────────────────────────────────────
-  async function toggleScreenShare() {
-    if (!isTeacher) return;
-    if (screenSharing) {
-      // Revert to camera
-      const camStream = await getLocalStream(true, true);
-      if (camStream && _vcState.peer) {
-        const camTrack = camStream.getVideoTracks()[0];
-        Object.values(_vcState.calls).forEach(call => {
-          const sender = call.peerConnection?.getSenders().find(s => s.track?.kind === 'video');
-          if (sender && camTrack) sender.replaceTrack(camTrack);
-        });
-        // Replace local stream tracks
-        if (_vcState.localStream) {
-          _vcState.localStream.getVideoTracks().forEach(t => _vcState.localStream.removeTrack(t));
-          _vcState.localStream.addTrack(camTrack);
-        }
-      }
-      setScreenSharing(false);
-    } else {
-      try {
-        const screenStream = await navigator.mediaDevices.getDisplayMedia({ video: true });
-        const screenTrack = screenStream.getVideoTracks()[0];
-        Object.values(_vcState.calls).forEach(call => {
-          const sender = call.peerConnection?.getSenders().find(s => s.track?.kind === 'video');
-          if (sender) sender.replaceTrack(screenTrack);
-        });
-        screenTrack.onended = () => setScreenSharing(false);
-        setScreenSharing(true);
-      } catch(_) {}
-    }
-  }
-
-  // ── Mute all students (teacher) ───────────────────────────────────────
-  function muteAllStudents() {
-    try {
-      if (wsSend) wsSend({ type: 'vc_mute_all', session_code: sessionCode });
-    } catch(_) {}
-    // We can't force-mute remote peers in WebRTC (by design), but we broadcast the signal
-    // and a well-behaved client would react. In a real system this would use data channels.
-  }
-
-  // ── Kick participant (teacher) ────────────────────────────────────────
-  function kickParticipant(peerId) {
-    const call = _vcState.calls[peerId];
-    if (call) { try { call.close(); } catch(_) {} }
-    delete _vcState.calls[peerId];
-    delete _vcState.participants[peerId];
-    try {
-      if (wsSend) wsSend({ type: 'vc_kick', target_peer: peerId, session_code: sessionCode });
-    } catch(_) {}
-    _vcNotify();
-  }
-
-  // ── Local video ref ───────────────────────────────────────────────────
-  const localVideoRef = React.useRef(null);
-  React.useEffect(() => {
-    if (localVideoRef.current && _vcState.localStream) {
-      localVideoRef.current.srcObject = _vcState.localStream;
-    }
-  }, [joined, _vcState.localStream]);
-
-  // ── Cleanup on unmount ────────────────────────────────────────────────
-  // We do NOT auto-leave on unmount — that's the key design: VC persists across navigation
-
-  // ── Render: not-joined lobby ──────────────────────────────────────────
-  if (!joined) {
-    return React.createElement('div', { className: 'vc-root' },
-      React.createElement('div', { className: 'vc-waiting' },
-        React.createElement('div', { className: 'vc-waiting-icon' }, '🎥'),
-        React.createElement('h3', null, isTeacher ? 'Start Live Class' : 'Join Live Class'),
-        React.createElement('p', null,
-          isTeacher
-            ? 'Start a video session for your class. Students can join via the "Live Class" tab while continuing other work.'
-            : 'Join your teacher\'s live video session. You can multitask — the call stays active while you solve tasks, chat, or browse other sections.'
-        ),
-        error && React.createElement('div', { className: 'card', style: { borderColor: 'var(--red)', color: 'var(--red)', padding: '10px 16px', fontSize: '0.85rem' } }, error),
-        React.createElement('button', {
-          className: 'btn btn-primary btn-lg',
-          onClick: joinRoom,
-          disabled: connecting
-        }, connecting ? '⏳ Connecting…' : (isTeacher ? '🎬 Start Live Class' : '📹 Join Live Class')),
-        React.createElement('p', { style: { fontSize: '0.75rem', color: 'var(--text3)' } },
-          '🔒 Peer-to-peer · Camera & mic required · Session: ', sessionCode
-        )
-      )
-    );
-  }
-
-  // ── Render: in-call ────────────────────────────────────────────────────
-  const allParticipants = [
-    {
-      id: 'local',
-      name: localName,
-      stream: _vcState.localStream,
-      micOn,
-      camOn,
-      isTeacher,
-      isLocal: true,
-    },
-    ...Object.entries(participants).map(([id, p]) => ({ id, ...p, isLocal: false }))
-  ];
-
-  return React.createElement('div', { className: 'vc-root' },
-    // Header
-    React.createElement('div', { className: 'vc-header' },
-      React.createElement('div', { className: 'vc-live-dot' }),
-      React.createElement('h2', null, '🎥 Live Class'),
-      React.createElement('span', { className: 'vc-status-text' },
-        `${allParticipants.length} participant${allParticipants.length !== 1 ? 's' : ''} · Session ${sessionCode}`
-      ),
-      React.createElement('div', { className: 'vc-header-actions' },
-        React.createElement('span', {
-          className: 'vc-connection-state connected'
-        }, '● Connected'),
-        isTeacher && React.createElement('button', {
-          className: 'btn btn-warn btn-sm vc-mute-all-btn',
-          onClick: muteAllStudents,
-          title: 'Request all students to mute'
-        }, '🔇 Mute All'),
-        React.createElement('button', {
-          className: 'btn btn-ghost btn-sm',
-          onClick: () => setSidebarOpen(o => !o)
-        }, sidebarOpen ? '◀ Participants' : '▶ Participants')
-      )
-    ),
-
-    // Body
-    React.createElement('div', { className: 'vc-body' },
-      // Grid of video tiles
-      React.createElement('div', { className: 'vc-grid-area' },
-        React.createElement('div', { className: 'vc-grid' },
-          allParticipants.map(p =>
-            React.createElement(VCTile, {
-              key: p.id,
-              name: p.name,
-              stream: p.stream,
-              isMuted: !p.micOn,
-              isCamOff: !p.camOn,
-              isLocal: p.isLocal,
-              isSpeaking: false,
-              isTeacher: p.isTeacher,
-            })
-          )
-        )
-      ),
-
-      // Sidebar
-      sidebarOpen && React.createElement('div', { className: 'vc-sidebar' },
-        React.createElement('div', { className: 'vc-sidebar-header' },
-          React.createElement('span', null, `👥 Participants (${allParticipants.length})`),
-        ),
-        React.createElement('div', { className: 'vc-sidebar-body' },
-          allParticipants.map(p =>
-            React.createElement(VCParticipantRow, {
-              key: p.id,
-              name: p.name,
-              micOn: p.isLocal ? micOn : (p.micOn !== false),
-              camOn: p.isLocal ? camOn : (p.camOn !== false),
-              isTeacher: p.isTeacher,
-              isLocal: p.isLocal,
-              amTeacher: isTeacher,
-              onMute: () => kickParticipant(p.id),
-              onKick: () => kickParticipant(p.id),
-            })
-          )
-        )
-      )
-    ),
-
-    // Controls bar
-    React.createElement('div', { className: 'vc-controls' },
-      React.createElement('button', {
-        className: `vc-ctrl-btn${micOn ? '' : ' off'}`,
-        onClick: toggleMic
-      },
-        React.createElement('span', { className: 'vc-ctrl-icon' }, micOn ? '🎤' : '🎤'),
-        micOn ? 'Mute' : 'Unmute'
-      ),
-      React.createElement('button', {
-        className: `vc-ctrl-btn${camOn ? '' : ' off'}`,
-        onClick: toggleCam
-      },
-        React.createElement('span', { className: 'vc-ctrl-icon' }, camOn ? '📷' : '📷'),
-        camOn ? 'Stop Video' : 'Start Video'
-      ),
-      isTeacher && React.createElement('button', {
-        className: `vc-ctrl-btn${screenSharing ? ' off' : ''}`,
-        onClick: toggleScreenShare
-      },
-        React.createElement('span', { className: 'vc-ctrl-icon' }, '🖥️'),
-        screenSharing ? 'Stop Share' : 'Share Screen'
-      ),
-      React.createElement('button', {
-        className: 'vc-ctrl-btn danger',
-        onClick: leaveRoom
-      },
-        React.createElement('span', { className: 'vc-ctrl-icon' }, '📵'),
-        isTeacher ? 'End Class' : 'Leave'
-      )
-    )
-  );
-}
-
-// ── WS bridge: dispatch vc_join events to window so LiveClassVC hears them ──
-// This is called from TeacherShell / StudentTaskView message handlers.
-// We attach to the existing ClassMind WS onMsg pathway by hooking the global event.
-(function patchVCBridge() {
-  const _orig = window._vcBridgePatched;
-  if (_orig) return;
-  window._vcBridgePatched = true;
-  // Override the global WebSocket message handler to also fire vc events
-  const _origAddEventListener = EventTarget.prototype.addEventListener;
-})();
 
 function App() {
   const [route, setRoute] = useState({

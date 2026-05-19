@@ -1539,8 +1539,14 @@ async def join_session(
             "Aap pehle se class me joined hain. (You are already joined in this class)"
         )
 
+    # Check if roll is already active in this session (but with different name or class)
+    # This prevents the same roll number from being used by multiple students
     if roll_n in s.get("active_rolls", set()):
-        raise HTTPException(403, "This roll number is already active")
+        log.warning(
+            "[DUPLICATE_ROLL] Roll %s is already active in session %s",
+            roll_n, session_code
+        )
+        raise HTTPException(403, "This roll number is already in use in this session. (Yah roll number pehle se active hai.)")
 
     # ═ STEP 1: Create student and add to waiting room ═
     student          = new_student(name, anonymous)

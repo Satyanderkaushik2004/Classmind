@@ -1348,111 +1348,241 @@ hr{border:none;border-top:1px solid var(--border);margin:16px 0}
   .motiv-toast{min-width:unset;width:100%}
 }
 
-/* ── Teacher Copilot ── */
+/* ── Teacher Copilot (Premium Redesign) ── */
 .copilot-fab{
   position:fixed;bottom:28px;right:28px;z-index:99999;
-  width:56px;height:56px;border-radius:50%;border:none;cursor:pointer;
-  background:linear-gradient(135deg,var(--accent),var(--accent2));
-  color:#fff;font-size:1.4rem;
-  box-shadow:0 4px 20px rgba(99,102,241,0.5);
+  width:60px;height:60px;border-radius:50%;border:none;cursor:pointer;
+  background:linear-gradient(135deg,#6366f1,#8b5cf6,#a855f7);
+  color:#fff;font-size:1.5rem;
+  box-shadow:0 4px 24px rgba(99,102,241,0.55),0 0 0 1px rgba(139,92,246,0.3);
   display:flex !important;align-items:center;justify-content:center;
-  transition:transform 0.2s,box-shadow 0.2s;
+  transition:transform 0.25s cubic-bezier(0.34,1.56,0.64,1),box-shadow 0.2s;
   visibility:visible !important;opacity:1 !important;
+  /* FIX: overflow:hidden was clipping the badge + pulse rings that extend outside the circle */
+  overflow:visible;
 }
-.copilot-fab:hover{transform:scale(1.08);box-shadow:0 6px 28px rgba(99,102,241,0.65)}
+.copilot-fab::after{
+  content:'';position:absolute;inset:0;border-radius:50%;
+  background:linear-gradient(135deg,rgba(255,255,255,0.2),transparent);
+  /* clip the gloss shine to the circle without hiding overflow on the parent */
+  pointer-events:none;
+}
+.copilot-fab:hover{transform:scale(1.1) translateY(-2px);box-shadow:0 8px 32px rgba(99,102,241,0.7),0 0 0 1px rgba(139,92,246,0.5)}
 .copilot-fab .copilot-pulse{
-  position:absolute;width:56px;height:56px;border-radius:50%;
-  background:rgba(99,102,241,0.35);
-  animation:copilot-ring 2.2s ease-out infinite;
+  position:absolute;width:60px;height:60px;border-radius:50%;
+  background:rgba(99,102,241,0.3);
+  animation:copilot-ring 2.5s ease-out infinite;
+  pointer-events:none;
 }
-@keyframes copilot-ring{0%{transform:scale(1);opacity:0.7}100%{transform:scale(1.65);opacity:0}}
+.copilot-fab .copilot-pulse2{
+  position:absolute;width:60px;height:60px;border-radius:50%;
+  background:rgba(139,92,246,0.2);
+  animation:copilot-ring 2.5s ease-out 1.25s infinite;
+  pointer-events:none;
+}
+@keyframes copilot-ring{0%{transform:scale(1);opacity:0.8}100%{transform:scale(1.8);opacity:0}}
 
+/* Normal window */
 .copilot-window{
-  position:fixed;bottom:96px;right:28px;z-index:99998;
-  width:360px;max-height:560px;
-  background:var(--surface);border:1px solid var(--border);
-  border-radius:18px;box-shadow:0 8px 40px rgba(0,0,0,0.45);
+  position:fixed;bottom:100px;right:28px;z-index:99998;
+  width:390px;height:600px;
+  background:var(--surface);
+  border:1px solid rgba(99,102,241,0.25);
+  border-radius:20px;
+  box-shadow:0 12px 60px rgba(0,0,0,0.5),0 0 0 1px rgba(99,102,241,0.1),inset 0 1px 0 rgba(255,255,255,0.05);
   display:flex;flex-direction:column;overflow:hidden;
-  animation:copilot-open 0.22s cubic-bezier(0.34,1.56,0.64,1);
+  animation:copilot-open 0.28s cubic-bezier(0.34,1.56,0.64,1);
   transform-origin:bottom right;
+  transition:width 0.3s ease,height 0.3s ease,bottom 0.3s ease,right 0.3s ease,border-radius 0.3s ease;
 }
-@keyframes copilot-open{from{transform:scale(0.6);opacity:0}to{transform:scale(1);opacity:1}}
+/* Fullscreen window */
+.copilot-window.fullscreen{
+  position:fixed;inset:0;bottom:0;right:0;z-index:99998;
+  width:100vw !important;height:100vh !important;
+  border-radius:0 !important;
+  animation:none;
+}
+@keyframes copilot-open{from{transform:scale(0.7) translateY(20px);opacity:0}to{transform:scale(1) translateY(0);opacity:1}}
+
+/* Backdrop blur overlay when fullscreen */
+.copilot-window.fullscreen::before{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(135deg,rgba(15,17,23,0.97),rgba(26,29,39,0.99));
+  z-index:-1;
+}
 
 .copilot-header{
   padding:14px 16px;
-  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  background:linear-gradient(135deg,rgba(99,102,241,0.9),rgba(139,92,246,0.9));
+  backdrop-filter:blur(20px);
   display:flex;align-items:center;justify-content:space-between;
   flex-shrink:0;
+  border-bottom:1px solid rgba(255,255,255,0.1);
+  position:relative;overflow:hidden;
 }
-.copilot-header-info{display:flex;align-items:center;gap:10px}
-.copilot-avatar{width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,0.2);
-  display:flex;align-items:center;justify-content:center;font-size:1.1rem}
-.copilot-title{font-weight:700;color:#fff;font-size:0.95rem}
-.copilot-subtitle{font-size:0.72rem;color:rgba(255,255,255,0.75);margin-top:1px}
-.copilot-close{background:none;border:none;color:rgba(255,255,255,0.8);cursor:pointer;
-  font-size:1.1rem;padding:4px;border-radius:6px;transition:background 0.15s}
-.copilot-close:hover{background:rgba(255,255,255,0.15);color:#fff}
+.copilot-header::before{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(90deg,rgba(255,255,255,0.05),transparent,rgba(255,255,255,0.05));
+  pointer-events:none;
+}
+.copilot-header-info{display:flex;align-items:center;gap:10px;position:relative;z-index:1}
+.copilot-avatar{
+  width:38px;height:38px;border-radius:50%;
+  background:rgba(255,255,255,0.15);
+  border:2px solid rgba(255,255,255,0.25);
+  display:flex;align-items:center;justify-content:center;
+  font-size:1.2rem;flex-shrink:0;
+  box-shadow:0 2px 8px rgba(0,0,0,0.2);
+  position:relative;
+}
+.copilot-avatar-dot{
+  position:absolute;bottom:1px;right:1px;
+  width:9px;height:9px;border-radius:50%;
+  background:#22c55e;border:2px solid rgba(99,102,241,0.9);
+}
+.copilot-title{font-weight:700;color:#fff;font-size:0.95rem;letter-spacing:-0.01em}
+.copilot-subtitle{font-size:0.7rem;color:rgba(255,255,255,0.7);margin-top:1px;display:flex;align-items:center;gap:4px}
+.copilot-header-actions{display:flex;align-items:center;gap:4px;position:relative;z-index:1}
+.copilot-hbtn{
+  background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.15);
+  color:rgba(255,255,255,0.85);cursor:pointer;
+  font-size:0.85rem;padding:5px 8px;border-radius:8px;
+  transition:all 0.15s;line-height:1;
+}
+.copilot-hbtn:hover{background:rgba(255,255,255,0.2);color:#fff}
+.copilot-close{background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.15);
+  color:rgba(255,255,255,0.85);cursor:pointer;
+  font-size:0.9rem;padding:5px 8px;border-radius:8px;transition:all 0.15s;}
+.copilot-close:hover{background:rgba(239,68,68,0.5);color:#fff;border-color:rgba(239,68,68,0.4)}
+
+/* Mode bar */
+.copilot-modebar{
+  display:flex;gap:0;border-bottom:1px solid var(--border);flex-shrink:0;
+  background:var(--surface2);overflow-x:auto;scrollbar-width:none;
+}
+.copilot-modebar::-webkit-scrollbar{display:none}
+.copilot-mode-btn{
+  padding:8px 14px;font-size:0.76rem;font-weight:600;
+  border:none;background:transparent;color:var(--text3);cursor:pointer;
+  border-bottom:2px solid transparent;transition:all 0.15s;
+  white-space:nowrap;font-family:inherit;letter-spacing:0.01em;
+}
+.copilot-mode-btn:hover{color:var(--text2);background:rgba(99,102,241,0.05)}
+.copilot-mode-btn.active{color:var(--accent);border-bottom-color:var(--accent);background:transparent}
 
 .copilot-chips{
-  padding:10px 12px 4px;display:flex;gap:6px;flex-wrap:wrap;flex-shrink:0;
+  padding:10px 12px 8px;display:flex;gap:6px;flex-wrap:wrap;flex-shrink:0;
   border-bottom:1px solid var(--border);
 }
 .copilot-chip{
-  padding:4px 10px;border-radius:20px;border:1px solid var(--border);
-  background:var(--surface2);color:var(--text2);font-size:0.75rem;cursor:pointer;
-  transition:all 0.15s;white-space:nowrap;
+  padding:5px 12px;border-radius:20px;border:1px solid var(--border);
+  background:var(--surface2);color:var(--text2);font-size:0.74rem;cursor:pointer;
+  transition:all 0.15s;white-space:nowrap;font-family:inherit;
+  display:flex;align-items:center;gap:4px;
 }
-.copilot-chip:hover{border-color:var(--accent);color:var(--accent);background:rgba(99,102,241,0.08)}
+.copilot-chip:hover{border-color:var(--accent);color:var(--accent);background:rgba(99,102,241,0.08);transform:translateY(-1px)}
+.copilot-chip.action-chip{border-color:rgba(99,102,241,0.4);background:rgba(99,102,241,0.06)}
 
 .copilot-messages{
-  flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:10px;
+  flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:12px;
+  scroll-behavior:smooth;
 }
-.copilot-msg{display:flex;flex-direction:column;gap:2px;max-width:88%}
+.copilot-messages::-webkit-scrollbar{width:4px}
+.copilot-messages::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+.copilot-msg{display:flex;flex-direction:column;gap:3px;max-width:90%}
 .copilot-msg.user{align-self:flex-end;align-items:flex-end}
 .copilot-msg.bot{align-self:flex-start;align-items:flex-start}
+.copilot-msg.system{align-self:center;align-items:center;max-width:100%}
 .copilot-bubble{
-  padding:9px 13px;border-radius:14px;font-size:0.845rem;line-height:1.5;
-  word-break:break-word;
+  padding:10px 14px;border-radius:16px;font-size:0.855rem;line-height:1.6;
+  word-break:break-word;position:relative;
 }
+.copilot-bubble a{color:var(--accent);text-decoration:underline}
 .copilot-msg.user .copilot-bubble{
-  background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;
+  background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;
   border-bottom-right-radius:4px;
+  box-shadow:0 2px 12px rgba(99,102,241,0.35);
 }
 .copilot-msg.bot .copilot-bubble{
   background:var(--surface2);color:var(--text);
   border-bottom-left-radius:4px;border:1px solid var(--border);
+  box-shadow:0 1px 4px rgba(0,0,0,0.15);
 }
-.copilot-ts{font-size:0.68rem;color:var(--text3);padding:0 4px}
-.copilot-typing{display:flex;align-items:center;gap:4px;padding:10px 13px;
-  background:var(--surface2);border-radius:14px;border-bottom-left-radius:4px;
+.copilot-msg.system .copilot-bubble{
+  background:rgba(99,102,241,0.08);border:1px solid rgba(99,102,241,0.2);
+  color:var(--text2);border-radius:10px;font-size:0.78rem;padding:6px 12px;
+  text-align:center;
+}
+.copilot-ts{font-size:0.66rem;color:var(--text3);padding:0 4px}
+.copilot-thinking{display:flex;align-items:center;gap:8px;padding:10px 14px;
+  background:var(--surface2);border-radius:16px;border-bottom-left-radius:4px;
+  border:1px solid var(--border);width:fit-content;color:var(--text3);font-size:0.78rem;}
+.copilot-thinking-icon{font-size:0.9rem;animation:copilot-spin 1.5s linear infinite}
+@keyframes copilot-spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+.copilot-typing{display:flex;align-items:center;gap:4px;padding:11px 14px;
+  background:var(--surface2);border-radius:16px;border-bottom-left-radius:4px;
   border:1px solid var(--border);width:fit-content;}
-.copilot-dot{width:7px;height:7px;border-radius:50%;background:var(--text3);
-  animation:copilot-bounce 1.2s infinite}
-.copilot-dot:nth-child(2){animation-delay:0.2s}
-.copilot-dot:nth-child(3){animation-delay:0.4s}
-@keyframes copilot-bounce{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-6px)}}
+.copilot-dot{width:7px;height:7px;border-radius:50%;background:var(--accent);
+  animation:copilot-bounce 1.3s infinite;opacity:0.7}
+.copilot-dot:nth-child(2){animation-delay:0.18s}
+.copilot-dot:nth-child(3){animation-delay:0.36s}
+@keyframes copilot-bounce{0%,60%,100%{transform:translateY(0);opacity:0.7}30%{transform:translateY(-7px);opacity:1}}
+
+/* Action buttons in messages */
+.copilot-action-btns{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.copilot-action-btn{
+  padding:4px 10px;border-radius:8px;border:1px solid rgba(99,102,241,0.3);
+  background:rgba(99,102,241,0.06);color:var(--accent);
+  font-size:0.75rem;cursor:pointer;transition:all 0.15s;font-family:inherit;
+}
+.copilot-action-btn:hover{background:rgba(99,102,241,0.15);border-color:var(--accent)}
 
 .copilot-input-row{
   display:flex;gap:8px;padding:10px 12px;border-top:1px solid var(--border);flex-shrink:0;
+  align-items:flex-end;background:var(--surface);
 }
 .copilot-input{
   flex:1;background:var(--surface2);border:1px solid var(--border);
-  border-radius:20px;padding:8px 14px;color:var(--text);font-size:0.85rem;
-  font-family:inherit;outline:none;transition:border 0.2s;
+  border-radius:20px;padding:9px 14px;color:var(--text);font-size:0.855rem;
+  font-family:inherit;outline:none;transition:border 0.2s,box-shadow 0.2s;
+  resize:none;max-height:120px;overflow-y:auto;line-height:1.4;
 }
-.copilot-input:focus{border-color:var(--accent)}
+.copilot-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(99,102,241,0.12)}
+.copilot-input::placeholder{color:var(--text3)}
+.copilot-input-btns{display:flex;gap:6px;align-items:center;flex-shrink:0}
+.copilot-mic{
+  width:34px;height:34px;border-radius:50%;border:1px solid var(--border);
+  background:var(--surface2);color:var(--text2);
+  font-size:0.85rem;display:flex;align-items:center;justify-content:center;
+  cursor:pointer;transition:all 0.2s;flex-shrink:0;
+}
+.copilot-mic:hover{background:var(--surface3);color:var(--text);border-color:var(--accent)}
+.copilot-mic.listening{background:rgba(239,68,68,0.15);border-color:var(--red);color:var(--red);animation:mic-pulse 1s ease-in-out infinite}
+@keyframes mic-pulse{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,0.4)}50%{box-shadow:0 0 0 6px rgba(239,68,68,0)}}
 .copilot-send{
   width:36px;height:36px;border-radius:50%;border:none;cursor:pointer;
-  background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;
-  font-size:0.9rem;display:flex;align-items:center;justify-content:center;
-  flex-shrink:0;transition:transform 0.15s;
+  background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;
+  font-size:0.95rem;display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;transition:transform 0.15s,box-shadow 0.15s;
+  box-shadow:0 2px 8px rgba(99,102,241,0.4);
 }
-.copilot-send:hover{transform:scale(1.1)}
-.copilot-send:disabled{opacity:0.4;cursor:not-allowed;transform:none}
+.copilot-send:hover:not(:disabled){transform:scale(1.1);box-shadow:0 4px 14px rgba(99,102,241,0.6)}
+.copilot-send:disabled{opacity:0.35;cursor:not-allowed;transform:none;box-shadow:none}
+
+/* API mode indicator */
+.copilot-ai-badge{
+  display:inline-flex;align-items:center;gap:4px;
+  background:linear-gradient(135deg,rgba(99,102,241,0.15),rgba(139,92,246,0.15));
+  border:1px solid rgba(99,102,241,0.3);
+  border-radius:20px;padding:2px 8px;font-size:0.65rem;font-weight:700;
+  color:var(--accent);letter-spacing:0.04em;text-transform:uppercase;
+}
+.copilot-ai-dot{width:5px;height:5px;border-radius:50%;background:var(--green);animation:blink 1.5s infinite}
 
 @media(max-width:600px){
-  .copilot-window{width:calc(100vw - 24px);right:12px;bottom:80px}
+  .copilot-window{width:calc(100vw - 20px);right:10px;bottom:80px;height:75vh}
   .copilot-fab{bottom:16px;right:16px}
+  .copilot-window.fullscreen{height:100dvh}
 }
 /* ── Guided Tour ── */
 .tour-overlay{
@@ -1519,13 +1649,17 @@ hr{border:none;border-top:1px solid var(--border);margin:16px 0}
 
 /* ── Copilot badge (new) ── */
 .copilot-badge{
-  position:absolute;top:-4px;right:-4px;
-  width:18px;height:18px;border-radius:50%;
+  position:absolute;top:-5px;right:-5px;
+  min-width:20px;height:20px;border-radius:10px;
   background:var(--red);color:#fff;
   font-size:0.65rem;font-weight:700;
   display:flex;align-items:center;justify-content:center;
+  padding:0 5px;
   border:2px solid var(--bg);
+  z-index:2;
+  box-shadow:0 2px 6px rgba(239,68,68,0.5);
   animation:blink 1.5s infinite;
+  pointer-events:none;
 }
 
 /* ── Auto Intervention Popup ── */
@@ -1693,53 +1827,126 @@ hr{border:none;border-top:1px solid var(--border);margin:16px 0}
   vertical-align:middle;
 }
 
-/* ── 5. Student Copilot (light) ── */
+/* ── 5. Student Copilot (Premium) ── */
 .student-copilot-fab{
   position:fixed;bottom:28px;right:28px;left:auto;z-index:99999;
-  width:52px;height:52px;border-radius:50%;border:none;cursor:pointer;
-  background:linear-gradient(135deg,#10b981,#0ea5e9);
-  color:#fff;font-size:1.3rem;
-  box-shadow:0 4px 20px rgba(16,185,129,0.55),0 0 0 1px rgba(16,185,129,0.2);
+  width:56px;height:56px;border-radius:50%;border:none;cursor:pointer;
+  background:linear-gradient(135deg,#0ea5e9,#10b981,#06b6d4);
+  color:#fff;font-size:1.35rem;
+  box-shadow:0 4px 22px rgba(14,165,233,0.55),0 0 0 1px rgba(16,185,129,0.2);
   display:flex !important;align-items:center;justify-content:center;
-  transition:transform 0.2s,box-shadow 0.2s;
-  visibility:visible !important;opacity:1 !important;
+  transition:transform 0.25s cubic-bezier(0.34,1.56,0.64,1),box-shadow 0.2s;
+  visibility:visible !important;opacity:1 !important;overflow:hidden;
 }
-.student-copilot-fab:hover{transform:scale(1.1) translateY(-2px);box-shadow:0 8px 28px rgba(16,185,129,0.7)}
+.student-copilot-fab::before{
+  content:'';position:absolute;inset:0;border-radius:50%;
+  background:linear-gradient(135deg,rgba(255,255,255,0.2),transparent);
+  pointer-events:none;
+}
+.student-copilot-fab:hover{transform:scale(1.1) translateY(-2px);box-shadow:0 8px 30px rgba(14,165,233,0.7)}
+.student-copilot-fab .s-pulse{
+  position:absolute;width:56px;height:56px;border-radius:50%;
+  background:rgba(14,165,233,0.3);animation:copilot-ring 2.5s ease-out infinite;pointer-events:none;
+}
 .student-copilot-panel{
   position:fixed;bottom:96px;right:28px;left:auto;z-index:99998;
-  width:340px;background:var(--surface);border:1px solid var(--border);
-  border-radius:16px;box-shadow:0 12px 48px rgba(0,0,0,0.55);
-  overflow:hidden;animation:copilot-open 0.22s cubic-bezier(0.34,1.56,0.64,1);
+  width:360px;
+  background:rgba(10,15,28,0.97);
+  border:1px solid rgba(14,165,233,0.2);
+  border-radius:20px;
+  box-shadow:0 20px 70px rgba(0,0,0,0.65),inset 0 1px 0 rgba(255,255,255,0.04);
+  overflow:hidden;
+  animation:copilot-open 0.28s cubic-bezier(0.34,1.56,0.64,1);
   transform-origin:bottom right;
+  backdrop-filter:blur(20px);
+  display:flex;flex-direction:column;max-height:580px;
 }
 .student-copilot-header{
-  padding:12px 16px;display:flex;align-items:center;gap:10px;
-  background:linear-gradient(135deg,#10b981,#0ea5e9);
+  padding:13px 16px;display:flex;align-items:center;gap:10px;flex-shrink:0;
+  background:linear-gradient(135deg,rgba(14,165,233,0.85),rgba(16,185,129,0.85));
+  border-bottom:1px solid rgba(255,255,255,0.08);
+  position:relative;overflow:hidden;
 }
+.student-copilot-header::before{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(45deg,transparent,rgba(255,255,255,0.06),transparent);
+  pointer-events:none;
+}
+.sc-avatar{width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.15);
+  border:2px solid rgba(255,255,255,0.25);display:flex;align-items:center;justify-content:center;
+  font-size:1.15rem;flex-shrink:0;position:relative;}
+.sc-avatar-dot{position:absolute;bottom:0;right:0;width:9px;height:9px;border-radius:50%;
+  background:#22c55e;border:2px solid rgba(14,165,233,0.9);}
 .student-copilot-title{font-weight:700;color:#fff;font-size:0.9rem}
-.student-copilot-sub{font-size:0.7rem;color:rgba(255,255,255,0.75);margin-top:1px}
-.student-copilot-close{margin-left:auto;background:none;border:none;color:rgba(255,255,255,0.8);
-  cursor:pointer;font-size:1.1rem;padding:4px;border-radius:6px;transition:background 0.15s}
-.student-copilot-close:hover{background:rgba(255,255,255,0.15);color:#fff}
-.student-copilot-actions{padding:12px;display:flex;flex-direction:column;gap:6px}
-.student-copilot-action{
-  display:flex;align-items:center;gap:10px;padding:10px 12px;
-  border-radius:10px;border:1px solid var(--border);background:var(--surface2);
-  cursor:pointer;font-size:0.85rem;color:var(--text);transition:all 0.15s;text-align:left;
-  font-family:inherit;width:100%;
+.student-copilot-sub{font-size:0.68rem;color:rgba(255,255,255,0.65);margin-top:1px}
+.student-copilot-close{margin-left:auto;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.15);
+  color:rgba(255,255,255,0.85);cursor:pointer;font-size:0.9rem;padding:5px 8px;border-radius:8px;
+  transition:all 0.15s;position:relative;z-index:1;}
+.student-copilot-close:hover{background:rgba(239,68,68,0.4);border-color:rgba(239,68,68,0.4);color:#fff}
+.sc-quick-btns{
+  padding:10px 12px;display:flex;gap:6px;flex-wrap:wrap;flex-shrink:0;
+  border-bottom:1px solid rgba(255,255,255,0.06);
 }
-.student-copilot-action:hover{border-color:#10b981;background:rgba(16,185,129,0.08);color:#10b981}
-.student-copilot-response{
-  padding:0 12px 12px;font-size:0.875rem;line-height:1.6;color:var(--text2);
-  background:rgba(16,185,129,0.06);border:1px solid rgba(16,185,129,0.2);
-  border-radius:10px;margin:0 12px 12px;
-  animation:task-fade-in 0.25s ease;
+.sc-quick-btn{
+  padding:5px 11px;border-radius:10px;border:1px solid rgba(255,255,255,0.1);
+  background:rgba(255,255,255,0.05);color:rgba(241,245,249,0.75);
+  font-size:0.74rem;cursor:pointer;transition:all 0.15s;font-family:inherit;
+  display:flex;align-items:center;gap:5px;
 }
-.student-copilot-no-task{
-  padding:20px;text-align:center;color:var(--text3);font-size:0.85rem;
+.sc-quick-btn:hover{border-color:rgba(14,165,233,0.5);background:rgba(14,165,233,0.1);color:#e0f2fe;transform:translateY(-1px)}
+.sc-messages{
+  flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:10px;
+  min-height:0;
 }
+.sc-messages::-webkit-scrollbar{width:3px}
+.sc-messages::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);border-radius:2px}
+.sc-msg{display:flex;flex-direction:column;gap:3px;max-width:90%}
+.sc-msg.user{align-self:flex-end;align-items:flex-end}
+.sc-msg.bot{align-self:flex-start;align-items:flex-start}
+.sc-bubble{
+  padding:9px 13px;border-radius:15px;font-size:0.83rem;line-height:1.6;
+  word-break:break-word;
+}
+.sc-msg.user .sc-bubble{
+  background:linear-gradient(135deg,#0ea5e9,#0891b2);color:#fff;
+  border-bottom-right-radius:4px;box-shadow:0 2px 10px rgba(14,165,233,0.3);
+}
+.sc-msg.bot .sc-bubble{
+  background:rgba(255,255,255,0.06);color:rgba(241,245,249,0.9);
+  border-bottom-left-radius:4px;border:1px solid rgba(255,255,255,0.1);
+}
+.sc-ts{font-size:0.64rem;color:rgba(255,255,255,0.3);padding:0 4px}
+.sc-typing{display:flex;align-items:center;gap:4px;padding:10px 13px;
+  background:rgba(255,255,255,0.06);border-radius:15px;border-bottom-left-radius:4px;
+  border:1px solid rgba(255,255,255,0.1);width:fit-content;}
+.sc-dot{width:6px;height:6px;border-radius:50%;background:#0ea5e9;
+  animation:copilot-bounce 1.3s infinite;opacity:0.7}
+.sc-dot:nth-child(2){animation-delay:0.18s}
+.sc-dot:nth-child(3){animation-delay:0.36s}
+.sc-input-row{
+  display:flex;gap:8px;padding:10px 12px;flex-shrink:0;
+  border-top:1px solid rgba(255,255,255,0.07);align-items:center;
+}
+.sc-input{
+  flex:1;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);
+  border-radius:20px;padding:9px 14px;color:rgba(241,245,249,0.9);font-size:0.83rem;
+  font-family:inherit;outline:none;transition:border 0.2s,box-shadow 0.2s;
+}
+.sc-input:focus{border-color:rgba(14,165,233,0.5);box-shadow:0 0 0 3px rgba(14,165,233,0.1)}
+.sc-input::placeholder{color:rgba(255,255,255,0.3)}
+.sc-send{
+  width:34px;height:34px;border-radius:50%;border:none;cursor:pointer;
+  background:linear-gradient(135deg,#0ea5e9,#10b981);color:#fff;
+  font-size:0.9rem;display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;transition:transform 0.15s,box-shadow 0.15s;
+  box-shadow:0 2px 8px rgba(14,165,233,0.4);
+}
+.sc-send:hover:not(:disabled){transform:scale(1.1);box-shadow:0 4px 14px rgba(14,165,233,0.6)}
+.sc-send:disabled{opacity:0.35;cursor:not-allowed;transform:none}
+.sc-empty{text-align:center;color:rgba(255,255,255,0.25);font-size:0.8rem;padding:24px 12px}
+.student-copilot-no-task{padding:20px;text-align:center;color:rgba(255,255,255,0.35);font-size:0.85rem}
 @media(max-width:600px){
-  .student-copilot-panel{width:calc(100vw - 24px);right:12px;left:auto;bottom:80px}
+  .student-copilot-panel{width:calc(100vw - 20px);right:10px;left:auto;bottom:80px}
   .student-copilot-fab{bottom:16px;right:16px;left:auto}
 }
 
@@ -1811,12 +2018,9 @@ hr{border:none;border-top:1px solid var(--border);margin:16px 0}
 .quiz-nav-dot:hover{transform:scale(1.1)}
 
 /* ── Copilot response highlight ── */
-.student-copilot-response strong{color:var(--text)}
-.student-copilot-response{transition:opacity 0.2s ease;}
+/* removed legacy student copilot override */
 
-/* ── Copilot v2: wider panel + chat ── */
-.student-copilot-panel{width:340px !important;bottom:96px !important;right:28px !important;left:auto !important;transform-origin:bottom right !important;}
-@media(max-width:600px){.student-copilot-panel{width:calc(100vw - 20px) !important;right:10px !important;left:auto !important;}}
+/* ── Copilot v2: wider panel + chat ── *//* removed legacy student copilot override */
 
 /* ═══════════════════════════════════════════════════════════════
    PREMIUM STUDENT UI — REBUILT FROM SCRATCH
@@ -5529,6 +5733,86 @@ const API = window.location.origin;
 // WebSocket base — auto-selects ws:// (http) or wss:// (https)
 const WS_BASE = (window.location.protocol === "https:" ? "wss://" : "ws://") + window.location.host;
 
+// ═══════════════════════════════════════════════════════════════════
+//  GLOBAL SESSION STORE — Singleton. Lives outside React render cycle.
+//  Never reset on component remount. Only cleared on explicit session end.
+// ═══════════════════════════════════════════════════════════════════
+const SESSION_STORE = (() => {
+  const _store = {
+    // ── WebSocket singletons (keyed by URL) ──────────────────────
+    _sockets: {},         // url -> WebSocket instance
+    _socketHandlers: {},  // url -> Set<handler>
+
+    /** Get or create a stable WebSocket. Reuses existing if open/connecting. */
+    getSocket(url, onMessage, onOpen, onClose) {
+      // If existing socket is open or connecting — reuse it
+      if (this._sockets[url] && this._sockets[url].readyState <= 1) {
+        // Register this handler too
+        if (!this._socketHandlers[url]) this._socketHandlers[url] = new Set();
+        if (onMessage) this._socketHandlers[url].add(onMessage);
+        return this._sockets[url];
+      }
+      // Otherwise create a new one
+      const ws = new WebSocket(url);
+      this._sockets[url] = ws;
+      this._socketHandlers[url] = new Set();
+      if (onMessage) this._socketHandlers[url].add(onMessage);
+      ws.onmessage = (e) => {
+        let msg; try { msg = JSON.parse(e.data); } catch { return; }
+        this._socketHandlers[url]?.forEach(h => { try { h(msg); } catch {} });
+      };
+      ws.onopen  = (e) => { if (onOpen)  onOpen(e);  };
+      ws.onclose = (e) => { if (onClose) onClose(e); delete this._sockets[url]; };
+      ws.onerror = (e) => { console.error('[CM WS error]', url, e); };
+      return ws;
+    },
+
+    /** Remove a specific message handler (e.g. when component unmounts). */
+    removeHandler(url, handler) {
+      this._socketHandlers[url]?.delete(handler);
+    },
+
+    /** Explicitly close a socket (call only on session end / logout). */
+    closeSocket(url) {
+      const ws = this._sockets[url];
+      if (ws) { ws.close(); delete this._sockets[url]; }
+      delete this._socketHandlers[url];
+    },
+
+    // ── Live test session state ──────────────────────────────────
+    testSession: {
+      active:          false,
+      tasks:           [],
+      currentIndex:    0,
+      answers:         {},       // taskId -> answer value
+      markedQuestions: {},       // taskId -> bool
+      codingContent:   {},       // taskId -> code string
+      timeLeft:        0,
+      durationSecs:    0,
+      startTime:       null,
+      submitted:       false,
+    },
+
+    // ── Teacher-side test management state ───────────────────────
+    teacherTestSession: {
+      running:         false,
+      tasks:           [],
+      startTime:       null,
+      submissions:     {},
+    },
+
+    // ── WebRTC / VC state (already in _vcState, kept for reference) ─
+    // _vcState is the authoritative singleton; this is metadata only
+    vcMeta: {
+      active:     false,
+      micOn:      true,
+      camOn:      true,
+      roomId:     null,
+    },
+  };
+  return _store;
+})();
+
 // ── GLOBAL: Context ──
 const AppCtx = createContext(null);
 const ADMIN_EMAILS = ["classmind7@gmail.com"];
@@ -5722,93 +6006,117 @@ async function sendTaskRequest(sessionCode, taskId, targetType = 'all', targetId
 }
 
 // ── GLOBAL: WebSocket Hook (all ws: uses ${WS_BASE}/ws/... pattern) ──
+// ── useWS — Singleton-aware WebSocket hook ───────────────────────
+// KEY FIX: Uses SESSION_STORE._sockets so that re-mounting a component
+// that uses the same URL never creates a duplicate connection.
+// The socket stays alive in SESSION_STORE; only the message handler
+// is swapped out. Cleanup only closes the socket on intentional
+// session-end (via SESSION_STORE.closeSocket), NOT on component unmount.
 function useWS(url, onMsg) {
   const ws = useRef(null);
   const onMsgRef = useRef(onMsg);
-  const retryRef = useRef(0); // reconnection attempt counter
-  useEffect(() => {
-    onMsgRef.current = onMsg;
-  }, [onMsg]);
+  const retryRef = useRef(0);
+  const aliveRef = useRef(true);
+
+  // Always keep handler ref current
+  useEffect(() => { onMsgRef.current = onMsg; }, [onMsg]);
+
   useEffect(() => {
     if (!url) return;
-    let alive = true;
+    aliveRef.current = true;
     let reconnectTimer;
+
     function connect() {
-      if (!alive) return;
-      try {
-        ws.current = new WebSocket(url);
-      } catch {
-        scheduleReconnect();
+      if (!aliveRef.current) return;
+
+      // ── Check SESSION_STORE for a live socket first ───────────
+      const existing = SESSION_STORE._sockets[url];
+      if (existing && existing.readyState <= WebSocket.OPEN) {
+        ws.current = existing;
+        // Register our handler with the multiplexer
+        if (!SESSION_STORE._socketHandlers[url]) SESSION_STORE._socketHandlers[url] = new Set();
+        SESSION_STORE._socketHandlers[url].add(handler);
+        retryRef.current = 0;
         return;
       }
-      ws.current.onopen = () => {
-        retryRef.current = 0; // reset backoff on successful connect
-        try {
-          ws.current.send(JSON.stringify({
-            type: 'ping'
-          }));
-        } catch {}
+
+      // ── Create new socket and register in SESSION_STORE ───────
+      let sock;
+      try { sock = new WebSocket(url); } catch { scheduleReconnect(); return; }
+
+      SESSION_STORE._sockets[url] = sock;
+      if (!SESSION_STORE._socketHandlers[url]) SESSION_STORE._socketHandlers[url] = new Set();
+      SESSION_STORE._socketHandlers[url].add(handler);
+      ws.current = sock;
+
+      sock.onopen = () => {
+        retryRef.current = 0;
+        try { sock.send(JSON.stringify({ type: 'ping' })); } catch {}
       };
-      ws.current.onmessage = e => {
-        try {
-          const data = JSON.parse(e.data);
-          // Send delivery acknowledgement for new_task messages
-          if (data.type === 'new_task' && data.delivery_id && ws.current?.readyState === WebSocket.OPEN) {
-            try {
-              ws.current.send(JSON.stringify({
-                type: 'task_received',
-                delivery_id: data.delivery_id,
-                task_id: data.task_id || data.task?.id || ''
-              }));
-            } catch {}
-          }
-          onMsgRef.current(data);
-        } catch {}
+
+      // Single onmessage fan-out to all registered handlers
+      sock.onmessage = e => {
+        let data; try { data = JSON.parse(e.data); } catch { return; }
+        // Send delivery ack for new_task
+        if (data.type === 'new_task' && data.delivery_id && sock.readyState === WebSocket.OPEN) {
+          try {
+            sock.send(JSON.stringify({
+              type: 'task_received',
+              delivery_id: data.delivery_id,
+              task_id: data.task_id || data.task?.id || ''
+            }));
+          } catch {}
+        }
+        SESSION_STORE._socketHandlers[url]?.forEach(h => { try { h(data); } catch {} });
       };
-      ws.current.onclose = () => {
-        if (alive) scheduleReconnect();
+
+      sock.onclose = () => {
+        SESSION_STORE._socketHandlers[url]?.delete(handler);
+        delete SESSION_STORE._sockets[url];
+        if (aliveRef.current) scheduleReconnect();
       };
-      ws.current.onerror = () => {
-        try {
-          ws.current.close();
-        } catch {}
-      };
+
+      sock.onerror = () => { try { sock.close(); } catch {} };
     }
+
+    function handler(data) { onMsgRef.current?.(data); }
+
     function scheduleReconnect() {
-      if (!alive) return;
-      // Exponential backoff: 1s, 2s, 4s … capped at 8s
+      if (!aliveRef.current) return;
       const delay = Math.min(1000 * Math.pow(2, retryRef.current), 8000);
       retryRef.current = Math.min(retryRef.current + 1, 4);
       reconnectTimer = setTimeout(connect, delay);
     }
+
     connect();
+
     const heartbeat = setInterval(() => {
       if (ws.current?.readyState === WebSocket.OPEN) {
-        try {
-          ws.current.send(JSON.stringify({
-            type: 'heartbeat'
-          }));
-        } catch {}
+        try { ws.current.send(JSON.stringify({ type: 'heartbeat' })); } catch {}
       }
     }, 15000);
+
     return () => {
-      alive = false;
+      // ── Component unmount cleanup ─────────────────────────────
+      // DO NOT close the socket — it must survive navigation.
+      // Only de-register our handler and stop the heartbeat.
       clearTimeout(reconnectTimer);
       clearInterval(heartbeat);
-      try {
-        ws.current?.close();
-      } catch {}
+      SESSION_STORE._socketHandlers[url]?.delete(handler);
+      // Note: ws.current intentionally NOT closed here.
+      // Call SESSION_STORE.closeSocket(url) explicitly on logout / session end.
     };
   }, [url]);
+
   const send = useCallback(data => {
     if (ws.current?.readyState === WebSocket.OPEN) {
-      try {
-        ws.current.send(JSON.stringify(data));
-      } catch {}
+      try { ws.current.send(JSON.stringify(data)); } catch {}
     }
   }, []);
+
   return send;
 }
+
 
 
 
@@ -7275,6 +7583,14 @@ function TeacherShell({
       });
       setSessionStatus(action === 'start' ? 'active' : action === 'pause' ? 'paused' : action === 'resume' ? 'active' : 'ended');
       add(`Session ${action}ed`, 'success');
+      // ── On explicit session end, clean up live state ───────────
+      if (action === 'end') {
+        SESSION_STORE.teacherTestSession = { running: false, tasks: [], startTime: null, durationSecs: 0, submissions: {} };
+        SESSION_STORE.vcMeta = { active: false, micOn: true, camOn: true, roomId: null };
+        // Close the teacher WebSocket so it reconnects fresh on next session
+        SESSION_STORE.closeSocket(`${WS_BASE}/ws/teacher/${sessionCode}`);
+        console.log('[ClassMind] Session ended — live state cleared.');
+      }
     } catch (e) {
       add(e.message, 'error');
     }
@@ -7452,16 +7768,36 @@ function TeacherShell({
     title: "My Profile"
   }, (teacherName || '?')[0].toUpperCase())))), /*#__PURE__*/React.createElement("div", {
     className: "main-content"
-  }, page === 'dashboard' && /*#__PURE__*/React.createElement(TeacherDashboard, _extends({}, sharedProps, {
+  },
+  /* ── Conditionally-rendered pages (lightweight, no live state) ── */
+  page === 'dashboard' && /*#__PURE__*/React.createElement(TeacherDashboard, _extends({}, sharedProps, {
     teacherName: teacherName,
     sessionControl: sessionControl,
     teacherProfileEmail: teacherProfileEmail
-  })), page === 'tasks' && /*#__PURE__*/React.createElement(TaskManagementPage, _extends({}, sharedProps, {
+  })),
+  page === 'tasks' && /*#__PURE__*/React.createElement(TaskManagementPage, _extends({}, sharedProps, {
     groups: groups,
     roster: roster
-  })), page === 'content' && /*#__PURE__*/React.createElement(ContentManagementPage, sharedProps), page === 'groups' && /*#__PURE__*/React.createElement(GroupsPage, sharedProps), page === 'reports' && /*#__PURE__*/React.createElement(ReportsPage, sharedProps), page === 'communication' && /*#__PURE__*/React.createElement(CommunicationPage, sharedProps), page === 'test' && /*#__PURE__*/React.createElement(TestModePage, sharedProps), page === 'coding' && /*#__PURE__*/React.createElement(CodingLabPage, _extends({}, sharedProps, {
-    isTeacher: true
-  })), page === 'vc' && /*#__PURE__*/React.createElement(VCPage, {
+  })),
+  page === 'content' && /*#__PURE__*/React.createElement(ContentManagementPage, sharedProps),
+  page === 'groups'   && /*#__PURE__*/React.createElement(GroupsPage, sharedProps),
+  page === 'reports'  && /*#__PURE__*/React.createElement(ReportsPage, sharedProps),
+  page === 'communication' && /*#__PURE__*/React.createElement(CommunicationPage, sharedProps),
+  page === 'coding'   && /*#__PURE__*/React.createElement(CodingLabPage, _extends({}, sharedProps, { isTeacher: true })),
+
+  /* ── PERSISTENT pages: always-mounted, CSS-hidden when inactive ──
+     PURPOSE: prevents timer loss, test-state reset, and WebRTC
+     teardown when the teacher navigates between sections.
+     State in these components is NEVER destroyed between nav visits. */
+  /*#__PURE__*/React.createElement('div', {
+    key: 'persistent-test',
+    style: { display: page === 'test' ? 'block' : 'none' }
+  }, /*#__PURE__*/React.createElement(TestModePage, sharedProps)),
+
+  /*#__PURE__*/React.createElement('div', {
+    key: 'persistent-vc',
+    style: { display: page === 'vc' ? 'block' : 'none' }
+  }, /*#__PURE__*/React.createElement(VCPage, {
     sessionCode: sessionCode,
     roster: roster,
     wsSend: wsSend,
@@ -7476,7 +7812,8 @@ function TeacherShell({
       setVcLocalStream(null);
       setVcParticipants([]);
     }
-  })), /*#__PURE__*/React.createElement(ProfileDrawer, {
+  })),
+   /*#__PURE__*/React.createElement(ProfileDrawer, {
     open: profileOpen,
     onClose: () => setProfileOpen(false),
     userName: teacherName,
@@ -7537,7 +7874,7 @@ function TeacherShell({
 }), /*#__PURE__*/React.createElement(MotivToastsContainer, {
   toasts: motivToasts,
   onDismiss: dismissMotivToast
-})));
+}))));
 }
 
 // ═════════════════════════════════════════════════════════════════
@@ -12672,16 +13009,27 @@ function TestModePage({
   roster,
   sessionStatus
 }) {
+  // ── Restore from SESSION_STORE so navigation never resets the running test ──
   // view: 'setup' | 'live' | 'results'
-  const [view, setView] = useState('setup');
+  const [view, setView] = useState(() => SESSION_STORE.teacherTestSession.running ? 'live' : 'setup');
   const [testTitle, setTestTitle] = useState('');
   const [duration, setDuration] = useState(30);
-  const [selectedIds, setSelectedIds] = useState([]); // task ids for this test
-  const [customQs, setCustomQs] = useState([]); // extra questions added directly here
+  const [selectedIds, setSelectedIds] = useState([]);
+  const [customQs, setCustomQs] = useState([]);
   const [leaderboard, setLeaderboard] = useState([]);
-  const [submissions, setSubmissions] = useState({}); // student_id -> {score, submitted_at}
-  const [timeLeft, setTimeLeft] = useState(0);
-  const [perQStats, setPerQStats] = useState({}); // task_id -> {correct, total}
+  const [submissions, setSubmissions] = useState(
+    () => ({ ...SESSION_STORE.teacherTestSession.submissions })
+  );
+  const [timeLeft, setTimeLeft] = useState(() => {
+    const ts = SESSION_STORE.teacherTestSession;
+    if (ts.running && ts.startTime && ts.durationSecs) {
+      const elapsed = Math.floor((Date.now() / 1000) - ts.startTime);
+      const remaining = ts.durationSecs - elapsed;
+      return remaining > 0 ? remaining : 0;
+    }
+    return 0;
+  });
+  const [perQStats, setPerQStats] = useState({});
   const [addingQ, setAddingQ] = useState(false);
   const [newQ, setNewQ] = useState({
     type: 'mcq',
@@ -12691,10 +13039,29 @@ function TestModePage({
     hint: '',
     marks: 1
   });
+  // Stable timer ref — do NOT create a new interval if one already exists
   const timerRef = useRef(null);
   const {
     add
   } = useContext(AppCtx);
+
+  // ── Re-attach timer if test was running when we were hidden ──────
+  useEffect(() => {
+    const ts = SESSION_STORE.teacherTestSession;
+    if (ts.running && timeLeft > 0 && !timerRef.current) {
+      timerRef.current = setInterval(() => {
+        setTimeLeft(t => {
+          if (t <= 1) { clearInterval(timerRef.current); timerRef.current = null; return 0; }
+          return t - 1;
+        });
+      }, 1000);
+    }
+    return () => {
+      // Intentionally NOT clearing on unmount — timer must persist while page is CSS-hidden.
+      // Timer is cleared explicitly by endTest() or when it reaches zero.
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [/* run only on mount */]);
 
   // All tasks available for this test = session tasks + custom questions
   const allAvailable = [...tasks, ...customQs];
@@ -12711,24 +13078,24 @@ function TestModePage({
         const r = await apiFetch(`/api/test/${sessionCode}/leaderboard`);
         if (r.leaderboard?.length) setLeaderboard(r.leaderboard);
         setSubmissions(prev => {
-          const next = {
-            ...prev
-          };
+          const next = { ...prev };
           r.leaderboard?.forEach(e => {
-            if (!next[e.student_id]) next[e.student_id] = {
-              score: e.score
-            };
+            if (!next[e.student_id]) next[e.student_id] = { score: e.score };
           });
+          // Sync to SESSION_STORE
+          SESSION_STORE.teacherTestSession.submissions = next;
           return next;
         });
         if (!r.active) {
           clearInterval(iv);
+          SESSION_STORE.teacherTestSession.running = false;
           setView('results');
         }
       } catch {}
     }, 3000);
     return () => clearInterval(iv);
   }, [view, sessionCode]);
+
   async function startTest() {
     if (sessionStatus !== 'active') {
       add('▶ Start the session first to enable actions', 'error');
@@ -12744,15 +13111,27 @@ function TestModePage({
           task_ids: selectedIds.length ? selectedIds : null
         }
       });
+      const startTimeSecs = Date.now() / 1000;
+      const durationSecs = duration * 60;
+      // Persist to SESSION_STORE immediately
+      SESSION_STORE.teacherTestSession = {
+        running: true,
+        tasks: testTasks,
+        startTime: startTimeSecs,
+        durationSecs,
+        submissions: {}
+      };
       setView('live');
-      setTimeLeft(duration * 60);
+      setTimeLeft(durationSecs);
       setLeaderboard([]);
       setSubmissions({});
       setPerQStats({});
+      clearInterval(timerRef.current);
       timerRef.current = setInterval(() => {
         setTimeLeft(t => {
           if (t <= 1) {
             clearInterval(timerRef.current);
+            timerRef.current = null;
             return 0;
           }
           return t - 1;
@@ -12763,8 +13142,11 @@ function TestModePage({
       add(e.message, 'error');
     }
   }
+
   async function endTest() {
     clearInterval(timerRef.current);
+    timerRef.current = null;
+    SESSION_STORE.teacherTestSession.running = false;
     try {
       const r = await apiFetch(`/api/test/end/${sessionCode}`, {
         method: 'POST'
@@ -14473,6 +14855,25 @@ class StudentPageErrorBoundary extends React.Component {
 // ═════════════════════════════════════════════════════════════════
 //  STUDENT: TASK VIEW
 // ═════════════════════════════════════════════════════════════════
+// ── Helpers for student session persistence ──────────────────────
+function _storeTestState(sessionCode, studentId, data) {
+  try {
+    sessionStorage.setItem(
+      `cm_test_${sessionCode}_${studentId}`,
+      JSON.stringify({ ...data, _ts: Date.now() })
+    );
+  } catch {}
+}
+function _loadTestState(sessionCode, studentId) {
+  try {
+    const raw = sessionStorage.getItem(`cm_test_${sessionCode}_${studentId}`);
+    return raw ? JSON.parse(raw) : null;
+  } catch { return null; }
+}
+function _clearTestState(sessionCode, studentId) {
+  try { sessionStorage.removeItem(`cm_test_${sessionCode}_${studentId}`); } catch {}
+}
+
 // ── STUDENT: Task View ──
 function StudentTaskView({
   sessionCode,
@@ -14482,12 +14883,36 @@ function StudentTaskView({
   updateUserProfile,
   studentEmoji: initialEmoji
 }) {
-  const [sPage, setSPage] = useState('task'); // task | test | chat | result
+  // Restore sPage from sessionStorage — if test was active, go back to test
+  const [sPage, setSPage] = useState(() => {
+    try {
+      const saved = _loadTestState(sessionCode, studentId);
+      return (saved?.active && !saved?.submitted) ? 'test' : 'task';
+    } catch { return 'task'; }
+  });
   const [currentTask, setCurrentTask] = useState(null);
   const [sessionStatus, setSessionStatus] = useState('active');
-  const [testState, setTestState] = useState(null); // {tasks, duration, startTime}
-  const [testSubmitted, setTestSubmitted] = useState(false); // FIX: track post-submission state
-  const [testAnswers, setTestAnswers] = useState({});
+  // Restore test state from sessionStorage on mount
+  const [testState, setTestState] = useState(() => {
+    try {
+      const saved = _loadTestState(sessionCode, studentId);
+      if (saved?.active && saved?.tasks?.length) {
+        return {
+          tasks: saved.tasks,
+          duration: saved.duration_secs,
+          startTime: saved.start_time
+        };
+      }
+    } catch {}
+    return null;
+  });
+  const [testSubmitted, setTestSubmitted] = useState(() => {
+    try { return !!_loadTestState(sessionCode, studentId)?.submitted; } catch { return false; }
+  });
+  // Restore answers from sessionStorage
+  const [testAnswers, setTestAnswers] = useState(() => {
+    try { return _loadTestState(sessionCode, studentId)?.answers || {}; } catch { return {}; }
+  });
   const [selected, setSelected] = useState(null);
   const [shortAnswer, setShortAnswer] = useState('');
   const [submitted, setSubmitted] = useState(false);
@@ -14501,7 +14926,18 @@ function StudentTaskView({
   const [handRaised, setHandRaised] = useState(false);
   const [groups, setGroups] = useState([]);
   const [announcement, setAnnouncement] = useState('');
-  const [testTimeLeft, setTestTimeLeft] = useState(0);
+  // Compute accurate remaining time from server start_time on restore
+  const [testTimeLeft, setTestTimeLeft] = useState(() => {
+    try {
+      const saved = _loadTestState(sessionCode, studentId);
+      if (saved?.active && saved?.start_time && saved?.duration_secs) {
+        const elapsed = Math.floor((Date.now() / 1000) - saved.start_time);
+        const remaining = saved.duration_secs - elapsed;
+        return remaining > 0 ? remaining : 0;
+      }
+    } catch {}
+    return 0;
+  });
   const testTimerRef = useRef(null);
   const messagesEnd = useRef(null);
   const {
@@ -14646,6 +15082,45 @@ function StudentTaskView({
       }));
     } catch {}
   }, [currentTask, quizState, answeredCount, correctCount]);
+
+  // ── PERSISTENCE: save test state + answers on every change ───────
+  useEffect(() => {
+    if (testState) {
+      _storeTestState(sessionCode, studentId, {
+        active: true,
+        tasks: testState.tasks,
+        duration_secs: testState.duration,
+        start_time: testState.startTime,
+        answers: testAnswers,
+        submitted: testSubmitted
+      });
+    }
+  }, [testState, testAnswers, testSubmitted, sessionCode, studentId]);
+
+  // ── AUTO-START TIMER if test was restored from sessionStorage ─────
+  useEffect(() => {
+    if (testState && testTimeLeft > 0 && !testSubmitted) {
+      // Only start if not already running
+      if (!testTimerRef.current) {
+        testTimerRef.current = setInterval(() => {
+          setTestTimeLeft(t => {
+            if (t <= 1) {
+              clearInterval(testTimerRef.current);
+              testTimerRef.current = null;
+              handleTestSubmit();
+              return 0;
+            }
+            return t - 1;
+          });
+        }, 1000);
+      }
+    }
+    return () => {
+      // Intentionally not clearing on every rerender — timer must survive tab switches
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [/* run only on mount */]);
+
   const wsUrl = `${WS_BASE}/ws/student/${sessionCode}/${studentId}`;
 
   // ── student notification sound ──
@@ -14744,7 +15219,17 @@ function StudentTaskView({
           playStudentBeep('default');
           add('💡 Teacher sent an explanation — check your task panel!', 'info');
         }
-      } else if (msg.type === 'session_status') setSessionStatus(msg.status);else if (msg.type === 'kicked') navigate('landing');else if (msg.type === 'content_shared') {
+      } else if (msg.type === 'session_status') {
+        setSessionStatus(msg.status);
+        // ── On session end, clean up persistent live state ──────
+        if (msg.status === 'ended') {
+          clearInterval(testTimerRef.current);
+          testTimerRef.current = null;
+          _clearTestState(sessionCode, studentId);
+          SESSION_STORE.closeSocket(`${WS_BASE}/ws/student/${sessionCode}/${studentId}`);
+          console.log('[ClassMind] Session ended — student state cleared.');
+        }
+      } else if (msg.type === 'kicked') navigate('landing');else if (msg.type === 'content_shared') {
         setContentShared({
           name: msg.filename,
           type: msg.content_type,
@@ -14798,22 +15283,33 @@ function StudentTaskView({
           return p;
         });
       } else if (msg.type === 'test_started') {
-        setTestState({
+        const newTestState = {
           tasks: msg.tasks,
           duration: msg.duration_secs,
           startTime: msg.start_time
-        });
+        };
+        setTestState(newTestState);
         setTestAnswers({});
-        setTestSubmitted(false); // FIX: reset submission flag when new test begins
+        setTestSubmitted(false);
         setSPage('test');
         playStudentBeep('test');
         add('🧪 Test has started — good luck!', 'info');
         setTestTimeLeft(msg.duration_secs);
+        // Immediately persist so reconnects can restore this test
+        _storeTestState(sessionCode, studentId, {
+          active: true,
+          tasks: msg.tasks,
+          duration_secs: msg.duration_secs,
+          start_time: msg.start_time,
+          answers: {},
+          submitted: false
+        });
         clearInterval(testTimerRef.current);
         testTimerRef.current = setInterval(() => {
           setTestTimeLeft(t => {
             if (t <= 1) {
               clearInterval(testTimerRef.current);
+              testTimerRef.current = null;
               handleTestSubmit();
               return 0;
             }
@@ -14822,7 +15318,9 @@ function StudentTaskView({
         }, 1000);
       } else if (msg.type === 'test_ended') {
         clearInterval(testTimerRef.current);
+        testTimerRef.current = null;
         setTestState(null);
+        _clearTestState(sessionCode, studentId);
         setSPage('result'); // result page handles null testState gracefully
         add('🏁 Test has ended', 'info');
       } else if (msg.type === 'announcement') setAnnouncement(msg.message);else if (msg.type === 'groups_updated') setGroups(msg.groups);else if (msg.type === 'coding_leaderboard_update') {
@@ -14856,6 +15354,52 @@ function StudentTaskView({
           const latestExp = msg.explanations[msg.explanations.length - 1];
           if (latestExp) setTaskExplanation(latestExp);
         }
+
+        // ── TEST STATE RESTORATION on reconnect ──────────────────────
+        // Priority: server-provided test_state > local sessionStorage
+        const serverTs = msg.test_state;
+        if (serverTs?.active && serverTs.tasks?.length && !testSubmitted) {
+          // Compute accurate remaining time from server's start_time
+          const elapsed = Math.floor((Date.now() / 1000) - (serverTs.start_time || 0));
+          const remaining = (serverTs.duration_secs || 0) - elapsed;
+
+          if (remaining > 0) {
+            // Load saved answers from sessionStorage (not sent by server)
+            const savedLocal = _loadTestState(sessionCode, studentId);
+            const savedAnswers = savedLocal?.answers || {};
+
+            setTestState({
+              tasks: serverTs.tasks,
+              duration: serverTs.duration_secs,
+              startTime: serverTs.start_time
+            });
+            setTestAnswers(savedAnswers);
+            setTestSubmitted(false);
+            setTestTimeLeft(remaining);
+            setSPage('test');
+
+            // Restart timer with accurate remaining time
+            clearInterval(testTimerRef.current);
+            testTimerRef.current = setInterval(() => {
+              setTestTimeLeft(t => {
+                if (t <= 1) {
+                  clearInterval(testTimerRef.current);
+                  testTimerRef.current = null;
+                  handleTestSubmit();
+                  return 0;
+                }
+                return t - 1;
+              });
+            }, 1000);
+
+            add('🧪 Test session restored — continue answering!', 'info');
+            console.log('[ClassMind] Test restored on reconnect. Remaining:', remaining + 's');
+          } else if (remaining <= 0 && !serverTs.submitted) {
+            // Time ran out while disconnected — auto-submit
+            handleTestSubmit();
+          }
+        }
+
         setWsConnected(true);
       }
     } catch (err) {
@@ -15062,7 +15606,10 @@ function StudentTaskView({
       });
     } catch {}
     clearInterval(testTimerRef.current);
+    testTimerRef.current = null;
     setTestSubmitted(true); // track submission for test page UI
+    // Clear test sessionStorage — test is done, no need to restore it
+    _clearTestState(sessionCode, studentId);
     setSPage('result');     // navigate to result page (has PDF export)
     console.log('[ClassMind] Student test submitted. Navigating to result page.');
   }
@@ -15815,7 +16362,11 @@ function StudentTaskView({
           renderTaskCard()
         ),
 
-        sPage==='test' && renderTest(),
+        // ── TEST: CSS-hidden (not unmounted) so timer/answers survive tab switches ──
+        React.createElement('div', {
+          key: 'student-test-persistent',
+          style: { display: sPage === 'test' ? 'block' : 'none' }
+        }, renderTest()),
 
         sPage==='chat' && renderChat(),
 
@@ -17863,435 +18414,390 @@ function TeacherCopilot({
   prevTasksLength
 }) {
   const [open, setOpen] = useState(false);
+  const [fullscreen, setFullscreen] = useState(false);
   const [input, setInput] = useState('');
   const [typing, setTyping] = useState(false);
+  const [isThinking, setIsThinking] = useState(false);
   const [unread, setUnread] = useState(0);
+  const [listening, setListening] = useState(false);
+  const [activeMode, setActiveMode] = useState('chat'); // chat | actions | insights
   const [messages, setMessages] = useState(() => {
-    const greetings = ["Hey 👋 Ready to run your class today?", "Welcome back! Let's make this session great. 🎓", "Hi there! Need help getting started?", "Good to see you! I'm here whenever you need guidance. 🧠"];
-    const g = greetings[Math.floor(Math.random() * greetings.length)];
-    return [{
-      role: 'bot',
-      text: g,
-      ts: fmtTs()
-    }];
+    const greetings = [
+      "👋 Hey! I'm your **ClassMind AI Copilot** — powered by Claude. Ask me anything, or tap an action below.",
+      "🧠 Welcome back! I'm connected and ready. Ask about your students, create tasks, or let me run an insight for you.",
+      "✨ Hi there! I'm your AI co-teacher. I can analyze your class, create content, and take actions — just ask!"
+    ];
+    return [{ role:'bot', text: greetings[Math.floor(Math.random()*greetings.length)], ts: fmtTs(), ai: false }];
   });
   const bottomRef = useRef(null);
   const inputRef = useRef(null);
   const prevStatusRef = useRef(sessionStatus);
   const prevTasksRef = useRef(tasks?.length || 0);
+  const recognitionRef = useRef(null);
+  const abortRef = useRef(null);
+
   function fmtTs() {
-    return new Date().toLocaleTimeString([], {
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+    return new Date().toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' });
   }
-  function addBotMsg(text, delay = 600) {
+  function pick(arr) { return arr[Math.floor(Math.random()*arr.length)]; }
+
+  // ── Build rich context for AI ──────────────────────────────────────
+  function buildContext() {
+    const participation = analytics?.participation || 0;
+    const understanding = analytics?.understanding || 0;
+    const atRisk = analytics?.at_risk || [];
+    const activeStudents = roster?.active || [];
+    const taskCount = tasks?.length || 0;
+    const topicConfusion = analytics?.topic_confusion || {};
+    const topTopic = Object.entries(topicConfusion).sort((a,b)=>b[1]-a[1])[0];
+    return `You are ClassMind AI Copilot — an intelligent teaching assistant embedded inside a live classroom platform.
+
+LIVE CLASSROOM STATE:
+- Session status: ${sessionStatus}
+- Active students: ${activeStudents.length} (${activeStudents.slice(0,5).map(s=>s.name||s.display_name||'Student').join(', ')}${activeStudents.length>5?'…':''})
+- Understanding score: ${understanding}%
+- Participation rate: ${participation}%
+- At-risk students (${atRisk.length}): ${atRisk.slice(0,5).map(s=>s.name||s).join(', ')||'none'}
+- Tasks created: ${taskCount}
+- Top confusion topic: ${topTopic ? topTopic[0] + ' (' + Math.round(topTopic[1]*100)+'% confused)' : 'none detected'}
+
+PLATFORM CAPABILITIES YOU CAN TELL THE TEACHER ABOUT:
+- Navigate to: Dashboard, Tasks, Reports, Groups, Chat, Content, Test Mode, Coding Lab
+- Session control: start, pause, resume, end session
+- Create tasks (MCQ, short answer, coding)
+- View at-risk students list
+- Generate AI content (quizzes, notes, summaries, MCQs)
+- View live analytics and leaderboard
+
+RESPONSE STYLE:
+- Be concise, smart, and action-oriented (1-3 sentences usually enough)
+- Use bullet points only when listing 3+ items
+- Use markdown bold (**text**) sparingly for emphasis
+- Suggest concrete next actions the teacher can take
+- If asked to navigate or take an action, confirm you're doing it
+- Be warm, professional, slightly conversational
+- Do NOT make up student names or data not listed above`;
+  }
+
+  // ── Call Anthropic API ─────────────────────────────────────────────
+  async function callAI(userMessage) {
+    const ctx = buildContext();
+    const msgHistory = messages.slice(-8).map(m => ({
+      role: m.role === 'user' ? 'user' : 'assistant',
+      content: m.text.replace(/<[^>]+>/g,'')
+    })).filter(m => m.role === 'user' || m.role === 'assistant');
+
+    try {
+      if (abortRef.current) abortRef.current.abort();
+      abortRef.current = new AbortController();
+      const resp = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        signal: abortRef.current.signal,
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-20250514',
+          max_tokens: 350,
+          system: ctx,
+          messages: [...msgHistory, { role:'user', content: userMessage }]
+        })
+      });
+      if (!resp.ok) throw new Error('API ' + resp.status);
+      const data = await resp.json();
+      return { text: data.content?.[0]?.text || 'Sorry, I got an empty response.', ai: true };
+    } catch(e) {
+      if (e.name === 'AbortError') return null;
+      return { text: getLocalReply(userMessage.toLowerCase()), ai: false };
+    }
+  }
+
+  function addBotMsg(text, delay=600, ai=false) {
     setTyping(true);
     setTimeout(() => {
       setTyping(false);
-      setMessages(m => [...m, {
-        role: 'bot',
-        text,
-        ts: fmtTs()
-      }]);
-      if (!open) setUnread(u => u + 1);
-    }, delay + Math.random() * 200);
+      setMessages(m => [...m, { role:'bot', text, ts:fmtTs(), ai }]);
+      if (!open) setUnread(u=>u+1);
+    }, delay + Math.random()*200);
   }
 
   // Tour message injection
-  useEffect(() => {
-    if (!tourMessage) return;
-    addBotMsg(tourMessage, 300);
-  }, [tourMessage]);
+  useEffect(() => { if (!tourMessage) return; addBotMsg(tourMessage, 300); }, [tourMessage]);
 
   // Event-based proactive messages
   useEffect(() => {
     const prev = prevStatusRef.current;
     if (prev !== sessionStatus) {
       prevStatusRef.current = sessionStatus;
-      if (sessionStatus === 'active' && prev === 'waiting') {
-        addBotMsg(pick(["Session started ✅ Let's engage your students!", "You're live! Students can join now. 🚀", "Class is open — let's go! 🎉"]), 400);
-      } else if (sessionStatus === 'paused') {
-        addBotMsg("Session paused ⏸ Take a breather!", 400);
-      } else if (sessionStatus === 'ended') {
-        addBotMsg("Session ended. Great work today! 🎓 Check Reports for insights.", 400);
-      }
+      if (sessionStatus==='active' && prev==='waiting') addBotMsg(pick(["Session started ✅ Students can join now! Want me to suggest an opener task?","You're live! 🚀 Let me know if you want help creating your first question."]), 400);
+      else if (sessionStatus==='paused') addBotMsg("Session paused ⏸ Good time for a quick check — want to see how students are doing?", 400);
+      else if (sessionStatus==='ended') addBotMsg("Session wrapped up! 🎓 Say **'summarize class'** and I'll generate a full recap for you.", 400);
     }
   }, [sessionStatus]);
+
   useEffect(() => {
     const prev = prevTasksRef.current;
     const cur = tasks?.length || 0;
-    if (cur > prev && prev === 0) {
-      prevTasksRef.current = cur;
-      addBotMsg(pick(["Nice! First task created 📝 Now send it to students!", "Great — your first question is ready. Hit **Send Next Task**! 📤"]), 500);
-    } else {
-      prevTasksRef.current = cur;
-    }
+    if (cur > prev && prev === 0) { prevTasksRef.current = cur; addBotMsg(pick(["First task created 📝 Ready to send when you are! Say **'send task'** or go to Dashboard.", "Great — task is ready. Hit **Send Next Task** from the Dashboard!"]), 500); }
+    else prevTasksRef.current = cur;
   }, [tasks?.length]);
 
-  // Proactive on open
   useEffect(() => {
     if (!open) return;
     setUnread(0);
     setTimeout(() => inputRef.current?.focus(), 150);
-    const taskCount = tasks?.length || 0;
-    const participation = analytics?.participation || 0;
-    const understanding = analytics?.understanding || 0;
-    const atRisk = analytics?.at_risk || [];
-    if (sessionStatus === 'waiting' && messages.length <= 2) {
-      addBotMsg(pick(["Start your session first to let students in. 👆", "Whenever you're ready, hit **Start Session** to begin! 🚀"]), 700);
-      return;
-    }
-    if (taskCount === 0 && sessionStatus === 'active' && messages.length <= 2) {
-      addBotMsg("You're live but have no tasks yet — head to **Tasks** to create your first question! 📝", 700);
-      return;
-    }
-    if (participation < 50 && sessionStatus === 'active') {
-      addBotMsg(pick([`Participation is low at ${participation}% 📉 Try sending a quick MCQ to re-engage the class.`, `Only ${participation}% of students are participating. Want to send a task to boost engagement?`]), 700);
-      return;
-    }
-    if (atRisk.length > 0 && messages.length <= 2) {
-      addBotMsg(`Some students are struggling ⚠️ Want to review the at-risk list? (${atRisk.map(s => s.name || s).slice(0, 2).join(', ')}${atRisk.length > 2 ? '…' : ''})`, 700);
-    }
   }, [open]);
-  useEffect(() => {
-    bottomRef.current?.scrollIntoView({
-      behavior: 'smooth'
-    });
-  }, [messages, typing]);
-  function pick(arr) {
-    return arr[Math.floor(Math.random() * arr.length)];
+
+  useEffect(() => { bottomRef.current?.scrollIntoView({ behavior:'smooth' }); }, [messages, typing, isThinking]);
+
+  // ── Voice input ────────────────────────────────────────────────────
+  function toggleVoice() {
+    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+      addBotMsg("Voice input isn't supported in this browser. Try Chrome! 🎤", 200); return;
+    }
+    if (listening) { recognitionRef.current?.stop(); setListening(false); return; }
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const rec = new SR();
+    rec.lang = 'en-US'; rec.interimResults = false;
+    rec.onresult = e => { setInput(e.results[0][0].transcript); setListening(false); };
+    rec.onerror = () => setListening(false);
+    rec.onend = () => setListening(false);
+    recognitionRef.current = rec;
+    rec.start(); setListening(true);
   }
-  function handleSend() {
+
+  // ── Handle send ────────────────────────────────────────────────────
+  async function handleSend() {
     const q = input.trim();
-    if (!q) return;
+    if (!q || typing || isThinking) return;
     setInput('');
-    setMessages(m => [...m, {
-      role: 'user',
-      text: q,
-      ts: fmtTs()
-    }]);
-    setTyping(true);
-    setTimeout(() => {
-      setTyping(false);
-      // ── Tour trigger: intercept before normal getReply ─────────────
-      if (/\btour\b|\bguide\b|\bwalkthrough\b|\bonboard\b/.test(q.toLowerCase())) {
-        if (setForceTour) {
-          setForceTour(true);
-          setPage('dashboard');
-        }
-        setMessages(m => [...m, {
-          role: 'bot',
-          text: pick(["🗺️ Starting the guided tour for you! Follow the highlighted steps to get set up.", "✨ Launching walkthrough now! I'll highlight each key feature step by step.", "🚀 Tour starting! Follow along — I'll guide you through ClassMind's core features."]),
-          ts: fmtTs()
-        }]);
-        return;
-      }
-      const reply = getReply(q.toLowerCase());
-      setMessages(m => [...m, {
-        role: 'bot',
-        text: reply,
-        ts: fmtTs()
-      }]);
-    }, 500 + Math.random() * 300);
+    setMessages(m => [...m, { role:'user', text:q, ts:fmtTs() }]);
+
+    // Tour trigger
+    if (/\btour\b|\bguide\b|\bwalkthrough\b|\bonboard\b/.test(q.toLowerCase())) {
+      if (setForceTour) { setForceTour(true); setPage('dashboard'); }
+      addBotMsg("🗺️ Launching the guided tour now! Follow the highlighted steps.", 400);
+      return;
+    }
+    // Local action triggers (navigation, session control) — instant
+    const localResp = tryLocalAction(q.toLowerCase());
+    if (localResp) { addBotMsg(localResp, 300); return; }
+
+    // Real AI response
+    setIsThinking(true);
+    setTyping(false);
+    const result = await callAI(q);
+    setIsThinking(false);
+    if (result) {
+      setMessages(m => [...m, { role:'bot', text: result.text, ts:fmtTs(), ai: result.ai }]);
+      if (!open) setUnread(u=>u+1);
+    }
   }
-  function quickAsk(q) {
-    setMessages(m => [...m, {
-      role: 'user',
-      text: q,
-      ts: fmtTs()
-    }]);
-    setTyping(true);
-    setTimeout(() => {
-      setTyping(false);
-      // ── Tour trigger ───────────────────────────────────────────────
-      if (/\btour\b|\bguide\b|\bwalkthrough\b|\bonboard\b/.test(q.toLowerCase())) {
-        if (setForceTour) {
-          setForceTour(true);
-          setPage('dashboard');
-        }
-        setMessages(m => [...m, {
-          role: 'bot',
-          text: "🗺️ Starting the guided tour for you! Follow the highlighted steps.",
-          ts: fmtTs()
-        }]);
-        return;
-      }
-      setMessages(m => [...m, {
-        role: 'bot',
-        text: getReply(q.toLowerCase()),
-        ts: fmtTs()
-      }]);
-    }, 500);
+
+  async function quickAsk(q) {
+    setMessages(m => [...m, { role:'user', text:q, ts:fmtTs() }]);
+    if (/\btour\b/.test(q.toLowerCase())) {
+      if (setForceTour) { setForceTour(true); setPage('dashboard'); }
+      addBotMsg("🗺️ Starting the guided tour!", 400); return;
+    }
+    const local = tryLocalAction(q.toLowerCase());
+    if (local) { addBotMsg(local, 300); return; }
+    setIsThinking(true);
+    const result = await callAI(q);
+    setIsThinking(false);
+    if (result) setMessages(m => [...m, { role:'bot', text:result.text, ts:fmtTs(), ai:result.ai }]);
   }
-  function getReply(q) {
+
+  // ── Local action handler (navigation + session) ────────────────────
+  function tryLocalAction(q) {
+    // Navigation
+    if (/\b(go to|open|show me|take me to|navigate)\b/.test(q)) {
+      if (/dashboard/.test(q)) { setPage('dashboard'); return pick(['✅ Opening Dashboard!','Sure! Here\'s your Dashboard.']); }
+      if (/task/.test(q)) { setPage('tasks'); return '📝 Opening Tasks!'; }
+      if (/report|analytics/.test(q)) { setPage('reports'); return '📈 Opening Reports!'; }
+      if (/group/.test(q)) { setPage('groups'); return '👥 Opening Groups!'; }
+      if (/chat|comm/.test(q)) { setPage('communication'); return '💬 Opening Chat!'; }
+      if (/content/.test(q)) { setPage('content'); return '📄 Opening Content!'; }
+      if (/test/.test(q)) { setPage('test'); return '🧪 Opening Test Mode!'; }
+      if (/cod|lab/.test(q)) { setPage('coding'); return '💻 Opening Coding Lab!'; }
+    }
+    // Session control
+    if (/start session/.test(q)) { if (sessionStatus==='active') return '✅ Session is already running!'; sessionControl('start'); return '▶️ Starting your session now! 🚀'; }
+    if (/pause session/.test(q)) { sessionControl('pause'); return '⏸ Session paused.'; }
+    if (/resume session/.test(q)) { sessionControl('resume'); return '▶️ Session resumed!'; }
+    if (/end session/.test(q)) { sessionControl('end'); return '🛑 Session ended. Great class today!'; }
+    return null;
+  }
+
+  // ── Local fallback reply ───────────────────────────────────────────
+  function getLocalReply(q) {
     const participation = analytics?.participation || 0;
     const understanding = analytics?.understanding || 0;
     const atRisk = analytics?.at_risk || [];
     const activeStudents = roster?.active || [];
     const taskCount = tasks?.length || 0;
-
-    // ── Humanized small talk ──
-    if (/^(hi|hello|hey|sup|yo)[\s!.]*$/.test(q.trim())) return pick(["Hey! How can I help you today? 😊", "Hi there! What do you need?", "Hello! Ready to help 🧠"]);
-    if (/thank|thanks|ty/.test(q)) return pick(["Anytime 😄", "Happy to help!", "Of course! Let me know if you need anything else."]);
-    if (/^ok[\s!.]*$|^okay[\s!.]*$|^got it[\s!.]*$/.test(q.trim())) return pick(["👍 Got it", "Perfect!", "Sounds good!"]);
-    if (/good|great|awesome|nice/.test(q)) return pick(["That's great to hear! 🎉", "Love the energy! 💪", "Excellent!"]);
-    if (/help/.test(q) && q.length < 10) return "I can help with navigation, live insights, sending tasks, or answering questions.\n\n💡 Say **\"start tour\"** to launch the guided walkthrough! 🧠";
-
-    // ── Navigation ──
-    if (/go to|open|show|navigate/.test(q)) {
-      if (/dashboard/.test(q)) {
-        setPage('dashboard');
-        return pick(['✅ Taking you to Dashboard!', 'Sure! Opening Dashboard now.']);
-      }
-      if (/task/.test(q)) {
-        setPage('tasks');
-        return pick(['📝 Opening Tasks for you!', 'Sure! Here are your tasks.']);
-      }
-      if (/report/.test(q)) {
-        setPage('reports');
-        return pick(['📈 Opening Reports!', 'Sure, checking the reports now.']);
-      }
-      if (/group/.test(q)) {
-        setPage('groups');
-        return '👥 Opening Groups!';
-      }
-      if (/chat|comm/.test(q)) {
-        setPage('communication');
-        return '💬 Opening Chat!';
-      }
-      if (/content/.test(q)) {
-        setPage('content');
-        return '📄 Opening Content!';
-      }
-      if (/test/.test(q)) {
-        setPage('test');
-        return '🧪 Opening Test Mode!';
-      }
-      if (/code|coding|lab/.test(q)) {
-        setPage('coding');
-        return '💻 Opening Coding Lab!';
-      }
-      return 'I can navigate to: Dashboard, Tasks, Reports, Groups, Chat, Content, Test Mode, or Coding Lab.';
+    if (/^(hi|hello|hey|sup)[\s!.]*$/.test(q.trim())) return pick(["Hey! How can I help? 😊","Hi! Ready to assist 🧠"]);
+    if (/thank/.test(q)) return pick(["Anytime 😄","Happy to help!"]);
+    if (/at.?risk|struggling|weak/.test(q)) return atRisk.length===0 ? '✅ No at-risk students right now!' : `🚨 **At-risk (${atRisk.length}):**\n${atRisk.slice(0,5).map(s=>`• ${s.name||s}`).join('\n')}`;
+    if (/performance|understanding|score/.test(q)) { const c=understanding>=70?'🟢':understanding>=40?'🟡':'🔴'; return `${c} Understanding: **${understanding}%** | Participation: **${participation}%** | Active: **${activeStudents.length}** students`; }
+    if (/student|active|how many/.test(q)) return `👥 **${activeStudents.length} students** active.\n${activeStudents.slice(0,5).map(s=>`• ${s.name||s.display_name||'Student'}`).join('\n')}`;
+    if (/task/.test(q)) return taskCount===0 ? '📝 No tasks yet — head to **Tasks** to create your first question!' : `📝 You have **${taskCount} task${taskCount>1?'s':''}** in this session.`;
+    if (/suggest|what should|advice/.test(q)) {
+      const tips=[];
+      if (participation<50) tips.push('📤 Send a task to boost participation');
+      if (understanding<40) tips.push('📚 Consider revisiting the topic');
+      if (atRisk.length>0) tips.push(`⚠️ Check in with ${atRisk.slice(0,2).map(s=>s.name||s).join(', ')}`);
+      if (!tips.length) return '✅ Class is running well! Keep it up 🎉';
+      return '💡 **My suggestions:**\n'+tips.join('\n');
     }
-
-    // ── Session control ──
-    if (/start session/.test(q)) {
-      if (sessionStatus === 'active') return pick(['✅ Session is already active!', 'You\'re already live! 🟢']);
-      sessionControl('start');
-      return pick(['▶️ Starting your session now!', 'Here we go! Session starting… 🚀']);
-    }
-    if (/pause session/.test(q)) {
-      sessionControl('pause');
-      return '⏸ Paused! Take your time.';
-    }
-    if (/resume session/.test(q)) {
-      sessionControl('resume');
-      return '▶️ Resumed! Welcome back.';
-    }
-    if (/end session/.test(q)) {
-      sessionControl('end');
-      return '🛑 Session ended. Great class!';
-    }
-
-    // ── Analytics ──
-    if (/at.?risk|struggling|weak/.test(q)) {
-      if (atRisk.length === 0) return '✅ No at-risk students right now — class is doing well!';
-      return `🚨 **At-risk students (${atRisk.length}):**\n${atRisk.map(s => `• ${s.name || s}`).join('\n')}\n\nConsider checking in with them personally.`;
-    }
-    if (/performance|understanding|score/.test(q)) {
-      const c = understanding >= 70 ? '🟢' : understanding >= 40 ? '🟡' : '🔴';
-      return `${c} **Understanding:** ${understanding}%\n📣 **Participation:** ${participation}%\n👥 **Active:** ${activeStudents.length} students`;
-    }
-    if (/participation/.test(q)) {
-      return participation < 50 ? `📣 Participation is at **${participation}%** — that's low. Try sending a task to re-engage! 📤` : `📣 Participation is at **${participation}%** — looking good! ✅`;
-    }
-    if (/student|active|how many|roster/.test(q)) {
-      return `👥 **${activeStudents.length} students** active right now.\n${activeStudents.slice(0, 6).map(s => `• ${s.name || s.display_name || 'Student'}`).join('\n')}${activeStudents.length > 6 ? `\n…and ${activeStudents.length - 6} more` : ''}`;
-    }
-    if (/task|how many task/.test(q)) {
-      return taskCount === 0 ? '📝 No tasks yet — head to the **Tasks** tab to create your first question!' : `📝 You have **${taskCount} task${taskCount > 1 ? 's' : ''}** in this session.`;
-    }
-    if (/session|status/.test(q)) {
-      const e = {
-        waiting: '⏳',
-        active: '🟢',
-        paused: '⏸',
-        ended: '🔴'
-      }[sessionStatus] || '⚪';
-      return `${e} Session is **${sessionStatus.toUpperCase()}** right now.`;
-    }
-
-    // ── Feature guidance ──
-    if (/create.*task|add.*task|new.*task/.test(q)) return '📝 **To create a task:**\n1. Click **Tasks** in the nav\n2. Click **"+ Create Task"**\n3. Choose MCQ, Short Answer, or Coding\n4. Fill in the question\n5. Hit **Save**, then **Send Next Task**!';
-    if (/test mode|quiz|run.*test|launch.*quiz/.test(q)) return '🧪 **Test Mode:** Go to the Test tab, add questions, set a timer, and click **Launch Test** — students auto-redirect and get a live countdown!';
-    if (/group/.test(q)) return '👥 **Groups:** Go to Groups tab → click **Auto-Generate** to create balanced groups instantly. You can also edit them manually.';
-    if (/content|upload|share.*file/.test(q)) return '📄 **Content:** Upload a PDF or image in the Content tab — it\'s instantly shared with all students!';
-    if (/report|analytics/.test(q)) return '📈 **Reports** show understanding %, accuracy per question, topic weakness map, and a live leaderboard. All updated in real-time!';
-    if (/chat|doubt/.test(q)) return '💬 **Chat** tab has live class chat, student doubts you can answer, and hand-raise notifications. A red dot appears when someone needs you.';
-    if (/coding lab|code lab|python/.test(q)) return '💻 **Coding Lab** gives students a Python sandbox. Send a coding task and students write, run, and submit their code directly in the browser.';
-    if (/notif|hand.?raise|alert/.test(q)) return '🔔 **Notifications** appear as a red dot on the Chat tab. You\'ll be alerted for new doubts, hand raises, and chat messages — with a sound too!';
-    if (/monitor|at.?risk|watch/.test(q)) return '🚨 **Student Monitor** (bottom of Dashboard) ranks all students by accuracy and flags who\'s falling behind so you know exactly who needs help.';
-    if (/copilot|assistant|ai|you/.test(q)) {
-      return `🧠 **I'm your ClassMind Copilot!** Ask me anything:
-
-• "Who is at risk?"
-• "Go to Reports"
-• "How do I create a task?"
-• "Suggest something"
-• "Start tour" for a walkthrough!`;
-    }
-
-    // ── What can I do here? ───────────────────────────────────────────
-    if (/what can i do|what can you do|what.?s here|explain this|explain dashboard|explain feature|how do i use|how to use|overview/.test(q)) {
-      return `🧭 **Here's what you can do in ClassMind:**
-• 📊 **Dashboard** — live class health at a glance
-• 📝 **Tasks** — create & send MCQ, short answer, or coding questions
-• 🧪 **Test Mode** — run timed graded quizzes
-• 💻 **Coding Lab** — send Python tasks to students
-• 📈 **Reports** — deep analytics & leaderboard
-• 💬 **Chat** — handle doubts, hand raises & messages
-• 📄 **Content** — share PDFs & images instantly
-• 👥 **Groups** — auto-generate balanced student groups
-
-Say **"Start tour"** for an interactive walkthrough! 🗺️`;
-    }
-
-    // ── How does X work ───────────────────────────────────────────────
-    if (/how does.*work|how.*send.*task|what is.*task/.test(q)) return '📤 **Sending tasks:** Go to Tasks → create a question → come back to Dashboard → click **Send Next Task**. Students see it instantly!';
-    if (/how.*session|what.*session/.test(q)) return '🏫 A **Session** is your live classroom. Click **Start Session** to open it. Students join using your session code. You control pacing — start, pause, or end anytime.';
-    if (/what can i do in task|tasks tab|task page/.test(q)) return '📝 In **Tasks** you can create and send tasks, assign quizzes, and track student responses in real-time.';
-    if (/what can i do in report|report tab|report page/.test(q)) return '📈 In **Reports** you can view understanding trends, per-question accuracy, topic confusion maps, and a live student leaderboard.';
-    if (/what can you|feature|how/.test(q)) return '🧠 **I can help with:**\n• Live insights — "Who is at risk?"\n• Navigate — "Go to Reports"\n• Feature help — "How to create a task?"\n• Actions — "Start session"\n• 🗺️ **Tour** — "Start tour" to relaunch the walkthrough\n\nJust ask!';
-
-    // ── Intelligent "What should I do now?" ──
-    if (/what should i do|what now|what do i do|next step|guide me|what.?s next/.test(q)) {
-      const parts = [];
-      if (understanding < 50) parts.push(`📉 Understanding is at ${understanding}% — revise the last concept before moving on.`);
-      if (understanding >= 50 && understanding < 70) parts.push(`🟡 Understanding is ${understanding}% — consider a quick recap question.`);
-      const topicConfusion = analytics?.topic_confusion || {};
-      const topTopic = Object.entries(topicConfusion).sort((a, b) => b[1] - a[1])[0];
-      if (topTopic) parts.push(`🎯 Most confusion in: **${topTopic[0]}**.`);
-      if (atRisk.length > 0) parts.push(`🔴 Focus on: ${atRisk.slice(0, 3).map(s => s.name || s).join(', ')}.`);
-      if (participation < 40) parts.push(`📤 Send a quick MCQ to boost participation (${participation}% active).`);
-      if (parts.length === 0) return '✅ Class is doing well! Keep going or send the next task.';
-      return parts.join('\n');
-    }
-
-    // ── Suggestions ──
-    if (/suggest|what should|advice|recommend/.test(q)) {
-      const tips = [];
-      if (participation < 50) tips.push('📤 Send a task to boost participation');
-      if (understanding < 40) tips.push('📚 Revise the topic — students are struggling');
-      if (taskCount === 0) tips.push('📝 Create your first task');
-      if (atRisk.length > 0) tips.push(`⚠️ Check in with: ${atRisk.slice(0, 2).map(s => s.name || s).join(', ')}`);
-      if (!tips.length) return pick(['✅ Everything looks great! Class is engaged and on track.', 'Class is running smoothly — keep it up! 🎉']);
-      return '💡 **My suggestions:**\n' + tips.join('\n');
-    }
-    return pick(["🤔 I didn't quite catch that. Try asking about tasks, students, reports, or navigation!", "Hmm, not sure about that one. Ask me about class performance, tasks, or navigation 😊"]);
+    return pick(["I can navigate, run actions, or give insights. Just ask!","Try asking about tasks, students, or performance!"]);
   }
+
   function parseMarkdown(text) {
-    return text.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br/>');
+    return text
+      .replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')
+      .replace(/\n/g,'<br/>');
   }
-  const QUICK = ['Class performance?', 'Who is at risk?', 'Go to Tasks', 'Suggest something'];
-  return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("button", {
-    id: "copilot-tour-anchor",
-    className: "copilot-fab",
-    onClick: () => {
-      setOpen(o => !o);
-      setUnread(0);
+
+  const QUICK_ACTIONS = [
+    { label:'📊 Class status', q:'What is the current class status and performance?' },
+    { label:'⚠️ At-risk students', q:'Who is struggling or at risk?' },
+    { label:'💡 Suggest next step', q:'What should I do next in class?' },
+    { label:'📝 Create quiz', q:'Create a short 3-question MCQ quiz I can use right now' },
+    { label:'📈 Go to Reports', q:'Go to Reports' },
+    { label:'🗺️ Start tour', q:'Start tour' },
+  ];
+
+  const INSIGHT_ACTIONS = [
+    { label:'📉 Low participation fix', q:'Participation is low — what are 3 quick engagement ideas?' },
+    { label:'🎯 Topic gap analysis', q:'Analyze topic confusion and suggest targeted interventions' },
+    { label:'✍️ Generate homework', q:'Generate 5 homework questions based on today\'s class topics' },
+    { label:'🧪 Create MCQ set', q:'Create 5 MCQ questions for a formative assessment' },
+    { label:'📋 Class summary', q:'Give me a brief summary of how today\'s class is going' },
+    { label:'🏆 Leaderboard insight', q:'Based on the leaderboard, which students should I highlight?' },
+  ];
+
+  const modeChips = activeMode === 'chat' ? QUICK_ACTIONS : INSIGHT_ACTIONS;
+
+  // ── Render ─────────────────────────────────────────────────────────
+  return /*#__PURE__*/React.createElement(React.Fragment, null,
+    // FAB — no inline position/bottom/right so CSS @media queries control it cleanly
+    /*#__PURE__*/React.createElement('button', {
+      id:'copilot-tour-anchor', className:'copilot-fab',
+      onClick:()=>{ setOpen(o=>!o); setUnread(0); },
+      title:'ClassMind AI Copilot — your AI teaching assistant'
     },
-    title: "ClassMind Copilot",
-    style: {
-      position: 'fixed',
-      bottom: '28px',
-      right: '28px',
-      zIndex: 99999
-    }
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "copilot-pulse"
-  }), open ? '✕' : '🧠', !open && unread > 0 && /*#__PURE__*/React.createElement("span", {
-    className: "copilot-badge"
-  }, unread)), open && /*#__PURE__*/React.createElement("div", {
-    className: "copilot-window",
-    style: {
-      position: 'fixed',
-      bottom: '96px',
-      right: '28px',
-      zIndex: 99998
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "copilot-header"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "copilot-header-info"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "copilot-avatar"
-  }, "\uD83E\uDDE0"), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
-    className: "copilot-title"
-  }, "ClassMind Copilot"), /*#__PURE__*/React.createElement("div", {
-    className: "copilot-subtitle",
-    style: {
-      display: 'flex',
-      alignItems: 'center',
-      gap: 5
-    }
-  }, /*#__PURE__*/React.createElement("span", {
-    style: {
-      width: 7,
-      height: 7,
-      borderRadius: '50%',
-      background: 'var(--green)',
-      display: 'inline-block'
-    }
-  }), "Online \u2014 always here to help"))), /*#__PURE__*/React.createElement("button", {
-    className: "copilot-close",
-    onClick: () => setOpen(false)
-  }, "\u2715")), /*#__PURE__*/React.createElement("div", {
-    className: "copilot-chips"
-  }, QUICK.map(q => /*#__PURE__*/React.createElement("button", {
-    key: q,
-    className: "copilot-chip",
-    onClick: () => quickAsk(q)
-  }, q))), /*#__PURE__*/React.createElement("div", {
-    className: "copilot-messages"
-  }, messages.map((m, i) => /*#__PURE__*/React.createElement("div", {
-    key: i,
-    className: `copilot-msg ${m.role}`
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "copilot-bubble",
-    dangerouslySetInnerHTML: {
-      __html: parseMarkdown(m.text)
-    }
-  }), /*#__PURE__*/React.createElement("span", {
-    className: "copilot-ts"
-  }, m.ts))), typing && /*#__PURE__*/React.createElement("div", {
-    className: "copilot-msg bot"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "copilot-typing"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "copilot-dot"
-  }), /*#__PURE__*/React.createElement("div", {
-    className: "copilot-dot"
-  }), /*#__PURE__*/React.createElement("div", {
-    className: "copilot-dot"
-  }))), /*#__PURE__*/React.createElement("div", {
-    ref: bottomRef
-  })), /*#__PURE__*/React.createElement("div", {
-    className: "copilot-input-row"
-  }, /*#__PURE__*/React.createElement("input", {
-    ref: inputRef,
-    className: "copilot-input",
-    value: input,
-    onChange: e => setInput(e.target.value),
-    onKeyDown: e => e.key === 'Enter' && !typing && handleSend(),
-    placeholder: "Ask anything\u2026",
-    disabled: typing
-  }), /*#__PURE__*/React.createElement("button", {
-    className: "copilot-send",
-    onClick: handleSend,
-    disabled: typing || !input.trim()
-  }, "\u27A4"))));
+      /*#__PURE__*/React.createElement('span', {className:'copilot-pulse'}),
+      /*#__PURE__*/React.createElement('span', {className:'copilot-pulse2'}),
+      open ? '✕' : '🧠',
+      !open && unread>0 && /*#__PURE__*/React.createElement('span', {className:'copilot-badge'}, unread>9?'9+':unread)
+    ),
+
+    // Panel
+    open && /*#__PURE__*/React.createElement('div', {
+      className:`copilot-window${fullscreen?' fullscreen':''}`,
+      style: fullscreen ? {position:'fixed',inset:0,zIndex:99998} : {zIndex:99998}
+    },
+      // Header
+      /*#__PURE__*/React.createElement('div', {className:'copilot-header'},
+        /*#__PURE__*/React.createElement('div', {className:'copilot-header-info'},
+          /*#__PURE__*/React.createElement('div', {className:'copilot-avatar'},
+            '🧠',
+            /*#__PURE__*/React.createElement('div', {className:'copilot-avatar-dot'})
+          ),
+          /*#__PURE__*/React.createElement('div', null,
+            /*#__PURE__*/React.createElement('div', {className:'copilot-title'}, 'ClassMind Copilot'),
+            /*#__PURE__*/React.createElement('div', {className:'copilot-subtitle'},
+              /*#__PURE__*/React.createElement('span', {className:'copilot-ai-badge'},
+                /*#__PURE__*/React.createElement('span', {className:'copilot-ai-dot'}), 'AI'
+              ),
+              ' Online — always here'
+            )
+          )
+        ),
+        /*#__PURE__*/React.createElement('div', {className:'copilot-header-actions'},
+          /*#__PURE__*/React.createElement('button', {className:'copilot-hbtn', onClick:()=>setFullscreen(f=>!f), title: fullscreen?'Exit fullscreen':'Fullscreen'},
+            fullscreen ? '⊡' : '⊞'
+          ),
+          /*#__PURE__*/React.createElement('button', {className:'copilot-close', onClick:()=>setOpen(false)}, '✕')
+        )
+      ),
+
+      // Mode bar
+      /*#__PURE__*/React.createElement('div', {className:'copilot-modebar'},
+        ['chat','insights'].map(m =>
+          /*#__PURE__*/React.createElement('button', {
+            key:m, className:`copilot-mode-btn${activeMode===m?' active':''}`,
+            onClick:()=>setActiveMode(m)
+          }, m==='chat'?'💬 Chat':'🔍 AI Insights')
+        )
+      ),
+
+      // Quick chips
+      /*#__PURE__*/React.createElement('div', {className:'copilot-chips'},
+        modeChips.map(a =>
+          /*#__PURE__*/React.createElement('button', {
+            key:a.label, className:'copilot-chip',
+            onClick:()=>quickAsk(a.q)
+          }, a.label)
+        )
+      ),
+
+      // Messages
+      /*#__PURE__*/React.createElement('div', {className:'copilot-messages'},
+        messages.map((m,i) =>
+          /*#__PURE__*/React.createElement('div', {key:i, className:`copilot-msg ${m.role}`},
+            /*#__PURE__*/React.createElement('div', {
+              className:'copilot-bubble',
+              dangerouslySetInnerHTML:{__html: parseMarkdown(m.text)}
+            }),
+            /*#__PURE__*/React.createElement('div', {style:{display:'flex',alignItems:'center',gap:6}},
+              /*#__PURE__*/React.createElement('span', {className:'copilot-ts'}, m.ts),
+              m.ai && /*#__PURE__*/React.createElement('span', {className:'copilot-ai-badge'}, '✨ AI')
+            )
+          )
+        ),
+        isThinking && /*#__PURE__*/React.createElement('div', {className:'copilot-msg bot'},
+          /*#__PURE__*/React.createElement('div', {className:'copilot-thinking'},
+            /*#__PURE__*/React.createElement('span', {className:'copilot-thinking-icon'}, '⚙️'),
+            'AI is thinking…'
+          )
+        ),
+        typing && !isThinking && /*#__PURE__*/React.createElement('div', {className:'copilot-msg bot'},
+          /*#__PURE__*/React.createElement('div', {className:'copilot-typing'},
+            /*#__PURE__*/React.createElement('div', {className:'copilot-dot'}),
+            /*#__PURE__*/React.createElement('div', {className:'copilot-dot'}),
+            /*#__PURE__*/React.createElement('div', {className:'copilot-dot'})
+          )
+        ),
+        /*#__PURE__*/React.createElement('div', {ref:bottomRef})
+      ),
+
+      // Input row
+      /*#__PURE__*/React.createElement('div', {className:'copilot-input-row'},
+        /*#__PURE__*/React.createElement('input', {
+          ref:inputRef,
+          className:'copilot-input',
+          value:input,
+          onChange:e=>setInput(e.target.value),
+          onKeyDown:e=>e.key==='Enter'&&!e.shiftKey&&handleSend(),
+          placeholder:'Ask anything or give a command…',
+          disabled:isThinking
+        }),
+        /*#__PURE__*/React.createElement('div', {className:'copilot-input-btns'},
+          /*#__PURE__*/React.createElement('button', {
+            className:`copilot-mic${listening?' listening':''}`,
+            onClick:toggleVoice, title: listening?'Stop listening':'Voice input'
+          }, listening ? '🔴' : '🎤'),
+          /*#__PURE__*/React.createElement('button', {
+            className:'copilot-send',
+            onClick:handleSend,
+            disabled:isThinking||!input.trim()
+          }, '➤')
+        )
+      )
+    )
+  );
 }
+
 
 // ═════════════════════════════════════════════════════════════════
 //  STUDENT LIVE HUD  (Feature 1)
@@ -18593,12 +19099,13 @@ function StudentCopilotLight({currentTask, submitted, result, answeredCount, cor
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
-  const [copilotMode, setCopilotMode] = useState('local');
+  const [isThinking, setIsThinking] = useState(false);
   const [wrongStreak, setWrongStreak] = useState(0);
   const [autoOpened, setAutoOpened] = useState(false);
   const idleRef = useRef(null);
   const bottomRef = useRef(null);
   const prevTaskId = useRef(null);
+  const abortRef = useRef(null);
 
   useEffect(() => {
     if (!submitted || !result) return;
@@ -18609,14 +19116,14 @@ function StudentCopilotLight({currentTask, submitted, result, answeredCount, cor
     clearTimeout(idleRef.current);
     if (!currentTask || submitted) return;
     idleRef.current = setTimeout(() => {
-      if (!open && !autoOpened) { setOpen(true); setAutoOpened(true); pushBot("⏱ Been thinking a while? Try **💡 Hint** or **🧠 Explain**!"); }
+      if (!open && !autoOpened) { setOpen(true); setAutoOpened(true); pushBot("⏱ Taking a moment? Tap **💡 Hint** or ask me anything about this question!"); }
     }, 30000);
     return () => clearTimeout(idleRef.current);
   }, [currentTask?.id, submitted, open]);
 
   useEffect(() => {
     if (wrongStreak >= 2 && submitted && result && !result.correct && !open) {
-      setTimeout(() => { setOpen(true); pushBot("📉 A few wrong in a row — let me help! Ask me anything below."); }, 700);
+      setTimeout(() => { setOpen(true); pushBot("📉 A few misses in a row — I'm here to help! Ask me to explain, hint, or motivate you."); }, 700);
     }
   }, [wrongStreak]);
 
@@ -18626,136 +19133,197 @@ function StudentCopilotLight({currentTask, submitted, result, answeredCount, cor
     prevTaskId.current = tid;
   }, [currentTask?.id]);
 
-  useEffect(() => {
-    if (bottomRef.current) bottomRef.current.scrollIntoView({behavior:'smooth'});
-  }, [messages]);
+  useEffect(() => { if (bottomRef.current) bottomRef.current.scrollIntoView({behavior:'smooth'}); }, [messages, isTyping, isThinking]);
 
-  function pushBot(text) { setMessages(m => [...m, {role:'bot', text}]); }
-  function pushUser(text) { setMessages(m => [...m, {role:'user', text}]); }
+  function pushBot(text, ai=false) { setMessages(m=>[...m, {role:'bot', text, ai}]); }
+  function pushUser(text) { setMessages(m=>[...m, {role:'user', text}]); }
 
-  function getLocalResponse(q) {
-    const ql = q.toLowerCase();
+  function fmtTs() { return new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}); }
+
+  // ── Build student context ──────────────────────────────────────────
+  function buildStudentContext() {
+    const taskQ = currentTask?.question || 'No question loaded';
+    const taskType = currentTask?.type || 'unknown';
+    const acc = answeredCount > 0 ? Math.round((correctCount/answeredCount)*100) : 0;
+    const mins = Math.floor(timeSpent/60); const secs = timeSpent%60;
+    return `You are a friendly, encouraging AI study assistant inside a live classroom platform called ClassMind.
+
+CURRENT TASK:
+- Question: ${taskQ}
+- Type: ${taskType} (mcq/short_answer/coding)
+- Student has answered: ${answeredCount} questions
+- Correct answers: ${correctCount} (${acc}% accuracy)
+- Time on this question: ${mins}m ${secs}s
+- Submitted: ${submitted ? 'Yes — result: ' + (result?.correct ? 'CORRECT' : 'INCORRECT') : 'Not yet submitted'}
+${currentTask?.hint ? '- Available hint: ' + currentTask.hint : ''}
+
+YOUR ROLE:
+- Give hints without revealing the direct answer
+- Explain concepts clearly and simply  
+- Encourage and motivate the student
+- Help them think through the problem step-by-step
+- If wrong, help them understand WHY without just giving the answer
+- Keep responses SHORT (2-4 sentences max usually)
+- Be warm, supportive, and student-friendly`;
+  }
+
+  // ── Call AI ────────────────────────────────────────────────────────
+  async function callAI(userMessage) {
+    try {
+      if (abortRef.current) abortRef.current.abort();
+      abortRef.current = new AbortController();
+      const resp = await fetch('https://api.anthropic.com/v1/messages', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        signal:abortRef.current.signal,
+        body: JSON.stringify({
+          model:'claude-sonnet-4-20250514',
+          max_tokens:200,
+          system: buildStudentContext(),
+          messages: [
+            ...messages.slice(-6).map(m=>({role:m.role==='user'?'user':'assistant',content:m.text})),
+            {role:'user',content:userMessage}
+          ]
+        })
+      });
+      if (!resp.ok) throw new Error('API '+resp.status);
+      const data = await resp.json();
+      return {text: data.content?.[0]?.text || 'Sorry, try again!', ai:true};
+    } catch(e) {
+      if (e.name==='AbortError') return null;
+      return {text: getLocalResponse(userMessage.toLowerCase()), ai:false};
+    }
+  }
+
+  function getLocalResponse(ql) {
     const taskQ = currentTask?.question || '';
-    if (!currentTask) return "No active task right now. Wait for the teacher to send a question!";
-    if (ql.includes('hint') || ql.includes('clue') || ql.includes('help')) {
+    if (!currentTask) return "No active task right now. Wait for your teacher to send a question!";
+    if (ql.includes('hint')||ql.includes('clue')||ql.includes('help')) {
       if (currentTask?.hint) return `💡 **Hint**: ${currentTask.hint}`;
-      const type = currentTask?.type;
-      if (type === 'mcq') return "For MCQ: eliminate obviously wrong options first. Look for keywords matching the question.";
-      if (type === 'coding') return "For coding: start with the simplest approach. Define your function, then handle the main logic, then edge cases.";
-      return "Read the question carefully. Identify the key action words — they tell you exactly what to do.";
+      if (currentTask?.type==='mcq') return "For MCQ: eliminate obviously wrong options first, then look for keywords in the question.";
+      if (currentTask?.type==='coding') return "For coding: define your function, handle the main logic, then think about edge cases.";
+      return "Read carefully — identify the key action words in the question. They tell you exactly what to do!";
     }
-    if (ql.includes('answer') && submitted && result) {
-      if (result.correct) return "✅ You got it right! Great work!";
-      return `❌ Not quite — review the concept and try to understand *why* each option is right or wrong.`;
+    if (ql.includes('explain')||ql.includes('what is')||ql.includes('how')) {
+      return `For **"${taskQ.substring(0,50)}…"** — break it into parts. What do you know? What's being asked? Work through each piece.`;
     }
-    if (ql.includes('explain') || ql.includes('what is') || ql.includes('how')) {
-      return `For **"${taskQ.substring(0,50)}..."** — focus on the core concept being tested. Break it into parts and think about each one separately.`;
+    if (ql.includes('time')) {
+      const mins=Math.floor(timeSpent/60); const secs=timeSpent%60;
+      return `You've been on this question for ${mins>0?`${mins}m `:''} ${secs}s. Take your time — thinking it through is the best approach!`;
     }
-    if (ql.includes('time') || ql.includes('how long')) {
-      const mins = Math.floor(timeSpent/60); const secs = timeSpent%60;
-      return `You've spent ${mins > 0 ? `${mins}m ` : ''}${secs}s on this question.`;
+    if (ql.includes('motivat')||ql.includes('encourage')) {
+      return ['You\'ve got this! 💪 Believe in yourself.','Stay focused — you\'re doing great! 🌟','Take a breath and give it another go! 🚀'][Math.floor(Math.random()*3)];
     }
-    return `Good question about "${taskQ.substring(0,40)}…"! Think step by step: what is being asked, what do you know, and what options make sense.`;
+    return `Good question! Think step-by-step: what is being asked, what do you know, and which answer fits best? 🧠`;
   }
 
   async function sendMessage() {
     const q = input.trim();
-    if (!q) return;
-    pushUser(q); setInput(''); setIsTyping(true);
-    await new Promise(r => setTimeout(r, 600 + Math.random()*400));
-    pushBot(getLocalResponse(q));
-    setIsTyping(false);
+    if (!q || isTyping || isThinking) return;
+    pushUser(q); setInput(''); setIsThinking(true);
+    const result2 = await callAI(q);
+    setIsThinking(false);
+    if (result2) pushBot(result2.text, result2.ai);
   }
 
   async function quickAction(type) {
     setOpen(true);
-    setIsTyping(true);
-    await new Promise(r => setTimeout(r, 500));
-    let resp = '';
-    if (type === 'hint') resp = getLocalResponse('hint');
-    else if (type === 'explain') resp = `**Explanation for:** "${(currentTask?.question||'').substring(0,60)}…"\n\n${getLocalResponse('explain')}`;
-    else if (type === 'why') resp = result?.correct ? '✅ You were correct! ' + (currentTask?.hint||'Keep up the great work.') : `❌ Incorrect. ${getLocalResponse('explain')}`;
-    else if (type === 'boost') { const msgs = ["You've got this! 💪","Stay focused — you're doing great!","Take a breath and re-read the question carefully. You can do it! 🌟"]; resp = msgs[Math.floor(Math.random()*msgs.length)]; }
-    pushBot(resp); setIsTyping(false);
+    let prompt = '';
+    if (type==='hint') prompt = 'Give me a hint for this question without revealing the answer';
+    else if (type==='explain') prompt = 'Explain the concept being tested in this question';
+    else if (type==='why') prompt = 'Explain why my answer was wrong and help me understand the correct approach';
+    else if (type==='boost') prompt = 'Motivate and encourage me to keep going!';
+    else if (type==='steps') prompt = 'Walk me through how to approach this step by step';
+    if (!prompt) return;
+    pushUser(prompt);
+    setIsThinking(true);
+    const res = await callAI(prompt);
+    setIsThinking(false);
+    if (res) pushBot(res.text, res.ai);
   }
 
-  const renderText = text => text.replace(/\*\*(.*?)\*\*/g, '$1');
+  const renderText = t => t.replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>').replace(/\n/g,'<br/>');
+
+  const QUICK_BTNS = [
+    {key:'hint',   icon:'💡', label:'Hint'},
+    {key:'explain',icon:'🧠', label:'Explain'},
+    {key:'steps',  icon:'📋', label:'Steps'},
+    submitted&&result&&!result.correct ? {key:'why',icon:'❓',label:'Why wrong?'} : null,
+    {key:'boost',  icon:'⚡', label:'Motivate'},
+  ].filter(Boolean);
 
   return React.createElement(React.Fragment, null,
     // FAB
     React.createElement('button', {
-      className: 'student-copilot-fab s-ui', onClick: ()=>setOpen(o=>!o),
-      title: 'AI Study Helper',
-      style:{zIndex:99999,position:'fixed',bottom:28,right:28,display:'flex',alignItems:'center',justifyContent:'center'}
-    }, open ? '✕' : '🤖'),
+      className:'student-copilot-fab s-ui',
+      onClick:()=>setOpen(o=>!o),
+      title:'AI Study Helper',
+      style:{position:'fixed',bottom:28,right:28,zIndex:99999}
+    },
+      React.createElement('span',{className:'s-pulse'}),
+      open ? '✕' : '🤖'
+    ),
 
     // Panel
-    open && React.createElement('div', {
-      className: 'student-copilot-panel s-ui',
-      style:{zIndex:99998,position:'fixed',bottom:96,right:28,width:340,borderRadius:16,
-        background:'rgba(10,15,35,0.97)',border:'1px solid rgba(14,165,233,0.2)',
-        backdropFilter:'blur(20px)',overflow:'hidden',
-        boxShadow:'0 20px 60px rgba(0,0,0,0.6)',animation:'copilot-open 0.22s cubic-bezier(0.34,1.56,0.64,1)'}
-    },
+    open && React.createElement('div', {className:'student-copilot-panel s-ui'},
       // Header
-      React.createElement('div', {style:{padding:'12px 16px',background:'linear-gradient(135deg,#0EA5E9,#7C3AED)',display:'flex',alignItems:'center',gap:10}},
-        React.createElement('span', {style:{fontSize:'1.2rem'}}, '🤖'),
-        React.createElement('div', null,
-          React.createElement('div', {style:{fontWeight:700,color:'#fff',fontSize:'0.9rem',fontFamily:"'Plus Jakarta Sans',sans-serif"}}, 'Study Copilot'),
-          React.createElement('div', {style:{fontSize:'0.68rem',color:'rgba(255,255,255,0.7)'}}, 'AI-powered study helper')
+      React.createElement('div', {className:'student-copilot-header'},
+        React.createElement('div', {className:'sc-avatar'},
+          '🤖',
+          React.createElement('div',{className:'sc-avatar-dot'})
         ),
-        React.createElement('button', {onClick:()=>setOpen(false),style:{marginLeft:'auto',background:'none',border:'none',color:'rgba(255,255,255,0.8)',cursor:'pointer',fontSize:'1.1rem',padding:4,borderRadius:6}}, '✕')
+        React.createElement('div', null,
+          React.createElement('div',{className:'student-copilot-title'},'Study Copilot'),
+          React.createElement('div',{className:'student-copilot-sub'},'AI-powered — always here')
+        ),
+        React.createElement('button',{
+          onClick:()=>setOpen(false), className:'student-copilot-close'
+        },'✕')
       ),
 
-      // Quick actions
-      !currentTask ? React.createElement('div', {style:{padding:'20px',textAlign:'center',color:'rgba(241,245,249,0.4)',fontSize:'0.85rem'}},
-        '⏳ Waiting for a task from your teacher…'
-      ) : React.createElement('div', {style:{padding:'10px 12px',display:'flex',gap:6,flexWrap:'wrap',borderBottom:'1px solid rgba(255,255,255,0.07)'}},
-        [
-          {key:'hint',icon:'💡',label:'Hint'},
-          {key:'explain',icon:'🧠',label:'Explain'},
-          submitted&&result&&!result.correct ? {key:'why',icon:'❌',label:'Why wrong?'} : null,
-          {key:'boost',icon:'⚡',label:'Motivate'},
-        ].filter(Boolean).map(a => React.createElement('button', {
-          key:a.key, onClick:()=>quickAction(a.key),
-          style:{padding:'5px 10px',borderRadius:8,border:'1px solid rgba(255,255,255,0.1)',
-            background:'rgba(255,255,255,0.04)',color:'rgba(241,245,249,0.7)',
-            cursor:'pointer',fontSize:'0.75rem',fontFamily:'inherit',display:'flex',alignItems:'center',gap:5,
-            transition:'all 0.15s'}
-        }, a.icon, ' ', a.label))
-      ),
+      // Quick action buttons
+      !currentTask
+        ? React.createElement('div',{className:'student-copilot-no-task'},'⏳ Waiting for your teacher to send a question…')
+        : React.createElement('div',{className:'sc-quick-btns'},
+          QUICK_BTNS.map(a => React.createElement('button',{
+            key:a.key, className:'sc-quick-btn', onClick:()=>quickAction(a.key)
+          }, a.icon,' ',a.label))
+        ),
 
       // Messages
-      React.createElement('div', {style:{height:200,overflowY:'auto',padding:'10px 12px',display:'flex',flexDirection:'column',gap:8}},
-        messages.length === 0 && React.createElement('div', {style:{textAlign:'center',color:'rgba(241,245,249,0.3)',fontSize:'0.8rem',paddingTop:20}},
-          'Ask me anything about this question!'
+      React.createElement('div',{className:'sc-messages'},
+        messages.length===0 && React.createElement('div',{className:'sc-empty'},'💬 Ask me anything about this question!'),
+        messages.map((m,i)=>React.createElement('div',{key:i,className:`sc-msg ${m.role}`},
+          React.createElement('div',{
+            className:'sc-bubble',
+            dangerouslySetInnerHTML:{__html:renderText(m.text)}
+          }),
+          m.ai && React.createElement('span',{
+            style:{fontSize:'0.62rem',color:'rgba(14,165,233,0.6)',paddingLeft:4}
+          },'✨ AI')
+        )),
+        isThinking && React.createElement('div',{className:'sc-msg bot'},
+          React.createElement('div',{className:'sc-typing'},
+            React.createElement('div',{className:'sc-dot'}),
+            React.createElement('div',{className:'sc-dot'}),
+            React.createElement('div',{className:'sc-dot'})
+          )
         ),
-        messages.map((m,i) => React.createElement('div', {
-          key:i,
-          style:{padding:'8px 11px',borderRadius:12,fontSize:'0.82rem',lineHeight:1.5,maxWidth:'90%',
-            alignSelf:m.role==='user'?'flex-end':'flex-start',
-            background:m.role==='user'?'linear-gradient(135deg,#0EA5E9,#7C3AED)':'rgba(255,255,255,0.07)',
-            color:'rgba(241,245,249,0.9)'}
-        }, renderText(m.text))),
-        isTyping && React.createElement('div', {style:{alignSelf:'flex-start',display:'flex',gap:4,padding:'8px 12px'}},
-          [0,1,2].map(i => React.createElement('div', {key:i,style:{width:6,height:6,borderRadius:'50%',background:'#0EA5E9',animation:`copilot-dot-bounce 1.2s ${i*0.2}s infinite`}}))
-        ),
-        React.createElement('div', {ref:bottomRef})
+        React.createElement('div',{ref:bottomRef})
       ),
 
       // Input
-      React.createElement('div', {style:{padding:'8px 12px',borderTop:'1px solid rgba(255,255,255,0.07)',display:'flex',gap:8}},
-        React.createElement('input', {
+      React.createElement('div',{className:'sc-input-row'},
+        React.createElement('input',{
           value:input, onChange:e=>setInput(e.target.value),
-          placeholder:'Ask anything…', className:'s-chat-input',
-          style:{flex:1,borderRadius:10,fontSize:'0.82rem'},
-          onKeyDown:e=>e.key==='Enter'&&sendMessage()
+          placeholder:'Ask anything…', className:'sc-input',
+          onKeyDown:e=>e.key==='Enter'&&!isThinking&&sendMessage(),
+          disabled:isThinking
         }),
-        React.createElement('button', {onClick:sendMessage,disabled:!input.trim(),
-          style:{padding:'7px 12px',borderRadius:10,border:'none',
-            background:'linear-gradient(135deg,#0EA5E9,#7C3AED)',color:'#fff',
-            cursor:'pointer',fontSize:'0.82rem'}
-        }, '→')
+        React.createElement('button',{
+          onClick:sendMessage, disabled:!input.trim()||isThinking,
+          className:'sc-send'
+        },'➤')
       )
     )
   );
@@ -19373,9 +19941,10 @@ function _vcCleanup() {
 
 // ── TEACHER: VC Page (full view) ──────────────────────────────────
 function VCPage({ sessionCode, roster, wsSend, sessionStatus, isTeacher, onVCStarted, onVCEnded }) {
-  const [vcActive, setVcActive] = useState(false);
-  const [micOn, setMicOn] = useState(true);
-  const [camOn, setCamOn] = useState(true);
+  // Initialize from _vcState so that hiding/showing this page doesn't lose live session
+  const [vcActive, setVcActive] = useState(() => !!_vcState.localStream);
+  const [micOn, setMicOn] = useState(() => _vcState.micOn !== false);
+  const [camOn, setCamOn] = useState(() => _vcState.camOn !== false);
   const [screenSharing, setScreenSharing] = useState(false);
   const [participants, setParticipants] = useState([]); // [{id, name, stream, micOn, camOn}]
   const [pinnedId, setPinnedId] = useState(null);
@@ -19384,7 +19953,9 @@ function VCPage({ sessionCode, roster, wsSend, sessionStatus, isTeacher, onVCSta
   const remoteRefs = useRef({});
   const { add } = useContext(AppCtx);
 
-  // Inject signal sender into global state
+  // Always keep sendSignal pointed at current wsSend — critical for ICE signaling
+  // even when this page is CSS-hidden. Do NOT null it out on cleanup (that would
+  // break signaling while teacher is on another page).
   useEffect(() => {
     _vcState.sendSignal = (data) => {
       try { wsSend({ ...data, session_code: sessionCode }); } catch(e) {}
@@ -19397,13 +19968,12 @@ function VCPage({ sessionCode, roster, wsSend, sessionStatus, isTeacher, onVCSta
         return [...prev, { id: peerId, name, stream, micOn: true, camOn: true }];
       });
     };
-    return () => {
-      _vcState.sendSignal = null;
-      _vcState.onRemoteTrack = null;
-    };
+    // IMPORTANT: no cleanup that nulls sendSignal — it must stay alive while
+    // VCPage is CSS-hidden so ICE candidates continue to flow between pages.
   }, [wsSend, sessionCode, roster]);
 
-  // Attach local stream to video element
+  // Attach local stream to video element — runs whenever vcActive toggles
+  // or whenever the component becomes visible after CSS-hide
   useEffect(() => {
     if (localVideoRef.current && _vcState.localStream) {
       localVideoRef.current.srcObject = _vcState.localStream;
@@ -19720,10 +20290,11 @@ function VCPage({ sessionCode, roster, wsSend, sessionStatus, isTeacher, onVCSta
 
 // ── STUDENT: VC Panel (floating) ──────────────────────────────────
 function VCStudentPanel({ sessionCode, studentId, studentName, wsSend, vcInvite, onDismissInvite }) {
-  const [inCall, setInCall] = useState(false);
+  // Restore state from _vcState singleton on mount so call survives remounts
+  const [inCall, setInCall] = useState(() => !!_vcState.localStream && _vcState.role === 'student');
   const [minimized, setMinimized] = useState(false);
-  const [micOn, setMicOn] = useState(true);
-  const [camOn, setCamOn] = useState(true);
+  const [micOn, setMicOn] = useState(() => _vcState.micOn !== false);
+  const [camOn, setCamOn] = useState(() => _vcState.camOn !== false);
   const [remotes, setRemotes] = useState({}); // peerId -> stream
   const [vcError, setVcError] = useState(null);
   const localRef = useRef(null);
@@ -19758,7 +20329,8 @@ function VCStudentPanel({ sessionCode, studentId, studentName, wsSend, vcInvite,
     window.removeEventListener('mouseup', onMouseUp);
   }
 
-  // Signal sender
+  // Keep signal sender always alive — do NOT null it in cleanup
+  // so ICE candidates continue to flow regardless of sPage changes
   useEffect(() => {
     _vcState.sendSignal = (data) => {
       try { wsSend({ ...data, session_code: sessionCode }); } catch(e) {}
@@ -19766,10 +20338,10 @@ function VCStudentPanel({ sessionCode, studentId, studentName, wsSend, vcInvite,
     _vcState.onRemoteTrack = (peerId, stream) => {
       setRemotes(prev => ({ ...prev, [peerId]: stream }));
     };
-    return () => { _vcState.sendSignal = null; _vcState.onRemoteTrack = null; };
+    // No cleanup nulling — call must persist across sPage switches
   }, [wsSend, sessionCode]);
 
-  // Attach local stream
+  // Attach local stream — also re-attach on restore (inCall=true from _vcState)
   useEffect(() => {
     if (localRef.current && _vcState.localStream) {
       localRef.current.srcObject = _vcState.localStream;
@@ -19784,10 +20356,17 @@ function VCStudentPanel({ sessionCode, studentId, studentName, wsSend, vcInvite,
     });
   }, [remotes]);
 
-  // Cleanup on unmount
-  useEffect(() => () => { if (inCall) { _vcCleanup(); } }, []);
+  // Only cleanup on intentional leave, never on unmount
+  // (component may unmount/remount due to sPage changes)
 
   async function joinCall() {
+    // Guard: already in call — don't create duplicate peer connections
+    if (_vcState.localStream) {
+      setInCall(true);
+      add('Already in call', 'info');
+      if (onDismissInvite) onDismissInvite();
+      return;
+    }
     setVcError(null);
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
@@ -19802,8 +20381,10 @@ function VCStudentPanel({ sessionCode, studentId, studentName, wsSend, vcInvite,
       setCamOn(true);
       // Notify teacher/peers we joined
       wsSend({ type: 'vc_join', session_code: sessionCode, student_id: studentId, student_name: studentName });
-      // Initiate peer connection to teacher
-      const pc = _vcCreatePeer('teacher', true);
+      // Initiate peer connection to teacher — guard against duplicate
+      if (!_vcState.peers['teacher']) {
+        _vcCreatePeer('teacher', true);
+      }
       add('📹 Joined the live video class!', 'success');
       if (onDismissInvite) onDismissInvite();
     } catch(e) {
@@ -19829,6 +20410,7 @@ function VCStudentPanel({ sessionCode, studentId, studentName, wsSend, vcInvite,
     if (!_vcState.localStream) return;
     const on = !micOn;
     _vcState.localStream.getAudioTracks().forEach(t => { t.enabled = on; });
+    _vcState.micOn = on;
     setMicOn(on);
     wsSend({ type: 'vc_mute_update', session_code: sessionCode, student_id: studentId, micOn: on });
   }
@@ -19837,6 +20419,7 @@ function VCStudentPanel({ sessionCode, studentId, studentName, wsSend, vcInvite,
     if (!_vcState.localStream) return;
     const on = !camOn;
     _vcState.localStream.getVideoTracks().forEach(t => { t.enabled = on; });
+    _vcState.camOn = on;
     setCamOn(on);
   }
 
@@ -20009,6 +20592,24 @@ function TeacherVCFloat({ sessionCode, roster, wsSend, vcActive, localStream, pa
   const remoteRefs = useRef({});
   const panelRef = useRef(null);
   const dragRef = useRef({ dragging:false,startX:0,startY:0,origX:0,origY:0 });
+
+  // Keep _vcState.sendSignal alive even if VCPage hasn't registered its own handler yet.
+  // Uses a weak fallback pattern: only sets if not already set by VCPage.
+  useEffect(() => {
+    const fallbackSignal = (data) => {
+      try { wsSend({ ...data, session_code: sessionCode }); } catch(e) {}
+    };
+    // Register as fallback; VCPage's handler (set with same ref) takes precedence
+    if (!_vcState.sendSignal) {
+      _vcState.sendSignal = fallbackSignal;
+    }
+    // Store our ref so we can identify our own cleanup
+    const myRef = fallbackSignal;
+    return () => {
+      // Only clear if we were the one who set it (don't clear VCPage's handler)
+      if (_vcState.sendSignal === myRef) _vcState.sendSignal = null;
+    };
+  }, [wsSend, sessionCode]);
 
   useEffect(() => {
     if (localRef.current && localStream) localRef.current.srcObject = localStream;

@@ -1536,7 +1536,7 @@ async def join_session(
         )
         raise HTTPException(
             400,
-            "Aap pehle se class me joined hain. (You are already joined in this class)"
+            "You are already joined in this class"
         )
 
     # Check if roll is already active in this session (but with different name or class)
@@ -1546,7 +1546,7 @@ async def join_session(
             "[DUPLICATE_ROLL] Roll %s is already active in session %s",
             roll_n, code
         )
-        raise HTTPException(403, "This roll number is already in use in this session. (Yah roll number pehle se active hai.)")
+        raise HTTPException(403, "This roll number is already in use in this session")
 
     # ═ STEP 1: Create student and add to waiting room ═
     student          = new_student(name, anonymous)

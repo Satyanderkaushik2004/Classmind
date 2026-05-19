@@ -17170,6 +17170,23 @@ function StudentTaskView({
           className:`s-hand-btn ${handRaised?'raised s-hand-raised-anim':''}`,
           onClick:toggleHand
         }, handRaised?'✋ Raised':'✋ Raise Hand'),
+        // Leave Session button
+        React.createElement('button', {
+          className:'s-leave-btn',
+          onClick: async () => {
+            if (confirm('Kya aap session chhod dena chahte hain? (Do you want to leave the session?)')) {
+              try {
+                await apiFetch(`/api/session/${sessionCode}/student/${studentId}/leave`, {method:'POST'});
+                add('Aap session ko chhod diye. Aap baad mein dobara join kar sakte hain. (You left the session. You can rejoin later.)', 'info');
+                navigate('landing');
+              } catch (e) {
+                add('Error leaving session: ' + e.message, 'error');
+              }
+            }
+          },
+          title:'Leave session',
+          style:{padding:'6px 12px',borderRadius:8,border:'1px solid rgba(255,100,100,0.5)',background:'rgba(255,100,100,0.1)',color:'#ff6464',cursor:'pointer',fontSize:'0.85rem',fontWeight:600,fontFamily:'inherit',transition:'all 0.2s'}
+        }, '🚪 Leave'),
         // Session pill with display name + code
         React.createElement('div', {
           className:'s-session-chip',

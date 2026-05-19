@@ -1519,6 +1519,26 @@ async def join_session(
             raise HTTPException(403, "You are not allowed in this session")
         name_n, roll_n, cls_n = match
 
+    # ═ DUPLICATE JOIN CHECK: Prevent active students from joining again ═
+    # Check if a student with same name, roll, and class is already ACTIVE
+    duplicate_check = next(
+        (sid for sid, st in s.get("students", {}).items()
+         if (st.get("name", "").strip().lower() == name_n and
+             st.get("roll", "").strip() == roll_n and
+             st.get("class", "").strip().upper() == cls_n and
+             st.get("status") == "active")),
+        None
+    )
+    if duplicate_check:
+        log.warning(
+            "[DUPLICATE] Student %s tried to rejoin while already active (name=%s, roll=%s, class=%s)",
+            duplicate_check, name_n, roll_n, cls_n
+        )
+        raise HTTPException(
+            400,
+            "Aap pehle se class me joined hain. (You are already joined in this class)"
+        )
+
     if roll_n in s.get("active_rolls", set()):
         raise HTTPException(403, "This roll number is already active")
 
@@ -1678,6 +1698,72 @@ async def kick_student(code: str, student_id: str):
     if roll:
         s.get("active_rolls", set()).discard(roll)
     return {"kicked": True}
+
+
+@app.post("/api/session/{code}/student/{student_id}/leave")
+async def student_leave_session(code: str, student_id: str):
+    """Student voluntarily leaves/exits the session.
+    
+    This marks the student as "left" instead of "removed", allowing them to rejoin later.
+    """
+    s = _S(code)
+    
+    if student_id not in s.get("students", {}):
+        raise HTTPException(404, "Student not found")
+    
+    student = s["students"][student_id]
+    student_name = student.get("name", "?")
+    
+    log.info(
+        "[LEAVE] Student %s (%s) left session %s",
+        student_id, student_name, code
+    )
+    
+    # ═ STEP 1: Mark attendance leave (if student was active) ═
+    if student.get("status") == "active":
+        attendance_mark_leave(s, student_id)
+    
+    # ═ STEP 2: Remove from waiting room if present ═
+    if student_id in s["waiting_room"]:
+        s["waiting_room"].remove(student_id)
+        log.debug("[LEAVE] Removed %s from waiting room", student_id)
+    
+    # ═ STEP 3: Set status to "left" (NOT "removed") ═
+    # This allows the student to rejoin with same name/roll/class
+    student["status"] = "left"
+    
+    # ═ STEP 4: Clean up active rolls ═
+    roll = student.get("roll")
+    if roll:
+        s.get("active_rolls", set()).discard(roll)
+    
+    # ═ STEP 5: Broadcast attendance update ═
+    asyncio.create_task(broadcast_attendance(s))
+    
+    # ═ STEP 6: Update roster for teacher ═
+    await push_roster(s)
+    
+    touch_session(s)
+    save_session(code)
+    
+    admin_broadcast({
+        "event": "student_left",
+        "session_code": code,
+        "student_id": student_id,
+        "student_name": student_name,
+        "reason": "voluntary_exit",
+    })
+    
+    log.info(
+        "[LEAVE] Student %s marked as left (can rejoin later)",
+        student_id
+    )
+    
+    return {
+        "left": True,
+        "student_id": student_id,
+        "message": "Aap session ko chhod diye. Aap baad mein dobara join kar sakte hain. (You have left the session. You can rejoin later.)"
+    }
 
 
 # ══════════════════════════════════════════════════════════════════

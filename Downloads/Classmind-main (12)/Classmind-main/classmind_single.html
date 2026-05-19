@@ -8480,26 +8480,55 @@ function SmartAttendancePage({ sessionCode, sessionStatus, roster, wsSend }) {
   const [minDur, setMinDur] = useState(60);
   const [search, setSearch] = useState('');
   const [toast, setToast] = useState(null);
+  const [lastUpdated, setLastUpdated] = useState(Date.now());
+  const [isLoading, setIsLoading] = useState(false);
   const prevPresentRef = React.useRef(0);
+  const pollIntervalRef = React.useRef(null);
 
-  // Load initial attendance state
-  React.useEffect(() => {
-    async function load() {
-      try {
-        const r = await apiFetch(`/api/session/${sessionCode}/attendance`);
-        setAtt(r);
-        setMinDur(r.min_duration || 60);
-      } catch(e) {}
+  // Fetch attendance data from backend
+  const fetchAttendanceData = React.useCallback(async () => {
+    try {
+      setIsLoading(true);
+      const r = await apiFetch(`/api/session/${sessionCode}/attendance`);
+      setAtt(r);
+      setLastUpdated(Date.now());
+      setMinDur(r.min_duration || 60);
+      console.log('[ATTENDANCE] Data fetched:', r);
+    } catch(e) {
+      console.error('[ATTENDANCE] Fetch error:', e.message);
+    } finally {
+      setIsLoading(false);
     }
-    load();
-    const id = setInterval(load, 8000);
-    return () => clearInterval(id);
   }, [sessionCode]);
+
+  // Load initial attendance state and setup polling
+  React.useEffect(() => {
+    fetchAttendanceData();
+    
+    // Setup polling: fetch every 5 seconds when attendance is active, every 10 seconds otherwise
+    const setupPolling = () => {
+      const interval = att.state === 'active' || att.state === 'paused' ? 5000 : 10000;
+      if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
+      pollIntervalRef.current = setInterval(() => {
+        fetchAttendanceData();
+      }, interval);
+    };
+    
+    setupPolling();
+    
+    return () => {
+      if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
+    };
+  }, [sessionCode, fetchAttendanceData, att.state]);
 
   // Listen for live attendance_update from parent WS — injected via a ref trick
   // The parent TeacherShell will call window.__attUpdate(data) on WS msg
   React.useEffect(() => {
-    window.__attUpdate = (data) => setAtt(data);
+    window.__attUpdate = (data) => {
+      console.log('[ATTENDANCE] WebSocket update:', data);
+      setAtt(data);
+      setLastUpdated(Date.now());
+    };
     return () => { window.__attUpdate = null; };
   }, []);
 
@@ -8622,13 +8651,13 @@ function SmartAttendancePage({ sessionCode, sessionStatus, roster, wsSend }) {
         ),
         React.createElement('div', { className: 'att-header-sub' },
           state === 'active'
-            ? `Live tracking · Started at ${fmtTime(att.started_at)} · Min stay: ${att.min_duration}s`
+            ? `Live tracking · Started at ${fmtTime(att.started_at)} · Min stay: ${att.min_duration}s · Updated: ${new Date(lastUpdated).toLocaleTimeString()}`
             : state === 'locked'
-            ? `Locked at ${fmtTime(att.locked_at)} — Attendance is final`
+            ? `Locked at ${fmtTime(att.locked_at)} — Attendance is final · Updated: ${new Date(lastUpdated).toLocaleTimeString()}`
             : state === 'ended'
-            ? `Ended at ${fmtTime(att.ended_at)} — ${att.present} of ${att.total} marked present`
+            ? `Ended at ${fmtTime(att.ended_at)} — ${att.present} of ${att.total} marked present · Updated: ${new Date(lastUpdated).toLocaleTimeString()}`
             : state === 'paused'
-            ? `Paused · ${att.present} present so far`
+            ? `Paused · ${att.present} present so far · Updated: ${new Date(lastUpdated).toLocaleTimeString()}`
             : 'Start attendance to begin live tracking'
         )
       ),

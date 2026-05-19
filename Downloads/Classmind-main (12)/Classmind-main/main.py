@@ -1544,7 +1544,7 @@ async def join_session(
     if roll_n in s.get("active_rolls", set()):
         log.warning(
             "[DUPLICATE_ROLL] Roll %s is already active in session %s",
-            roll_n, session_code
+            roll_n, code
         )
         raise HTTPException(403, "This roll number is already in use in this session. (Yah roll number pehle se active hai.)")
 

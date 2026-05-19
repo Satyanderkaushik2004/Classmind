@@ -6431,8 +6431,20 @@ async function apiFetch(path, opts = {}) {
     let detail = res.statusText;
     try {
       const err = await res.json();
-      detail = err.detail || err.message || detail;
-    } catch {}
+      // FastAPI returns error in 'detail' field
+      // Try detail first, then message, then full error object
+      if (err.detail) {
+        detail = typeof err.detail === 'string' ? err.detail : JSON.stringify(err.detail);
+      } else if (err.message) {
+        detail = err.message;
+      } else if (err.error) {
+        detail = err.error;
+      } else {
+        detail = Object.values(err).find(v => typeof v === 'string') || detail;
+      }
+    } catch (parseErr) {
+      // If response is not JSON, use statusText
+    }
     throw new Error(detail || `Request failed (${res.status})`);
   }
   return res.json();

@@ -1348,26 +1348,61 @@ hr{border:none;border-top:1px solid var(--border);margin:16px 0}
   .motiv-toast{min-width:unset;width:100%}
 }
 
-/* ── Teacher Copilot (Premium Redesign) ── */
+/* ══════════════════════════════════════════════════════════════════════
+   GLOBAL CO-PILOT — Portal-rendered, ALWAYS on top, never clipped
+   Root causes fixed:
+     1. ReactDOM.createPortal → renders directly on <body>, bypassing
+        ALL ancestor stacking contexts (transform, filter, will-change)
+     2. z-index:9999999 — above every modal, overlay, VC panel, tour
+     3. contain:none — prevents CSS Containment from confining the layer
+     4. transform:translateZ(0) — forces GPU compositing layer
+     5. Desktop: 24px offsets + larger 64px button
+══════════════════════════════════════════════════════════════════════ */
 .copilot-fab{
-  position:fixed;bottom:28px;right:28px;z-index:99999;
+  /* CRITICAL POSITION — must never move or be overridden */
+  position:fixed !important;
+  bottom:24px !important;
+  right:24px !important;
+  z-index:9999999 !important;
+
   width:60px;height:60px;border-radius:50%;border:none;cursor:pointer;
   background:linear-gradient(135deg,#6366f1,#8b5cf6,#a855f7);
   color:#fff;font-size:1.5rem;
   box-shadow:0 4px 24px rgba(99,102,241,0.55),0 0 0 1px rgba(139,92,246,0.3);
   display:flex !important;align-items:center;justify-content:center;
-  transition:transform 0.25s cubic-bezier(0.34,1.56,0.64,1),box-shadow 0.2s;
   visibility:visible !important;opacity:1 !important;
-  /* FIX: overflow:hidden was clipping the badge + pulse rings that extend outside the circle */
   overflow:visible;
+
+  /* GPU compositing — prevents repaint on scroll/layout */
+  transform:translateZ(0);
+  will-change:transform,box-shadow;
+  backface-visibility:hidden;
+  -webkit-backface-visibility:hidden;
+
+  /* Prevent any containment from clipping this element */
+  contain:none;
+
+  transition:transform 0.25s cubic-bezier(0.34,1.56,0.64,1),box-shadow 0.2s;
+
+  /* Entrance animation */
+  animation:copilot-fab-enter 0.4s cubic-bezier(0.34,1.56,0.64,1) both;
 }
+
+@keyframes copilot-fab-enter{
+  from{transform:translateZ(0) scale(0) translateY(20px);opacity:0}
+  to{transform:translateZ(0) scale(1) translateY(0);opacity:1}
+}
+
 .copilot-fab::after{
   content:'';position:absolute;inset:0;border-radius:50%;
   background:linear-gradient(135deg,rgba(255,255,255,0.2),transparent);
-  /* clip the gloss shine to the circle without hiding overflow on the parent */
   pointer-events:none;
 }
-.copilot-fab:hover{transform:scale(1.1) translateY(-2px);box-shadow:0 8px 32px rgba(99,102,241,0.7),0 0 0 1px rgba(139,92,246,0.5)}
+.copilot-fab:hover{
+  transform:translateZ(0) scale(1.1) translateY(-2px);
+  box-shadow:0 8px 32px rgba(99,102,241,0.75),0 0 0 1px rgba(139,92,246,0.5),
+             0 0 48px rgba(99,102,241,0.3);
+}
 .copilot-fab .copilot-pulse{
   position:absolute;width:60px;height:60px;border-radius:50%;
   background:rgba(99,102,241,0.3);
@@ -1384,25 +1419,35 @@ hr{border:none;border-top:1px solid var(--border);margin:16px 0}
 
 /* Normal window */
 .copilot-window{
-  position:fixed;bottom:100px;right:28px;z-index:99998;
+  position:fixed !important;
+  bottom:100px;right:24px;
+  z-index:9999998 !important;
   width:390px;height:600px;
   background:var(--surface);
   border:1px solid rgba(99,102,241,0.25);
   border-radius:20px;
   box-shadow:0 12px 60px rgba(0,0,0,0.5),0 0 0 1px rgba(99,102,241,0.1),inset 0 1px 0 rgba(255,255,255,0.05);
   display:flex;flex-direction:column;overflow:hidden;
-  animation:copilot-open 0.28s cubic-bezier(0.34,1.56,0.64,1);
+  animation:copilot-open 0.32s cubic-bezier(0.34,1.56,0.64,1);
   transform-origin:bottom right;
   transition:width 0.3s ease,height 0.3s ease,bottom 0.3s ease,right 0.3s ease,border-radius 0.3s ease;
+  /* Portal renders on body — no stacking context interference */
+  contain:none;
+  backface-visibility:hidden;
+  -webkit-backface-visibility:hidden;
 }
 /* Fullscreen window */
 .copilot-window.fullscreen{
-  position:fixed;inset:0;bottom:0;right:0;z-index:99998;
+  position:fixed !important;inset:0;bottom:0;right:0;
+  z-index:9999998 !important;
   width:100vw !important;height:100vh !important;
   border-radius:0 !important;
   animation:none;
 }
-@keyframes copilot-open{from{transform:scale(0.7) translateY(20px);opacity:0}to{transform:scale(1) translateY(0);opacity:1}}
+@keyframes copilot-open{
+  from{transform:scale(0.75) translateY(24px);opacity:0;filter:blur(4px)}
+  to{transform:scale(1) translateY(0);opacity:1;filter:blur(0)}
+}
 
 /* Backdrop blur overlay when fullscreen */
 .copilot-window.fullscreen::before{
@@ -1581,8 +1626,56 @@ hr{border:none;border-top:1px solid var(--border);margin:16px 0}
 
 @media(max-width:600px){
   .copilot-window{width:calc(100vw - 20px);right:10px;bottom:80px;height:75vh}
-  .copilot-fab{bottom:16px;right:16px}
+  .copilot-fab{bottom:16px !important;right:16px !important}
   .copilot-window.fullscreen{height:100dvh}
+}
+
+/* ── DESKTOP / LAPTOP — premium copilot experience ── */
+@media(min-width:769px){
+  .copilot-fab{
+    width:64px !important;
+    height:64px !important;
+    font-size:1.65rem;
+    bottom:24px !important;
+    right:24px !important;
+    box-shadow:
+      0 6px 28px rgba(99,102,241,0.6),
+      0 0 0 1px rgba(139,92,246,0.35),
+      0 0 60px rgba(99,102,241,0.15);
+  }
+  .copilot-window{
+    width:430px;
+    height:640px;
+    bottom:108px;
+    right:24px;
+    border-radius:22px;
+    box-shadow:
+      0 24px 80px rgba(0,0,0,0.55),
+      0 0 0 1px rgba(99,102,241,0.15),
+      inset 0 1px 0 rgba(255,255,255,0.07),
+      0 0 120px rgba(99,102,241,0.06);
+    /* Glassmorphism feel on desktop */
+    backdrop-filter:blur(0px);
+  }
+  /* Keyboard shortcut badge visible on desktop */
+  .copilot-kb-hint{
+    display:flex;align-items:center;gap:4px;
+    font-size:0.65rem;color:rgba(255,255,255,0.45);
+    position:absolute;bottom:-22px;left:50%;transform:translateX(-50%);
+    white-space:nowrap;pointer-events:none;
+    opacity:0;transition:opacity 0.2s;
+  }
+  .copilot-fab:hover .copilot-kb-hint{opacity:1}
+  .copilot-kb-hint kbd{
+    background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.2);
+    border-radius:4px;padding:1px 5px;font-family:monospace;font-size:0.6rem;
+  }
+}
+
+/* ── TABLET — medium breakpoint ── */
+@media(min-width:601px) and (max-width:768px){
+  .copilot-fab{bottom:80px !important;right:16px !important}
+  .copilot-window{width:calc(100vw - 32px);right:16px;bottom:154px;height:70vh}
 }
 /* ── Guided Tour ── */
 .tour-overlay{
@@ -1660,6 +1753,20 @@ hr{border:none;border-top:1px solid var(--border);margin:16px 0}
   box-shadow:0 2px 6px rgba(239,68,68,0.5);
   animation:blink 1.5s infinite;
   pointer-events:none;
+}
+
+/* ── Desktop Keyboard hint tooltip (hidden by default, shown on hover in media query) ── */
+.copilot-kb-hint{
+  display:none; /* enabled via desktop @media block */
+}
+
+/* ── Copilot AI-thinking pulse state ── */
+.copilot-fab.is-thinking{
+  animation:copilot-thinking-glow 1.2s ease-in-out infinite !important;
+}
+@keyframes copilot-thinking-glow{
+  0%,100%{box-shadow:0 4px 24px rgba(99,102,241,0.55),0 0 0 1px rgba(139,92,246,0.3)}
+  50%{box-shadow:0 6px 36px rgba(99,102,241,0.9),0 0 0 2px rgba(139,92,246,0.7),0 0 60px rgba(99,102,241,0.35)}
 }
 
 /* ── Auto Intervention Popup ── */
@@ -1829,37 +1936,49 @@ hr{border:none;border-top:1px solid var(--border);margin:16px 0}
 
 /* ── 5. Student Copilot (Premium) ── */
 .student-copilot-fab{
-  position:fixed;bottom:28px;right:28px;left:auto;z-index:99999;
+  position:fixed !important;
+  bottom:24px !important;right:24px !important;left:auto !important;
+  z-index:9999999 !important;
   width:56px;height:56px;border-radius:50%;border:none;cursor:pointer;
   background:linear-gradient(135deg,#0ea5e9,#10b981,#06b6d4);
   color:#fff;font-size:1.35rem;
   box-shadow:0 4px 22px rgba(14,165,233,0.55),0 0 0 1px rgba(16,185,129,0.2);
   display:flex !important;align-items:center;justify-content:center;
+  visibility:visible !important;opacity:1 !important;overflow:visible;
+  /* GPU compositing layer — same fix as teacher copilot */
+  transform:translateZ(0);
+  will-change:transform,box-shadow;
+  backface-visibility:hidden;
+  -webkit-backface-visibility:hidden;
+  contain:none;
   transition:transform 0.25s cubic-bezier(0.34,1.56,0.64,1),box-shadow 0.2s;
-  visibility:visible !important;opacity:1 !important;overflow:hidden;
+  animation:copilot-fab-enter 0.4s cubic-bezier(0.34,1.56,0.64,1) both;
 }
 .student-copilot-fab::before{
   content:'';position:absolute;inset:0;border-radius:50%;
   background:linear-gradient(135deg,rgba(255,255,255,0.2),transparent);
   pointer-events:none;
 }
-.student-copilot-fab:hover{transform:scale(1.1) translateY(-2px);box-shadow:0 8px 30px rgba(14,165,233,0.7)}
+.student-copilot-fab:hover{transform:translateZ(0) scale(1.1) translateY(-2px);box-shadow:0 8px 30px rgba(14,165,233,0.7)}
 .student-copilot-fab .s-pulse{
   position:absolute;width:56px;height:56px;border-radius:50%;
   background:rgba(14,165,233,0.3);animation:copilot-ring 2.5s ease-out infinite;pointer-events:none;
 }
 .student-copilot-panel{
-  position:fixed;bottom:96px;right:28px;left:auto;z-index:99998;
+  position:fixed !important;
+  bottom:92px;right:24px;left:auto;
+  z-index:9999998 !important;
   width:360px;
   background:rgba(10,15,28,0.97);
   border:1px solid rgba(14,165,233,0.2);
   border-radius:20px;
   box-shadow:0 20px 70px rgba(0,0,0,0.65),inset 0 1px 0 rgba(255,255,255,0.04);
   overflow:hidden;
-  animation:copilot-open 0.28s cubic-bezier(0.34,1.56,0.64,1);
+  animation:copilot-open 0.32s cubic-bezier(0.34,1.56,0.64,1);
   transform-origin:bottom right;
   backdrop-filter:blur(20px);
   display:flex;flex-direction:column;max-height:580px;
+  contain:none;
 }
 .student-copilot-header{
   padding:13px 16px;display:flex;align-items:center;gap:10px;flex-shrink:0;
@@ -1946,8 +2065,34 @@ hr{border:none;border-top:1px solid var(--border);margin:16px 0}
 .sc-empty{text-align:center;color:rgba(255,255,255,0.25);font-size:0.8rem;padding:24px 12px}
 .student-copilot-no-task{padding:20px;text-align:center;color:rgba(255,255,255,0.35);font-size:0.85rem}
 @media(max-width:600px){
-  .student-copilot-panel{width:calc(100vw - 20px);right:10px;left:auto;bottom:80px}
-  .student-copilot-fab{bottom:16px;right:16px;left:auto}
+  .student-copilot-panel{width:calc(100vw - 20px) !important;right:10px !important;left:auto !important;bottom:80px !important}
+  .student-copilot-fab{bottom:16px !important;right:16px !important;left:auto !important}
+}
+
+/* Desktop student copilot enhancements */
+@media(min-width:769px){
+  .student-copilot-fab{
+    width:62px !important;
+    height:62px !important;
+    font-size:1.5rem;
+    bottom:24px !important;
+    right:24px !important;
+    box-shadow:
+      0 6px 28px rgba(14,165,233,0.6),
+      0 0 0 1px rgba(16,185,129,0.25),
+      0 0 60px rgba(14,165,233,0.12);
+  }
+  .student-copilot-panel{
+    width:400px !important;
+    max-height:620px !important;
+    bottom:104px !important;
+    right:24px !important;
+    border-radius:22px !important;
+    box-shadow:
+      0 24px 80px rgba(0,0,0,0.6),
+      0 0 0 1px rgba(14,165,233,0.15),
+      inset 0 1px 0 rgba(255,255,255,0.06) !important;
+  }
 }
 
 /* ── 6. Waiting room tips ── */
@@ -2714,6 +2859,9 @@ body.s-ui-active .toasts {
 .s-page-wrap {
   flex: 1; display: flex; flex-direction: column;
   animation: s-pageIn 0.3s cubic-bezier(0.4,0,0.2,1) both;
+  /* NOTE: transform in s-pageIn would break position:fixed descendants.
+     The copilot is now rendered via ReactDOM.createPortal on <body>,
+     so it's immune to this stacking context. No changes needed here. */
 }
 @keyframes s-pageIn {
   from { opacity: 0; transform: translateY(8px); }
@@ -3890,7 +4038,7 @@ body.s-ui-active .toasts {
    FLOATING COMPONENTS — bottom sheets on mobile
    ───────────────────────────────────────────────────────────────── */
 @media(max-width:768px){
-  /* Copilot FABs — move up to clear bottom nav */
+  /* Copilot FABs — move up to clear bottom nav (mobile only) */
   .copilot-fab{ bottom:72px !important; right:14px !important; }
   .student-copilot-fab{ bottom:72px !important; right:14px !important; }
 
@@ -18677,24 +18825,55 @@ RESPONSE STYLE:
 
   const modeChips = activeMode === 'chat' ? QUICK_ACTIONS : INSIGHT_ACTIONS;
 
-  // ── Render ─────────────────────────────────────────────────────────
-  return /*#__PURE__*/React.createElement(React.Fragment, null,
-    // FAB — no inline position/bottom/right so CSS @media queries control it cleanly
+  // ── Ctrl+K / '/' keyboard shortcut ────────────────────────────────
+  useEffect(() => {
+    function onKeyDown(e) {
+      // Ctrl+K or Cmd+K — toggle copilot
+      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault();
+        setOpen(o => { const next = !o; if (next) setUnread(0); return next; });
+        return;
+      }
+      // '/' when no input is focused — open copilot
+      if (e.key === '/' && document.activeElement === document.body) {
+        e.preventDefault();
+        setOpen(true);
+        setUnread(0);
+        // Focus input after open animation
+        setTimeout(() => inputRef.current?.focus(), 180);
+      }
+    }
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, []);
+
+  // ── Render — PORTALED to document.body ────────────────────────────
+  // ReactDOM.createPortal renders the copilot DIRECTLY on <body>,
+  // completely bypassing ANY ancestor stacking context (transform,
+  // filter, will-change, overflow) that would otherwise break
+  // position:fixed or push the button behind other layers.
+  const copilotContent = /*#__PURE__*/ReactDOM.createPortal(React.createElement(React.Fragment, null,
+    // FAB
     /*#__PURE__*/React.createElement('button', {
       id:'copilot-tour-anchor', className:'copilot-fab',
       onClick:()=>{ setOpen(o=>!o); setUnread(0); },
-      title:'ClassMind AI Copilot — your AI teaching assistant'
+      title:'ClassMind AI Copilot — Ctrl+K to toggle'
     },
       /*#__PURE__*/React.createElement('span', {className:'copilot-pulse'}),
       /*#__PURE__*/React.createElement('span', {className:'copilot-pulse2'}),
       open ? '✕' : '🧠',
-      !open && unread>0 && /*#__PURE__*/React.createElement('span', {className:'copilot-badge'}, unread>9?'9+':unread)
+      !open && unread>0 && /*#__PURE__*/React.createElement('span', {className:'copilot-badge'}, unread>9?'9+':unread),
+      /*#__PURE__*/React.createElement('span', {className:'copilot-kb-hint'},
+        /*#__PURE__*/React.createElement('kbd', null, 'Ctrl'),
+        '+',
+        /*#__PURE__*/React.createElement('kbd', null, 'K')
+      )
     ),
 
     // Panel
     open && /*#__PURE__*/React.createElement('div', {
       className:`copilot-window${fullscreen?' fullscreen':''}`,
-      style: fullscreen ? {position:'fixed',inset:0,zIndex:99998} : {zIndex:99998}
+      style: fullscreen ? {position:'fixed',inset:0,zIndex:9999998} : {zIndex:9999998}
     },
       // Header
       /*#__PURE__*/React.createElement('div', {className:'copilot-header'},
@@ -18795,7 +18974,12 @@ RESPONSE STYLE:
         )
       )
     )
-  );
+  ), document.body);
+  // ↑ createPortal closes here — copilot renders on <body>,
+  //   bypassing ALL ancestor stacking contexts.
+
+  // ── Portal to <body> — completely bypasses any ancestor stacking context ──
+  return copilotContent;
 }
 
 
@@ -19252,13 +19436,18 @@ YOUR ROLE:
     {key:'boost',  icon:'⚡', label:'Motivate'},
   ].filter(Boolean);
 
-  return React.createElement(React.Fragment, null,
+  // ── Render — PORTALED to document.body ────────────────────────────
+  // ReactDOM.createPortal renders the student copilot DIRECTLY on <body>,
+  // bypassing the s-page-wrap transform animation and aurora filter
+  // that break position:fixed inside the student UI.
+  return ReactDOM.createPortal(React.createElement(React.Fragment, null,
     // FAB
     React.createElement('button', {
       className:'student-copilot-fab s-ui',
       onClick:()=>setOpen(o=>!o),
-      title:'AI Study Helper',
-      style:{position:'fixed',bottom:28,right:28,zIndex:99999}
+      title:'AI Study Helper'
+      // No inline position/z-index — CSS handles all positioning.
+      // Component is portaled to <body> so no ancestor can clip it.
     },
       React.createElement('span',{className:'s-pulse'}),
       open ? '✕' : '🤖'
@@ -19326,7 +19515,9 @@ YOUR ROLE:
         },'➤')
       )
     )
-  );
+  ), document.body);
+  // ↑ ReactDOM.createPortal renders directly on <body>,
+  //   bypassing ALL ancestor stacking contexts that break position:fixed
 }
 
 

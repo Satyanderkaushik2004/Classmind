@@ -109,8 +109,15 @@ def check_environment():
     else:
         log.info("[OK] SendGrid Email system configured.")
     
-    # Strict OAuth check
-    validate_oauth_config()
+    # OAuth: do not hard-fail the app import when GOOGLE_CLIENT_ID is missing.
+    # Defer strict validation to auth-time; here we only log a warning so
+    # developers can run the server locally without layout-breaking failures.
+    google_cid = get_google_client_id()
+    if not google_cid:
+        log.warning("[!] GOOGLE_CLIENT_ID is not configured in .env. Google OAuth will be disabled until configured.")
+    else:
+        # If a value exists, perform a sanity check and log result (non-fatal).
+        validate_oauth_config()
 
 check_environment()
 

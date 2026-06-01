@@ -36,7 +36,7 @@ from google.oauth2 import id_token
 from google.auth.transport import requests
 from fastapi import (
     BackgroundTasks, Body, Depends, FastAPI, File, Form, HTTPException,
-    Query, UploadFile, WebSocket, WebSocketDisconnect,
+    Query, Request, UploadFile, WebSocket, WebSocketDisconnect,
 )
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse, Response
@@ -114,9 +114,53 @@ def check_environment():
 
 check_environment()
 
-from fastapi import Request
-import traceback
 
+# ── AI LLM Helper ─────────────────────────────────────────────────
+async def call_llm(prompt: str, api_key: Optional[str] = None, is_json: bool = False) -> str:
+    key_to_use = api_key or os.getenv("OPENROUTER_API_KEY") or os.getenv("GEMINI_API_KEY")
+    if not key_to_use:
+        raise ValueError("No API key available")
+
+    # Detect API provider: standard Gemini key starts with AIzaSy
+    is_gemini = key_to_use.startswith("AIzaSy") or (not api_key and os.getenv("GEMINI_API_KEY") and not os.getenv("OPENROUTER_API_KEY"))
+
+    import httpx
+    async with httpx.AsyncClient(timeout=60) as client:
+        if is_gemini:
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={key_to_use}"
+            json_body = {
+                "contents": [{"parts": [{"text": prompt}]}]
+            }
+            if is_json:
+                json_body["generationConfig"] = {
+                    "responseMimeType": "application/json"
+                }
+            resp = await client.post(
+                url,
+                headers={"Content-Type": "application/json"},
+                json=json_body
+            )
+            resp.raise_for_status()
+            resp_json = resp.json()
+            return resp_json["candidates"][0]["content"]["parts"][0]["text"].strip()
+        else:
+            url = "https://openrouter.ai/api/v1/chat/completions"
+            resp = await client.post(
+                url,
+                headers={
+                    "Content-Type": "application/json",
+                    "Authorization": f"Bearer {key_to_use}",
+                    "HTTP-Referer": "https://classmind.app",
+                    "X-Title": "ClassMind AI Assistant",
+                },
+                json={
+                    "model": "openai/gpt-4o-mini",
+                    "messages": [{"role": "user", "content": prompt}],
+                    "max_tokens": 4000 if is_json else 1000,
+                },
+            )
+            resp.raise_for_status()
+            return resp.json().get("choices", [{}])[0].get("message", {}).get("content", "").strip()
 
 
 # ── concurrency helpers ───────────────────────────────────────────
@@ -1414,6 +1458,19 @@ async def send_otp(req: SendOtpReq):
             "message": f"Could not deliver email. The OTP code is printed to backend console logs for local testing."
         }
 
+@app.get("/api/debug/otp")
+async def debug_otp(email: str, request: Request):
+    if request.client is None or request.client.host not in ("127.0.0.1", "::1"):
+        raise HTTPException(403, "Debug OTP access is restricted to localhost")
+    record = otp_store.get(email.strip().lower())
+    if not record:
+        raise HTTPException(404, "No OTP found for this email")
+    return {
+        "email": email,
+        "otp": record["otp"],
+        "expires_at": record["expires_at"],
+    }
+
 @app.post("/api/auth/verify-otp")
 async def verify_otp(req: VerifyOtpReq):
     email = req.email.strip().lower()
@@ -2536,33 +2593,14 @@ async def ai_explain_question(
 
     explanation = ""
 
-    if api_key:
+    # Use key from request or fallback to server-side env variables (OpenRouter or Gemini)
+    key_to_use = api_key or os.getenv("OPENROUTER_API_KEY") or os.getenv("GEMINI_API_KEY")
+
+    if key_to_use:
         try:
-            import httpx
-            async with httpx.AsyncClient(timeout=30) as client:
-                resp = await client.post(
-                    "https://openrouter.ai/api/v1/chat/completions",
-                    headers={
-                        "Content-Type":  "application/json",
-                        "Authorization": f"Bearer {api_key}",
-                        "HTTP-Referer":  "https://classmind.app",
-                        "X-Title":       "ClassMind AI Explain",
-                    },
-                    json={
-                        "model":    "openai/gpt-4o-mini",
-                        "messages": [{"role": "user", "content": prompt}],
-                        "max_tokens": 800,
-                    },
-                )
-            data = resp.json()
-            explanation = (
-                data.get("choices", [{}])[0]
-                .get("message", {})
-                .get("content", "")
-                .strip()
-            )
+            explanation = await call_llm(prompt, key_to_use, is_json=False)
         except Exception as exc:
-            log.warning("[AI EXPLAIN] OpenRouter call failed: %s", exc)
+            log.warning("[AI EXPLAIN] LLM call failed: %s", exc)
             explanation = ""
 
     # Fallback: structured placeholder so the UI always has something to show
@@ -3428,6 +3466,27 @@ async def dispatch_email_report(code: str, email: str):
             
     except Exception as exc:
         log.error("[BACKGROUND_EMAIL] Unexpected error: %s", exc)
+
+
+# SPA fallback: serve the frontend file for any non-API path so client-side routing
+# (history API) works and refresh keeps the user on the same page.
+@app.get("/{_path:path}", include_in_schema=False)
+def spa_fallback(request: Request, _path: str):
+    # Don't override API, WS, admin, docs or favicon routes
+    p = request.url.path.lstrip("/")
+    blocked_prefixes = ("api/", "ws/", "admin/", "favicon", "docs", "redoc")
+    if any(p.startswith(bp) for bp in blocked_prefixes):
+        raise HTTPException(404, "Not found")
+
+    if not FRONTEND_FILE.exists():
+        raise HTTPException(404, f"Frontend not found — ensure '{FRONTEND_FILE.name}' is present")
+
+    content = FRONTEND_FILE.read_bytes()
+    return Response(
+        content=content,
+        media_type="text/html",
+        headers={"Content-Length": str(len(content))},
+    )
 
 
 # ══════════════════════════════════════════════════════════════════
@@ -4421,9 +4480,10 @@ async def lesson_generate(
         ("time_breakdown",      "⏱️ Time Breakdown"),
     ]
 
-    generated_sections = {}
+    # Use key from request or fallback to server-side env variables (OpenRouter or Gemini)
+    key_to_use = api_key or os.getenv("OPENROUTER_API_KEY") or os.getenv("GEMINI_API_KEY")
 
-    if api_key:
+    if key_to_use:
         prompt = f"""You are an expert teacher assistant. Generate a COMPLETE, detailed lesson plan.
 
 Topic: {topic}
@@ -4443,23 +4503,7 @@ For time_breakdown, include minutes for each phase.
 Make it practical, engaging, and pedagogically sound."""
 
         try:
-            import httpx
-            async with httpx.AsyncClient(timeout=60) as client:
-                resp = await client.post(
-                    "https://openrouter.ai/api/v1/chat/completions",
-                    headers={
-                        "Content-Type": "application/json",
-                        "Authorization": f"Bearer {api_key}",
-                        "HTTP-Referer": "https://classmind.app",
-                        "X-Title": "ClassMind AI Lesson Planner",
-                    },
-                    json={
-                        "model": "openai/gpt-4o-mini",
-                        "messages": [{"role": "user", "content": prompt}],
-                        "max_tokens": 4000,
-                    },
-                )
-            raw = resp.json().get("choices", [{}])[0].get("message", {}).get("content", "").strip()
+            raw = await call_llm(prompt, key_to_use, is_json=True)
             # Strip markdown code fences if present
             if raw.startswith("```"):
                 raw = raw.split("\n", 1)[-1].rsplit("```", 1)[0].strip()

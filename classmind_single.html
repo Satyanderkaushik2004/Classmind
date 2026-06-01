@@ -16693,7 +16693,9 @@ No markdown, no explanation, just the raw JSON array.`
     style: {
       marginTop: 4
     }
-  }, "Stored in browser only. Without key, realistic mock questions are generated."))), results.length > 0 && /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+  }, "Stored in browser only. Without key, realistic mock questions are generated.")))
+, loading && /*#__PURE__*/React.createElement(PencilLoader, { text: 'AI is crafting your questions\u2026' })
+, results.length > 0 && /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       justifyContent: 'space-between',
@@ -22044,7 +22046,9 @@ No markdown, no explanation, just the raw JSON array.`
     }
   }, "Stored in browser only. Without key, realistic mock questions are generated.")), /*#__PURE__*/React.createElement("div", {
     className: "text-xs text-muted"
-  }, `AI will generate and automatically add & select 5 ${aiQType.toUpperCase()} questions for this topic.`))), /*#__PURE__*/React.createElement("div", {
+  }, `AI will generate and automatically add & select 5 ${aiQType.toUpperCase()} questions for this topic.`)))
+, aiGenerating && /*#__PURE__*/React.createElement(PencilLoader, { text: 'AI is crafting your questions\u2026' })
+, /*#__PURE__*/React.createElement("div", {
     className: "card"
   }, /*#__PURE__*/React.createElement("div", {
     className: "flex justify-between items-center",

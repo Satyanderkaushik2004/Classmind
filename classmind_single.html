@@ -27992,9 +27992,20 @@ class AppErrorBoundary extends React.Component {
 }
 
 function App() {
-  const [route, setRoute] = useState({
-    page: 'landing',
-    params: {}
+  const [route, setRoute] = useState(() => {
+    try {
+      const path = (typeof window !== 'undefined' && window.location && window.location.pathname) ? window.location.pathname : '/';
+      const m = path.match(/^\/session\/(.+)$/);
+      if (m && m[1]) {
+        // Determine role from stored profile (if any)
+        let stored = null;
+        try { stored = JSON.parse(localStorage.getItem('cm_user')) || null; } catch {};
+        const role = stored?.role || (stored?.roleHistory || []).includes('teacher') ? 'teacher' : null;
+        const page = role === 'teacher' ? 'teacher-dashboard' : 'student-waiting';
+        return { page, params: { sessionCode: decodeURIComponent(m[1]) } };
+      }
+    } catch (e) {}
+    return { page: 'landing', params: {} };
   });
   const toastCtx = useToasts();
   const [config, setConfig] = useState({ admin_emails: [] });

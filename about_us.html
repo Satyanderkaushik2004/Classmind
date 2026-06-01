@@ -34,14 +34,20 @@
     .nav-brand:hover .nav-brand-icon{transform:rotate(-10deg) scale(1.1)}
     .nav-brand-name{font-weight:700;font-size:1.15rem;color:var(--white);letter-spacing:-0.02em}
     .nav-center{display:flex;gap:2px}
-    .nav-link{padding:8px 16px;border-radius:8px;font-size:0.82rem;font-weight:500;color:var(--muted);transition:all .2s;letter-spacing:0.01em;position:relative}
-    .nav-link:hover{color:var(--white);background:rgba(255,255,255,0.04)}
-    .nav-link.active{color:var(--white);background:rgba(255,255,255,0.06)}
-    .nav-link::after{content:'';position:absolute;bottom:2px;left:50%;width:0;height:2px;background:var(--accent2);border-radius:2px;transition:all .3s;transform:translateX(-50%)}
-    .nav-link.active::after{width:20px}
+    .nav-link{padding:10px 20px;border-radius:12px;font-size:0.85rem;font-weight:600;color:var(--muted);transition:all .3s cubic-bezier(0.16,1,0.3,1);letter-spacing:0.02em;position:relative;overflow:hidden}
+    .nav-link::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(124,58,237,0.1),rgba(34,211,238,0.1));opacity:0;transition:opacity .3s;border-radius:12px}
+    .nav-link:hover{color:var(--white);transform:translateY(-2px);box-shadow:0 4px 12px rgba(124,58,237,0.2)}
+    .nav-link:hover::before{opacity:1}
+    .nav-link.active{color:var(--white);background:linear-gradient(135deg,rgba(124,58,237,0.15),rgba(34,211,238,0.1));box-shadow:0 0 20px rgba(124,58,237,0.15),inset 0 1px 0 rgba(255,255,255,0.1)}
+    .nav-link::after{content:'';position:absolute;bottom:4px;left:50%;width:0;height:2px;background:linear-gradient(90deg,var(--accent2),var(--cyan));border-radius:2px;transition:all .3s;transform:translateX(-50%);box-shadow:0 0 8px var(--accent2)}
+    .nav-link.active::after{width:24px}
+    .nav-link .nav-icon{display:inline-block;margin-right:6px;font-size:0.9rem;transition:transform .3s}
+    .nav-link:hover .nav-icon{transform:scale(1.2) rotate(-5deg)}
     .nav-right{display:flex;align-items:center;gap:12px}
-    .nav-back{padding:8px 20px;border-radius:8px;font-size:0.82rem;font-weight:600;color:var(--accent3);border:1px solid rgba(124,58,237,0.25);background:rgba(124,58,237,0.06);transition:all .2s;letter-spacing:0.01em}
-    .nav-back:hover{background:rgba(124,58,237,0.12);border-color:rgba(124,58,237,0.4);transform:translateY(-1px)}
+    .nav-back{padding:10px 22px;border-radius:12px;font-size:0.85rem;font-weight:600;color:var(--white);border:1px solid rgba(124,58,237,0.3);background:linear-gradient(135deg,rgba(124,58,237,0.12),rgba(34,211,238,0.08));transition:all .3s cubic-bezier(0.16,1,0.3,1);letter-spacing:0.02em;position:relative;overflow:hidden}
+    .nav-back::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(124,58,237,0.2),rgba(34,211,238,0.15));opacity:0;transition:opacity .3s}
+    .nav-back:hover{transform:translateY(-2px);box-shadow:0 4px 16px rgba(124,58,237,0.3),0 0 20px rgba(34,211,238,0.15);border-color:rgba(124,58,237,0.5)}
+    .nav-back:hover::before{opacity:1}
     .nav-mobile{display:none;background:none;border:none;color:var(--muted);cursor:pointer;padding:8px}
 
     /* ═══ HERO ═══ */

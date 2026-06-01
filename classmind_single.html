@@ -28036,6 +28036,20 @@ function App() {
       params
     });
     window.scrollTo(0, 0);
+    try {
+      // Keep browser URL in sync for refresh/bookmarking.
+      // If a sessionCode is present, set the path to /session/<code>,
+      // otherwise fall back to root '/'. Use replaceState to avoid
+      // creating extra history entries during in-app navigation.
+      if (params && params.sessionCode) {
+        const path = '/session/' + encodeURIComponent(params.sessionCode);
+        window.history.replaceState({}, '', path);
+      } else {
+        window.history.replaceState({}, '', '/');
+      }
+    } catch (e) {
+      // ignore history errors in older browsers
+    }
   }
   const {
     page,

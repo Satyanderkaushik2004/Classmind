@@ -271,6 +271,69 @@
     /* ═══ CURSOR GLOW ═══ */
     .cursor-glow{position:fixed;width:400px;height:400px;border-radius:50%;background:radial-gradient(circle,rgba(124,58,237,0.04),transparent 60%);pointer-events:none;z-index:9999;transform:translate(-50%,-50%);transition:opacity .3s;mix-blend-mode:screen}
 
+    /* ═══ EXTRA KILLER ANIMATIONS ═══ */
+    /* Glowing pulse on stat items */
+    .stat-item{position:relative}
+    .stat-item::after{content:'';position:absolute;inset:-2px;border-radius:12px;opacity:0;transition:opacity .4s;background:conic-gradient(from 0deg,transparent,rgba(124,58,237,0.1),transparent,rgba(34,211,238,0.1),transparent);animation:glowSpin 4s linear infinite;filter:blur(8px);pointer-events:none}
+    .stat-item:hover::after{opacity:1}
+    @keyframes glowSpin{to{transform:rotate(360deg)}}
+
+    /* Ripple effect */
+    .ripple{position:absolute;border-radius:50%;background:rgba(139,92,246,0.15);transform:scale(0);animation:rippleAnim 0.8s ease-out forwards;pointer-events:none;z-index:100}
+    @keyframes rippleAnim{to{transform:scale(4);opacity:0}}
+
+    /* Sparkle on buttons */
+    .sparkle{position:absolute;width:4px;height:4px;border-radius:50%;pointer-events:none;z-index:100;animation:sparkleFade 0.6s ease-out forwards}
+    @keyframes sparkleFade{0%{transform:scale(0);opacity:1}50%{transform:scale(1.5);opacity:0.8}100%{transform:scale(0);opacity:0}}
+
+    /* Animated gradient border on feature cells */
+    .feature-cell,.mvp-panel,.founder-panel,.tech-item,.cta-card{position:relative}
+    .glow-border{position:absolute;inset:-1px;border-radius:inherit;padding:1px;background:conic-gradient(from var(--glow-angle,0deg),transparent 60%,var(--accent2) 70%,var(--cyan) 80%,transparent 90%);-webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);-webkit-mask-composite:xor;mask-composite:exclude;opacity:0;transition:opacity .4s;pointer-events:none;z-index:1}
+    .feature-cell:hover .glow-border,.mvp-panel:hover .glow-border,.founder-panel:hover .glow-border,.cta-card:hover .glow-border{opacity:1;animation:glowRotate 3s linear infinite}
+    @keyframes glowRotate{to{--glow-angle:360deg}}
+    @property --glow-angle{syntax:'<angle>';initial-value:0deg;inherits:false}
+
+    /* Floating animation on cred badges */
+    .founder-cred{animation:credFloat 3s ease-in-out infinite}
+    .founder-cred:nth-child(2){animation-delay:0.3s}
+    .founder-cred:nth-child(3){animation-delay:0.6s}
+    .founder-cred:nth-child(4){animation-delay:0.9s}
+    .founder-cred:nth-child(5){animation-delay:1.2s}
+    @keyframes credFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
+    .founder-cred:hover{animation:none}
+
+    /* Text scramble on section titles */
+    .scramble-char{display:inline-block;transition:all 0.1s}
+
+    /* Staggered card reveal with clip-path */
+    .reveal-clip{clip-path:inset(100% 0 0 0);transition:clip-path 1s cubic-bezier(0.16,1,0.3,1)}
+    .reveal-clip.visible{clip-path:inset(0 0 0 0)}
+
+    /* Scale pop reveal for stats */
+    .reveal-pop{opacity:0;transform:scale(0.8);transition:all 0.6s cubic-bezier(0.34,1.56,0.64,1)}
+    .reveal-pop.visible{opacity:1;transform:scale(1)}
+    .reveal-pop.d1{transition-delay:.1s}.reveal-pop.d2{transition-delay:.2s}.reveal-pop.d3{transition-delay:.3s}
+
+    /* Magnetic button */
+    .btn-primary{transition:all .3s cubic-bezier(0.16,1,0.3,1)}
+    .btn-primary:hover{transform:translateY(-3px) scale(1.05)}
+
+    /* Typewriter for hero desc */
+    .typewriter{overflow:hidden;white-space:normal;border-right:2px solid var(--accent3);animation:blink 0.8s step-end infinite}
+    @keyframes blink{50%{border-color:transparent}}
+    .typewriter.done{border-right:none;animation:none}
+
+    /* Pulse glow on orbit dots */
+    .orbit-dot{animation:dotGlow 2s ease-in-out infinite alternate}
+    @keyframes dotGlow{0%{box-shadow:0 0 6px currentColor;transform:scale(1)}100%{box-shadow:0 0 18px currentColor;transform:scale(1.4)}}
+
+    /* Stat number glow on hover */
+    .stat-number{transition:all .3s}
+    .stat-item:hover .stat-number{text-shadow:0 0 20px rgba(124,58,237,0.4)}
+
+    /* Section transition gradient lines */
+    .divider::after{content:'';position:absolute;top:-1px;right:0;width:80px;height:3px;background:linear-gradient(270deg,var(--cyan),transparent);border-radius:3px}
+
     /* ═══ RESPONSIVE ═══ */
     @media(max-width:1024px){
       .nav-center{display:none}.nav-mobile{display:block}
@@ -843,6 +906,129 @@
       orbs.forEach(function(orb,i){
         orb.style.transform='translateY('+scrolled*(0.1+i*0.05)+'px)';
       });
+      // Parallax on all sections
+      document.querySelectorAll('.section').forEach(function(sec){
+        var rect=sec.getBoundingClientRect();
+        var offset=rect.top/window.innerHeight;
+        var inner=sec.querySelector('.section-head');
+        if(inner)inner.style.transform='translateY('+offset*-15+'px)';
+      });
+    },{passive:true});
+
+    // ═══ RIPPLE EFFECT ON CARDS ═══
+    document.querySelectorAll('.founder-panel,.mvp-panel,.feature-cell,.stat-item').forEach(function(el){
+      el.style.overflow='hidden';el.style.position='relative';
+      el.addEventListener('click',function(e){
+        var rect=el.getBoundingClientRect();
+        var ripple=document.createElement('div');
+        ripple.className='ripple';
+        ripple.style.left=(e.clientX-rect.left)+'px';
+        ripple.style.top=(e.clientY-rect.top)+'px';
+        ripple.style.width=ripple.style.height=Math.max(rect.width,rect.height)+'px';
+        el.appendChild(ripple);
+        setTimeout(function(){ripple.remove()},800);
+      });
+    });
+
+    // ═══ SPARKLE ON BUTTONS ═══
+    document.querySelectorAll('.btn-primary,.nav-back').forEach(function(btn){
+      btn.style.position='relative';btn.style.overflow='hidden';
+      btn.addEventListener('mouseenter',function(){
+        for(var i=0;i<8;i++){
+          setTimeout(function(){
+            var s=document.createElement('div');
+            s.className='sparkle';
+            s.style.left=Math.random()*100+'%';
+            s.style.top=Math.random()*100+'%';
+            var colors=['#8b5cf6','#22d3ee','#fb7185','#fbbf24','#a78bfa','#34d399'];
+            s.style.background=colors[Math.floor(Math.random()*colors.length)];
+            s.style.width=s.style.height=(Math.random()*4+2)+'px';
+            btn.appendChild(s);
+            setTimeout(function(){s.remove()},600);
+          },i*60);
+        }
+      });
+    });
+
+    // ═══ TEXT SCRAMBLE ON SECTION TITLES ═══
+    var chars='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%';
+    document.querySelectorAll('.section-title,.section-eyebrow').forEach(function(el){
+      var original=el.textContent;
+      var triggered=false;
+      var io=new IntersectionObserver(function(entries){
+        if(entries[0].isIntersecting&&!triggered){
+          triggered=true;
+          var iterations=0;
+          var interval=setInterval(function(){
+            el.textContent=original.split('').map(function(ch,i){
+              if(i<iterations)return original[i];
+              if(ch===' ')return ' ';
+              return chars[Math.floor(Math.random()*chars.length)];
+            }).join('');
+            iterations+=1/2;
+            if(iterations>=original.length){clearInterval(interval);el.textContent=original}
+          },30);
+          io.disconnect();
+        }
+      },{threshold:0.5});
+      io.observe(el);
+    });
+
+    // ═══ MAGNETIC BUTTON EFFECT ═══
+    document.querySelectorAll('.btn-primary,.btn-ghost').forEach(function(btn){
+      btn.addEventListener('mousemove',function(e){
+        if(window.innerWidth<1024)return;
+        var rect=btn.getBoundingClientRect();
+        var x=e.clientX-rect.left-rect.width/2;
+        var y=e.clientY-rect.top-rect.height/2;
+        btn.style.transform='translate('+x*0.2+'px,'+y*0.2+'px) scale(1.05)';
+      });
+      btn.addEventListener('mouseleave',function(){
+        btn.style.transform='';
+      });
+    });
+
+    // ═══ SCALE POP REVEAL FOR STATS ═══
+    document.querySelectorAll('.stat-item').forEach(function(el,i){
+      el.classList.add('reveal-pop');
+      if(i>0)el.classList.add('d'+(i));
+    });
+    if('IntersectionObserver' in window){
+      var popObs=new IntersectionObserver(function(entries){
+        entries.forEach(function(e){if(e.isIntersecting){e.target.classList.add('visible');popObs.unobserve(e.target)}});
+      },{threshold:0.2});
+      document.querySelectorAll('.reveal-pop').forEach(function(el){popObs.observe(el)});
+    }
+
+    // ═══ GLOW BORDER ELEMENTS ═══
+    document.querySelectorAll('.feature-cell,.mvp-panel,.founder-panel,.cta-card').forEach(function(el){
+      var gb=document.createElement('div');
+      gb.className='glow-border';
+      el.appendChild(gb);
+    });
+
+    // ═══ FLOATING ORB FOLLOW ON FOUNDER CARDS ═══
+    document.querySelectorAll('.founder-panel').forEach(function(card){
+      var floater=document.createElement('div');
+      floater.style.cssText='position:absolute;width:120px;height:120px;border-radius:50%;filter:blur(60px);pointer-events:none;opacity:0;transition:opacity .5s;z-index:0;';
+      floater.style.background=card===document.querySelectorAll('.founder-panel')[0]?'rgba(124,58,237,0.12)':'rgba(34,211,238,0.12)';
+      card.appendChild(floater);
+      card.addEventListener('mousemove',function(e){
+        var rect=card.getBoundingClientRect();
+        floater.style.left=(e.clientX-rect.left-60)+'px';
+        floater.style.top=(e.clientY-rect.top-60)+'px';
+        floater.style.opacity='1';
+      });
+      card.addEventListener('mouseleave',function(){floater.style.opacity='0'});
+    });
+
+    // ═══ PROGRESS BAR AT TOP ═══
+    var progressBar=document.createElement('div');
+    progressBar.style.cssText='position:fixed;top:0;left:0;height:2px;background:linear-gradient(90deg,var(--accent),var(--cyan),var(--rose));z-index:10000;transition:width .1s;box-shadow:0 0 8px rgba(124,58,237,0.5)';
+    document.body.appendChild(progressBar);
+    window.addEventListener('scroll',function(){
+      var scrolled=window.scrollY/(document.documentElement.scrollHeight-window.innerHeight)*100;
+      progressBar.style.width=scrolled+'%';
     },{passive:true});
   })();
   </script>

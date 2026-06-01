@@ -13923,11 +13923,7 @@ function TeacherShell({
           "\uD83D\uDD14",
           totalNotifs > 0 && /*#__PURE__*/React.createElement("span", { className: "hdr-notif-badge" }, totalNotifs)
         ),
-        /* Class code badge */
-        /*#__PURE__*/React.createElement("div", { className: "hdr-class-code" },
-          /*#__PURE__*/React.createElement("span", { className: "hdr-class-code-label" }, "Class Code"),
-          /*#__PURE__*/React.createElement("span", { className: "hdr-class-code-value" }, sessionCode)
-        ),
+
         /* VC button (active sessions) */
         sessionStatus === 'active' && /*#__PURE__*/React.createElement("button", {
           className: `btn btn-sm ${vcActive ? 'btn-danger' : 'btn-primary'}`,
@@ -14001,6 +13997,7 @@ function TeacherShell({
         onClose: () => setProfileOpen(false),
         userName: teacherName,
         role: "teacher",
+        sessionCode: sessionCode,
         teacherData: {
           tasks,
           totalStudents: (roster.active || []).length
@@ -27619,7 +27616,7 @@ function BarChart({ labels, data, label, color = "#22c55e" }) {
 // ═════════════════════════════════════════════════════════════════
 //  PROFILE DRAWER — MODERNIZED ANALYTICS
 // ═════════════════════════════════════════════════════════════════
-function ProfileDrawer({ open, onClose, userName, role, updateUserProfile, navigate }) {
+function ProfileDrawer({ open, onClose, userName, role, sessionCode, updateUserProfile, navigate }) {
   const [tab, setTab] = React.useState('overview');
   const [editName, setEditName] = React.useState(userName || '');
   const [editRole, setEditRole] = React.useState(role === 'both' ? 'teacher' : (role || 'teacher'));
@@ -27905,6 +27902,10 @@ function ProfileDrawer({ open, onClose, userName, role, updateUserProfile, navig
           React.createElement("div", { className: "prof-settings-section" },
             React.createElement("div", { className: "prof-settings-label" }, "✏️ Name"),
             React.createElement("input", { className: "prof-settings-input", value: editName, onChange: e => setEditName(e.target.value) }),
+            role === 'teacher' && sessionCode && React.createElement(React.Fragment, null,
+              React.createElement("div", { className: "prof-settings-label", style: { marginTop: 14 } }, "🔑 Class Code"),
+              React.createElement("input", { className: "prof-settings-input", value: sessionCode, readOnly: true, style: { cursor: 'default', opacity: 0.75 } })
+            ),
             React.createElement("button", { className: "btn btn-primary btn-sm w-full", style: {marginTop:8}, onClick: () => {
               const u = JSON.parse(localStorage.getItem('cm_user') || '{}');
               u.name = editName.trim();
@@ -28036,20 +28037,6 @@ function App() {
       params
     });
     window.scrollTo(0, 0);
-    try {
-      // Keep browser URL in sync for refresh/bookmarking.
-      // If a sessionCode is present, set the path to /session/<code>,
-      // otherwise fall back to root '/'. Use replaceState to avoid
-      // creating extra history entries during in-app navigation.
-      if (params && params.sessionCode) {
-        const path = '/session/' + encodeURIComponent(params.sessionCode);
-        window.history.replaceState({}, '', path);
-      } else {
-        window.history.replaceState({}, '', '/');
-      }
-    } catch (e) {
-      // ignore history errors in older browsers
-    }
   }
   const {
     page,

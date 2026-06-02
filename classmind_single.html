@@ -1780,10 +1780,6 @@ select option{background:var(--surface2)}
   color: var(--text3);
   font-size: 0.75rem;
 }
-.db-qc-upload-highlight .db-qc-title { color: var(--accent); }
-
-/* Hidden file input hook */
-.db-hidden-file { display: none; }
 
 /* Uploaded file display block */
 .db-qc-file-info {
@@ -10904,6 +10900,35 @@ function safeBtoa(str) {
     }
   }
 }
+
+// ── GLOBAL: location helper shared by student join and teacher Close Access ──
+async function getCurrentLocation() {
+  if (!navigator.geolocation) {
+    throw new Error('Geolocation is not available in this browser');
+  }
+  const pos = await new Promise((resolve, reject) => {
+    navigator.geolocation.getCurrentPosition(resolve, reject, {
+      enableHighAccuracy: true,
+      timeout: 15000,
+      maximumAge: 10000,
+    });
+  });
+  const coords = pos.coords || {};
+  const lat = coords.latitude;
+  const lng = coords.longitude;
+  const accuracy = coords.accuracy;
+  const timestamp = pos.timestamp || Date.now();
+  if (typeof lat !== 'number' || typeof lng !== 'number' || !Number.isFinite(lat) || lat < -90 || lat > 90 || lng < -180 || lng > 180) {
+    throw new Error('Invalid GPS coordinates received');
+  }
+  if (typeof accuracy !== 'number' || !Number.isFinite(accuracy) || accuracy > 100) {
+    throw new Error(`GPS accuracy must be 100m or better (current: ${Math.round(accuracy || 0)}m)`);
+  }
+  if (Date.now() - timestamp > 15000) {
+    throw new Error('GPS reading is stale; please try again');
+  }
+  return { lat, lng, accuracy: Math.round(accuracy), timestamp };
+}
 async function apiFetch(path, opts = {}) {
   const headers = {
     'Content-Type': 'application/json'
@@ -11866,6 +11891,17 @@ function LandingPage({
     setLoading(true);
     setJoinError('');
     try {
+      const sessionInfo = await apiFetch(`/api/session/${sessionCode}`);
+      const accessMode = sessionInfo.access_mode || 'open';
+      let studentLat = null;
+      let studentLng = null;
+
+      if (accessMode === 'close') {
+        const location = await getCurrentLocation();
+        studentLat = location.lat;
+        studentLng = location.lng;
+      }
+
       // ── CLOSED ACCESS GATE ─────────────────────────────────────────────
       // Call check_access BEFORE any join attempt.
       // For open-access sessions the server returns 200 immediately.
@@ -11877,16 +11913,18 @@ function LandingPage({
           `/api/session/${sessionCode}/check_access?` +
           `name=${encodeURIComponent(effectiveName)}&` +
           `roll=${encodeURIComponent(roll)}&` +
-          `cls=${encodeURIComponent(cls)}`
+          `cls=${encodeURIComponent(cls)}` +
+          (studentLat !== null ? `&student_lat=${encodeURIComponent(studentLat)}&student_lng=${encodeURIComponent(studentLng)}` : '')
         );
       } catch (_accessErr) {
-        add('Not allowed for this class', 'error');
+        add(_accessErr.message || 'Not allowed for this class', 'error');
         setLoading(false);
         return;
       }
       // ── CLOSED ACCESS GATE END ────────────────────────────────────────
 
-      const res = await apiFetch(`/api/session/${sessionCode}/join?name=${encodeURIComponent(effectiveName)}&roll=${encodeURIComponent(roll)}&cls=${encodeURIComponent(cls)}&anonymous=true&email=${encodeURIComponent(effectiveEmail.trim())}&phone=${encodeURIComponent(effectivePhone.trim())}`, {
+      const res = await apiFetch(`/api/session/${sessionCode}/join?name=${encodeURIComponent(effectiveName)}&roll=${encodeURIComponent(roll)}&cls=${encodeURIComponent(cls)}&anonymous=true&email=${encodeURIComponent(effectiveEmail.trim())}&phone=${encodeURIComponent(effectivePhone.trim())}` +
+        (studentLat !== null ? `&student_lat=${encodeURIComponent(studentLat)}&student_lng=${encodeURIComponent(studentLng)}` : ''), {
         method: 'POST'
       });
 
@@ -13378,6 +13416,11 @@ function TeacherShell({
   const [tasks, setTasks] = useState([]);
   const [groups, setGroups] = useState([]);
   const [sessionStatus, setSessionStatus] = useState('waiting');
+  const [accessMode, setAccessMode] = useState('open');
+  const [closeAccessRadius, setCloseAccessRadius] = useState(100);
+  const [teacherLocation, setTeacherLocation] = useState(null);
+  const [geoMessage, setGeoMessage] = useState('Capture teacher GPS if using Close Access.');
+  const [accessSaving, setAccessSaving] = useState(false);
   const [notifications, setNotifications] = useState({
     doubts: 0,
     hands: 0,
@@ -13471,6 +13514,12 @@ function TeacherShell({
         if (msg.session?.groups) setGroups(msg.session.groups || []);
         if (msg.session?.tasks) setTasks(msg.session.tasks || []);
         if (msg.session?.vc_active !== undefined) setVcActive(msg.session.vc_active);
+        if (msg.session?.access_mode) setAccessMode(msg.session.access_mode);
+        if (typeof msg.session?.close_access_radius_meters === 'number') setCloseAccessRadius(msg.session.close_access_radius_meters);
+        if (msg.session?.close_access_location) {
+          setTeacherLocation(msg.session.close_access_location);
+          setGeoMessage(`Teacher location captured at ${msg.session.close_access_location.lat.toFixed(4)}, ${msg.session.close_access_location.lng.toFixed(4)}`);
+        }
       } else if (msg.type === 'attendance_update') {
         if (msg.attendance && typeof window.__attUpdate === 'function') {
           window.__attUpdate(msg.attendance);
@@ -13501,10 +13550,96 @@ function TeacherShell({
       setGroups(g.groups || []);
     } catch {}
   }
+  async function loadSessionSettings() {
+    try {
+      const info = await apiFetch(`/api/session/${sessionCode}`);
+      setAccessMode(info.access_mode || 'open');
+      if (typeof info.close_access_radius_meters === 'number') {
+        setCloseAccessRadius(info.close_access_radius_meters);
+      }
+      if (info.close_access_location && info.close_access_location.lat !== undefined && info.close_access_location.lng !== undefined) {
+        setTeacherLocation(info.close_access_location);
+        setGeoMessage(`Close Access active at ${info.close_access_location.lat.toFixed(4)}, ${info.close_access_location.lng.toFixed(4)} (${closeAccessRadius}m radius)`);
+      } else if (info.access_mode === 'close') {
+        setGeoMessage('Close Access selected. Capture teacher location to enable the geo-fence.');
+      } else if (info.access_mode === 'closed') {
+        setGeoMessage('Closed access selected. Legacy student list validation is enabled.');
+      } else {
+        setGeoMessage('Open access: anyone can join.');
+      }
+    } catch (err) {
+      console.warn("Failed to load session access settings", err);
+    }
+  }
+
+  function buildGpsMessage(location) {
+    let message = `Teacher location captured at ${location.lat.toFixed(4)}, ${location.lng.toFixed(4)} (${location.accuracy}m accuracy)`;
+    if (location.accuracy > 50) {
+      message += ` — GPS accuracy is moderate (${location.accuracy}m). For best results, move near a window or outdoor area.`;
+    }
+    if (closeAccessRadius <= 50 && location.accuracy > 50) {
+      message += ` Current GPS accuracy may be insufficient for a ${closeAccessRadius}m radius. Consider using 50m or 100m radius.`;
+    }
+    return message;
+  }
+
+  async function saveAccessSettings(mode, location) {
+    setAccessSaving(true);
+    try {
+      const payload = {
+        access_mode: mode,
+        radius_meters: closeAccessRadius,
+      };
+      if (location) {
+        payload.teacher_lat = location.lat;
+        payload.teacher_lng = location.lng;
+      }
+      const res = await apiFetch(`/api/session/${sessionCode}/access_settings`, {
+        method: 'POST',
+        body: payload,
+      });
+      setAccessMode(res.access_mode || mode);
+      if (typeof res.close_access_radius_meters === 'number') {
+        setCloseAccessRadius(res.close_access_radius_meters);
+      }
+      if (res.close_access_location) {
+        setTeacherLocation(res.close_access_location);
+        setGeoMessage(`Close Access active at ${res.close_access_location.lat.toFixed(4)}, ${res.close_access_location.lng.toFixed(4)} (${res.close_access_radius_meters}m radius)`);
+      } else if (res.access_mode === 'close') {
+        setGeoMessage('Close Access selected. Capture teacher location to enable the geo-fence.');
+      } else if (res.access_mode === 'closed') {
+        setGeoMessage('Closed access selected. Legacy student list validation is enabled.');
+      } else {
+        setGeoMessage('Open access: anyone can join.');
+      }
+      add('Access settings updated', 'success');
+      return res;
+    } catch (err) {
+      add(err.message || 'Failed to save access settings', 'error');
+      throw err;
+    } finally {
+      setAccessSaving(false);
+    }
+  }
+
+  async function captureTeacherLocation() {
+    try {
+      setGeoMessage('Requesting teacher location...');
+      const location = await getCurrentLocation();
+      setTeacherLocation(location);
+      setGeoMessage(buildGpsMessage(location));
+      await saveAccessSettings('close', location);
+    } catch (err) {
+      setGeoMessage('Teacher location capture failed.');
+      add(`Location capture failed: ${err.message}`, 'error');
+    }
+  }
+
   useEffect(() => {
     loadRoster();
     loadTasks();
     loadGroups();
+    loadSessionSettings();
   }, []);
 
   // ── FEATURE 2: Sync live analytics to weekly store ────────────────
@@ -13728,6 +13863,17 @@ function TeacherShell({
     // FEATURE 1: chat control
     chatEnabled,
     setChatEnabled,
+    // Close Access Mode
+    accessMode,
+    setAccessMode,
+    closeAccessRadius,
+    setCloseAccessRadius,
+    teacherLocation,
+    geoMessage,
+    accessSaving,
+    saveAccessSettings,
+    captureTeacherLocation,
+    setGeoMessage,
     // Navigation
     setPage
   };
@@ -15046,6 +15192,16 @@ function TeacherDashboard({
   loadTasks,
   wsSend,
   teacherProfileEmail,
+  accessMode,
+  setAccessMode,
+  closeAccessRadius,
+  setCloseAccessRadius,
+  teacherLocation,
+  geoMessage,
+  accessSaving,
+  saveAccessSettings,
+  captureTeacherLocation,
+  setGeoMessage,
   setPage
 }) {
   const {
@@ -15286,9 +15442,6 @@ function TeacherDashboard({
   const filteredStudents = (roster.active || []).filter(st =>
     !studentSearch || (st.name || '').toLowerCase().includes(studentSearch.toLowerCase())
   );
-
-  // ── Uploaded student file state ──────────────────────────────────
-  const [uploadedFileName, setUploadedFileName] = useState(null);
 
   // AI insights — dynamically computed from actual classroom data
   const activeCount   = roster?.active?.length || 0;
@@ -15634,83 +15787,53 @@ function TeacherDashboard({
           React.createElement("span", null, "\u26A1"),
           React.createElement("span", { className: "db-panel-title" }, "Quick Controls")
         ),
-        /* Upload CSV */
-        React.createElement("label", { htmlFor: "fileInputDB", className: "db-qc-item db-qc-upload-highlight", style: { cursor: 'pointer' } },
-          React.createElement("div", { className: "db-qc-icon-wrap" }, "\uD83D\uDCC2"),
-          React.createElement("div", { className: "db-qc-text" },
-            React.createElement("div", { className: "db-qc-title" }, "Upload CSV / Excel"),
-            React.createElement("div", { className: "db-qc-sub" }, "Import students to your class")
+        React.createElement("div", {
+          className: "db-qc-item",
+          style: { border: '1px solid var(--border)', background: 'var(--surface2)', padding: 12, marginTop: 12, gap: 10, display: 'flex', flexDirection: 'column' }
+        },
+          React.createElement("div", { className: "db-qc-title" }, "Close Access"),
+          React.createElement("div", { className: "db-qc-sub" }, "Limit joins to students near the teacher using GPS."),
+          React.createElement("div", { style: { display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' } },
+            React.createElement("label", { style: { display: 'flex', flexDirection: 'column', flex: '1 1 140px' } },
+              React.createElement("span", { style: { fontSize: '0.85rem', marginBottom: 4, color: 'var(--text3)' } }, "Access mode"),
+              React.createElement("select", {
+                value: accessMode,
+                onChange: async e => {
+                  const mode = e.target.value;
+                  setAccessMode(mode);
+                  if (mode === 'close' && !teacherLocation) {
+                    setGeoMessage('Close Access selected. Capture teacher location to enable the geo-fence.');
+                    return;
+                  }
+                  await saveAccessSettings(mode, teacherLocation);
+                },
+                style: { width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--surface)', color: 'inherit' }
+              },
+                React.createElement("option", { value: "open" }, "Open"),
+                React.createElement("option", { value: "closed" }, "Closed (Student List)"),
+                React.createElement("option", { value: "close" }, "Close Access (Geo-fence)")
+              )
+            ),
+            React.createElement("label", { style: { display: 'flex', flexDirection: 'column', flex: '1 1 160px' } },
+              React.createElement("span", { style: { fontSize: '0.85rem', marginBottom: 4, color: 'var(--text3)' } }, "Radius (meters)"),
+              React.createElement("input", {
+                type: "number",
+                min: 25,
+                max: 2000,
+                value: closeAccessRadius,
+                onChange: e => setCloseAccessRadius(Math.max(25, Number(e.target.value) || 25)),
+                style: { width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--surface)', color: 'inherit' }
+              })
+            ),
+            React.createElement("button", {
+              className: "db-approve-btn",
+              style: { flex: '0 0 auto', minWidth: 160 },
+              onClick: captureTeacherLocation,
+              disabled: accessSaving,
+              title: "Capture current teacher GPS position"
+            }, accessSaving ? 'Saving…' : 'Capture Location')
           ),
-          React.createElement("span", { className: "db-qc-arrow" }, "\u2197")
-        ),
-        React.createElement("input", {
-          id: "fileInputDB",
-          type: "file",
-          accept: ".csv,.xlsx,.xls",
-          className: "db-hidden-file",
-          onChange: async e => {
-            const file = e.target.files[0];
-            if (!file) return;
-            setUploadedFileName(file.name);
-            let text = "";
-            const isExcel = file.name.match(/\.(xlsx|xls)$/i);
-            if (isExcel) {
-              try {
-                const arrayBuffer = await file.arrayBuffer();
-                const XLSX = window.XLSX;
-                if (!XLSX) throw new Error("SheetJS (XLSX) library not loaded");
-                const wb = XLSX.read(arrayBuffer, { type: 'array' });
-                const ws = wb.Sheets[wb.SheetNames[0]];
-                text = XLSX.utils.sheet_to_csv(ws);
-              } catch (excelErr) {
-                add("❌ Failed to parse Excel file: " + excelErr.message, "error");
-                setUploadedFileName(null);
-                return;
-              }
-            } else {
-              text = await file.text();
-            }
-            const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
-            const headerKeywords = ['name', 'roll', 'class', 'student', 'no', 'sr', 'sno'];
-            const firstCells = (lines[0] || '').toLowerCase().split(',').map(c => c.trim());
-            const hasHeader = firstCells.some(c => headerKeywords.includes(c));
-            const dataLines = hasHeader ? lines.slice(1) : lines;
-            const allowedStudents = dataLines.map(line => {
-              const cols = line.split(',').map(c => c.trim());
-              return { name: (cols[0] || '').toLowerCase(), roll: (cols[1] || '').toLowerCase(), cls: (cols[2] || '').toLowerCase() };
-            }).filter(s => s.name || s.roll);
-            try {
-              localStorage.setItem("cm_allowed_" + sessionCode, JSON.stringify({ students: allowedStudents, updatedAt: Date.now() }));
-            } catch (e) {}
-            try {
-              await fetch(API + "/api/session/" + sessionCode + "/set_students", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ students: allowedStudents })
-              });
-            } catch (e) {}
-            add("✅ " + allowedStudents.length + " students imported. Join restricted to listed students.", "success");
-          }
-        }),
-        /* Uploaded file info + remove option */
-        uploadedFileName && React.createElement("div", { className: "db-qc-file-info" },
-          React.createElement("div", { className: "db-qc-file-icon" }, "📄"),
-          React.createElement("div", { className: "db-qc-file-text" },
-            React.createElement("div", { className: "db-qc-file-label" }, "Student List"),
-            React.createElement("div", { className: "db-qc-file-name", title: uploadedFileName }, uploadedFileName)
-          ),
-          React.createElement("button", {
-            className: "db-qc-file-remove",
-            title: "Remove uploaded file",
-            onClick: e => {
-              e.preventDefault();
-              e.stopPropagation();
-              setUploadedFileName(null);
-              // Reset the file input so the same file can be re-selected
-              const inp = document.getElementById('fileInputDB');
-              if (inp) inp.value = '';
-            }
-          }, "🗑 Remove")
+          React.createElement("div", { className: "db-qc-sub", style: { marginTop: 8 } }, geoMessage)
         ),
         /* Send Next Task */
         React.createElement("button", {
@@ -25739,6 +25862,7 @@ function GuidedTour({
   });
   const [arrowStyle, setArrowStyle] = useState({});
   const [fade, setFade] = useState(true); // for smooth step transitions
+  const tourSteps = (typeof TOUR_STEPS !== 'undefined' && Array.isArray(TOUR_STEPS)) ? TOUR_STEPS : [];
 
   // ── Trigger: fire ONCE per session (sessionCode-scoped localStorage key) ──
   useEffect(() => {
@@ -25767,7 +25891,7 @@ function GuidedTour({
   // ── Navigate to the right page when step changes ─────────────────
   useEffect(() => {
     if (!shouldStart) return;
-    const s = TOUR_STEPS[step];
+    const s = tourSteps[step];
     if (s?.page) setPage(s.page);
     // Delay pos compute to allow page render
     const t = setTimeout(() => {
@@ -25784,11 +25908,11 @@ function GuidedTour({
   // ── Fire copilot hint when step advances ─────────────────────────
   useEffect(() => {
     if (!shouldStart || !onTourMessage) return;
-    const s = TOUR_STEPS[step];
+    const s = tourSteps[step];
     if (s?.copilotHint) onTourMessage(s.copilotHint);
   }, [step, shouldStart]);
   function computePos() {
-    const s = TOUR_STEPS[step];
+    const s = tourSteps[step];
     if (!s) return;
     let el = document.getElementById(s.targetId);
     if (!el && s.fallbackId) el = document.getElementById(s.fallbackId);
@@ -25835,7 +25959,7 @@ function GuidedTour({
     }, 120);
   }
   function next() {
-    if (step >= TOUR_STEPS.length - 1) {
+    if (step >= tourSteps.length - 1) {
       finish();
       return;
     }
@@ -25851,9 +25975,9 @@ function GuidedTour({
   function parseMarkdown(text) {
     return text.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br/>');
   }
-  if (!shouldStart) return null;
-  const currentStep = TOUR_STEPS[step];
-  const isLast = step === TOUR_STEPS.length - 1;
+  if (!shouldStart || tourSteps.length === 0) return null;
+  const currentStep = tourSteps[step];
+  const isLast = step === tourSteps.length - 1;
   const isFirst = step === 0;
   return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
     style: {
@@ -25901,7 +26025,7 @@ function GuidedTour({
       gap: 4,
       marginBottom: 8
     }
-  }, TOUR_STEPS.map((_, i) => /*#__PURE__*/React.createElement("div", {
+  }, tourSteps.map((_, i) => /*#__PURE__*/React.createElement("div", {
     key: i,
     className: `tour-dot ${i === step ? 'active' : i < step ? 'done' : ''}`
   }))), /*#__PURE__*/React.createElement("div", {
@@ -25914,7 +26038,7 @@ function GuidedTour({
       letterSpacing: '0.06em',
       marginBottom: 6
     }
-  }, "Step ", step + 1, " of ", TOUR_STEPS.length), /*#__PURE__*/React.createElement("div", {
+  }, "Step ", step + 1, " of ", tourSteps.length), /*#__PURE__*/React.createElement("div", {
     className: "tour-tooltip-text",
     dangerouslySetInnerHTML: {
       __html: parseMarkdown(currentStep.text)

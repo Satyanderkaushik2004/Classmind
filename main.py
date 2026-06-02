@@ -266,6 +266,52 @@ def validate_closed_access_student(s: dict, name: str, roll: str, cls: str) -> b
 # ── CLOSED ACCESS VALIDATION END ─────────────────────────────────────────────
 
 
+def haversine_distance_meters(lat1: float, lng1: float, lat2: float, lng2: float) -> float:
+    """Return great-circle distance between two GPS points in meters."""
+    from math import asin, cos, radians, sin, sqrt
+    lat1_r, lng1_r, lat2_r, lng2_r = map(radians, (lat1, lng1, lat2, lng2))
+    dlat = lat2_r - lat1_r
+    dlng = lng2_r - lng1_r
+    a = sin(dlat / 2) ** 2 + cos(lat1_r) * cos(lat2_r) * sin(dlng / 2) ** 2
+    c = 2 * asin(min(1.0, sqrt(a)))
+    return c * 6371000.0
+
+
+def get_close_access_failure_reason(s: dict, lat: Optional[float], lng: Optional[float]) -> Optional[str]:
+    if s.get("access_mode", "open") != "close":
+        return None
+    if lat is None or lng is None:
+        return "Location is required for Close Access mode"
+    if not isinstance(lat, (int, float)) or not isinstance(lng, (int, float)):
+        return "Invalid GPS coordinates"
+    if not (-90 <= lat <= 90 and -180 <= lng <= 180):
+        return "Invalid GPS coordinates"
+    location = s.get("close_access_location")
+    if not location or not isinstance(location, dict):
+        return "Teacher location has not been captured yet"
+    teacher_lat = location.get("lat")
+    teacher_lng = location.get("lng")
+    if teacher_lat is None or teacher_lng is None:
+        return "Teacher location has not been captured yet"
+    if not isinstance(teacher_lat, (int, float)) or not isinstance(teacher_lng, (int, float)):
+        return "Teacher location is invalid"
+    if not (-90 <= teacher_lat <= 90 and -180 <= teacher_lng <= 180):
+        return "Teacher location is invalid"
+    radius = s.get("close_access_radius_meters", 100)
+    distance = haversine_distance_meters(teacher_lat, teacher_lng, lat, lng)
+    if distance > radius:
+        return f"Your location is outside the allowed radius ({int(distance)}m away)"
+    return None
+
+
+def validate_close_access_student(s: dict, lat: Optional[float], lng: Optional[float]) -> bool:
+    if s.get("access_mode", "open") != "close":
+        return True
+    return get_close_access_failure_reason(s, lat, lng) is None
+
+# ── CLOSED ACCESS VALIDATION END ─────────────────────────────────────────────
+
+
 def admin_session_summary(s: dict) -> dict:
     students = [st for st in s["students"].values() if st.get("status") == "active"]
     return {
@@ -915,6 +961,12 @@ class CreateSessionReq(BaseModel):
     email:        Optional[str] = None
     phone:        Optional[str] = None
     session_name: Optional[str] = None
+
+class AccessSettingsReq(BaseModel):
+    access_mode: str
+    radius_meters: Optional[int] = None
+    teacher_lat: Optional[float] = None
+    teacher_lng: Optional[float] = None
 
 class SendExplanationReq(BaseModel):
     task_id:     str
@@ -1681,6 +1733,9 @@ def get_session_info(code: str):
         "current_task_idx": s["current_task_idx"],
         "total_tasks":      len(s["tasks"]),
         "created_at":       s["created_at"],
+        "access_mode":      s.get("access_mode", "open"),
+        "close_access_radius_meters": s.get("close_access_radius_meters", 100),
+        "close_access_location":       s.get("close_access_location"),
         # Closed-access flag so student UI can pre-validate before attempting join
         "is_closed_access": s.get("access_mode", "open") == "closed",
     }
@@ -1813,6 +1868,8 @@ async def join_session(
     anonymous: bool = Query(True),
     email:     Optional[str] = Query(None),
     phone:     Optional[str] = Query(None),
+    student_lat: Optional[float] = Query(None),
+    student_lng: Optional[float] = Query(None),
 ):
     s = _S(code)
     if s["status"] == "ended":
@@ -1828,20 +1885,26 @@ async def join_session(
     cls_n  = cls.strip().upper()
     name_norm, roll_norm, cls_norm = normalize_student_credentials(name, roll, cls)
 
-    # ── CLOSED ACCESS GATE ───────────────────────────────────────────────
-    # Hard, server-authoritative block using the canonical validation
-    # function.  Executes BEFORE any student record is created, before any
-    # waiting-room insertion, and before any teacher notification.
-    # Unauthorised students are rejected immediately with 403; they never
-    # appear in the waiting room or teacher approval queue.
-    if not validate_closed_access_student(s, name, roll, cls):
-        log.warning(
-            "[CLOSED_ACCESS] Blocked unauthorised join attempt: "
-            "name=%r roll=%r cls=%r session=%s",
-            name.strip().lower(), roll.strip(), cls.strip().upper(), code,
-        )
-        raise HTTPException(403, "Not allowed for this class")
-    # ── CLOSED ACCESS GATE END ───────────────────────────────────────────
+    # ── ACCESS MODE GATE ────────────────────────────────────────────────
+    access_mode = s.get("access_mode", "open")
+    if access_mode == "closed":
+        if not validate_closed_access_student(s, name, roll, cls):
+            log.warning(
+                "[CLOSED_ACCESS] Blocked unauthorised join attempt: "
+                "name=%r roll=%r cls=%r session=%s",
+                name.strip().lower(), roll.strip(), cls.strip().upper(), code,
+            )
+            raise HTTPException(403, "Not allowed for this class")
+    elif access_mode == "close":
+        denial_reason = get_close_access_failure_reason(s, student_lat, student_lng)
+        if denial_reason is not None:
+            log.warning(
+                "[CLOSE_ACCESS] Blocked geo-fenced join attempt: "
+                "name=%r roll=%r cls=%r session=%s reason=%s",
+                name.strip().lower(), roll.strip(), cls.strip().upper(), code, denial_reason,
+            )
+            raise HTTPException(403, denial_reason)
+    # ── ACCESS MODE GATE END ───────────────────────────────────────────
 
     # ═ DUPLICATE JOIN CHECK: Prevent active students from joining again ═
     # Check if a student with same name, roll, and class is already ACTIVE
@@ -2282,12 +2345,41 @@ async def clear_students(code: str):
     return {"message": "Open access restored"}
 
 
+@app.post("/api/session/{code}/access_settings")
+async def set_access_settings(code: str, req: AccessSettingsReq):
+    s = _S(code)
+    if req.access_mode not in {"open", "closed", "close"}:
+        raise HTTPException(400, "Invalid access_mode; expected open, closed, or close")
+    if req.radius_meters is not None:
+        if req.radius_meters <= 0 or req.radius_meters > 2000:
+            raise HTTPException(400, "radius_meters must be between 1 and 2000")
+        s["close_access_radius_meters"] = req.radius_meters
+    if req.access_mode == "close":
+        if req.teacher_lat is not None and req.teacher_lng is not None:
+            if not (-90 <= req.teacher_lat <= 90 and -180 <= req.teacher_lng <= 180):
+                raise HTTPException(400, "Invalid teacher GPS coordinates")
+            s["close_access_location"] = {"lat": req.teacher_lat, "lng": req.teacher_lng}
+        elif not s.get("close_access_location"):
+            raise HTTPException(400, "Teacher location is required to enable Close Access")
+    s["access_mode"] = req.access_mode
+    save_session(code)
+    log.info("Session %s access settings updated: mode=%s radius=%s location=%s", code, req.access_mode, req.radius_meters, s.get("close_access_location"))
+    return {
+        "message": "Access settings updated",
+        "access_mode": s["access_mode"],
+        "close_access_radius_meters": s.get("close_access_radius_meters", 100),
+        "close_access_location": s.get("close_access_location"),
+    }
+
+
 @app.get("/api/session/{code}/check_access")
 async def check_access(
     code: str,
     name: str = Query(...),
     roll: str = Query(...),
     cls:  str = Query(...),
+    student_lat: Optional[float] = Query(None),
+    student_lng: Optional[float] = Query(None),
 ):
     """Pre-validation endpoint called by the student UI BEFORE the actual join
     request.  Always called — for open-access sessions it returns 200
@@ -2304,15 +2396,21 @@ async def check_access(
     access_mode = s.get("access_mode", "open")
 
     # Open access — every student is authorised; return immediately.
-    if access_mode != "closed":
+    if access_mode == "open":
         return {"authorized": True, "access_mode": "open"}
 
-    # Closed access — delegate entirely to the canonical validation function.
-    # This endpoint never touches waiting_room, students dict, or WebSockets.
-    if not validate_closed_access_student(s, name, roll, cls):
-        raise HTTPException(403, "Not allowed for this class")
+    if access_mode == "closed":
+        if not validate_closed_access_student(s, name, roll, cls):
+            raise HTTPException(403, "Not allowed for this class")
+        return {"authorized": True, "access_mode": "closed"}
 
-    return {"authorized": True, "access_mode": "closed"}
+    if access_mode == "close":
+        denial_reason = get_close_access_failure_reason(s, student_lat, student_lng)
+        if denial_reason is not None:
+            raise HTTPException(403, denial_reason)
+        return {"authorized": True, "access_mode": "close"}
+
+    return {"authorized": True, "access_mode": access_mode}
 
 
 # ══════════════════════════════════════════════════════════════════

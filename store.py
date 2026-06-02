@@ -178,9 +178,11 @@ def new_session(code: str, teacher_name: str) -> dict:
         "students":         {},          # student_id -> student dict
         "waiting_room":     [],          # [student_id, ...]
         "kicked":           set(),
-        "access_mode":      "open",        # "open" | "closed"  (closed = CSV uploaded)
+        "access_mode":      "open",        # "open" | "closed"  (closed = CSV uploaded) | "close" (geo-fenced)
         "allowed_students": set(),        # optional CSV admission list (tuples: name,roll,cls)
         "active_rolls":     set(),        # duplicate login guard
+        "close_access_location": None,     # teacher GPS location for Close Access mode
+        "close_access_radius_meters": 100, # validation radius for Close Access mode
         # tasks
         "tasks":            [],
         "current_task_idx": -1,

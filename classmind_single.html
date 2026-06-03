@@ -14848,53 +14848,7 @@ function SmartAttendancePage({ sessionCode, sessionStatus, roster, wsSend }) {
         )
       ),
 
-      // ── Attendance Snapshot (donut) ──
-      React.createElement('div', { className: 'att-snapshot-card' },
-        React.createElement('div', { className: 'att-snapshot-header' }, 'Attendance Snapshot'),
-        React.createElement('div', { className: 'att-snapshot-body' },
-          React.createElement('div', { className: 'att-donut-wrap' },
-            React.createElement('svg', {
-              className: 'att-donut-svg', width: 160, height: 160, viewBox: '0 0 160 160'
-            },
-              // bg track
-              React.createElement('circle', { cx: 80, cy: 80, r: donutR, fill: 'none', stroke: 'var(--surface3)', strokeWidth: 16 }),
-              // segments
-              ...(pct === 0
-                ? [React.createElement('circle', { key: 'empty', cx: 80, cy: 80, r: donutR, fill: 'none', stroke: 'var(--surface3)', strokeWidth: 16 })]
-                : donutArcs.filter(a => a.val > 0).map((a, i) =>
-                    React.createElement('circle', {
-                      key: i, cx: 80, cy: 80, r: donutR,
-                      fill: 'none', stroke: a.color, strokeWidth: 16,
-                      strokeDasharray: `${a.dash} ${a.gap}`,
-                      strokeDashoffset: a.offset,
-                      style: { transition: 'stroke-dasharray 0.8s ease, stroke-dashoffset 0.8s ease' }
-                    })
-                  )
-              )
-            ),
-            React.createElement('div', { className: 'att-donut-center' },
-              React.createElement('div', { className: 'att-donut-pct' }, `${pct}%`),
-              React.createElement('div', { className: 'att-donut-lbl' }, 'Attendance')
-            )
-          ),
-          React.createElement('div', { className: 'att-snapshot-legend' },
-            [
-              { label: 'Present',    val: att.present, color: '#22c55e' },
-              { label: 'Late',       val: att.late,    color: '#f97316' },
-              { label: 'Left Early', val: att.exited,  color: '#ef4444' },
-              { label: 'Not Marked', val: att.absent,  color: '#64748b' },
-            ].map(({ label, val, color }) =>
-              React.createElement('div', { key: label, className: 'att-snap-legend-item' },
-                React.createElement('div', { className: 'att-snap-legend-dot', style: { background: color } }),
-                React.createElement('span', { className: 'att-snap-legend-label' }, label),
-                React.createElement('span', { className: 'att-snap-legend-val' },
-                  `${val} (${att.total > 0 ? Math.round(val / att.total * 100) : 0}%)`
-                )
-              )
-            )
-          )
-        )
-      ),
+
 
       // ── Session Details ──
       React.createElement('div', { className: 'att-session-card' },
@@ -15864,19 +15818,7 @@ function TeacherDashboard({
           ),
           React.createElement("span", { className: "db-qc-arrow" }, "\u203A")
         ),
-        /* Refresh Classroom */
-        React.createElement("button", {
-          className: "db-qc-item",
-          style: { border: 'none', width: '100%' },
-          onClick: () => wsSend({ type: 'get_roster' })
-        },
-          React.createElement("div", { className: "db-qc-icon-wrap" }, "\uD83D\uDD04"),
-          React.createElement("div", { className: "db-qc-text" },
-            React.createElement("div", { className: "db-qc-title" }, "Refresh Classroom"),
-            React.createElement("div", { className: "db-qc-sub" }, `${groups.length} group(s) formed`)
-          ),
-          React.createElement("span", { className: "db-qc-arrow" }, "\u203A")
-        )
+
       )
     ),
 

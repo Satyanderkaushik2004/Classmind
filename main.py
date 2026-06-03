@@ -997,10 +997,10 @@ class CreateTaskReq(BaseModel):
 class RunAiEvalReq(BaseModel):
     student_id: str
     task_id:    str
-    api_key:    str
+    api_key:    Optional[str] = None
 
 class BulkAiEvalReq(BaseModel):
-    api_key:    str
+    api_key:    Optional[str] = None
 
 class ApproveEvalReq(BaseModel):
     student_id: str
@@ -2799,7 +2799,68 @@ Do not include any markdown styling, code blocks, or extra text. Output only the
             response["ai_score"] = min(max(0.0, suggested_marks), max_marks)
             response["confidence_score"] = confidence
             response["explanation"] = explanation
-            response["evaluation_status"] = "ai_reviewed"
+            
+            # --- AUTO-APPROVE AI EVALUATION ---
+            score = response["ai_score"]
+            is_correct = score >= (max_marks / 2.0)
+            student_id = response.get("student_id")
+            
+            response["teacher_score"] = score
+            response["teacher_feedback"] = explanation
+            response["evaluation_status"] = "approved"
+            response["correct"] = is_correct
+            
+            student = s["students"].get(student_id)
+            if student:
+                student["score"] = student.get("score", 0) + score
+                student["correct"] = student.get("correct", 0) + (1 if is_correct else 0)
+                
+                if s.get("mode") == "test":
+                    ts = s["test_state"]
+                    ts["scores"][student_id] = ts["scores"].get(student_id, 0) + score
+                    lb = sorted(ts["scores"].items(), key=lambda x: x[1], reverse=True)
+                    ts["leaderboard"] = [
+                        {
+                            "student_id":   sid,
+                            "score":        sc,
+                            "rank":         i + 1,
+                            "student_name": s["students"].get(sid, {}).get("name", sid),
+                        }
+                        for i, (sid, sc) in enumerate(lb)
+                    ]
+                
+                try:
+                    update_student_reports_on_approval(s, student_id, task["id"], score, explanation, is_correct)
+                except Exception as rpt_err:
+                    log.warning("[AI EVALUATION] failed to update report: %s", rpt_err)
+                
+                try:
+                    _appr_analytics = compute_analytics(s)
+                    _appr_analytics["understanding_short"] = compute_analytics(s, question_type="short").get("understanding", 0)
+                    _appr_analytics["understanding_long"]  = compute_analytics(s, question_type="long").get("understanding", 0)
+                    await ws_teacher(s, {
+                        "type": "analytics_update",
+                        "analytics": _appr_analytics,
+                    })
+                except Exception as analytics_err:
+                    log.warning("[AI EVALUATION] failed to update analytics: %s", analytics_err)
+                
+                try:
+                    await push_roster(s)
+                except Exception as roster_err:
+                    log.warning("[AI EVALUATION] failed to push roster: %s", roster_err)
+                
+                try:
+                    await ws_student(s, student_id, {
+                        "type": "evaluation_approved",
+                        "task_id": task["id"],
+                        "score": score,
+                        "feedback": explanation,
+                        "is_correct": is_correct,
+                        "student_score": student.get("score", 0),
+                    })
+                except Exception as ws_student_err:
+                    log.warning("[AI EVALUATION] failed to notify student: %s", ws_student_err)
         else:
             raise RuntimeError(f"API Error {resp.status_code}: {resp.text}")
             
@@ -3573,25 +3634,6 @@ async def dispatch_email_report(code: str, email: str):
         log.error("[BACKGROUND_EMAIL] Unexpected error: %s", exc)
 
 
-# SPA fallback: serve the frontend file for any non-API path so client-side routing
-# (history API) works and refresh keeps the user on the same page.
-@app.get("/{_path:path}", include_in_schema=False)
-def spa_fallback(request: Request, _path: str):
-    # Don't override API, WS, admin, docs or favicon routes
-    p = request.url.path.lstrip("/")
-    blocked_prefixes = ("api/", "ws/", "admin/", "favicon", "docs", "redoc")
-    if any(p.startswith(bp) for bp in blocked_prefixes):
-        raise HTTPException(404, "Not found")
-
-    if not FRONTEND_FILE.exists():
-        raise HTTPException(404, f"Frontend not found — ensure '{FRONTEND_FILE.name}' is present")
-
-    content = FRONTEND_FILE.read_bytes()
-    return Response(
-        content=content,
-        media_type="text/html",
-        headers={"Content-Length": str(len(content))},
-    )
 
 
 # ══════════════════════════════════════════════════════════════════
@@ -4927,15 +4969,26 @@ async def run_ai_evaluation_endpoint(code: str, req: RunAiEvalReq):
     if not response:
         raise HTTPException(404, "Student response not found")
     
-    s["teacher_api_key"] = req.api_key
-    await run_ai_evaluation_for_response(s, task, response, req.api_key)
+    api_key = req.api_key or os.getenv("OPENROUTER_API_KEY") or s.get("teacher_api_key")
+    if not api_key:
+        raise HTTPException(400, "API key is required. Please provide it in the input or configure OPENROUTER_API_KEY.")
+    
+    s["teacher_api_key"] = api_key
+    await run_ai_evaluation_for_response(s, task, response, api_key)
+    save_session(code)
     return {"success": True, "response": response}
+
 
 
 @app.post("/api/session/{code}/evaluations/bulk_ai")
 async def bulk_ai_evaluation_endpoint(code: str, req: BulkAiEvalReq):
     s = _S(code)
-    s["teacher_api_key"] = req.api_key
+    
+    api_key = req.api_key or os.getenv("OPENROUTER_API_KEY") or s.get("teacher_api_key")
+    if not api_key:
+        raise HTTPException(400, "API key is required. Please provide it in the input or configure OPENROUTER_API_KEY.")
+        
+    s["teacher_api_key"] = api_key
     
     pending_evals = []
     short_tasks = [t for t in s["tasks"] if t.get("type") == "short"]
@@ -4953,7 +5006,7 @@ async def bulk_ai_evaluation_endpoint(code: str, req: BulkAiEvalReq):
         return {"success": True, "count": 0, "message": "No pending AI-enabled evaluations found"}
         
     tasks_to_run = [
-        run_ai_evaluation_for_response(s, t, r, req.api_key)
+        run_ai_evaluation_for_response(s, t, r, api_key)
         for t, r in pending_evals
     ]
     await asyncio.gather(*tasks_to_run)
@@ -5030,6 +5083,27 @@ async def approve_evaluation_endpoint(code: str, req: ApproveEvalReq):
     })
     
     return {"success": True, "response": response}
+
+
+# SPA fallback: serve the frontend file for any non-API path so client-side routing
+# (history API) works and refresh keeps the user on the same page.
+@app.get("/{_path:path}", include_in_schema=False)
+def spa_fallback(request: Request, _path: str):
+    # Don't override API, WS, admin, docs or favicon routes
+    p = request.url.path.lstrip("/")
+    blocked_prefixes = ("api/", "ws/", "admin/", "favicon", "docs", "redoc")
+    if any(p.startswith(bp) for bp in blocked_prefixes):
+        raise HTTPException(404, "Not found")
+
+    if not FRONTEND_FILE.exists():
+        raise HTTPException(404, f"Frontend not found — ensure '{FRONTEND_FILE.name}' is present")
+
+    content = FRONTEND_FILE.read_bytes()
+    return Response(
+        content=content,
+        media_type="text/html",
+        headers={"Content-Length": str(len(content))},
+    )
 
 
 # ── local dev ──────────────────────────────────────────────────────

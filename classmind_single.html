@@ -12778,7 +12778,7 @@ function LandingPage({
   const [teacherName, setTeacherName] = useState(userProfile?.name || '');
   const [teacherEmail, setTeacherEmail] = useState(userProfile?.email || '');
   const [teacherPhone, setTeacherPhone] = useState(userProfile?.phone || '');
-  const [sessionName, setSessionName] = useState('');
+  const [classDuration, setClassDuration] = useState('');
   const [studentName, setStudentName] = useState(userProfile?.name || '');
   const [studentEmail, setStudentEmail] = useState(userProfile?.email || '');
   const [studentPhone, setStudentPhone] = useState(userProfile?.phone || '');
@@ -12884,6 +12884,7 @@ function LandingPage({
     if (!effectiveName.trim()) return add('Enter your name', 'error');
     if (!effectiveEmail.trim()) return add('Email is required', 'error');
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(effectiveEmail.trim())) return add('Enter a valid email address', 'error');
+    if (!classDuration) return add('Please select class duration', 'error');
 
     setLoading(true);
     try {
@@ -12893,7 +12894,7 @@ function LandingPage({
           teacher_name: effectiveName,
           email: effectiveEmail.trim(),
           phone: effectivePhone.trim() || null,
-          session_name: sessionName.trim() || null,
+          duration_mins: parseInt(classDuration, 10),
         }
       });
 
@@ -12919,7 +12920,7 @@ function LandingPage({
       }
 
       localStorage.setItem('teacher_email', effectiveEmail.trim());
-      navigate('teacher-dashboard', { sessionCode: res.session_code, teacherName: effectiveName, sessionName: res.session_name || sessionName.trim() });
+      navigate('teacher-dashboard', { sessionCode: res.session_code, teacherName: effectiveName, sessionName: res.session_name || `Session ${res.session_code}`, durationMins: parseInt(classDuration, 10) });
     } catch (e) { add(e.message, 'error'); }
     setLoading(false);
   }
@@ -13202,20 +13203,38 @@ function LandingPage({
               /*#__PURE__*/React.createElement("input", { value: teacherEmail, onChange: e => setTeacherEmail(e.target.value), placeholder: "teacher@school.com" })
             )
           ), 
-          /*#__PURE__*/React.createElement("div", { className: "form-group" }, 
-            /*#__PURE__*/React.createElement("label", null, "Session Name ", /*#__PURE__*/React.createElement("span", { style: { color: 'var(--text3)', fontWeight: 400 } }, "(optional)")), 
-            /*#__PURE__*/React.createElement("input", { value: sessionName, onChange: e => setSessionName(e.target.value), placeholder: "e.g. Python Basics, Math Quiz 3, AI Revision Test" })
-          ), 
-          /*#__PURE__*/React.createElement("div", { className: "flex gap-8" }, 
-            /*#__PURE__*/React.createElement("button", { className: "btn btn-ghost", onClick: () => setShowTeacher(false) }, "Back"), 
-            /*#__PURE__*/React.createElement("button", { className: "btn btn-primary", style: { flex: 1 }, onClick: createSession, disabled: loading }, loading ? 'Creating...' : 'Create Session \u2192')
+          /*#__PURE__*/React.createElement("div", { className: "form-group" },
+            /*#__PURE__*/React.createElement("label", null, "Class Duration"),
+            /*#__PURE__*/React.createElement("select", {
+              value: classDuration,
+              onChange: (e) => setClassDuration(e.target.value),
+              style: { cursor: "pointer" }
+            },
+              /*#__PURE__*/React.createElement("option", { value: "" }, "Select duration..."),
+              /*#__PURE__*/React.createElement("option", { value: "15" }, "15 mins"),
+              /*#__PURE__*/React.createElement("option", { value: "30" }, "30 mins"),
+              /*#__PURE__*/React.createElement("option", { value: "45" }, "45 mins"),
+              /*#__PURE__*/React.createElement("option", { value: "60" }, "1 hour"),
+              /*#__PURE__*/React.createElement("option", { value: "90" }, "1.5 hours"),
+              /*#__PURE__*/React.createElement("option", { value: "120" }, "2 hours")
+            )
+          ),
+          /*#__PURE__*/React.createElement("div", { className: "flex gap-8" },
+            /*#__PURE__*/React.createElement("button", { className: "btn btn-ghost", onClick: () => setShowTeacher(false) }, "Back"),
+            /*#__PURE__*/React.createElement("button", {
+              className: "btn btn-primary",
+              style: { flex: 1 },
+              onClick: createSession,
+              disabled: loading
+            }, loading ? "Creating..." : "Create Session →")
           )
-        ), 
+        ),
+
         showStudent && /*#__PURE__*/React.createElement("div", {
           className: "card lp-form-fade lp-form-fade-card",
-          style: { width: '100%', maxWidth: 420, position: 'relative', zIndex: 1 }
-        }, 
-          /*#__PURE__*/React.createElement("div", { className: "card-title" }, "🧑‍🎓 Join Session"),
+          style: { width: '100%', maxWidth: 400, position: 'relative', zIndex: 1 }
+        },
+          /*#__PURE__*/React.createElement("div", { className: "card-title" }, "\uD83E\uDDD1\u200D\uD83C\uDF93 Join Session"),
 
           // ── Avatar picker ──
           /*#__PURE__*/React.createElement("div", { style: { marginBottom: 16 } },
@@ -13297,7 +13316,7 @@ function LandingPage({
               boxShadow: '0 2px 8px rgba(239, 68, 68, 0.1)',
               animation: 's-fade-in 0.2s ease-out'
             }
-          }, "⚠️ ", joinError),
+          }, "\u26a0\ufe0f ", joinError),
           /*#__PURE__*/React.createElement("div", { className: "flex gap-8" }, 
             /*#__PURE__*/React.createElement("button", { className: "btn btn-ghost", onClick: () => { setShowStudent(false); setJoinError(''); } }, "Back"), 
             /*#__PURE__*/React.createElement("button", {
@@ -13305,7 +13324,7 @@ function LandingPage({
               style: { flex: 1 },
               onClick: joinSession,
               disabled: loading
-            }, loading ? '⏳ Joining...' : `${selectedStudentEmoji} Join Session →`)
+            }, loading ? '\u23f3 Joining...' : `${selectedStudentEmoji} Join Session \u2192`)
           )
         )
       )
@@ -14438,6 +14457,7 @@ function TeacherShell({
   sessionCode,
   teacherName,
   sessionName: initialSessionName,
+  durationMins: initialDurationMins,
   navigate: rootNavigate,
   updateUserProfile,
   teacherProfileEmail
@@ -14465,6 +14485,8 @@ function TeacherShell({
   const [tasks, setTasks] = useState([]);
   const [groups, setGroups] = useState([]);
   const [sessionStatus, setSessionStatus] = useState('waiting');
+  const [sessionDurationMins, setSessionDurationMins] = useState(initialDurationMins || 0);
+  const [sessionEndTimestamp, setSessionEndTimestamp] = useState(null); // ms epoch when session ends
   const [accessMode, setAccessMode] = useState('open');
   const [closeAccessRadius, setCloseAccessRadius] = useState(100);
   const [teacherLocation, setTeacherLocation] = useState(null);
@@ -14525,6 +14547,18 @@ function TeacherShell({
         });
       } else if (msg.type === 'session_status') {
         setSessionStatus(msg.status || 'waiting');
+        // Update end timestamp from server if provided
+        if (msg.session_end_timestamp) {
+          setSessionEndTimestamp(msg.session_end_timestamp * 1000); // convert to ms
+        }
+        if (msg.status === 'ended') {
+          add('Class has ended.', 'info');
+          SESSION_STORE.teacherTestSession = { running: false, tasks: [], startTime: null, durationSecs: 0, submissions: {} };
+          SESSION_STORE.closeSocket(`${WS_BASE}/ws/teacher/${sessionCode}`);
+          setTimeout(() => {
+            rootNavigate('landing');
+          }, 3000);
+        }
       } else if (msg.type === 'groups_updated') {
         setGroups(msg.groups || []);
       } else if (msg.type === 'task_created' || msg.type === 'task_deleted' || msg.type === 'tasks_imported') {
@@ -14568,6 +14602,12 @@ function TeacherShell({
         if (msg.session?.close_access_location) {
           setTeacherLocation(msg.session.close_access_location);
           setGeoMessage(`Teacher location captured at ${msg.session.close_access_location.lat.toFixed(4)}, ${msg.session.close_access_location.lng.toFixed(4)}`);
+        }
+        // ── Countdown: compute end timestamp from server data ──
+        if (msg.session?.duration_mins) setSessionDurationMins(msg.session.duration_mins);
+        if (msg.session?.started_at && msg.session?.duration_mins) {
+          const endMs = (msg.session.started_at + msg.session.duration_mins * 60) * 1000;
+          setSessionEndTimestamp(endMs);
         }
       } else if (msg.type === 'attendance_update') {
         if (msg.attendance && typeof window.__attUpdate === 'function') {
@@ -14838,7 +14878,15 @@ function TeacherShell({
       await apiFetch(`/api/session/${sessionCode}/control?action=${action}`, {
         method: 'POST'
       });
-      setSessionStatus(action === 'start' ? 'active' : action === 'pause' ? 'paused' : action === 'resume' ? 'active' : 'ended');
+      const newStatus = action === 'start' ? 'active' : action === 'pause' ? 'paused' : action === 'resume' ? 'active' : 'ended';
+      setSessionStatus(newStatus);
+      // ── Compute end timestamp when session starts ──
+      if (action === 'start' && sessionDurationMins > 0) {
+        setSessionEndTimestamp(Date.now() + sessionDurationMins * 60 * 1000);
+      }
+      if (action === 'end') {
+        setSessionEndTimestamp(null);
+      }
       add(`Session ${action}ed`, 'success');
       // ── On explicit session end, clean up live state ───────────
       if (action === 'end') {
@@ -14846,6 +14894,9 @@ function TeacherShell({
         // Close the teacher WebSocket so it reconnects fresh on next session
         SESSION_STORE.closeSocket(`${WS_BASE}/ws/teacher/${sessionCode}`);
         console.log('[ClassMind] Session ended — live state cleared.');
+        setTimeout(() => {
+          rootNavigate('landing');
+        }, 2000);
       }
     } catch (e) {
       add(e.message, 'error');
@@ -14905,6 +14956,8 @@ function TeacherShell({
     roster,
     analytics,
     sessionStatus,
+    sessionDurationMins,
+    sessionEndTimestamp,
     wsSend,
     loadTasks,
     loadRoster,
@@ -16191,6 +16244,8 @@ function TeacherDashboard({
   roster,
   analytics,
   sessionStatus,
+  sessionDurationMins,
+  sessionEndTimestamp,
   sessionControl,
   loadTasks,
   wsSend,
@@ -16310,21 +16365,59 @@ function TeacherDashboard({
       sessionControl('end');
     }
   }
-  // ── Session timer (client-side elapsed clock) ────────────────────
-  const [sessionElapsed, setSessionElapsed] = useState(0);
+  // ── Session countdown timer ────────────────────────────────────────
+  const [countdownSecs, setCountdownSecs] = useState(0);
   const sessionStartRef = useRef(null);
   useEffect(() => {
     if (sessionStatus === 'active') {
       if (!sessionStartRef.current) sessionStartRef.current = Date.now();
       const id = setInterval(() => {
-        setSessionElapsed(Math.floor((Date.now() - sessionStartRef.current) / 1000));
+        if (sessionEndTimestamp) {
+          const remaining = Math.max(0, Math.floor((sessionEndTimestamp - Date.now()) / 1000));
+          setCountdownSecs(remaining);
+          // Auto-end when countdown hits 0
+          if (remaining === 0) {
+            clearInterval(id);
+            sessionControl('end');
+          }
+        } else if (sessionDurationMins > 0 && sessionStartRef.current) {
+          // Fallback: compute from start + duration
+          const elapsed = Math.floor((Date.now() - sessionStartRef.current) / 1000);
+          const totalSecs = sessionDurationMins * 60;
+          const remaining = Math.max(0, totalSecs - elapsed);
+          setCountdownSecs(remaining);
+          if (remaining === 0) {
+            clearInterval(id);
+            sessionControl('end');
+          }
+        }
       }, 1000);
       return () => clearInterval(id);
     } else if (sessionStatus !== 'paused') {
       sessionStartRef.current = null;
-      setSessionElapsed(0);
+      setCountdownSecs(sessionDurationMins ? sessionDurationMins * 60 : 0);
     }
-  }, [sessionStatus]);
+  }, [sessionStatus, sessionEndTimestamp, sessionDurationMins]);
+
+  // Format countdown as "1h 24m" or "42m 12s"
+  const fmtCountdown = (secs) => {
+    if (secs <= 0) return '0m 0s';
+    const h = Math.floor(secs / 3600);
+    const m = Math.floor((secs % 3600) / 60);
+    const s = secs % 60;
+    if (h > 0) return `${h}h ${m}m`;
+    return `${m}m ${s}s`;
+  };
+
+  // Color based on remaining time
+  const getCountdownColor = (secs) => {
+    if (secs <= 0 || sessionStatus !== 'active') return 'var(--text2)';
+    if (secs < 5 * 60) return 'var(--red)';
+    if (secs < 15 * 60) return 'var(--yellow)';
+    return 'var(--green)';
+  };
+  const countdownColor = getCountdownColor(countdownSecs);
+  const countdownBlink = sessionStatus === 'active' && countdownSecs > 0 && countdownSecs < 5 * 60;
 
   // ── ANALYTICS HISTORY — rolling window of real data points ───────
   const understandingHistory = useRef([]);
@@ -16347,10 +16440,6 @@ function TeacherDashboard({
       push(tasksHistory.current, tasksCount);
     }
   }, [analytics?.understanding, analytics?.participation, roster?.active?.length, tasks?.length, sessionStatus]);
-  const fmtElapsed = (s) => {
-    const m = Math.floor(s / 60), sec = s % 60;
-    return `${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`;
-  };
   const understanding = (analytics?.understanding) || 0;
   const understandingColor = understanding >= 70 ? 'green' : understanding >= 40 ? 'yellow' : 'red';
   const statusColor = {
@@ -16577,11 +16666,21 @@ function TeacherDashboard({
           React.createElement("div", { className: "db-hero-meta-label" }, "Students Connected")
         ),
         React.createElement("div", { className: "db-hero-meta-item" },
-          React.createElement("div", { className: "db-hero-meta-icon" }, "🕐"),
-          React.createElement("div", { className: "db-hero-time-value" },
-            sessionStatus === 'active' ? fmtElapsed(sessionElapsed) : "--:--"
+          React.createElement("div", { className: "db-hero-meta-icon" }, "⏱️"),
+          React.createElement("div", { 
+            className: "db-hero-time-value",
+            style: { 
+              color: countdownColor,
+              animation: countdownBlink ? 'blink 1s step-start infinite' : 'none',
+              transition: 'color 0.5s ease',
+              fontVariantNumeric: 'tabular-nums'
+            }
+          },
+            sessionStatus === 'active' ? fmtCountdown(countdownSecs) :
+            sessionStatus === 'paused' ? fmtCountdown(countdownSecs) :
+            sessionDurationMins > 0 ? `${sessionDurationMins}m` : "--"
           ),
-          React.createElement("div", { className: "db-hero-meta-label" }, "Session Time")
+          React.createElement("div", { className: "db-hero-meta-label" }, "Class Ends In")
         )
       ),
       /* Illustration — Abstract AI network nodes */
@@ -25337,6 +25436,7 @@ function StudentTaskView({
         setSessionStatus(msg.status);
         // ── On session end, clean up persistent live state ──────
         if (msg.status === 'ended') {
+          add('Class has ended.', 'info');
           clearInterval(testTimerRef.current);
           testTimerRef.current = null;
           _clearTestState(sessionCode, studentId);

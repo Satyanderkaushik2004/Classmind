@@ -95,6 +95,8 @@ def _deserialize_session(d: dict) -> dict:
     # Runtime WebSocket fields are never stored — reinit to None / empty dict
     s["teacher_ws"] = None
     s.setdefault("ws_clients", {})
+    s.setdefault("duration_mins", 0)
+    s.setdefault("started_at", None)
     # ── Migrate old tasks to include starter_code ─────────────────────
     for t in s.get("tasks", []):
         if isinstance(t, dict) and "starter_code" not in t:
@@ -170,6 +172,8 @@ def new_session(code: str, teacher_name: str) -> dict:
         "mode":             "live",      # live|test
         "created_at":       now(),
         "last_activity_at": now(),
+        "duration_mins":    0,
+        "started_at":       None,
         "vc_active":        False,
         # websockets (runtime only — never persisted)
         "teacher_ws":       None,

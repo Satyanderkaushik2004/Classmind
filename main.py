@@ -961,6 +961,7 @@ class CreateSessionReq(BaseModel):
     email:        Optional[str] = None
     phone:        Optional[str] = None
     session_name: Optional[str] = None
+    duration_mins: int
 
 class AccessSettingsReq(BaseModel):
     access_mode: str
@@ -1113,6 +1114,59 @@ async def test_timer_watcher():
                         pass
 
 
+async def end_session_automatically(s: dict):
+    code = s["code"]
+    s["status"] = "ended"
+    touch_session(s)
+    
+    # Broadcast to all connected clients
+    await ws_broadcast(s, {"type": "session_status", "status": "ended"})
+    
+    admin_broadcast({
+        "event": "session_ended",
+        "session_code": code,
+        "teacher_name": s.get("teacher_name"),
+    })
+    
+    # Remove from active mapping so teacher can start a new session next time
+    t_email = s.get("teacher_email")
+    if t_email and teacher_sessions.get(t_email) == code:
+        teacher_sessions.pop(t_email, None)
+        log.info("[SESSION] Removed session %s from active mapping for %s", code, t_email)
+        
+    # Queue the auto-email reports
+    asyncio.create_task(_send_session_end_emails(s))
+    log.info("[SESSION] Timed auto-end triggered for session %s. Cleanup complete.", code)
+
+
+async def session_timer_watcher():
+    while True:
+        await asyncio.sleep(3)
+        for s in list(sessions.values()):
+            status = s.get("status")
+            if status in ("active", "paused"):
+                duration_mins = s.get("duration_mins", 0)
+                started_at = s.get("started_at")
+                if duration_mins > 0 and started_at:
+                    elapsed = now() - started_at
+                    if elapsed >= duration_mins * 60:
+                        log.info("[SESSION TIMER] Auto-ending session %s after %d mins", s["code"], duration_mins)
+                        try:
+                            await end_session_automatically(s)
+                        except Exception as e:
+                            log.error("[SESSION TIMER] Error ending session %s automatically: %s", s["code"], e, exc_info=True)
+            
+            # Safeguard: prevent sessions from running indefinitely
+            # If a session is not ended and has been created for more than 12 hours, force end it.
+            created_at = s.get("created_at", 0)
+            if status != "ended" and now() - created_at > 12 * 3600:
+                log.info("[SESSION TIMER] Force ending stale/indefinite session %s", s["code"])
+                try:
+                    await end_session_automatically(s)
+                except Exception as e:
+                    log.error("[SESSION TIMER] Error force ending session %s: %s", s["code"], e, exc_info=True)
+
+
 async def code_worker():
     while True:
         code, language, stdin, future = await execution_queue.get()
@@ -1171,11 +1225,12 @@ async def lifespan(app: FastAPI):
     t2 = asyncio.create_task(test_timer_watcher())
     t3 = asyncio.create_task(code_worker())
     t4 = asyncio.create_task(autosave_worker())
+    t5 = asyncio.create_task(session_timer_watcher())
     yield
     # Final save before shutdown
     for code in list(sessions):
         save_session(code)
-    t1.cancel(); t2.cancel(); t3.cancel(); t4.cancel()
+    t1.cancel(); t2.cancel(); t3.cancel(); t4.cancel(); t5.cancel()
     log.info("ClassMind stopped.")
 
 
@@ -1675,6 +1730,8 @@ async def admin_delete_session(code: str, admin_username: str = Depends(admin_au
 
 @app.post("/api/session/create")
 async def create_session(req: CreateSessionReq, background_tasks: BackgroundTasks):
+    if req.duration_mins <= 0 or req.duration_mins > 120:
+        raise HTTPException(400, "Class duration must be between 1 and 120 minutes (max 2 hours).")
     # Validate email if provided
     email = (req.email or "").strip().lower()
     if email:
@@ -1696,6 +1753,8 @@ async def create_session(req: CreateSessionReq, background_tasks: BackgroundTask
 
     # Store session name (display name for the session)
     s["session_name"] = (req.session_name or "").strip()
+    s["duration_mins"] = req.duration_mins
+    s["started_at"] = None
 
     # Store teacher profile on session
     if email:
@@ -1722,6 +1781,11 @@ async def create_session(req: CreateSessionReq, background_tasks: BackgroundTask
 @app.get("/api/session/{code}")
 def get_session_info(code: str):
     s = _S(code)
+    started_at = s.get("started_at")
+    duration_mins = s.get("duration_mins", 0)
+    session_end_timestamp = None
+    if started_at and duration_mins:
+        session_end_timestamp = started_at + duration_mins * 60
     return {
         "code":             s["code"],
         "status":           s["status"],
@@ -1738,6 +1802,10 @@ def get_session_info(code: str):
         "close_access_location":       s.get("close_access_location"),
         # Closed-access flag so student UI can pre-validate before attempting join
         "is_closed_access": s.get("access_mode", "open") == "closed",
+        # Session duration and countdown data
+        "duration_mins":         duration_mins,
+        "started_at":            started_at,
+        "session_end_timestamp": session_end_timestamp,
     }
 
 
@@ -1824,8 +1892,23 @@ async def session_control(code: str, action: str = Query(...), background_tasks:
     if action not in MAP:
         raise HTTPException(400, f"Unknown action '{action}'")
     s["status"] = MAP[action]
+    if action == "start":
+        if not s.get("started_at"):
+            s["started_at"] = now()
     touch_session(s)
-    await ws_broadcast(s, {"type": "session_status", "status": s["status"]})
+
+    # Compute session_end_timestamp for countdown
+    started_at = s.get("started_at")
+    duration_mins = s.get("duration_mins", 0)
+    session_end_timestamp = (started_at + duration_mins * 60) if (started_at and duration_mins) else None
+
+    await ws_broadcast(s, {
+        "type": "session_status",
+        "status": s["status"],
+        "started_at": started_at,
+        "duration_mins": duration_mins,
+        "session_end_timestamp": session_end_timestamp,
+    })
     if action == "end":
         admin_broadcast({
             "event": "session_ended",
@@ -1846,7 +1929,7 @@ async def session_control(code: str, action: str = Query(...), background_tasks:
         if background_tasks is not None:
             background_tasks.add_task(_send_class_start_notifications, s)
             log.info("[AUTO-EMAIL] Class-start notification task queued for %s", code)
-    return {"status": s["status"]}
+    return {"status": s["status"], "session_end_timestamp": session_end_timestamp}
 
 
 def normalize_string(val: str) -> str:
@@ -4155,6 +4238,8 @@ async def teacher_ws_endpoint(ws: WebSocket, session_code: str):
             "groups":       s["groups"],
             "deliveries":   [delivery_summary(d) for d in s.get("task_deliveries", {}).values()],
             "vc_active":    s.get("vc_active", False),
+            "duration_mins": s.get("duration_mins", 0),
+            "started_at":   s.get("started_at"),
         },
         "analytics": compute_analytics(s),
         "roster":    {"active": active, "waiting": waiting},

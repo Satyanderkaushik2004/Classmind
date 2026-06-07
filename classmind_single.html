@@ -942,76 +942,126 @@ select option{background:var(--surface2)}
 }
 
 /* ── TOP HEADER ── */
+/* ═══════════════════════════════════════════════════════════
+   PREMIUM TEACHER HEADER — full redesign
+═══════════════════════════════════════════════════════════ */
 .teacher-header {
   height: var(--header-h);
-  background: var(--surface);
-  border-bottom: 1px solid var(--border);
+  background: linear-gradient(135deg,
+    rgba(15,17,35,0.98) 0%,
+    rgba(22,26,52,0.98) 50%,
+    rgba(15,17,35,0.98) 100%);
+  border-bottom: 1px solid rgba(99,102,241,0.2);
   display: flex;
   align-items: center;
-  padding: 0 24px;
+  padding: 0 20px;
   gap: 12px;
   position: sticky;
   top: 0;
   z-index: 100;
   flex-shrink: 0;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: 0 1px 0 rgba(99,102,241,0.1), 0 4px 24px rgba(0,0,0,0.3);
 }
-.teacher-header-greeting { flex: 1; }
+.light .teacher-header {
+  background: linear-gradient(135deg, #f8fafc 0%, #eef2ff 50%, #f8fafc 100%);
+  border-bottom: 1px solid rgba(99,102,241,0.15);
+  box-shadow: 0 1px 0 rgba(99,102,241,0.08), 0 4px 20px rgba(0,0,0,0.06);
+}
+
+/* ── Header left: avatar + greeting ── */
+.teacher-header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  min-width: 0;
+}
+.teacher-header-greeting { flex: 1; min-width: 0; }
 .teacher-header-greeting h2 {
-  font-size: 1.1rem;
+  font-size: 1rem;
   font-weight: 700;
   color: var(--text);
   line-height: 1.25;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
-.teacher-header-greeting p {
-  font-size: 0.8rem;
+.light .teacher-header-greeting h2 { color: #1e293b; }
+
+/* Rotating motivational quotes */
+.header-quote-wrap {
+  height: 18px;
+  overflow: hidden;
+  position: relative;
+}
+.header-quote {
+  font-size: 0.75rem;
   color: var(--text2);
-  margin-top: 1px;
+  line-height: 1;
+  position: absolute;
+  left: 0; right: 0;
+  transition: opacity 0.5s ease, transform 0.5s ease;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
+.header-quote.visible { opacity: 1; transform: translateY(0); }
+.header-quote.hidden-up { opacity: 0; transform: translateY(-12px); pointer-events: none; }
+.header-quote.hidden-down { opacity: 0; transform: translateY(12px); pointer-events: none; }
+
+/* ── Header actions (right side) ── */
 .teacher-header-actions {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
+  flex-shrink: 0;
 }
 .hdr-icon-btn {
-  width: 38px; height: 38px;
+  width: 36px; height: 36px;
   border-radius: 50%;
-  border: none;
-  background: var(--surface2);
+  border: 1px solid rgba(99,102,241,0.15);
+  background: rgba(99,102,241,0.08);
   color: var(--text2);
   cursor: pointer;
   display: flex; align-items: center; justify-content: center;
   font-size: 1rem;
   position: relative;
-  transition: all 0.18s;
+  transition: all 0.2s cubic-bezier(0.4,0,0.2,1);
 }
-.hdr-icon-btn:hover { background: var(--surface3); color: var(--text); }
+.hdr-icon-btn:hover {
+  background: rgba(99,102,241,0.18);
+  color: var(--text);
+  border-color: rgba(99,102,241,0.35);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(99,102,241,0.2);
+}
 .hdr-notif-badge {
   position: absolute;
-  top: -2px; right: -2px;
+  top: -3px; right: -3px;
   background: var(--red);
   color: #fff;
-  font-size: 0.6rem;
-  font-weight: 700;
+  font-size: 0.58rem;
+  font-weight: 800;
   min-width: 16px; height: 16px;
   border-radius: 8px;
   display: flex; align-items: center; justify-content: center;
   padding: 0 3px;
   pointer-events: none;
+  border: 2px solid var(--bg);
 }
 .hdr-class-code {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 6px 14px;
-  background: var(--surface2);
-  border: 1px solid var(--border);
+  padding: 5px 12px;
+  background: rgba(99,102,241,0.08);
+  border: 1px solid rgba(99,102,241,0.2);
   border-radius: 20px;
   font-size: 0.8rem;
 }
-.hdr-class-code-label {
-  color: var(--text2);
-  font-weight: 500;
-}
+.hdr-class-code-label { color: var(--text2); font-weight: 500; }
 .hdr-class-code-value {
   color: var(--accent);
   font-weight: 800;
@@ -1019,19 +1069,193 @@ select option{background:var(--surface2)}
   font-size: 0.95rem;
   letter-spacing: 1px;
 }
+
+/* ─── PREMIUM AVATAR SYSTEM ─── */
 .hdr-avatar {
-  width: 38px; height: 38px;
+  width: 40px; height: 40px;
   border-radius: 50%;
   background: linear-gradient(135deg, #6366f1, #8b5cf6);
   color: #fff;
-  font-weight: 700;
+  font-weight: 800;
   font-size: 0.95rem;
-  border: 2px solid rgba(99,102,241,0.4);
+  border: 2.5px solid rgba(99,102,241,0.5);
   cursor: pointer;
   display: flex; align-items: center; justify-content: center;
-  transition: all 0.18s;
+  transition: all 0.25s cubic-bezier(0.4,0,0.2,1);
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 0 0 0 rgba(99,102,241,0.4);
+  flex-shrink: 0;
 }
-.hdr-avatar:hover { border-color: var(--accent); }
+.hdr-avatar img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+.hdr-avatar:hover {
+  border-color: #6366f1;
+  box-shadow: 0 0 0 4px rgba(99,102,241,0.2), 0 4px 16px rgba(99,102,241,0.3);
+  transform: scale(1.08);
+}
+.hdr-avatar-presence {
+  position: absolute;
+  bottom: 1px; right: 1px;
+  width: 9px; height: 9px;
+  border-radius: 50%;
+  background: var(--green);
+  border: 2px solid var(--surface);
+  pointer-events: none;
+}
+
+/* ── READ-ONLY SESSION BANNER ── */
+.session-readonly-banner {
+  background: linear-gradient(135deg, rgba(99,102,241,0.12) 0%, rgba(139,92,246,0.08) 100%);
+  border: 1px solid rgba(99,102,241,0.25);
+  border-radius: 8px;
+  padding: 8px 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.82rem;
+  color: var(--text2);
+  margin: 12px 24px 0;
+  animation: banner-fade-in 0.5s ease;
+}
+@keyframes banner-fade-in { from { opacity:0; transform: translateY(-6px); } to { opacity:1; transform: translateY(0); } }
+.session-readonly-banner .ro-icon { font-size: 1rem; }
+.session-readonly-banner .ro-title {
+  font-weight: 700;
+  color: var(--accent);
+  font-size: 0.85rem;
+}
+.session-readonly-banner .ro-desc { color: var(--text2); }
+.session-readonly-banner .ro-pills {
+  margin-left: auto;
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.ro-pill {
+  padding: 2px 10px;
+  border-radius: 12px;
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+.ro-pill.allowed { background: rgba(34,197,94,0.12); color: var(--green); border: 1px solid rgba(34,197,94,0.25); }
+.ro-pill.locked  { background: rgba(239,68,68,0.10); color: var(--red); border: 1px solid rgba(239,68,68,0.2); }
+
+/* ── DISABLED BUTTONS IN READ-ONLY MODE ── */
+.session-ended-lock {
+  opacity: 0.42 !important;
+  cursor: not-allowed !important;
+  pointer-events: none !important;
+  filter: grayscale(0.4);
+}
+.session-ended-lock-btn {
+  position: relative;
+}
+.session-ended-lock-btn::after {
+  content: '🔒';
+  position: absolute;
+  top: -6px; right: -6px;
+  font-size: 0.65rem;
+  background: var(--surface);
+  border-radius: 50%;
+  padding: 1px 2px;
+  pointer-events: none;
+}
+
+/* ── VIDEO CALL SIDEBAR ITEM (always visible) ── */
+.sidebar-vc-item {
+  margin: 8px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(99,102,241,0.2);
+  background: rgba(99,102,241,0.06);
+  overflow: hidden;
+  transition: all 0.2s;
+}
+.sidebar-vc-item:hover {
+  border-color: rgba(99,102,241,0.4);
+  background: rgba(99,102,241,0.12);
+}
+.sidebar-vc-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border: none;
+  background: transparent;
+  color: var(--sidebar-text);
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 500;
+  font-family: inherit;
+  transition: all 0.2s;
+}
+.sidebar-vc-btn.active-call {
+  color: var(--red) !important;
+  background: rgba(239,68,68,0.08) !important;
+}
+.sidebar-vc-btn.active-call .vc-pulse-dot {
+  background: var(--red);
+  animation: vc-pulse 1.5s ease-in-out infinite;
+}
+@keyframes vc-pulse {
+  0%,100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.4); opacity: 0.7; }
+}
+.vc-pulse-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--green);
+  flex-shrink: 0;
+  margin-left: auto;
+}
+.sidebar-vc-icon {
+  font-size: 1.1rem;
+  width: 24px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+
+/* ── AVATAR UPLOAD MODAL ── */
+.avatar-upload-zone {
+  border: 2px dashed rgba(99,102,241,0.3);
+  border-radius: 12px;
+  padding: 24px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: rgba(99,102,241,0.04);
+}
+.avatar-upload-zone:hover {
+  border-color: var(--accent);
+  background: rgba(99,102,241,0.08);
+}
+.avatar-upload-zone.dragging {
+  border-color: var(--accent);
+  background: rgba(99,102,241,0.12);
+  transform: scale(1.01);
+}
+.avatar-preview-ring {
+  width: 80px; height: 80px;
+  border-radius: 50%;
+  margin: 0 auto 12px;
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  display: flex; align-items: center; justify-content: center;
+  color: #fff;
+  font-size: 1.8rem;
+  font-weight: 800;
+  overflow: hidden;
+  border: 3px solid rgba(99,102,241,0.4);
+  box-shadow: 0 0 20px rgba(99,102,241,0.25);
+}
+.avatar-preview-ring img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
 
 /* ── DASHBOARD PAGE WRAPPER ── */
 .db-page {
@@ -1864,7 +2088,11 @@ select option{background:var(--surface2)}
   .db-stats-row { grid-template-columns: repeat(2, 1fr); }
   .db-bottom-grid { grid-template-columns: 1fr; }
   .db-hero-illustration { display: none; }
-  .teacher-header { padding: 0 16px; gap: 8px; }
+  .teacher-header { padding: 0 12px; gap: 6px; }
+  .teacher-header-greeting h2 { font-size: 0.88rem; }
+  .hdr-class-code { display: none; }
+  .session-readonly-banner { margin: 8px 14px 0; flex-wrap: wrap; gap: 6px; }
+  .ro-pills { display: none; }
   .db-page { padding: 14px 14px 24px; }
 }
 @media (max-width: 600px) {
@@ -1895,6 +2123,8 @@ select option{background:var(--surface2)}
 .light .sidebar-nav-item { color: var(--text2); }
 .light .sidebar-nav-item:hover { background: var(--surface2); color: var(--text); }
 .light .sidebar-nav-item.active { background: rgba(99,102,241,0.1); color: var(--accent); }
+.light .sidebar-vc-btn { color: #475569; }
+.light .session-readonly-banner { background: rgba(99,102,241,0.06); }
 .light .db-hero-card { background: linear-gradient(120deg, #eef2ff 0%, #e8eaff 50%, #ede9fe 100%); }
 .light .db-ai-banner { background: linear-gradient(120deg, rgba(238,242,255,0.98) 0%, rgba(237,233,254,0.95) 100%); }
 .light .db-hero-time-value { color: var(--text); }
@@ -4975,12 +5205,17 @@ body.s-ui-active .toasts {
 }
 .profile-drawer-close:hover{background:var(--surface3);color:var(--text)}
 .profile-avatar{
-  width:56px;height:56px;border-radius:50%;
+  width:72px;height:72px;border-radius:50%;
   background:linear-gradient(135deg,var(--accent),var(--accent2));
   display:flex;align-items:center;justify-content:center;
-  font-size:1.5rem;font-weight:700;color:#fff;margin-bottom:10px;
-  box-shadow:0 4px 16px rgba(99,102,241,0.4);
+  font-size:1.8rem;font-weight:800;color:#fff;margin-bottom:10px;
+  box-shadow:0 4px 20px rgba(99,102,241,0.45), 0 0 0 3px rgba(99,102,241,0.25);
+  overflow:hidden;
+  transition: transform 0.2s, box-shadow 0.2s;
 }
+.profile-avatar:hover { transform: scale(1.05); box-shadow: 0 8px 28px rgba(99,102,241,0.5), 0 0 0 4px rgba(99,102,241,0.35); }
+.profile-avatar:hover .avatar-camera-overlay { opacity: 1 !important; }
+.avatar-camera-overlay { opacity: 0; transition: opacity 0.2s; }
 .profile-name{font-size:1.1rem;font-weight:700;margin-bottom:2px}
 .profile-role-badge{
   display:inline-flex;align-items:center;gap:5px;
@@ -14552,12 +14787,9 @@ function TeacherShell({
           setSessionEndTimestamp(msg.session_end_timestamp * 1000); // convert to ms
         }
         if (msg.status === 'ended') {
-          add('Class has ended.', 'info');
+          add('✅ Class ended — you are now in Read-Only mode. View analytics & download reports.', 'info');
           SESSION_STORE.teacherTestSession = { running: false, tasks: [], startTime: null, durationSecs: 0, submissions: {} };
-          SESSION_STORE.closeSocket(`${WS_BASE}/ws/teacher/${sessionCode}`);
-          setTimeout(() => {
-            rootNavigate('landing');
-          }, 3000);
+          // Do NOT close WebSocket or navigate away — teacher stays in dashboard in read-only mode
         }
       } else if (msg.type === 'groups_updated') {
         setGroups(msg.groups || []);
@@ -14891,12 +15123,8 @@ function TeacherShell({
       // ── On explicit session end, clean up live state ───────────
       if (action === 'end') {
         SESSION_STORE.teacherTestSession = { running: false, tasks: [], startTime: null, durationSecs: 0, submissions: {} };
-        // Close the teacher WebSocket so it reconnects fresh on next session
-        SESSION_STORE.closeSocket(`${WS_BASE}/ws/teacher/${sessionCode}`);
-        console.log('[ClassMind] Session ended — live state cleared.');
-        setTimeout(() => {
-          rootNavigate('landing');
-        }, 2000);
+        // Keep teacher in dashboard in read-only mode — do NOT navigate away or close socket
+        console.log('[ClassMind] Session ended — switching to read-only teacher mode.');
       }
     } catch (e) {
       add(e.message, 'error');
@@ -15040,6 +15268,38 @@ function TeacherShell({
   };
   const totalNotifs = notifications.doubts + notifications.chat + notifications.hands;
 
+  // ── PROFILE PHOTO — load from localStorage ─────────────────────────
+  const [profilePhoto, setProfilePhoto] = useState(() => {
+    try {
+      const user = JSON.parse(localStorage.getItem('cm_user') || '{}');
+      return localStorage.getItem(`cm_avatar_${user.email || user.id || 'teacher'}`) || null;
+    } catch { return null; }
+  });
+
+  // ── ROTATING MOTIVATIONAL QUOTES ──────────────────────────────────
+  const HEADER_QUOTES = [
+    "Here's what's happening in your classroom today.",
+    "Teaching minds, shaping futures. 🎓",
+    "Every session creates real impact.",
+    "Your students are making progress.",
+    "Learning never stops. Keep inspiring. ✨",
+    "AI insights are ready for your class.",
+    "Today's engagement is looking great!",
+    "Keep inspiring young minds. 🚀",
+  ];
+  const [quoteIdx, setQuoteIdx] = useState(0);
+  const [quoteVisible, setQuoteVisible] = useState(true);
+  useEffect(() => {
+    const iv = setInterval(() => {
+      setQuoteVisible(false);
+      setTimeout(() => {
+        setQuoteIdx(i => (i + 1) % HEADER_QUOTES.length);
+        setQuoteVisible(true);
+      }, 500);
+    }, 5000);
+    return () => clearInterval(iv);
+  }, []);
+
   return /*#__PURE__*/React.createElement("div", {
     className: "teacher-layout"
   },
@@ -15071,7 +15331,38 @@ function TeacherShell({
         /*#__PURE__*/React.createElement("span", { className: "sidebar-nav-label" }, p.label),
         p.id === 'communication' && totalNotifs > 0 &&
           /*#__PURE__*/React.createElement("span", { className: "sidebar-notif-dot" })
-      ))
+      )),
+      /* ── VIDEO CALL — always visible in sidebar ── */
+      /*#__PURE__*/React.createElement("div", { className: "sidebar-section-label" }, "TOOLS"),
+      /*#__PURE__*/React.createElement("div", { className: "sidebar-vc-item" },
+        /*#__PURE__*/React.createElement("button", {
+          className: `sidebar-vc-btn${vcActive ? ' active-call' : ''}`,
+          disabled: sessionStatus === 'ended',
+          style: sessionStatus === 'ended' ? { opacity: 0.4, cursor: 'not-allowed' } : {},
+          title: sessionStatus === 'ended' ? 'Session ended — video call unavailable' : vcActive ? 'End Video Call' : 'Start Video Call',
+          onClick: async () => {
+            if (sessionStatus !== 'active') return;
+            if (vcActive) {
+              setVcActive(false);
+              try { await apiFetch(`/api/session/${sessionCode}/vc/end`, { method: 'POST' }); } catch {}
+            } else {
+              try { await apiFetch(`/api/session/${sessionCode}/vc/start`, { method: 'POST' }); } catch {}
+              setVcActive(true);
+            }
+          }
+        },
+          /*#__PURE__*/React.createElement("span", { className: "sidebar-vc-icon" },
+            React.createElement('svg',{viewBox:'0 0 24 24',fill:'none',stroke:'currentColor',strokeWidth:2,strokeLinecap:'round',strokeLinejoin:'round',width:18,height:18,style:{display:'block'}},
+              React.createElement('polygon',{points:'23 7 16 12 23 17 23 7'}),
+              React.createElement('rect',{x:1,y:5,width:15,height:14,rx:2})
+            )
+          ),
+          /*#__PURE__*/React.createElement("span", { className: "sidebar-nav-label" },
+            vcActive ? 'End Video Call' : 'Video Call'
+          ),
+          /*#__PURE__*/React.createElement("span", { className: "vc-pulse-dot" })
+        )
+      )
     ),
     /* ClassMind Capability Showcase */
     /*#__PURE__*/React.createElement("div", { className: "sidebar-capability" },
@@ -15112,10 +15403,38 @@ function TeacherShell({
         "aria-label": "Menu",
         onClick: () => setMobileNavOpen(o => !o)
       }, mobileNavOpen ? '\u2715' : '\u2630'),
-      /*#__PURE__*/React.createElement("div", { className: "teacher-header-greeting" },
-        /*#__PURE__*/React.createElement("h2", null, `Good ${getGreeting()}, ${teacherName || 'Teacher'}! \uD83D\uDC4B`),
-        /*#__PURE__*/React.createElement("p", null, "Here\u2019s what\u2019s happening in your classroom today.")
+
+      /* LEFT: Avatar + Greeting + Rotating Quote */
+      /*#__PURE__*/React.createElement("div", { className: "teacher-header-left" },
+        /* Avatar with photo support */
+        /*#__PURE__*/React.createElement("button", {
+          className: "hdr-avatar",
+          onClick: () => setProfileOpen(true),
+          title: "My Profile"
+        },
+          profilePhoto
+            ? /*#__PURE__*/React.createElement("img", { src: profilePhoto, alt: teacherName || 'Teacher' })
+            : (teacherName || '?')[0].toUpperCase(),
+          /*#__PURE__*/React.createElement("span", { className: "hdr-avatar-presence" })
+        ),
+
+        /* Greeting + Quote */
+        /*#__PURE__*/React.createElement("div", { className: "teacher-header-greeting" },
+          /*#__PURE__*/React.createElement("h2", null,
+            `Good ${getGreeting()}, ${teacherName || 'Teacher'}! \uD83D\uDC4B`,
+            sessionStatus === 'ended' && /*#__PURE__*/React.createElement("span", {
+              style: { marginLeft: 8, fontSize: '0.7rem', background: 'rgba(239,68,68,0.15)', color: 'var(--red)', padding: '2px 8px', borderRadius: 20, fontWeight: 700, border: '1px solid rgba(239,68,68,0.25)' }
+            }, "\uD83D\uDD12 Session Ended — Read-Only")
+          ),
+          /*#__PURE__*/React.createElement("div", { className: "header-quote-wrap" },
+            /*#__PURE__*/React.createElement("span", {
+              className: `header-quote ${quoteVisible ? 'visible' : 'hidden-up'}`
+            }, HEADER_QUOTES[quoteIdx])
+          )
+        )
       ),
+
+      /* RIGHT: Actions */
       /*#__PURE__*/React.createElement("div", { className: "teacher-header-actions" },
         /* Theme toggle — BB-8 */
         /*#__PURE__*/React.createElement("label", {className: "bb8-toggle bb8-toggle-sm", title: lightMode ? 'Dark Mode' : 'Light Mode'},
@@ -15172,7 +15491,7 @@ function TeacherShell({
           totalNotifs > 0 && /*#__PURE__*/React.createElement("span", { className: "hdr-notif-badge" }, totalNotifs)
         ),
 
-        /* VC button (active sessions) */
+        /* VC button — only in active sessions */
         sessionStatus === 'active' && /*#__PURE__*/React.createElement("button", {
           className: `btn btn-sm ${vcActive ? 'btn-danger' : 'btn-primary'}`,
           onClick: async () => {
@@ -15199,13 +15518,23 @@ function TeacherShell({
         /*#__PURE__*/React.createElement("button", {
           className: "btn btn-ghost btn-sm",
           onClick: () => rootNavigate('landing')
-        }, "Exit"),
-        /* Avatar */
-        /*#__PURE__*/React.createElement("button", {
-          className: "hdr-avatar",
-          onClick: () => setProfileOpen(true),
-          title: "My Profile"
-        }, (teacherName || '?')[0].toUpperCase())
+        }, "Exit")
+      )
+    ),
+
+    /* ── SESSION ENDED READ-ONLY BANNER ── */
+    sessionStatus === 'ended' && /*#__PURE__*/React.createElement("div", { className: "session-readonly-banner" },
+      /*#__PURE__*/React.createElement("span", { className: "ro-icon" }, "\uD83D\uDCCA"),
+      /*#__PURE__*/React.createElement("div", null,
+        /*#__PURE__*/React.createElement("div", { className: "ro-title" }, "Class Ended — Read-Only Mode"),
+        /*#__PURE__*/React.createElement("div", { className: "ro-desc" }, "Analytics, reports, attendance & submissions are still accessible.")
+      ),
+      /*#__PURE__*/React.createElement("div", { className: "ro-pills" },
+        /*#__PURE__*/React.createElement("span", { className: "ro-pill allowed" }, "✓ View Analytics"),
+        /*#__PURE__*/React.createElement("span", { className: "ro-pill allowed" }, "✓ Download Reports"),
+        /*#__PURE__*/React.createElement("span", { className: "ro-pill allowed" }, "✓ Attendance"),
+        /*#__PURE__*/React.createElement("span", { className: "ro-pill locked" }, "✗ New Tasks"),
+        /*#__PURE__*/React.createElement("span", { className: "ro-pill locked" }, "✗ Video Call")
       )
     ),
 
@@ -15251,7 +15580,17 @@ function TeacherShell({
           totalStudents: (roster.active || []).length
         },
         updateUserProfile: updateUserProfile,
-        navigate: rootNavigate
+        navigate: rootNavigate,
+        profilePhoto: profilePhoto,
+        onProfilePhotoChange: (photo) => {
+          setProfilePhoto(photo);
+          try {
+            const user = JSON.parse(localStorage.getItem('cm_user') || '{}');
+            const key = `cm_avatar_${user.email || user.id || 'teacher'}`;
+            if (photo) localStorage.setItem(key, photo);
+            else localStorage.removeItem(key);
+          } catch {}
+        }
       }),
       /*#__PURE__*/React.createElement("nav", {
         className: "mobile-bottom-nav",
@@ -28831,7 +29170,7 @@ function BarChart({ labels, data, label, color = "#22c55e" }) {
 // ═════════════════════════════════════════════════════════════════
 //  PROFILE DRAWER — MODERNIZED ANALYTICS
 // ═════════════════════════════════════════════════════════════════
-function ProfileDrawer({ open, onClose, userName, role, sessionCode, updateUserProfile, navigate }) {
+function ProfileDrawer({ open, onClose, userName, role, sessionCode, updateUserProfile, navigate, profilePhoto, onProfilePhotoChange }) {
   const [tab, setTab] = React.useState('overview');
   const [editName, setEditName] = React.useState(userName || '');
   const [editRole, setEditRole] = React.useState(role === 'both' ? 'teacher' : (role || 'teacher'));
@@ -29026,14 +29365,88 @@ function ProfileDrawer({ open, onClose, userName, role, sessionCode, updateUserP
   const isStudent = role === 'student';
   const isBoth = role === 'both';
 
+  // ── Avatar upload handler ────────────────────────────────────────
+  const avatarInputRef = React.useRef(null);
+  function handleAvatarUpload(e) {
+    const file = (e.target?.files || e.dataTransfer?.files)?.[0];
+    if (!file) return;
+    const allowed = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    if (!allowed.includes(file.type)) {
+      add && add('Please upload a JPG, PNG, or WebP image.', 'error'); return;
+    }
+    if (file.size > 3 * 1024 * 1024) {
+      add && add('Image must be under 3MB.', 'error'); return;
+    }
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const dataUrl = ev.target.result;
+      // Compress via canvas
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const MAX = 200;
+        const ratio = Math.min(MAX / img.width, MAX / img.height);
+        canvas.width = img.width * ratio;
+        canvas.height = img.height * ratio;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        const compressed = canvas.toDataURL('image/jpeg', 0.82);
+        if (onProfilePhotoChange) onProfilePhotoChange(compressed);
+        add && add('✅ Profile photo updated!', 'success');
+      };
+      img.src = dataUrl;
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function removeAvatar() {
+    if (onProfilePhotoChange) onProfilePhotoChange(null);
+    add && add('Profile photo removed.', 'info');
+  }
+
   return React.createElement(React.Fragment, null,
     React.createElement("div", { className: `profile-overlay${open ? ' open' : ''}`, onClick: handleOverlayClick }),
     React.createElement("div", { className: `profile-drawer${open ? ' open' : ''}` },
       React.createElement("div", { className: "profile-drawer-header" },
         React.createElement("button", { className: "profile-drawer-close", onClick: onClose }, "✕"),
-        React.createElement("div", { className: "profile-avatar" }, initials),
+        /* Premium avatar with upload on click */
+        React.createElement("div", {
+          className: "profile-avatar",
+          style: { position: 'relative', cursor: 'pointer', overflow: 'visible' },
+          title: "Click to change photo",
+          onClick: () => avatarInputRef.current && avatarInputRef.current.click()
+        },
+          profilePhoto
+            ? React.createElement("img", {
+                src: profilePhoto,
+                alt: userName,
+                style: { width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%', display: 'block' }
+              })
+            : initials,
+          /* Camera overlay on hover */
+          React.createElement("div", {
+            style: {
+              position: 'absolute', inset: 0, borderRadius: '50%',
+              background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center',
+              justifyContent: 'center', opacity: 0, transition: 'opacity 0.2s',
+              fontSize: '1.2rem'
+            },
+            className: 'avatar-camera-overlay'
+          }, "📷"),
+          React.createElement("input", {
+            ref: avatarInputRef,
+            type: "file",
+            accept: "image/jpeg,image/jpg,image/png,image/webp",
+            style: { display: 'none' },
+            onChange: handleAvatarUpload
+          })
+        ),
         React.createElement("div", { className: "profile-name" }, userName),
         React.createElement("div", { className: "profile-role-badge" }, isTeacher ? '👨‍🏫 Teacher' : isStudent ? '👨‍🎓 Student' : '👤 User'),
+        profilePhoto && React.createElement("button", {
+          style: { fontSize: '0.72rem', color: 'var(--red)', background: 'none', border: 'none', cursor: 'pointer', marginTop: 4, opacity: 0.7 },
+          onClick: removeAvatar
+        }, "✕ Remove photo"),
         React.createElement("div", { className: "profile-tabs" },
           React.createElement("button", { className: `profile-tab${tab === 'overview' ? ' active' : ''}`, onClick: () => setTab('overview') }, "📊 Overview"),
           (isTeacher || isBoth) && React.createElement("button", { className: `profile-tab${tab === 'teacher' ? ' active' : ''}`, onClick: () => setTab('teacher') }, "📅 Teaching"),

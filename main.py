@@ -4213,6 +4213,8 @@ async def teacher_ws_endpoint(ws: WebSocket, session_code: str):
         await ws.close()
         return
 
+    # Allow teacher to reconnect even if session is ended (read-only analytics mode)
+    # Previously this would close the connection for ended sessions — now we keep it open
     await ws.accept()
     if s.get("teacher_ws"):
         log.info("[WS] Teacher reconnecting to session %s (replacing existing connection)", session_code)
@@ -4222,13 +4224,14 @@ async def teacher_ws_endpoint(ws: WebSocket, session_code: str):
             pass
             
     s["teacher_ws"] = ws
-    log.info("[WS] Teacher connected to session: %s (Teacher ID: %s)", session_code, s.get("teacher_id", "unknown"))
+    log.info("[WS] Teacher connected to session: %s (Teacher ID: %s, status: %s)", session_code, s.get("teacher_id", "unknown"), s.get("status"))
 
     active  = [st for st in s["students"].values() if st["status"] == "active"]
     waiting = [s["students"][sid] for sid in s["waiting_room"] if sid in s["students"]]
     await ws_send(ws, {
         "type": "connected",
         "role": "teacher",
+        "read_only": s.get("status") == "ended",  # Signal read-only mode to frontend
         "session": {
             "code":         s["code"],
             "status":       s["status"],

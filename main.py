@@ -1057,6 +1057,10 @@ class ResolveDoubtReq(BaseModel):
     doubt_id:     str
     answer:       str
 
+class ReopenDoubtReq(BaseModel):
+    session_code: str
+    doubt_id:     str
+
 class StartTestReq(BaseModel):
     session_code:  str
     duration_secs: int = 1800
@@ -3544,14 +3548,20 @@ def get_chat(code: str, chat_type: str = Query("global"), limit: int = Query(200
 @app.post("/api/doubts/submit")
 async def submit_doubt(req: SubmitDoubtReq):
     s  = _S(req.session_code)
+    s.setdefault("doubts", [])
     st = s["students"].get(req.student_id, {})
     d  = {
         "id":           gen_id("d"),
         "student_id":   req.student_id,
         "student_name": st.get("name", "?"),
+        "doubt_text":   req.doubt_text,
         "text":         req.doubt_text,
         "answer":       None,
+        "reply":        None,
+        "status":       "pending",
         "resolved":     False,
+        "resolved_at":  None,
+        "resolved_by":  None,
         "created_at":   now(),
     }
     s["doubts"].append(d)
@@ -3562,10 +3572,37 @@ async def submit_doubt(req: SubmitDoubtReq):
 @app.post("/api/doubts/resolve")
 async def resolve_doubt(req: ResolveDoubtReq):
     s = _S(req.session_code)
+    s.setdefault("doubts", [])
     for d in s["doubts"]:
         if d["id"] == req.doubt_id:
-            d.update({"answer": req.answer, "resolved": True, "resolved_at": now()})
+            d.update({
+                "answer": req.answer,
+                "reply": req.answer,
+                "resolved": True,
+                "status": "resolved",
+                "resolved_at": now(),
+                "resolved_by": "teacher",
+            })
             await ws_broadcast(s, {"type": "doubt_resolved", "doubt": d})
+            return d
+    raise HTTPException(404, "Doubt not found")
+
+
+@app.post("/api/doubts/reopen")
+async def reopen_doubt(req: ReopenDoubtReq):
+    s = _S(req.session_code)
+    s.setdefault("doubts", [])
+    for d in s["doubts"]:
+        if d["id"] == req.doubt_id:
+            d.update({
+                "resolved": False,
+                "status": "pending",
+                "answer": None,
+                "reply": None,
+                "resolved_at": None,
+                "resolved_by": None,
+            })
+            await ws_broadcast(s, {"type": "doubt_reopened", "doubt": d})
             return d
     raise HTTPException(404, "Doubt not found")
 
@@ -4352,7 +4389,8 @@ async def teacher_ws_endpoint(ws: WebSocket, session_code: str):
                 reply = data.get("reply", "")
                 resolved = bool(data.get("resolved", False))
                 found = False
-                for d in s.get("doubts", []):
+                s.setdefault("doubts", [])
+                for d in s["doubts"]:
                     if d.get("id") == doubt_id:
                         d["reply"] = reply
                         if resolved:
@@ -4360,12 +4398,16 @@ async def teacher_ws_endpoint(ws: WebSocket, session_code: str):
                             d["answer"] = reply
                             d["resolved"] = True
                             d["resolved_at"] = now()
+                            d["resolved_by"] = "teacher"
                         else:
                             d["status"] = "answered"
+                        # Ensure both text fields present
+                        d.setdefault("doubt_text", d.get("text", ""))
+                        d.setdefault("text", d.get("doubt_text", ""))
                         found = True
                         save_session(session_code)
                         await ws_broadcast(s, {"type": "doubt_resolved", "doubt": d})
-                        await ws_send(ws, {"type": "doubts_update", "doubts": s.get("doubts", [])})
+                        await ws_send(ws, {"type": "doubts_update", "doubts": s["doubts"]})
                         break
                 if not found:
                     await ws_send(ws, {"type": "error", "message": "Doubt not found"})

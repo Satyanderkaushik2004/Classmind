@@ -589,11 +589,21 @@ async def push_roster(s: dict):
                 "name": st["name"]
             })
 
+    # Normalise raised_hands — backend may still have old list format
+    rh = s.get("raised_hands", {})
+    if isinstance(rh, list):
+        rh = {sid: {"name": s["students"].get(sid, {}).get("name", "?"), "raised_at": 0} for sid in rh}
+        s["raised_hands"] = rh
+    hand_list = [
+        {"student_id": sid, "student_name": info.get("name", "?"), "raised_at": info.get("raised_at")}
+        for sid, info in rh.items()
+    ]
+
     await ws_teacher(s, {
         "type":         "roster_update",
         "active":       active,
         "waiting":      waiting,
-        "raised_hands": s["raised_hands"],
+        "raised_hands": hand_list,
     })
 
 
@@ -3567,25 +3577,55 @@ def get_doubts(code: str):
 
 @app.post("/api/session/{code}/raise_hand/{student_id}")
 async def raise_hand(code: str, student_id: str):
-    s  = _S(code)
-    if student_id not in s["raised_hands"]:
-        s["raised_hands"].append(student_id)
+    s = sessions.get(code)
+    if not s:
+        raise HTTPException(404, "Session not found")
+    if student_id not in s.get("students", {}):
+        raise HTTPException(404, "Student not found")
     st = s["students"].get(student_id, {})
+    # raised_hands is now a dict: {student_id: {name, raised_at}}
+    rh = s.setdefault("raised_hands", {})
+    if isinstance(rh, list):
+        # Migrate legacy list format to dict
+        rh = {sid: {"name": s["students"].get(sid, {}).get("name", "?"), "raised_at": now()} for sid in rh if sid in s["students"]}
+        s["raised_hands"] = rh
+    if student_id not in rh:
+        rh[student_id] = {"name": st.get("name", "?"), "raised_at": now()}
+    hand_list = [
+        {"student_id": sid, "student_name": info.get("name", "?"), "raised_at": info.get("raised_at")}
+        for sid, info in rh.items()
+    ]
     await ws_teacher(s, {
         "type":         "hand_raised",
         "student_id":   student_id,
         "student_name": st.get("name", "?"),
+        "raised_hands": hand_list,
+        "count":        len(rh),
     })
-    return {"raised": True}
+    return {"raised": True, "count": len(rh)}
 
 
 @app.post("/api/session/{code}/lower_hand/{student_id}")
 async def lower_hand(code: str, student_id: str):
-    s = _S(code)
-    if student_id in s["raised_hands"]:
-        s["raised_hands"].remove(student_id)
-    await ws_teacher(s, {"type": "hand_lowered", "student_id": student_id})
-    return {"lowered": True}
+    s = sessions.get(code)
+    if not s:
+        raise HTTPException(404, "Session not found")
+    rh = s.setdefault("raised_hands", {})
+    if isinstance(rh, list):
+        rh = {sid: {"name": s["students"].get(sid, {}).get("name", "?"), "raised_at": now()} for sid in rh if sid in s["students"]}
+        s["raised_hands"] = rh
+    rh.pop(student_id, None)
+    hand_list = [
+        {"student_id": sid, "student_name": info.get("name", "?"), "raised_at": info.get("raised_at")}
+        for sid, info in rh.items()
+    ]
+    await ws_teacher(s, {
+        "type":         "hand_lowered",
+        "student_id":   student_id,
+        "raised_hands": hand_list,
+        "count":        len(rh),
+    })
+    return {"lowered": True, "count": len(rh)}
 
 
 @app.post("/api/session/{code}/broadcast")
@@ -4228,6 +4268,15 @@ async def teacher_ws_endpoint(ws: WebSocket, session_code: str):
 
     active  = [st for st in s["students"].values() if st["status"] == "active"]
     waiting = [s["students"][sid] for sid in s["waiting_room"] if sid in s["students"]]
+    # Normalise raised_hands for connected payload
+    rh = s.get("raised_hands", {})
+    if isinstance(rh, list):
+        rh = {sid: {"name": s["students"].get(sid, {}).get("name", "?"), "raised_at": 0} for sid in rh}
+        s["raised_hands"] = rh
+    hand_list = [
+        {"student_id": sid, "student_name": info.get("name", "?"), "raised_at": info.get("raised_at")}
+        for sid, info in rh.items()
+    ]
     await ws_send(ws, {
         "type": "connected",
         "role": "teacher",
@@ -4244,8 +4293,10 @@ async def teacher_ws_endpoint(ws: WebSocket, session_code: str):
             "duration_mins": s.get("duration_mins", 0),
             "started_at":   s.get("started_at"),
         },
-        "analytics": compute_analytics(s),
-        "roster":    {"active": active, "waiting": waiting},
+        "analytics":    compute_analytics(s),
+        "roster":       {"active": active, "waiting": waiting},
+        "raised_hands": hand_list,
+        "doubts":       s.get("doubts", []),
     })
 
     try:
@@ -4271,6 +4322,53 @@ async def teacher_ws_endpoint(ws: WebSocket, session_code: str):
                 log.info("Chat %s for session %s", "enabled" if enabled else "disabled", session_code)
                 await ws_all_students(s, {"type": "chat_toggle", "enabled": enabled})
                 await ws_send(ws, {"type": "chat_toggle_ack", "enabled": enabled})
+
+            # ── HAND RAISE CONTROLS (teacher-side) ──────────────────────
+            elif cmd == "lower_all_hands":
+                rh = s.setdefault("raised_hands", {})
+                if isinstance(rh, list):
+                    rh = {}
+                    s["raised_hands"] = rh
+                else:
+                    rh.clear()
+                await ws_send(ws, {"type": "hand_raise_update", "raised_hands": [], "count": 0})
+
+            elif cmd == "lower_hand":
+                sid_to_lower = data.get("student_id", "")
+                rh = s.setdefault("raised_hands", {})
+                if isinstance(rh, list):
+                    rh = {sid: {"name": s["students"].get(sid, {}).get("name","?"), "raised_at": 0} for sid in rh}
+                    s["raised_hands"] = rh
+                rh.pop(sid_to_lower, None)
+                hand_list = [{"student_id": sid, "student_name": info.get("name","?"), "raised_at": info.get("raised_at")} for sid, info in rh.items()]
+                await ws_send(ws, {"type": "hand_raise_update", "raised_hands": hand_list, "count": len(rh)})
+
+            # ── DOUBT CONTROLS (teacher-side) ─────────────────────────────
+            elif cmd == "get_doubts":
+                await ws_send(ws, {"type": "doubts_update", "doubts": s.get("doubts", [])})
+
+            elif cmd == "reply_doubt":
+                doubt_id = data.get("doubt_id", "")
+                reply = data.get("reply", "")
+                resolved = bool(data.get("resolved", False))
+                found = False
+                for d in s.get("doubts", []):
+                    if d.get("id") == doubt_id:
+                        d["reply"] = reply
+                        if resolved:
+                            d["status"] = "resolved"
+                            d["answer"] = reply
+                            d["resolved"] = True
+                            d["resolved_at"] = now()
+                        else:
+                            d["status"] = "answered"
+                        found = True
+                        save_session(session_code)
+                        await ws_broadcast(s, {"type": "doubt_resolved", "doubt": d})
+                        await ws_send(ws, {"type": "doubts_update", "doubts": s.get("doubts", [])})
+                        break
+                if not found:
+                    await ws_send(ws, {"type": "error", "message": "Doubt not found"})
 
             # ── ATTENDANCE CONTROLS (teacher-side) ──────────────────────
             elif cmd == "attendance_control":
@@ -4415,6 +4513,13 @@ async def student_ws_endpoint(ws: WebSocket, session_code: str, student_id: str)
             "submitted":     _already_submitted,
         }
 
+    # Compute hand raised status for this student on reconnect
+    rh = s.get("raised_hands", {})
+    if isinstance(rh, list):
+        rh = {sid: {"name": s["students"].get(sid, {}).get("name", "?"), "raised_at": 0} for sid in rh}
+        s["raised_hands"] = rh
+    student_hand_raised = student_id in rh
+
     await ws_send(ws, {
         "type":                "connected",
         "role":                "student",
@@ -4434,6 +4539,8 @@ async def student_ws_endpoint(ws: WebSocket, session_code: str, student_id: str)
         "explanations":        s.get("explanations", []),
         "student_status":      student_status,  # Send status so frontend knows
         "vc_active":           s.get("vc_active", False),
+        "hand_raised":         student_hand_raised,  # Sync hand state on reconnect
+        "doubts":              [d for d in s.get("doubts", []) if d.get("student_id") == student_id],
     })
 
     if student_status == "active":
@@ -4449,7 +4556,11 @@ async def student_ws_endpoint(ws: WebSocket, session_code: str, student_id: str)
     try:
         while True:
             raw  = await ws.receive_text()
-            data = json.loads(raw)
+            try:
+                data = json.loads(raw)
+            except Exception:
+                log.warning("[WS] Student %s sent invalid JSON", student_id)
+                continue
             cmd  = data.get("type", "")
 
             if cmd in ("ping", "heartbeat"):
@@ -4472,6 +4583,63 @@ async def student_ws_endpoint(ws: WebSocket, session_code: str, student_id: str)
                     })
                     continue
 
+            # ── HAND RAISE via WebSocket ─────────────────────────────────
+            elif cmd == "raise_hand":
+                st_data = s["students"].get(student_id, {})
+                rh2 = s.setdefault("raised_hands", {})
+                if isinstance(rh2, list):
+                    rh2 = {sid: {"name": s["students"].get(sid, {}).get("name","?"), "raised_at": 0} for sid in rh2}
+                    s["raised_hands"] = rh2
+                if student_id not in rh2:
+                    rh2[student_id] = {"name": st_data.get("name","?"), "raised_at": now()}
+                hand_list = [{"student_id": sid, "student_name": info.get("name","?"), "raised_at": info.get("raised_at")} for sid, info in rh2.items()]
+                await ws_send(ws, {"type": "hand_ack", "raised": True})
+                await ws_teacher(s, {
+                    "type": "hand_raised",
+                    "student_id": student_id,
+                    "student_name": st_data.get("name","?"),
+                    "raised_hands": hand_list,
+                    "count": len(rh2),
+                })
+
+            elif cmd == "lower_hand":
+                rh2 = s.setdefault("raised_hands", {})
+                if isinstance(rh2, list):
+                    rh2 = {sid: {"name": s["students"].get(sid, {}).get("name","?"), "raised_at": 0} for sid in rh2}
+                    s["raised_hands"] = rh2
+                rh2.pop(student_id, None)
+                hand_list = [{"student_id": sid, "student_name": info.get("name","?"), "raised_at": info.get("raised_at")} for sid, info in rh2.items()]
+                await ws_send(ws, {"type": "hand_ack", "raised": False})
+                await ws_teacher(s, {
+                    "type": "hand_lowered",
+                    "student_id": student_id,
+                    "raised_hands": hand_list,
+                    "count": len(rh2),
+                })
+
+            # ── DOUBT via WebSocket ───────────────────────────────────────
+            elif cmd == "submit_doubt":
+                doubt_text = (data.get("doubt_text") or data.get("text") or "").strip()
+                if doubt_text:
+                    st_data = s["students"].get(student_id, {})
+                    import uuid as _uuid
+                    d = {
+                        "id":           f"d_{_uuid.uuid4().hex[:8]}",
+                        "student_id":   student_id,
+                        "student_name": st_data.get("name", "?"),
+                        "doubt_text":   doubt_text,
+                        "text":         doubt_text,
+                        "reply":        "",
+                        "answer":       None,
+                        "status":       "pending",
+                        "resolved":     False,
+                        "created_at":   now(),
+                    }
+                    s.setdefault("doubts", []).append(d)
+                    save_session(session_code)
+                    await ws_send(ws, {"type": "doubt_submitted", "doubt": d})
+                    await ws_teacher(s, {"type": "new_doubt", "doubt": d})
+
             elif cmd == "task_received":
                 attendance_add_interaction(s, student_id)
                 delivery_id = data.get("delivery_id")
@@ -4489,6 +4657,24 @@ async def student_ws_endpoint(ws: WebSocket, session_code: str, student_id: str)
     finally:
         if s.get("ws_clients", {}).get(student_id) is ws:
             s["ws_clients"].pop(student_id, None)
+        # Auto-lower hand on disconnect
+        rh = s.get("raised_hands", {})
+        if isinstance(rh, list):
+            rh = {sid: {"name": s["students"].get(sid, {}).get("name", "?"), "raised_at": now()} for sid in rh if sid in s["students"]}
+            s["raised_hands"] = rh
+        if student_id in rh:
+            rh.pop(student_id, None)
+            hand_list = [
+                {"student_id": sid, "student_name": info.get("name", "?"), "raised_at": info.get("raised_at")}
+                for sid, info in rh.items()
+            ]
+            asyncio.create_task(ws_teacher(s, {
+                "type": "hand_lowered",
+                "student_id": student_id,
+                "raised_hands": hand_list,
+                "count": len(rh),
+                "reason": "disconnect",
+            }))
         attendance_mark_leave(s, student_id)
         asyncio.create_task(broadcast_attendance(s))
         touch_session(s)

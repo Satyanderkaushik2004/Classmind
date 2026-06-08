@@ -199,7 +199,7 @@ def new_session(code: str, teacher_name: str) -> dict:
         # communication
         "chat_messages":    [],
         "doubts":           [],
-        "raised_hands":     [],
+        "raised_hands":     {},         # dict: {student_id: {name, raised_at}}
         # content
         "content_files":    {},          # filename -> {name,data,content_type,size}
         "quiz":             None,

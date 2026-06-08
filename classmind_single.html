@@ -2411,6 +2411,126 @@ select option{background:var(--surface2)}
 }
 .chat-input-row input:focus ~ .chat-input-glow { opacity:0.15; }
 
+/* ══════════════════════════════════════════════════════════════
+   COMMUNICATION PAGE V2 — Premium Discord/Notion Redesign
+══════════════════════════════════════════════════════════════ */
+.comm-v2-page{display:flex;gap:16px;height:calc(100vh - var(--header-h) - 2px);max-height:calc(100vh - var(--header-h) - 2px);overflow:hidden;padding:18px 20px;box-sizing:border-box;}
+.comm-v2-left{flex:1;min-width:0;min-height:0;display:flex;flex-direction:column;gap:13px;overflow:hidden;}
+/* Title row */
+.comm-v2-title-row{display:flex;align-items:center;gap:14px;flex-shrink:0;}
+.comm-v2-title-icon{width:46px;height:46px;border-radius:14px;background:linear-gradient(135deg,rgba(124,92,255,.18),rgba(91,127,255,.18));border:1px solid rgba(124,92,255,.28);display:flex;align-items:center;justify-content:center;font-size:1.35rem;box-shadow:0 4px 20px rgba(124,92,255,.15);flex-shrink:0;}
+.comm-v2-title-text h2{font-size:1.4rem;font-weight:800;background:linear-gradient(135deg,#fff 0%,#c4b5fd 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin:0 0 2px;letter-spacing:-.02em;line-height:1.2;}
+.comm-v2-title-text p{font-size:0.78rem;color:#6b7db3;margin:0;}
+/* Toggle bar */
+.comm-v2-toggle-bar{display:flex;align-items:center;justify-content:space-between;background:rgba(20,20,45,.85);border:1px solid rgba(99,102,241,.2);border-radius:14px;padding:10px 16px;backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);flex-shrink:0;}
+.comm-v2-toggle-left{display:flex;align-items:center;gap:10px;font-size:.88rem;font-weight:600;color:#e2e8f0;}
+.comm-v2-status-enabled{display:flex;align-items:center;gap:5px;font-size:.73rem;font-weight:700;color:#22c55e;background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.22);padding:3px 9px;border-radius:20px;}
+.comm-v2-status-disabled{display:flex;align-items:center;gap:5px;font-size:.73rem;font-weight:700;color:#ef4444;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.22);padding:3px 9px;border-radius:20px;}
+.comm-v2-disable-btn{display:flex;align-items:center;gap:7px;padding:8px 16px;border-radius:10px;border:none;cursor:pointer;font-size:.82rem;font-weight:700;background:linear-gradient(135deg,rgba(239,68,68,.9),rgba(220,38,38,.9));color:#fff;box-shadow:0 4px 16px rgba(239,68,68,.3);transition:all .2s ease;}
+.comm-v2-disable-btn:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(239,68,68,.45);}
+.comm-v2-enable-btn{display:flex;align-items:center;gap:7px;padding:8px 16px;border-radius:10px;border:none;cursor:pointer;font-size:.82rem;font-weight:700;background:linear-gradient(135deg,rgba(34,197,94,.85),rgba(22,163,74,.85));color:#fff;box-shadow:0 4px 16px rgba(34,197,94,.3);transition:all .2s ease;}
+.comm-v2-enable-btn:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(34,197,94,.45);}
+/* Tabs */
+.comm-v2-tabs{display:flex;align-items:center;gap:2px;border-bottom:1px solid rgba(99,102,241,.15);flex-shrink:0;}
+.comm-v2-tab{padding:8px 18px 10px;font-size:.875rem;font-weight:600;color:#6b7db3;background:transparent;border:none;cursor:pointer;border-bottom:2px solid transparent;transition:all .2s ease;margin-bottom:-1px;display:flex;align-items:center;gap:6px;white-space:nowrap;font-family:var(--db-font);}
+.comm-v2-tab:hover{color:#a5b4fc;}
+.comm-v2-tab.active{color:#7c5cff;border-bottom-color:#7c5cff;text-shadow:0 0 20px rgba(124,92,255,.35);}
+/* Chat glass container */
+.comm-v2-chat-container{flex:1;min-height:0;display:flex;flex-direction:column;background:linear-gradient(180deg,rgba(16,18,40,.94) 0%,rgba(10,12,28,.97) 100%);border:1px solid rgba(99,102,241,.2);border-radius:18px;overflow:hidden;backdrop-filter:blur(30px);-webkit-backdrop-filter:blur(30px);box-shadow:0 8px 40px rgba(0,0,0,.4),0 0 0 1px rgba(124,92,255,.06),inset 0 1px 0 rgba(255,255,255,.04);position:relative;}
+.comm-v2-chat-container::before{content:'';position:absolute;top:0;left:0;right:0;height:100px;background:linear-gradient(180deg,rgba(124,92,255,.055) 0%,transparent 100%);pointer-events:none;z-index:0;}
+/* Chat header */
+.comm-v2-chat-header{display:flex;align-items:center;justify-content:space-between;padding:13px 18px;border-bottom:1px solid rgba(99,102,241,.14);background:rgba(16,18,40,.5);flex-shrink:0;position:relative;z-index:1;}
+.comm-v2-chat-header-left{display:flex;align-items:center;gap:12px;}
+.comm-v2-chat-hdr-avatar{width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#6366f1,#8b5cf6);display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0;box-shadow:0 4px 12px rgba(99,102,241,.4);}
+.comm-v2-chat-hdr-title{font-size:.92rem;font-weight:700;color:#fff;margin:0 0 2px;}
+.comm-v2-chat-hdr-sub{font-size:.7rem;color:#6b7db3;margin:0;}
+.comm-v2-chat-header-right{display:flex;align-items:center;gap:10px;}
+.comm-v2-online-badge{display:flex;align-items:center;gap:6px;font-size:.76rem;font-weight:700;color:#e2e8f0;background:rgba(20,20,45,.8);border:1px solid rgba(99,102,241,.2);padding:5px 12px;border-radius:20px;}
+.comm-v2-online-dot-green{width:8px;height:8px;border-radius:50%;background:#22c55e;box-shadow:0 0 6px rgba(34,197,94,.6);display:inline-block;animation:cv2PulseGreen 2s ease-in-out infinite;flex-shrink:0;}
+@keyframes cv2PulseGreen{0%,100%{box-shadow:0 0 6px rgba(34,197,94,.6);}50%{box-shadow:0 0 12px rgba(34,197,94,.9);}}
+.comm-v2-menu-btn{width:32px;height:32px;border-radius:8px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);color:#a5b4fc;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:1.2rem;transition:all .2s ease;line-height:1;padding:0;}
+.comm-v2-menu-btn:hover{background:rgba(124,92,255,.15);border-color:rgba(124,92,255,.3);}
+/* Messages */
+.comm-v2-messages{flex:1;min-height:0;overflow-y:auto;padding:16px 18px;display:flex;flex-direction:column;gap:6px;position:relative;z-index:1;scroll-behavior:smooth;}
+.comm-v2-messages::-webkit-scrollbar{width:4px;}
+.comm-v2-messages::-webkit-scrollbar-track{background:transparent;}
+.comm-v2-messages::-webkit-scrollbar-thumb{background:rgba(124,92,255,.25);border-radius:4px;}
+.comm-v2-messages::-webkit-scrollbar-thumb:hover{background:rgba(124,92,255,.45);}
+/* Message row */
+.comm-v2-msg-row{display:flex;align-items:flex-start;gap:10px;max-width:88%;align-self:flex-start;animation:cv2SlideIn .26s cubic-bezier(.34,1.26,.64,1) both;}
+@keyframes cv2SlideIn{from{opacity:0;transform:translateY(8px) scale(.98);}to{opacity:1;transform:translateY(0) scale(1);}}
+.comm-v2-msg-row.teacher-row{max-width:92%;}
+/* Avatars */
+.comm-v2-msg-av{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.77rem;font-weight:700;flex-shrink:0;box-shadow:0 2px 10px rgba(0,0,0,.3);color:#fff;}
+.comm-v2-msg-av.teacher-av{background:linear-gradient(135deg,#f97316,#eab308)!important;}
+/* Bubble column */
+.comm-v2-bubble-col{display:flex;flex-direction:column;gap:4px;flex:1;min-width:0;}
+.comm-v2-bubble-header{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;}
+.comm-v2-sender{font-size:.78rem;font-weight:700;color:#a5b4fc;}
+.comm-v2-teacher-badge{font-size:.62rem;font-weight:800;color:#f97316;background:rgba(249,115,22,.12);border:1px solid rgba(249,115,22,.25);padding:1px 6px;border-radius:10px;text-transform:uppercase;letter-spacing:.5px;}
+.comm-v2-time{font-size:.67rem;color:#3d4f6e;margin-left:auto;}
+/* Bubbles */
+.comm-v2-bubble{padding:10px 14px;border-radius:4px 14px 14px 14px;font-size:.875rem;line-height:1.55;word-break:break-word;background:rgba(28,30,58,.85);color:#dde4f5;border:1px solid rgba(99,102,241,.12);transition:transform .15s ease,border-color .15s ease;box-shadow:0 2px 8px rgba(0,0,0,.2);}
+.comm-v2-bubble:hover{transform:translateY(-1px);border-color:rgba(124,92,255,.22);}
+.comm-v2-bubble.teacher-bubble{background:linear-gradient(135deg,rgba(80,50,180,.55) 0%,rgba(55,80,185,.55) 100%);border:1px solid rgba(124,92,255,.35);box-shadow:0 4px 20px rgba(99,102,241,.18);}
+/* Reactions */
+.comm-v2-reactions{display:flex;align-items:center;gap:4px;margin-top:3px;}
+.comm-v2-reaction-pill{display:flex;align-items:center;gap:4px;background:rgba(20,20,45,.8);border:1px solid rgba(99,102,241,.2);border-radius:20px;padding:2px 8px;font-size:.73rem;cursor:pointer;transition:all .15s ease;}
+.comm-v2-reaction-pill:hover{background:rgba(124,92,255,.15);border-color:rgba(124,92,255,.35);}
+/* Empty state */
+.comm-v2-empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;color:#3d4f6e;text-align:center;padding:32px;}
+.comm-v2-empty-icon{font-size:2.4rem;opacity:.4;}
+.comm-v2-empty-text{font-size:.875rem;color:#3d4f6e;}
+/* Input area */
+.comm-v2-input-area{display:flex;align-items:center;gap:10px;padding:13px 16px;border-top:1px solid rgba(99,102,241,.1);background:rgba(10,12,28,.65);flex-shrink:0;position:relative;z-index:1;}
+.comm-v2-input-field{flex:1;min-width:0;padding:11px 16px;background:rgba(20,22,50,.8);border:1.5px solid rgba(99,102,241,.16);border-radius:12px;color:#e2e8f0;font-size:.875rem;font-family:var(--db-font);outline:none;transition:border-color .2s,box-shadow .2s;}
+.comm-v2-input-field:focus{border-color:rgba(124,92,255,.48);box-shadow:0 0 0 3px rgba(124,92,255,.07);}
+.comm-v2-input-field::placeholder{color:#3d4f6e;}
+.comm-v2-input-field:disabled{opacity:.4;cursor:not-allowed;}
+.comm-v2-icon-btn{width:38px;height:38px;border-radius:10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);color:#6b7db3;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:1.1rem;flex-shrink:0;transition:all .2s ease;}
+.comm-v2-icon-btn:hover{background:rgba(124,92,255,.12);border-color:rgba(124,92,255,.25);color:#a5b4fc;}
+.comm-v2-send-btn{width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,#7c5cff,#5b7fff);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#fff;flex-shrink:0;box-shadow:0 4px 16px rgba(124,92,255,.48);transition:transform .18s ease,box-shadow .18s ease;}
+.comm-v2-send-btn:hover:not(:disabled){transform:scale(1.08);box-shadow:0 6px 22px rgba(124,92,255,.62);}
+.comm-v2-send-btn:active:not(:disabled){transform:scale(.95);}
+.comm-v2-send-btn:disabled{opacity:.4;cursor:not-allowed;box-shadow:none;}
+/* Tab content (doubts/hands) */
+.comm-v2-tab-content{flex:1;min-height:0;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px;position:relative;z-index:1;}
+.comm-v2-tab-content::-webkit-scrollbar{width:4px;}
+.comm-v2-tab-content::-webkit-scrollbar-track{background:transparent;}
+.comm-v2-tab-content::-webkit-scrollbar-thumb{background:rgba(124,92,255,.2);border-radius:4px;}
+.comm-v2-doubt-card{background:rgba(22,24,52,.8);border:1px solid rgba(99,102,241,.16);border-radius:12px;padding:14px 16px;transition:border-color .15s ease;}
+.comm-v2-doubt-card:hover{border-color:rgba(124,92,255,.3);}
+/* RIGHT PANEL */
+.comm-v2-right{width:278px;flex-shrink:0;display:flex;flex-direction:column;overflow:hidden;min-height:0;}
+.comm-v2-students-panel{flex:1;min-height:0;display:flex;flex-direction:column;background:linear-gradient(180deg,rgba(16,18,40,.94) 0%,rgba(10,12,28,.97) 100%);border:1px solid rgba(99,102,241,.2);border-radius:18px;overflow:hidden;backdrop-filter:blur(30px);-webkit-backdrop-filter:blur(30px);box-shadow:0 8px 40px rgba(0,0,0,.3);}
+.comm-v2-sp-header{display:flex;align-items:center;justify-content:space-between;padding:14px 16px 12px;border-bottom:1px solid rgba(99,102,241,.1);flex-shrink:0;}
+.comm-v2-sp-title{display:flex;align-items:center;gap:8px;font-size:.875rem;font-weight:700;color:#e2e8f0;}
+.comm-v2-sp-count{font-size:.73rem;color:#22c55e;background:rgba(34,197,94,.1);padding:2px 9px;border-radius:12px;font-weight:700;}
+.comm-v2-sp-search{padding:10px 12px;border-bottom:1px solid rgba(99,102,241,.07);flex-shrink:0;}
+.comm-v2-sp-search-wrap{position:relative;}
+.comm-v2-sp-search-icon{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:#3d4f6e;font-size:.8rem;pointer-events:none;}
+.comm-v2-sp-search-field{width:100%;padding:8px 12px 8px 32px;background:rgba(18,20,48,.75);border:1px solid rgba(99,102,241,.14);border-radius:10px;color:#e2e8f0;font-size:.79rem;font-family:var(--db-font);outline:none;transition:border-color .2s;box-sizing:border-box;}
+.comm-v2-sp-search-field:focus{border-color:rgba(124,92,255,.4);}
+.comm-v2-sp-search-field::placeholder{color:#3d4f6e;}
+.comm-v2-students-list{flex:1;min-height:0;overflow-y:auto;padding:6px 8px;display:flex;flex-direction:column;}
+.comm-v2-students-list::-webkit-scrollbar{width:3px;}
+.comm-v2-students-list::-webkit-scrollbar-track{background:transparent;}
+.comm-v2-students-list::-webkit-scrollbar-thumb{background:rgba(124,92,255,.18);border-radius:4px;}
+.comm-v2-student-row{display:flex;align-items:center;gap:10px;padding:8px 8px;border-radius:10px;transition:background .15s ease;cursor:pointer;}
+.comm-v2-student-row:hover{background:rgba(124,92,255,.07);}
+.comm-v2-student-av-wrap{position:relative;flex-shrink:0;}
+.comm-v2-student-av{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.77rem;font-weight:700;color:#fff;}
+.comm-v2-student-online-dot{position:absolute;bottom:0;right:0;width:9px;height:9px;border-radius:50%;background:#22c55e;border:2px solid rgba(10,12,28,.97);box-shadow:0 0 5px rgba(34,197,94,.55);}
+.comm-v2-student-info{flex:1;min-width:0;}
+.comm-v2-student-name{font-size:.82rem;font-weight:600;color:#dde4f5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.comm-v2-student-sub{font-size:.69rem;color:#3d4f6e;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.comm-v2-view-all-btn{margin:6px 10px 10px;padding:9px 14px;background:rgba(124,92,255,.07);border:1px solid rgba(124,92,255,.18);border-radius:10px;color:#a5b4fc;font-size:.81rem;font-weight:600;cursor:pointer;text-align:center;transition:all .2s ease;flex-shrink:0;font-family:var(--db-font);}
+.comm-v2-view-all-btn:hover{background:rgba(124,92,255,.14);border-color:rgba(124,92,255,.32);}
+/* Responsive */
+@media(max-width:1024px){.comm-v2-right{width:240px;}}
+@media(max-width:900px){.comm-v2-right{display:none;}.comm-v2-page{padding:14px 16px;}}
+@media(max-width:768px){.comm-v2-page{height:auto;min-height:calc(100vh - 130px);flex-direction:column;overflow:auto;}.comm-v2-chat-container{min-height:380px;}}
+
 /* ── Code Editor ── */
 .code-editor{background:#0d1117;border:1px solid var(--border);border-radius:var(--radius-sm);
   padding:14px;font-family:'Fira Code',monospace;font-size:0.875rem;color:#c9d1d9;
@@ -14780,6 +14900,10 @@ function TeacherShell({
           active: msg.active || [],
           waiting: msg.waiting || []
         });
+        // Sync raised_hands from roster update
+        if (Array.isArray(msg.raised_hands)) {
+          window.dispatchEvent(new CustomEvent('classmind:hand_update', { detail: { raised_hands: msg.raised_hands, count: msg.raised_hands.length } }));
+        }
       } else if (msg.type === 'session_status') {
         setSessionStatus(msg.status || 'waiting');
         // Update end timestamp from server if provided
@@ -14806,6 +14930,8 @@ function TeacherShell({
           doubts: (n.doubts || 0) + 1
         }));
         add(`New doubt from ${msg.doubt?.student_name || 'Student'}`, 'info');
+        // Broadcast doubt update event for communication panel
+        window.dispatchEvent(new CustomEvent('classmind:new_doubt', { detail: msg.doubt }));
       } else if (msg.type === 'hand_raised') {
         playBeep();
         setNotifications(n => ({
@@ -14813,6 +14939,11 @@ function TeacherShell({
           hands: (n.hands || 0) + 1
         }));
         add(`✋ ${msg.student_name || 'Student'} raised hand`, 'info');
+        // Broadcast hand update for communication panel
+        window.dispatchEvent(new CustomEvent('classmind:hand_update', { detail: { raised_hands: msg.raised_hands || [], count: msg.count || 0 } }));
+      } else if (msg.type === 'hand_lowered' || msg.type === 'hand_raise_update') {
+        // Update hand state in communication panel
+        window.dispatchEvent(new CustomEvent('classmind:hand_update', { detail: { raised_hands: msg.raised_hands || [], count: msg.count || 0 } }));
       } else if (msg.type === 'chat_message') {
         playBeep();
         setNotifications(n => ({
@@ -14841,10 +14972,19 @@ function TeacherShell({
           const endMs = (msg.session.started_at + msg.session.duration_mins * 60) * 1000;
           setSessionEndTimestamp(endMs);
         }
+        // ── Restore raised hands + doubts on reconnect ──
+        if (Array.isArray(msg.raised_hands)) {
+          window.dispatchEvent(new CustomEvent('classmind:hand_update', { detail: { raised_hands: msg.raised_hands, count: msg.raised_hands.length } }));
+        }
+        if (Array.isArray(msg.doubts)) {
+          window.dispatchEvent(new CustomEvent('classmind:doubts_restore', { detail: { doubts: msg.doubts } }));
+        }
       } else if (msg.type === 'attendance_update') {
         if (msg.attendance && typeof window.__attUpdate === 'function') {
           window.__attUpdate(msg.attendance);
         }
+      } else if (msg.type === 'doubt_resolved' || msg.type === 'doubts_update') {
+        window.dispatchEvent(new CustomEvent('classmind:doubt_resolved', { detail: msg }));
       } else if (msg.type === 'ai_evaluation_done') {
         window.dispatchEvent(new CustomEvent('classmind:ai_eval_done', { detail: msg }));
       }
@@ -15240,6 +15380,7 @@ function TeacherShell({
     if (id === 'communication') {
       clearNotif('chat');
       clearNotif('doubts');
+      clearNotif('hands');
     }
   }
 
@@ -15489,6 +15630,19 @@ function TeacherShell({
         },
           "\uD83D\uDD14",
           totalNotifs > 0 && /*#__PURE__*/React.createElement("span", { className: "hdr-notif-badge" }, totalNotifs)
+        ),
+        /* Live hand-raise badge — pulses when hands are raised */
+        notifications.hands > 0 && /*#__PURE__*/React.createElement("button", {
+          className: "hdr-icon-btn",
+          title: `${notifications.hands} student(s) raised hand`,
+          onClick: () => navTo('communication'),
+          style: { position: 'relative', animation: 'pulse 1.5s infinite' }
+        },
+          "\u270B",
+          /*#__PURE__*/React.createElement("span", {
+            className: "hdr-notif-badge",
+            style: { background: '#eab308', color: '#000', minWidth: 18, height: 18, borderRadius: 9, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.7rem', fontWeight: 700, position: 'absolute', top: -4, right: -4 }
+          }, notifications.hands)
         ),
 
         /* VC button — only in active sessions */
@@ -22513,240 +22667,431 @@ function CommunicationPage({
   const [tab, setTab] = useState('global');
   const [messages, setMessages] = useState([]);
   const [doubts, setDoubts] = useState([]);
-  const [hands, setHands] = useState([]);
+  const [hands, setHands] = useState([]); // [{student_id, student_name, raised_at}]
   const [input, setInput] = useState('');
   const [resolveDoubt, setResolveDoubt] = useState(null);
   const [resolveText, setResolveText] = useState('');
+  const [studentSearch, setStudentSearch] = useState('');
   const messagesEnd = useRef(null);
-  const {
-    add
-  } = useContext(AppCtx);
+  const { add } = useContext(AppCtx);
   const TEACHER_ID = 'teacher';
+
+  // ── Subscribe to hand raise and doubt events from WS (broadcast via CustomEvent) ──
   useEffect(() => {
-    loadAll();
+    function onHandUpdate(e) {
+      try {
+        const { raised_hands } = e.detail || {};
+        setHands(Array.isArray(raised_hands) ? raised_hands : []);
+      } catch {}
+    }
+    function onNewDoubt(e) {
+      try {
+        const doubt = e.detail;
+        if (doubt && doubt.id) {
+          setDoubts(prev => {
+            const exists = prev.some(d => d.id === doubt.id);
+            return exists ? prev : [...prev, doubt];
+          });
+        }
+      } catch {}
+    }
+    function onDoubtsRestore(e) {
+      try {
+        const { doubts: serverDoubts } = e.detail || {};
+        if (Array.isArray(serverDoubts)) setDoubts(serverDoubts);
+      } catch {}
+    }
+    function onDoubtResolved(e) {
+      try {
+        // fired by doubt_resolved WS message handled in TeacherShell
+        // We refresh doubts from API after resolve
+        loadAll();
+      } catch {}
+    }
+    window.addEventListener('classmind:hand_update', onHandUpdate);
+    window.addEventListener('classmind:new_doubt', onNewDoubt);
+    window.addEventListener('classmind:doubts_restore', onDoubtsRestore);
+    window.addEventListener('classmind:doubt_resolved', onDoubtResolved);
+    return () => {
+      window.removeEventListener('classmind:hand_update', onHandUpdate);
+      window.removeEventListener('classmind:new_doubt', onNewDoubt);
+      window.removeEventListener('classmind:doubts_restore', onDoubtsRestore);
+      window.removeEventListener('classmind:doubt_resolved', onDoubtResolved);
+    };
+  }, []);
+
+  // ── Avatar colour palette (hash-assigned) ──
+  const AV_COLORS = [
+    'linear-gradient(135deg,#6366f1,#8b5cf6)',
+    'linear-gradient(135deg,#3b82f6,#6366f1)',
+    'linear-gradient(135deg,#ec4899,#8b5cf6)',
+    'linear-gradient(135deg,#f97316,#eab308)',
+    'linear-gradient(135deg,#22c55e,#16a34a)',
+    'linear-gradient(135deg,#06b6d4,#3b82f6)',
+    'linear-gradient(135deg,#f43f5e,#ec4899)',
+    'linear-gradient(135deg,#a855f7,#6366f1)',
+  ];
+  const hashColor = str => {
+    let h = 0;
+    for (let i = 0; i < (str || '').length; i++) h = (h * 31 + str.charCodeAt(i)) & 0xffffffff;
+    return AV_COLORS[Math.abs(h) % AV_COLORS.length];
+  };
+  const SUBTITLES = ['Active in class','Learning enthusiast','Asking questions','Engaged student','Problem solver','Code explorer','Concept learner','Future engineer'];
+  const studentSubtitle = id => { let h=0; for(let i=0;i<(id||'').length;i++) h=(h*31+id.charCodeAt(i))&0xffffffff; return SUBTITLES[Math.abs(h)%SUBTITLES.length]; };
+  const initials = str => (str||'?').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+  const fmtTime = ts => ts ? new Date(ts).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}) : '';
+
+  // ── Data loading ──
+  useEffect(() => { loadAll(); }, [tab]);
+  useEffect(() => {
+    if (tab !== 'global') return;
+    const iv = setInterval(loadAll, 5000);
+    return () => clearInterval(iv);
   }, [tab]);
+
   const loadAll = async () => {
     try {
-      const [chatRes, doubtRes] = await Promise.all([apiFetch(`/api/session/${sessionCode}/chat?chat_type=global`), apiFetch(`/api/session/${sessionCode}/doubts`)]);
-      setMessages(chatRes.messages || []);
-      setDoubts(doubtRes.doubts || []);
+      const chatRes = await apiFetch(`/api/session/${sessionCode}/chat?chat_type=global`);
+      setMessages((chatRes && chatRes.messages) ? chatRes.messages : []);
+    } catch {}
+    try {
+      const doubtRes = await apiFetch(`/api/session/${sessionCode}/doubts`);
+      if (doubtRes && Array.isArray(doubtRes.doubts)) {
+        setDoubts(doubtRes.doubts);
+      }
     } catch {}
   };
-  useEffect(() => {
-    messagesEnd.current?.scrollIntoView({
-      behavior: 'smooth'
-    });
-  }, [messages]);
+
+  useEffect(() => { messagesEnd.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
+
   async function sendMsg() {
     if (!input.trim()) return;
     try {
       await apiFetch('/api/chat/send', {
         method: 'POST',
-        body: {
-          session_code: sessionCode,
-          sender_id: TEACHER_ID,
-          content: input,
-          chat_type: 'global',
-          target_id: null
-        }
+        body: { session_code: sessionCode, sender_id: TEACHER_ID, content: input, chat_type: 'global', target_id: null }
       });
       setInput('');
       loadAll();
-    } catch (e) {
-      add(e.message, 'error');
-    }
+    } catch (e) { add(e.message, 'error'); }
   }
+
   async function resolve(doubtId) {
     try {
+      // Try WS first
+      if (typeof wsSend === 'function') {
+        wsSend({ type: 'reply_doubt', doubt_id: doubtId, reply: resolveText, resolved: true });
+      }
+      // Also confirm via REST
       await apiFetch('/api/doubts/resolve', {
         method: 'POST',
-        body: {
-          session_code: sessionCode,
-          doubt_id: doubtId,
-          answer: resolveText
-        }
+        body: { session_code: sessionCode, doubt_id: doubtId, answer: resolveText }
       });
-      add('Doubt resolved', 'success');
+      // Update local state optimistically
+      setDoubts(prev => (Array.isArray(prev) ? prev : []).map(d =>
+        d.id === doubtId ? { ...d, resolved: true, status: 'resolved', answer: resolveText, reply: resolveText } : d
+      ));
+      add('Doubt resolved ✅', 'success');
       setResolveDoubt(null);
       setResolveText('');
-      loadAll();
-    } catch (e) {
-      add(e.message, 'error');
-    }
+    } catch (e) { add(e.message || 'Failed to resolve doubt', 'error'); }
   }
+
   async function broadcast(text) {
     if (!text) return;
     try {
       await apiFetch('/api/chat/send', {
         method: 'POST',
-        body: {
-          session_code: sessionCode,
-          sender_id: TEACHER_ID,
-          content: text,
-          chat_type: 'global'
-        }
+        body: { session_code: sessionCode, sender_id: TEACHER_ID, content: text, chat_type: 'global' }
       });
       loadAll();
     } catch {}
   }
-  return /*#__PURE__*/React.createElement("div", {
-    className: "page"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "section-title",
-    style: {
-      marginBottom: 16
-    }
-  }, "\uD83D\uDCAC Communication Center"), /*#__PURE__*/React.createElement("div", {
-    className: "chat-toggle-bar"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "chat-toggle-label"
-  }, "\uD83D\uDCAC Student Chat", /*#__PURE__*/React.createElement("span", {
-    className: `chat-toggle-status ${chatEnabled ? 'enabled' : 'disabled'}`
-  }, chatEnabled ? '● Enabled' : '● Disabled')), /*#__PURE__*/React.createElement("button", {
-    className: `btn btn-sm ${chatEnabled ? 'btn-danger' : 'btn-success'}`,
-    onClick: () => {
-      const next = !chatEnabled;
-      setChatEnabled(next);
-      // Broadcast to all students via WebSocket
-      wsSend({
-        type: 'chat_toggle',
-        enabled: next
-      });
-    }
-  }, chatEnabled ? '🔒 Disable Chat' : '🔓 Enable Chat')), /*#__PURE__*/React.createElement("div", {
-    className: "tabs"
-  }, ['global', 'doubts', 'hands'].map(t => /*#__PURE__*/React.createElement("button", {
-    key: t,
-    className: `tab ${tab === t ? 'active' : ''}`,
-    onClick: () => setTab(t)
-  }, t === 'global' ? '🌐 Global' : t === 'doubts' ? `❓ Doubts (${doubts.filter(d => !d.resolved).length})` : '✋ Hands'))), tab === 'global' && /*#__PURE__*/React.createElement("div", {
-    className: "card",
-    style: { padding: 0, overflow: 'hidden' }
-  },
-    /*#__PURE__*/React.createElement("div", { className: "chat-card-header", style: { padding: '14px 18px 12px' } },
-      /*#__PURE__*/React.createElement("div", { className: "chat-card-header-title" },
-        /*#__PURE__*/React.createElement("span", { className: "chat-online-dot" }),
-        'Global Chat'
+
+  // ── Derived data ──
+  const onlineStudents = roster.active || [];
+  const filteredStudents = studentSearch
+    ? onlineStudents.filter(s => (s.name || s.display_name || '').toLowerCase().includes(studentSearch.toLowerCase()))
+    : onlineStudents;
+  const pendingDoubts = (Array.isArray(doubts) ? doubts : []).filter(d => !d.resolved && d.status !== 'resolved').length;
+
+  // ── Render helpers ──
+  function renderMessages() {
+    if (messages.length === 0) return [
+      React.createElement('div', { key: 'empty', className: 'comm-v2-empty' },
+        React.createElement('div', { className: 'comm-v2-empty-icon' }, '\uD83D\uDCAC'),
+        React.createElement('div', { className: 'comm-v2-empty-text' }, 'No messages yet. Start the conversation!')
+      )
+    ];
+    return messages.map(m => {
+      const isTeacher = m.sender_id === TEACHER_ID;
+      const senderName = m.sender_name || (isTeacher ? 'Teacher' : 'Student');
+      return React.createElement('div', { key: m.id, className: 'comm-v2-msg-row' + (isTeacher ? ' teacher-row' : '') },
+        React.createElement('div', {
+          className: 'comm-v2-msg-av' + (isTeacher ? ' teacher-av' : ''),
+          style: !isTeacher ? { background: hashColor(m.sender_id || m.sender_name) } : {}
+        }, isTeacher ? '\uD83D\uDC68\u200D\uD83C\uDFEB' : initials(senderName)),
+        React.createElement('div', { className: 'comm-v2-bubble-col' },
+          React.createElement('div', { className: 'comm-v2-bubble-header' },
+            React.createElement('span', { className: 'comm-v2-sender' }, senderName),
+            isTeacher && React.createElement('span', { className: 'comm-v2-teacher-badge' }, 'Teacher'),
+            React.createElement('span', { className: 'comm-v2-time' }, fmtTime(m.timestamp))
+          ),
+          React.createElement('div', { className: 'comm-v2-bubble' + (isTeacher ? ' teacher-bubble' : '') }, m.content)
+        )
+      );
+    });
+  }
+
+  function renderDoubts() {
+    const safeDoubts = Array.isArray(doubts) ? doubts : [];
+    if (safeDoubts.length === 0) return [
+      React.createElement('div', { key: 'empty', className: 'comm-v2-empty' },
+        React.createElement('div', { className: 'comm-v2-empty-icon' }, '\uD83E\uDD14'),
+        React.createElement('div', { className: 'comm-v2-empty-text' }, 'No doubts raised yet.')
+      )
+    ];
+    return safeDoubts.map(d =>
+      React.createElement('div', { key: d.id || d.student_id, className: 'comm-v2-doubt-card' },
+        React.createElement('div', { style: { display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:8 } },
+          React.createElement('span', { style: { fontWeight:700, fontSize:'0.85rem', color:'#e2e8f0' } }, d.student_name || 'Student'),
+          React.createElement('span', { className: `badge badge-${(d.resolved||d.status==='resolved') ? 'green' : 'yellow'}` }, (d.resolved||d.status==='resolved') ? 'Resolved' : d.status==='answered' ? 'Answered' : 'Pending')
+        ),
+        React.createElement('div', { style: { fontSize:'0.85rem', color:'#a5b0d0', marginBottom:8 } }, d.doubt_text || d.text || ''),
+        (d.resolved || d.status === 'resolved')
+          ? React.createElement('div', { style: { fontSize:'0.8rem', color:'#22c55e', background:'rgba(34,197,94,0.08)', padding:'6px 10px', borderRadius:6 } }, 'Ans: ', d.answer || d.reply || '')
+          : React.createElement('button', { className:'btn btn-warn btn-xs', onClick:() => { setResolveDoubt(d); setResolveText(''); } }, 'Answer Doubt')
+      )
+    );
+  }
+
+  function renderHands() {
+    const raised = Array.isArray(hands) ? hands : [];
+    if (!raised.length) return [
+      React.createElement('div', { key: 'empty', className: 'comm-v2-empty' },
+        React.createElement('div', { className: 'comm-v2-empty-icon' }, '\u270B'),
+        React.createElement('div', { className: 'comm-v2-empty-text' }, 'No raised hands right now.')
+      )
+    ];
+    const fmtHandTime = ts => {
+      if (!ts) return '';
+      try { return new Date(ts * 1000).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}); } catch { return ''; }
+    };
+    return [
+      React.createElement('div', { key: 'hdr', style: { display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:8 } },
+        React.createElement('span', { style: { fontWeight:700, fontSize:'0.875rem', color:'#e2e8f0' } }, `✋ Raised Hands (${raised.length})`),
+        React.createElement('button', {
+          className:'btn btn-ghost btn-xs',
+          onClick:() => {
+            setHands([]);
+            if (typeof wsSend === 'function') wsSend({ type: 'lower_all_hands' });
+          }
+        }, 'Lower All')
       ),
-      /*#__PURE__*/React.createElement("span", { style: { fontSize: '0.75rem', color: 'var(--text3)' } }, messages.length, ' message', messages.length !== 1 ? 's' : '')
-    ), /*#__PURE__*/React.createElement("div", {
-    className: "chat-area"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "chat-messages"
-  }, messages.length === 0 ? /*#__PURE__*/React.createElement("div", { className: "chat-empty" }, /*#__PURE__*/React.createElement("div", { className: "chat-empty-icon" }, "\uD83D\uDCAC"), "No messages yet. Start the conversation!") : messages.map(m => /*#__PURE__*/React.createElement("div", {
-    key: m.id,
-    className: `chat-msg-wrap ${m.sender_id === TEACHER_ID ? 'own' : 'other'}`
-  },
-    m.sender_id !== TEACHER_ID && /*#__PURE__*/React.createElement("div", {
-      className: "chat-avatar"
-    }, (m.sender_name || '?')[0].toUpperCase()),
-    /*#__PURE__*/React.createElement("div", { className: "chat-bubble-col" },
-      m.sender_id !== TEACHER_ID && /*#__PURE__*/React.createElement("div", { className: "chat-sender" }, m.sender_name),
-      /*#__PURE__*/React.createElement("div", { className: "chat-bubble" }, m.content),
-      /*#__PURE__*/React.createElement("div", { className: "chat-time" }, m.timestamp ? new Date(m.timestamp).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}) : '')
+      ...raised.map(h =>
+        React.createElement('div', { key: h.student_id || h.student_name, className:'comm-v2-doubt-card', style:{ display:'flex', alignItems:'center', gap:10, padding:'10px 14px' } },
+          React.createElement('span', { style:{ fontSize:'1.2rem' } }, '\u270B'),
+          React.createElement('div', { style:{ flex:1 } },
+            React.createElement('div', { style:{ color:'#e2e8f0', fontWeight:600, fontSize:'0.875rem' } }, h.student_name || h.student_id || 'Student'),
+            h.raised_at && React.createElement('div', { style:{ color:'#94a3b8', fontSize:'0.75rem', marginTop:2 } }, fmtHandTime(h.raised_at))
+          ),
+          React.createElement('button', {
+            className:'btn btn-success btn-sm',
+            onClick:() => {
+              setHands(prev => prev.filter(x => x.student_id !== h.student_id));
+              if (typeof wsSend === 'function') wsSend({ type: 'lower_hand', student_id: h.student_id });
+            }
+          }, 'Lower')
+        )
+      )
+    ];
+  }
+
+  // ── SVG send icon ──
+  const SendIcon = React.createElement('svg', { width:17, height:17, viewBox:'0 0 24 24', fill:'none', stroke:'currentColor', strokeWidth:2.5, strokeLinecap:'round', strokeLinejoin:'round' },
+    React.createElement('line', { x1:22, y1:2, x2:11, y2:13 }),
+    React.createElement('polygon', { points:'22 2 15 22 11 13 2 9 22 2' })
+  );
+
+  // ── Tab header config ──
+  const tabHdrConfig = {
+    doubts: { icon:'\u2753', title:'Student Doubts', sub:'Questions from your students' },
+    hands:  { icon:'\u270B', title:'Raised Hands',   sub:'Students who raised their hand' }
+  };
+
+  return React.createElement('div', { className: 'comm-v2-page' },
+
+    /* ════════ LEFT PANEL ════════ */
+    React.createElement('div', { className: 'comm-v2-left' },
+
+      /* Title row */
+      React.createElement('div', { className: 'comm-v2-title-row' },
+        React.createElement('div', { className: 'comm-v2-title-icon' }, '\uD83D\uDCAC'),
+        React.createElement('div', { className: 'comm-v2-title-text' },
+          React.createElement('h2', null, 'Communication Center'),
+          React.createElement('p', null, 'Connect, collaborate & grow together')
+        )
+      ),
+
+      /* Chat toggle bar */
+      React.createElement('div', { className: 'comm-v2-toggle-bar' },
+        React.createElement('div', { className: 'comm-v2-toggle-left' },
+          React.createElement('span', null, '\uD83D\uDCAC'),
+          React.createElement('span', null, ' Student Chat'),
+          React.createElement('span', { className: chatEnabled ? 'comm-v2-status-enabled' : 'comm-v2-status-disabled' },
+            React.createElement('span', { style:{ fontSize:'0.55rem', lineHeight:1 } }, '\u25CF'),
+            chatEnabled ? 'Enabled' : 'Disabled'
+          )
+        ),
+        React.createElement('button', {
+          className: chatEnabled ? 'comm-v2-disable-btn' : 'comm-v2-enable-btn',
+          onClick: () => {
+            const next = !chatEnabled;
+            setChatEnabled(next);
+            wsSend({ type: 'chat_toggle', enabled: next });
+          }
+        },
+          React.createElement('span', null, chatEnabled ? '\uD83D\uDD12' : '\uD83D\uDD13'),
+          chatEnabled ? ' Disable Chat' : ' Enable Chat'
+        )
+      ),
+
+      /* Tabs */
+      React.createElement('div', { className: 'comm-v2-tabs' },
+        React.createElement('button', { className: 'comm-v2-tab' + (tab==='global' ? ' active' : ''), onClick: () => setTab('global') }, '\uD83C\uDF10 Global'),
+        React.createElement('button', { className: 'comm-v2-tab' + (tab==='doubts' ? ' active' : ''), onClick: () => setTab('doubts') }, `\u2753 Doubts (${pendingDoubts})`),
+        React.createElement('button', { className: 'comm-v2-tab' + (tab==='hands'  ? ' active' : ''), onClick: () => setTab('hands') }, '\u270B Hands')
+      ),
+
+      /* Chat glass container */
+      React.createElement('div', { className: 'comm-v2-chat-container' },
+
+        /* Chat header — adapts to tab */
+        React.createElement('div', { className: 'comm-v2-chat-header' },
+          React.createElement('div', { className: 'comm-v2-chat-header-left' },
+            React.createElement('div', { className: 'comm-v2-chat-hdr-avatar' },
+              tab === 'global' ? '\uD83D\uDCAC' : (tabHdrConfig[tab] || {}).icon || '\uD83D\uDCAC'
+            ),
+            React.createElement('div', null,
+              React.createElement('div', { className: 'comm-v2-chat-hdr-title' },
+                tab === 'global' ? 'Global Chat' : (tabHdrConfig[tab] || {}).title
+              ),
+              React.createElement('div', { className: 'comm-v2-chat-hdr-sub' },
+                tab === 'global' ? 'Open discussion with all students' : (tabHdrConfig[tab] || {}).sub
+              )
+            )
+          ),
+          tab === 'global' && React.createElement('div', { className: 'comm-v2-chat-header-right' },
+            React.createElement('div', { className: 'comm-v2-online-badge' },
+              React.createElement('span', { className: 'comm-v2-online-dot-green' }),
+              `${onlineStudents.length} Online`
+            ),
+            React.createElement('button', { className: 'comm-v2-menu-btn' }, '\u22EE')
+          )
+        ),
+
+        /* Scrollable content — messages or doubts/hands */
+        tab === 'global'
+          ? React.createElement('div', { className: 'comm-v2-messages' },
+              ...renderMessages(),
+              React.createElement('div', { ref: messagesEnd })
+            )
+          : React.createElement('div', { className: 'comm-v2-tab-content' },
+              ...(tab === 'doubts' ? renderDoubts() : renderHands())
+            ),
+
+        /* Input bar — only on global tab */
+        tab === 'global' && React.createElement('div', { className: 'comm-v2-input-area' },
+          React.createElement('input', {
+            className: 'comm-v2-input-field',
+            value: input,
+            onChange: e => setInput(e.target.value),
+            placeholder: 'Type your message\u2026',
+            disabled: !chatEnabled,
+            onKeyDown: e => e.key === 'Enter' && sendMsg()
+          }),
+          React.createElement('button', { className: 'comm-v2-icon-btn', title: 'Emoji', onClick: () => {} }, '\uD83D\uDE0A'),
+          React.createElement('button', { className: 'comm-v2-icon-btn', title: 'Attach', onClick: () => {} }, '\uD83D\uDCCE'),
+          React.createElement('button', {
+            className: 'comm-v2-send-btn',
+            onClick: sendMsg,
+            disabled: !chatEnabled || !input.trim()
+          }, SendIcon)
+        )
+      )
     ),
-    m.sender_id === TEACHER_ID && /*#__PURE__*/React.createElement("div", { className: "chat-avatar teacher-av" }, "\uD83D\uDC68\u200D\uD83C\uDFEB")
-  )), /*#__PURE__*/React.createElement("div", {
-    ref: messagesEnd
-  })), /*#__PURE__*/React.createElement("div", {
-    className: "chat-input-row"
-  }, /*#__PURE__*/React.createElement("input", {
-    value: input,
-    onChange: e => setInput(e.target.value),
-    placeholder: "Type a message\u2026",
-    onKeyDown: e => e.key === 'Enter' && sendMsg()
-  }), /*#__PURE__*/React.createElement("button", {
-    className: "chat-send-btn",
-    onClick: sendMsg
-  }, "\u2192")))), tab === 'doubts' && /*#__PURE__*/React.createElement("div", null, doubts.length === 0 && /*#__PURE__*/React.createElement("div", {
-    className: "card text-center text-muted",
-    style: {
-      padding: 40
-    }
-  }, "No doubts raised yet"), doubts.map(d => /*#__PURE__*/React.createElement("div", {
-    key: d.id,
-    className: "doubt-card",
-    style: {
-      marginBottom: 10,
-      background: 'var(--surface)',
-      border: '1px solid var(--border)',
-      borderRadius: 10,
-      padding: 14
-    }
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "text-sm font-bold"
-  }, d.student_name), /*#__PURE__*/React.createElement("span", {
-    className: `badge badge-${d.resolved ? 'green' : 'yellow'}`
-  }, d.resolved ? 'Resolved' : 'Pending')), /*#__PURE__*/React.createElement("div", {
-    style: {
-      fontSize: '0.85rem',
-      color: 'var(--text2)',
-      marginBottom: 8
-    }
-  }, d.doubt_text), d.resolved ? /*#__PURE__*/React.createElement("div", {
-    style: {
-      fontSize: '0.8rem',
-      color: 'var(--green)',
-      background: 'rgba(34,197,94,0.05)',
-      padding: '6px 10px',
-      borderRadius: 6
-    }
-  }, "Ans: ", d.answer) : /*#__PURE__*/React.createElement("button", {
-    className: "btn btn-warn btn-xs",
-    onClick: () => {
-      setResolveDoubt(d);
-      setResolveText('');
-    }
-  }, "Answer Doubt"))), resolveDoubt && /*#__PURE__*/React.createElement(Modal, {
-    title: "Resolve Doubt",
-    onClose: () => setResolveDoubt(null)
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "form-group"
-  }, /*#__PURE__*/React.createElement("label", null, "Doubt from ", resolveDoubt.student_name), /*#__PURE__*/React.createElement("div", {
-    className: "text-sm text-muted mb-10"
-  }, resolveDoubt.doubt_text), /*#__PURE__*/React.createElement("input", {
-    value: resolveText,
-    onChange: e => setResolveText(e.target.value),
-    placeholder: "Type your answer...",
-    onKeyDown: e => e.key === 'Enter' && resolve(resolveDoubt.id)
-  }), /*#__PURE__*/React.createElement("button", {
-    className: "btn btn-success mt-12",
-    onClick: () => resolve(resolveDoubt.id)
-  }, "Submit Answer")), tab === 'hands' && /*#__PURE__*/React.createElement("div", {
-    className: "card"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "flex justify-between items-center mb-8"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "text-sm font-bold"
-  }, "Active Raised Hands (", hands.length, ")"), hands.length > 0 && /*#__PURE__*/React.createElement("button", {
-    className: "btn btn-ghost btn-xs",
-    onClick: () => setHands([])
-  }, "Lower All")), /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: 'flex',
-      flexWrap: 'wrap',
-      gap: 8
-    }
-  }, (roster.active || []).filter(s => hands.includes(s.id)).map(s => /*#__PURE__*/React.createElement("div", {
-    key: s.id,
-    className: "student-chip",
-    style: {
-      marginBottom: 6
-    }
-  }, /*#__PURE__*/React.createElement("span", null, "\u270B"), /*#__PURE__*/React.createElement("span", {
-    style: {
-      flex: 1
-    }
-  }, s.name), /*#__PURE__*/React.createElement("button", {
-    className: "btn btn-success btn-sm",
-    onClick: () => setHands(h => h.filter(id => id !== s.id))
-  }, "Lower"))), !hands.length && /*#__PURE__*/React.createElement("div", {
-    className: "text-muted text-sm",
-    style: {
-      marginTop: 8
-    }
-  }, "No raised hands right now")))));
+
+    /* ════════ RIGHT PANEL — Online Students ════════ */
+    React.createElement('div', { className: 'comm-v2-right' },
+      React.createElement('div', { className: 'comm-v2-students-panel' },
+
+        /* Header */
+        React.createElement('div', { className: 'comm-v2-sp-header' },
+          React.createElement('div', { className: 'comm-v2-sp-title' },
+            React.createElement('span', { className: 'comm-v2-online-dot-green' }),
+            'Online Students'
+          ),
+          React.createElement('span', { className: 'comm-v2-sp-count' }, `${onlineStudents.length} online`)
+        ),
+
+        /* Search */
+        React.createElement('div', { className: 'comm-v2-sp-search' },
+          React.createElement('div', { className: 'comm-v2-sp-search-wrap' },
+            React.createElement('span', { className: 'comm-v2-sp-search-icon' }, '\uD83D\uDD0D'),
+            React.createElement('input', {
+              className: 'comm-v2-sp-search-field',
+              value: studentSearch,
+              onChange: e => setStudentSearch(e.target.value),
+              placeholder: 'Search students\u2026'
+            })
+          )
+        ),
+
+        /* Student list */
+        React.createElement('div', { className: 'comm-v2-students-list' },
+          filteredStudents.length === 0
+            ? React.createElement('div', { className: 'comm-v2-empty', style:{ padding:20 } },
+                React.createElement('div', { style:{ fontSize:'1.5rem', opacity:.4 } }, '\uD83D\uDC65'),
+                React.createElement('div', { style:{ fontSize:'0.78rem', color:'#3d4f6e', marginTop:8 } }, onlineStudents.length === 0 ? 'No students online' : 'No matches')
+              )
+            : filteredStudents.map(s =>
+                React.createElement('div', { key: s.id, className: 'comm-v2-student-row' },
+                  React.createElement('div', { className: 'comm-v2-student-av-wrap' },
+                    React.createElement('div', { className: 'comm-v2-student-av', style:{ background: hashColor(s.id || s.name || '') } },
+                      initials(s.name || s.display_name || s.id)
+                    ),
+                    React.createElement('span', { className: 'comm-v2-student-online-dot' })
+                  ),
+                  React.createElement('div', { className: 'comm-v2-student-info' },
+                    React.createElement('div', { className: 'comm-v2-student-name' }, s.name || s.display_name || s.id),
+                    React.createElement('div', { className: 'comm-v2-student-sub' }, studentSubtitle(s.id))
+                  )
+                )
+              )
+        ),
+
+        /* View all */
+        React.createElement('button', { className: 'comm-v2-view-all-btn' }, 'View All Students \u2192')
+      )
+    ),
+
+    /* ════════ Resolve Doubt Modal ════════ */
+    resolveDoubt && React.createElement(Modal, { title: 'Resolve Doubt', onClose: () => setResolveDoubt(null) },
+      React.createElement('div', { className: 'form-group' },
+        React.createElement('label', null, 'Doubt from ', resolveDoubt.student_name || 'Student'),
+        React.createElement('div', { className: 'text-sm text-muted mb-10' }, resolveDoubt.doubt_text || resolveDoubt.text || ''),
+        React.createElement('input', {
+          value: resolveText,
+          onChange: e => setResolveText(e.target.value),
+          placeholder: 'Type your answer...',
+          onKeyDown: e => e.key === 'Enter' && resolve(resolveDoubt.id)
+        }),
+        React.createElement('button', { className: 'btn btn-success mt-12', onClick: () => resolve(resolveDoubt.id) }, 'Submit Answer')
+      )
+    )
+  );
 }
+
 
 // ═════════════════════════════════════════════════════════════════
 //  EVALUATIONS PAGE (Short & Long Answer Manual/AI Grading)
@@ -25817,13 +26162,29 @@ function StudentTaskView({
         add('🧠 Teacher sent a new lesson plan — check it out!', 'info');
       }
       else if (msg.type === 'doubt_resolved') {
-        setDoubts(d => d.map(x => x.id === msg.doubt.id ? msg.doubt : x));
+        const resolvedDoubt = msg.doubt;
+        if (resolvedDoubt && resolvedDoubt.id) {
+          setDoubts(d => (Array.isArray(d) ? d : []).map(x => x.id === resolvedDoubt.id ? resolvedDoubt : x));
+        }
         playStudentBeep('doubt');
         add('💡 Your doubt has been answered!', 'success');
         setSPage(p => {
           if (p !== 'chat') setChatUnread(n => n + 1);
           return p;
         });
+      } else if (msg.type === 'doubt_submitted') {
+        // WS confirmation that doubt was received
+        const submittedDoubt = msg.doubt;
+        if (submittedDoubt && submittedDoubt.id) {
+          setDoubts(prev => {
+            const arr = Array.isArray(prev) ? prev : [];
+            const exists = arr.some(d => d.id === submittedDoubt.id);
+            return exists ? arr : [...arr, submittedDoubt];
+          });
+        }
+      } else if (msg.type === 'hand_ack') {
+        // Server confirmed hand raise/lower
+        if (msg.raised !== undefined) setHandRaised(!!msg.raised);
       } else if (msg.type === 'evaluation_approved') {
         if (currentTask && msg.task_id === currentTask.id) {
           setResult({
@@ -25921,6 +26282,18 @@ function StudentTaskView({
           // Show most recent explanation for current task if available
           const latestExp = msg.explanations[msg.explanations.length - 1];
           if (latestExp) setTaskExplanation(latestExp);
+        }
+        // ── Restore hand raised state on reconnect ──
+        if (msg.hand_raised !== undefined) {
+          setHandRaised(!!msg.hand_raised);
+        }
+        // ── Restore doubts from server on reconnect ──
+        if (Array.isArray(msg.doubts) && msg.doubts.length > 0) {
+          setDoubts(prev => {
+            const existing = new Set((Array.isArray(prev) ? prev : []).map(d => d.id));
+            const fresh = msg.doubts.filter(d => !existing.has(d.id));
+            return [...(Array.isArray(prev) ? prev : []), ...fresh];
+          });
         }
 
         // ── TEST STATE RESTORATION on reconnect ──────────────────────
@@ -26103,27 +26476,44 @@ function StudentTaskView({
   async function submitDoubt() {
     if (!doubtText.trim()) return;
     try {
-      const d = await apiFetch('/api/doubts/submit', {
-        method: 'POST',
-        body: {
-          session_code: sessionCode,
-          student_id: studentId,
-          doubt_text: doubtText
-        }
-      });
-      setDoubts(prev => [...prev, d]);
+      // Try WS first (faster), fallback to REST
+      const sentViaWS = typeof wsSend === 'function' && wsSend({ type: 'submit_doubt', doubt_text: doubtText.trim() });
+      if (!sentViaWS) {
+        const d = await apiFetch('/api/doubts/submit', {
+          method: 'POST',
+          body: {
+            session_code: sessionCode,
+            student_id: studentId,
+            doubt_text: doubtText.trim()
+          }
+        });
+        setDoubts(prev => Array.isArray(prev) ? [...prev, d] : [d]);
+      }
       setDoubtText('');
-      add('Doubt submitted', 'success');
-    } catch {}
+      add('Doubt submitted ✅', 'success');
+    } catch(err) {
+      add('Failed to submit doubt. Please try again.', 'error');
+      console.error('[Doubt] Submit error:', err);
+    }
   }
   async function toggleHand() {
-    const endpoint = handRaised ? 'lower_hand' : 'raise_hand';
+    const newRaised = !handRaised;
+    const wsCmd = newRaised ? 'raise_hand' : 'lower_hand';
     try {
-      await apiFetch(`/api/session/${sessionCode}/${endpoint}/${studentId}`, {
-        method: 'POST'
-      });
-      setHandRaised(!handRaised);
-    } catch {}
+      // Send via WS first (instant)
+      let wsSent = false;
+      if (typeof wsSend === 'function') {
+        wsSent = wsSend({ type: wsCmd });
+      }
+      // Also send via REST as fallback / confirmation
+      const endpoint = newRaised ? 'raise_hand' : 'lower_hand';
+      await apiFetch(`/api/session/${sessionCode}/${endpoint}/${studentId}`, { method: 'POST' });
+      setHandRaised(newRaised);
+    } catch(err) {
+      // Still update UI optimistically, don't crash
+      setHandRaised(newRaised);
+      console.error('[Hand] Toggle error:', err);
+    }
   }
   const fmtTime = s => `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
   const [tourReady, setTourReady] = useState(false);
@@ -26428,9 +26818,9 @@ function StudentTaskView({
       // Doubts section
       doubts.length > 0 && React.createElement('div', {style:{padding:'12px 16px',borderBottom:'1px solid rgba(255,255,255,0.06)'}},
         React.createElement('div', {style:{fontSize:'0.72rem',fontWeight:700,color:'rgba(241,245,249,0.3)',textTransform:'uppercase',letterSpacing:'0.08em',marginBottom:8}}, '❓ Your Doubts'),
-        doubts.map((d,i)=>React.createElement('div', {key:i,className:`s-doubt-card ${d.resolved?'s-doubt-resolved':''}`},
-          React.createElement('div', {className:'s-doubt-text'}, d.doubt_text),
-          d.resolved && React.createElement('div', {className:'s-doubt-answer'}, '✅ ', d.answer)
+        (Array.isArray(doubts) ? doubts : []).map((d,i)=>React.createElement('div', {key:d.id||i,className:`s-doubt-card ${(d.resolved||d.status==='resolved'||d.status==='answered')?'s-doubt-resolved':''}`},
+          React.createElement('div', {className:'s-doubt-text'}, d.doubt_text || d.text || ''),
+          (d.resolved || d.status==='resolved' || d.status==='answered') && React.createElement('div', {className:'s-doubt-answer'}, '✅ ', d.answer || d.reply || '')
         ))
       ),
 

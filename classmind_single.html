@@ -11951,6 +11951,959 @@ body.s-ui-active .toasts {
   }
 }
 
+/* ══════════════════════════════════════════════════════════════════
+   CM2 — Premium Content Management Dashboard v2
+   Deep navy glassmorphism, purple accents, modern SaaS aesthetic
+══════════════════════════════════════════════════════════════════ */
+
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+:root {
+  --cm2-bg0: #070B1A;
+  --cm2-bg1: #0B1023;
+  --cm2-bg2: #11182D;
+  --cm2-bg3: #161D35;
+  --cm2-border: rgba(255,255,255,0.07);
+  --cm2-border2: rgba(99,102,241,0.25);
+  --cm2-purple: #6366f1;
+  --cm2-purple2: #8b5cf6;
+  --cm2-green: #22c55e;
+  --cm2-orange: #f97316;
+  --cm2-cyan: #06b6d4;
+  --cm2-text1: #f0f4ff;
+  --cm2-text2: #94a3b8;
+  --cm2-text3: #4a5568;
+  --cm2-glass: rgba(255,255,255,0.035);
+  --cm2-glass2: rgba(255,255,255,0.055);
+}
+
+/* Wrap */
+.cm2-wrap {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+  background: var(--cm2-bg0);
+  font-family: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif;
+  color: var(--cm2-text1);
+}
+
+/* ── Top Header ── */
+.cm2-header {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 20px 28px;
+  background: var(--cm2-bg1);
+  border-bottom: 1px solid var(--cm2-border);
+  position: sticky;
+  top: 0;
+  z-index: 60;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+.cm2-header-left { flex-shrink: 0; }
+.cm2-welcome-title {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--cm2-text1);
+  letter-spacing: -0.01em;
+  line-height: 1.3;
+}
+.cm2-welcome-title .cm2-wave { display: inline-block; }
+.cm2-welcome-sub {
+  font-size: 0.8rem;
+  color: var(--cm2-text2);
+  margin-top: 2px;
+  font-weight: 400;
+}
+.cm2-header-center {
+  flex: 1;
+  max-width: 520px;
+  margin: 0 auto;
+}
+.cm2-search-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.cm2-search-icon {
+  position: absolute;
+  left: 13px;
+  font-size: 0.82rem;
+  color: var(--cm2-text3);
+  pointer-events: none;
+}
+.cm2-search-input {
+  width: 100%;
+  background: var(--cm2-bg2);
+  border: 1px solid var(--cm2-border);
+  border-radius: 10px;
+  padding: 9px 42px 9px 36px;
+  color: var(--cm2-text1);
+  font-size: 0.85rem;
+  outline: none;
+  font-family: inherit;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.cm2-search-input:focus {
+  border-color: var(--cm2-purple);
+  box-shadow: 0 0 0 3px rgba(99,102,241,0.12);
+}
+.cm2-search-input::placeholder { color: var(--cm2-text3); }
+.cm2-search-kbd {
+  position: absolute;
+  right: 10px;
+  font-size: 0.7rem;
+  color: var(--cm2-text3);
+  background: var(--cm2-bg3);
+  border: 1px solid var(--cm2-border);
+  border-radius: 5px;
+  padding: 1px 6px;
+  pointer-events: none;
+}
+.cm2-header-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.cm2-icon-btn {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  border: 1px solid var(--cm2-border);
+  background: var(--cm2-glass);
+  color: var(--cm2-text2);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  transition: all 0.2s;
+  position: relative;
+}
+.cm2-icon-btn:hover { background: var(--cm2-bg3); color: var(--cm2-text1); }
+.cm2-notif-dot {
+  position: absolute;
+  top: 7px;
+  right: 7px;
+  width: 8px;
+  height: 8px;
+  background: #ef4444;
+  border-radius: 50%;
+  border: 1.5px solid var(--cm2-bg1);
+  font-size: 0.6rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-weight: 700;
+}
+.cm2-create-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 18px;
+  background: linear-gradient(135deg, var(--cm2-purple), var(--cm2-purple2));
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: inherit;
+  box-shadow: 0 4px 16px rgba(99,102,241,0.35);
+  white-space: nowrap;
+}
+.cm2-create-btn:hover { opacity: 0.9; transform: translateY(-1px); box-shadow: 0 6px 22px rgba(99,102,241,0.45); }
+.cm2-create-plus {
+  width: 18px; height: 18px;
+  background: rgba(255,255,255,0.2);
+  border-radius: 5px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1rem; line-height: 1;
+}
+
+/* ── Stats Row ── */
+.cm2-stats-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  padding: 20px 28px;
+  background: var(--cm2-bg1);
+  border-bottom: 1px solid var(--cm2-border);
+}
+.cm2-stat-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 18px 20px;
+  background: var(--cm2-glass);
+  border: 1px solid var(--cm2-border);
+  border-radius: 14px;
+  cursor: default;
+  transition: all 0.22s;
+  position: relative;
+  overflow: hidden;
+}
+.cm2-stat-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 14px;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+.cm2-stat-card:hover::before { opacity: 1; }
+.cm2-stat-card:hover { transform: translateY(-2px); border-color: rgba(99,102,241,0.3); }
+.cm2-stat-icon {
+  width: 46px;
+  height: 46px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.3rem;
+  flex-shrink: 0;
+}
+.cm2-stat-body { flex: 1; min-width: 0; }
+.cm2-stat-label {
+  font-size: 0.75rem;
+  color: var(--cm2-text2);
+  font-weight: 500;
+  margin-bottom: 4px;
+}
+.cm2-stat-value {
+  font-size: 1.7rem;
+  font-weight: 800;
+  color: var(--cm2-text1);
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+.cm2-stat-sub {
+  font-size: 0.72rem;
+  color: var(--cm2-green);
+  margin-top: 4px;
+  font-weight: 600;
+}
+
+/* ── Category Tabs ── */
+.cm2-tabs-bar {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  padding: 0 28px;
+  background: var(--cm2-bg1);
+  border-bottom: 1px solid var(--cm2-border);
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.cm2-tabs-bar::-webkit-scrollbar { display: none; }
+.cm2-tab-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 13px 16px;
+  border: none;
+  background: transparent;
+  color: var(--cm2-text2);
+  cursor: pointer;
+  font-size: 0.83rem;
+  font-weight: 500;
+  border-bottom: 2px solid transparent;
+  transition: all 0.18s;
+  white-space: nowrap;
+  font-family: inherit;
+  position: relative;
+}
+.cm2-tab-btn:hover { color: var(--cm2-text1); }
+.cm2-tab-btn.active {
+  color: var(--cm2-purple);
+  border-bottom-color: var(--cm2-purple);
+  font-weight: 700;
+}
+.cm2-tab-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--cm2-purple);
+  margin-right: -2px;
+}
+
+/* ── Filter Bar ── */
+.cm2-filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 28px;
+  background: var(--cm2-bg1);
+  border-bottom: 1px solid var(--cm2-border);
+  flex-wrap: wrap;
+}
+.cm2-filter-search {
+  flex: 1;
+  min-width: 200px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--cm2-bg2);
+  border: 1px solid var(--cm2-border);
+  border-radius: 10px;
+  padding: 9px 14px;
+  color: var(--cm2-text2);
+  font-size: 0.85rem;
+  transition: border-color 0.2s;
+}
+.cm2-filter-search:focus-within {
+  border-color: var(--cm2-purple);
+}
+.cm2-filter-search input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  color: var(--cm2-text1);
+  font-size: 0.85rem;
+  outline: none;
+  font-family: inherit;
+  min-width: 0;
+}
+.cm2-filter-search input::placeholder { color: var(--cm2-text3); }
+.cm2-dropdown {
+  background: var(--cm2-bg2);
+  border: 1px solid var(--cm2-border);
+  border-radius: 10px;
+  padding: 8px 14px;
+  color: var(--cm2-text1);
+  font-size: 0.82rem;
+  font-family: inherit;
+  cursor: pointer;
+  outline: none;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%2394a3b8'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  padding-right: 28px;
+  min-width: 130px;
+  transition: border-color 0.2s;
+}
+.cm2-dropdown:focus { border-color: var(--cm2-purple); }
+.cm2-filter-btn {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 16px;
+  background: var(--cm2-bg2);
+  border: 1px solid var(--cm2-border);
+  border-radius: 10px;
+  color: var(--cm2-text1);
+  font-size: 0.82rem;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.18s;
+  font-weight: 500;
+  white-space: nowrap;
+}
+.cm2-filter-btn:hover { background: var(--cm2-bg3); border-color: rgba(99,102,241,0.3); }
+
+/* ── Main 2-Column Area ── */
+.cm2-main-area {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  background: var(--cm2-bg0);
+}
+.cm2-content-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px 20px;
+  min-width: 0;
+}
+.cm2-content-list::-webkit-scrollbar { width: 4px; }
+.cm2-content-list::-webkit-scrollbar-track { background: transparent; }
+.cm2-content-list::-webkit-scrollbar-thumb { background: rgba(99,102,241,0.25); border-radius: 4px; }
+
+/* Content Row Card */
+.cm2-content-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px;
+  background: var(--cm2-glass);
+  border: 1px solid var(--cm2-border);
+  border-radius: 14px;
+  margin-bottom: 10px;
+  cursor: pointer;
+  transition: all 0.22s;
+  position: relative;
+}
+.cm2-content-row:hover {
+  background: var(--cm2-bg2);
+  border-color: rgba(99,102,241,0.28);
+  transform: translateX(2px);
+}
+.cm2-content-row.selected {
+  background: rgba(99,102,241,0.08);
+  border-color: var(--cm2-purple);
+  box-shadow: 0 0 0 1px rgba(99,102,241,0.3);
+}
+.cm2-row-thumb {
+  width: 72px;
+  height: 72px;
+  border-radius: 10px;
+  background: var(--cm2-bg2);
+  flex-shrink: 0;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  position: relative;
+}
+.cm2-row-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.cm2-row-info { flex: 1; min-width: 0; }
+.cm2-row-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 5px;
+  flex-wrap: wrap;
+}
+.cm2-row-title {
+  font-size: 0.93rem;
+  font-weight: 700;
+  color: var(--cm2-text1);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.cm2-ai-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  background: rgba(99,102,241,0.15);
+  color: #a5b4fc;
+  border-radius: 20px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  flex-shrink: 0;
+  border: 1px solid rgba(99,102,241,0.25);
+}
+.cm2-row-desc {
+  font-size: 0.8rem;
+  color: var(--cm2-text2);
+  line-height: 1.5;
+  margin-bottom: 7px;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.cm2-row-tags {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.cm2-tag {
+  padding: 2px 9px;
+  border-radius: 20px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  border: 1px solid transparent;
+}
+.cm2-tag-image { background: rgba(34,197,94,0.12); color: #4ade80; border-color: rgba(34,197,94,0.2); }
+.cm2-tag-pdf { background: rgba(239,68,68,0.12); color: #f87171; border-color: rgba(239,68,68,0.2); }
+.cm2-tag-video { background: rgba(139,92,246,0.12); color: #c084fc; border-color: rgba(139,92,246,0.2); }
+.cm2-tag-note { background: rgba(20,184,166,0.12); color: #2dd4bf; border-color: rgba(20,184,166,0.2); }
+.cm2-tag-link { background: rgba(234,179,8,0.12); color: #fbbf24; border-color: rgba(234,179,8,0.2); }
+.cm2-tag-presentation { background: rgba(236,72,153,0.12); color: #f472b6; border-color: rgba(236,72,153,0.2); }
+.cm2-tag-assignment { background: rgba(249,115,22,0.12); color: #fb923c; border-color: rgba(249,115,22,0.2); }
+.cm2-tag-subject { background: rgba(99,102,241,0.1); color: #a5b4fc; border-color: rgba(99,102,241,0.2); }
+.cm2-row-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 5px;
+  flex-shrink: 0;
+  min-width: 110px;
+}
+.cm2-row-date { font-size: 0.75rem; color: var(--cm2-text2); white-space: nowrap; }
+.cm2-row-status-published {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--cm2-green);
+}
+.cm2-row-status-draft {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--cm2-orange);
+}
+.cm2-row-counts {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.73rem;
+  color: var(--cm2-text3);
+}
+.cm2-row-count { display: flex; align-items: center; gap: 3px; }
+.cm2-row-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+.cm2-row-menu-btn {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  border: 1px solid var(--cm2-border);
+  background: transparent;
+  color: var(--cm2-text2);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  transition: all 0.18s;
+  font-family: inherit;
+}
+.cm2-row-menu-btn:hover { background: var(--cm2-bg3); color: var(--cm2-text1); }
+.cm2-row-menu-btn.danger:hover { background: rgba(239,68,68,0.12); color: #f87171; }
+
+/* Dropdown menu for row actions */
+.cm2-action-menu {
+  position: relative;
+}
+.cm2-action-dropdown {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 4px);
+  background: var(--cm2-bg2);
+  border: 1px solid var(--cm2-border);
+  border-radius: 10px;
+  min-width: 160px;
+  z-index: 100;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+  overflow: hidden;
+  animation: cm2-fade-in 0.12s ease;
+}
+@keyframes cm2-fade-in { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
+.cm2-action-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 14px;
+  font-size: 0.82rem;
+  color: var(--cm2-text1);
+  cursor: pointer;
+  transition: background 0.15s;
+  border: none;
+  background: transparent;
+  width: 100%;
+  text-align: left;
+  font-family: inherit;
+}
+.cm2-action-item:hover { background: var(--cm2-bg3); }
+.cm2-action-item.danger { color: #f87171; }
+.cm2-action-item.danger:hover { background: rgba(239,68,68,0.1); }
+.cm2-action-divider { height: 1px; background: var(--cm2-border); margin: 4px 0; }
+
+/* ── Right Preview Panel ── */
+.cm2-preview-panel {
+  width: 340px;
+  flex-shrink: 0;
+  border-left: 1px solid var(--cm2-border);
+  background: var(--cm2-bg1);
+  overflow-y: auto;
+  position: sticky;
+  top: var(--header-h);
+  align-self: flex-start;
+  max-height: calc(100vh - var(--header-h));
+  scrollbar-width: none;
+}
+.cm2-preview-panel::-webkit-scrollbar { display: none; }
+.cm2-preview-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  min-height: 400px;
+  color: var(--cm2-text3);
+  font-size: 0.88rem;
+  gap: 10px;
+  padding: 40px 20px;
+  text-align: center;
+}
+.cm2-preview-empty-icon { font-size: 3rem; opacity: 0.3; }
+.cm2-preview-empty-text { font-weight: 600; color: var(--cm2-text2); }
+.cm2-preview-img-wrap {
+  position: relative;
+  width: 100%;
+  height: 200px;
+  background: linear-gradient(135deg, #f97316 0%, #ea580c 50%, #c2410c 100%);
+  overflow: hidden;
+}
+.cm2-preview-img-wrap.img-bg-blue { background: linear-gradient(135deg, #6366f1, #4338ca); }
+.cm2-preview-img-wrap.img-bg-green { background: linear-gradient(135deg, #22c55e, #16a34a); }
+.cm2-preview-img-wrap.img-bg-purple { background: linear-gradient(135deg, #8b5cf6, #7c3aed); }
+.cm2-preview-img-wrap.img-bg-cyan { background: linear-gradient(135deg, #06b6d4, #0891b2); }
+.cm2-preview-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.cm2-preview-img-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 4rem;
+  opacity: 0.5;
+}
+.cm2-preview-btn-overlay {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(0,0,0,0.6);
+  color: #fff;
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 8px;
+  padding: 5px 10px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  backdrop-filter: blur(10px);
+  cursor: pointer;
+  font-family: inherit;
+}
+.cm2-preview-expand-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 30px;
+  height: 30px;
+  background: rgba(0,0,0,0.6);
+  color: #fff;
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 7px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 0.8rem;
+  backdrop-filter: blur(10px);
+  font-family: inherit;
+}
+.cm2-preview-body { padding: 18px 18px 0; }
+.cm2-preview-title-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+.cm2-preview-title {
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--cm2-text1);
+  line-height: 1.3;
+  flex: 1;
+  min-width: 0;
+}
+.cm2-preview-tags {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+.cm2-add-tag-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 8px;
+  background: transparent;
+  border: 1px dashed var(--cm2-text3);
+  border-radius: 20px;
+  color: var(--cm2-text3);
+  font-size: 0.7rem;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.18s;
+}
+.cm2-add-tag-btn:hover { border-color: var(--cm2-purple); color: var(--cm2-purple); }
+.cm2-preview-desc {
+  font-size: 0.82rem;
+  color: var(--cm2-text2);
+  line-height: 1.65;
+  margin-bottom: 14px;
+}
+.cm2-show-more {
+  color: var(--cm2-purple);
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.8rem;
+}
+.cm2-details-section { padding: 14px 18px; border-top: 1px solid var(--cm2-border); }
+.cm2-details-title {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--cm2-text1);
+  margin-bottom: 12px;
+  letter-spacing: 0.02em;
+}
+.cm2-detail-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 7px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  gap: 10px;
+}
+.cm2-detail-row:last-child { border-bottom: none; }
+.cm2-detail-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.78rem;
+  color: var(--cm2-text2);
+  flex-shrink: 0;
+}
+.cm2-detail-label-icon {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--cm2-text3);
+  flex-shrink: 0;
+}
+.cm2-detail-val {
+  font-size: 0.78rem;
+  color: var(--cm2-text1);
+  font-weight: 500;
+  text-align: right;
+  min-width: 0;
+  word-break: break-word;
+}
+.cm2-detail-uploader {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.78rem;
+  color: var(--cm2-text1);
+  font-weight: 500;
+}
+.cm2-uploader-av {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--cm2-purple), var(--cm2-purple2));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #fff;
+  flex-shrink: 0;
+}
+.cm2-preview-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 16px 18px 20px;
+  border-top: 1px solid var(--cm2-border);
+}
+.cm2-edit-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 10px 14px;
+  background: linear-gradient(135deg, var(--cm2-purple), var(--cm2-purple2));
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: inherit;
+  box-shadow: 0 4px 14px rgba(99,102,241,0.3);
+}
+.cm2-edit-btn:hover { opacity: 0.9; transform: translateY(-1px); }
+.cm2-action-icon-btn {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  border: 1px solid var(--cm2-border);
+  background: var(--cm2-glass);
+  color: var(--cm2-text2);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  transition: all 0.18s;
+  font-family: inherit;
+}
+.cm2-action-icon-btn:hover { background: var(--cm2-bg3); color: var(--cm2-text1); }
+.cm2-action-icon-btn.del:hover { background: rgba(239,68,68,0.12); color: #f87171; border-color: rgba(239,68,68,0.3); }
+
+/* Upload panel inside cm2 */
+.cm2-upload-panel {
+  flex: 1;
+  padding: 24px 28px;
+  background: var(--cm2-bg0);
+  overflow-y: auto;
+}
+.cm2-upload-grid {
+  display: grid;
+  grid-template-columns: minmax(0,1.2fr) minmax(0,0.8fr);
+  gap: 20px;
+  max-width: 900px;
+}
+.cm2-upload-card {
+  background: var(--cm2-glass);
+  border: 1px solid var(--cm2-border);
+  border-radius: 16px;
+  padding: 22px;
+  margin-bottom: 0;
+}
+.cm2-upload-card-title {
+  font-weight: 700;
+  font-size: 0.95rem;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--cm2-text1);
+}
+.cm2-upload-zone {
+  border: 2px dashed rgba(99,102,241,0.35);
+  border-radius: 14px;
+  padding: 40px 24px;
+  text-align: center;
+  cursor: pointer;
+  background: rgba(99,102,241,0.04);
+  transition: all 0.2s;
+  position: relative;
+  margin-bottom: 16px;
+}
+.cm2-upload-zone:hover, .cm2-upload-zone.dragover {
+  border-color: var(--cm2-purple);
+  background: rgba(99,102,241,0.1);
+}
+.cm2-form-group { margin-bottom: 12px; }
+.cm2-form-group label {
+  display: block;
+  font-size: 0.78rem;
+  color: var(--cm2-text2);
+  margin-bottom: 6px;
+  font-weight: 600;
+}
+.cm2-form-group input,
+.cm2-form-group textarea {
+  width: 100%;
+  background: var(--cm2-bg2);
+  border: 1px solid var(--cm2-border);
+  border-radius: 8px;
+  padding: 9px 12px;
+  color: var(--cm2-text1);
+  font-size: 0.85rem;
+  outline: none;
+  font-family: inherit;
+  transition: border-color 0.2s;
+}
+.cm2-form-group input:focus,
+.cm2-form-group textarea:focus { border-color: var(--cm2-purple); }
+
+/* Section label */
+.cm2-section-heading {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--cm2-text2);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: 10px 20px 6px;
+}
+
+/* Empty state */
+.cm2-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 24px;
+  text-align: center;
+  gap: 12px;
+  color: var(--cm2-text2);
+}
+.cm2-empty-icon { font-size: 3.5rem; opacity: 0.3; }
+.cm2-empty-title { font-size: 1.1rem; font-weight: 700; }
+.cm2-empty-sub { font-size: 0.85rem; color: var(--cm2-text3); max-width: 340px; line-height: 1.6; }
+
+/* Link bar */
+.cm2-link-bar {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+  align-items: center;
+}
+.cm2-link-bar input {
+  flex: 1;
+  background: var(--cm2-bg2);
+  border: 1px solid var(--cm2-border);
+  border-radius: 8px;
+  padding: 8px 12px;
+  color: var(--cm2-text1);
+  font-size: 0.83rem;
+  outline: none;
+  font-family: inherit;
+}
+.cm2-add-link-btn {
+  padding: 8px 14px;
+  background: linear-gradient(135deg, var(--cm2-purple), var(--cm2-purple2));
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  white-space: nowrap;
+}
+
+/* Responsive */
+@media (max-width: 1100px) {
+  .cm2-preview-panel { width: 300px; }
+  .cm2-stats-row { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 900px) {
+  .cm2-preview-panel { display: none; }
+  .cm2-stats-row { grid-template-columns: repeat(2, 1fr); }
+  .cm2-header { flex-wrap: wrap; gap: 12px; }
+  .cm2-header-center { order: 3; width: 100%; max-width: none; }
+}
+@media (max-width: 600px) {
+  .cm2-stats-row { grid-template-columns: repeat(2, 1fr); gap: 10px; padding: 14px; }
+  .cm2-header { padding: 14px; }
+  .cm2-content-list { padding: 10px; }
+  .cm2-row-thumb { width: 54px; height: 54px; }
+  .cm2-row-meta { display: none; }
+  .cm2-tabs-bar { padding: 0 14px; }
+  .cm2-filter-bar { padding: 10px 14px; }
+}
+
 </style>
 </head>
 <body>
@@ -15709,7 +16662,7 @@ function TeacherShell({
         groups: groups,
         roster: roster
       })),
-      page === 'content' && /*#__PURE__*/React.createElement(ContentManagementPage, sharedProps),
+      page === 'content' && /*#__PURE__*/React.createElement(ContentManagementPage, _extends({}, sharedProps, { teacherName: teacherName })),
       page === 'groups'   && /*#__PURE__*/React.createElement(GroupsPage, sharedProps),
       page === 'attendance' && /*#__PURE__*/React.createElement(SmartAttendancePage, {
         sessionCode,
@@ -19990,7 +20943,7 @@ function ChManagerRow({ item, onPin, onDelete, onPreview, onEdit, teacherName })
 }
 
 // ── TEACHER CONTENT MANAGEMENT PAGE ──
-function ContentManagementPage({ sessionCode, tasks }) {
+function ContentManagementPage({ sessionCode, tasks, teacherName }) {
   const { add } = useContext(AppCtx);
   const [files, setFiles] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -20007,6 +20960,8 @@ function ContentManagementPage({ sessionCode, tasks }) {
   const [linkUrl, setLinkUrl] = useState('');
   const [linkTitle, setLinkTitle] = useState('');
   const [uploadForm, setUploadForm] = useState({ title: '', subject: '', description: '', type: 'note', pinned: false });
+  const [openMenuIdx, setOpenMenuIdx] = useState(null);
+  const [showFullDesc, setShowFullDesc] = useState(false);
   // ── Cinematic background slideshow ──────────────────────────────
   const [chHeroSlide, setChHeroSlide] = useState(0);
 
@@ -20184,235 +21139,433 @@ function ContentManagementPage({ sessionCode, tasks }) {
     )
   );
 
-  return React.createElement('div', { className: 'ch-page' },
-    // ── Header ──
-    React.createElement('div', { className: 'ch-hero' },
-      // ── Cinematic background slides ──
-      CH_HERO_SLIDES.map((src, i) =>
-        React.createElement('div', {
-          key: i,
-          className: `ch-hero-slide kb-${['a','b','c'][i % 3]}${chHeroSlide === i ? ' active' : ''}`,
-          style: { backgroundImage: src, backgroundSize: 'cover', backgroundPosition: 'center top' }
-        })
-      ),
-      // ── Dark cinematic overlay ──
-      React.createElement('div', { className: 'ch-hero-overlay' }),
-      React.createElement('div', { className: 'ch-hero-inner' },
-        React.createElement('div', { className: 'ch-hero-label' }, '📚 Content Hub — Teacher View'),
-        React.createElement('div', { className: 'ch-hero-title' }, 'Manage Learning Library'),
-        React.createElement('div', { className: 'ch-hero-sub' }, 'Upload, organize and publish learning materials. Students see everything in a beautiful content feed instantly.'),
-        React.createElement('div', { className: 'ch-hero-stats' },
-          React.createElement('div', { className: 'ch-hero-stat' },
-            React.createElement('div', { className: 'ch-hero-stat-num' }, files.length),
-            React.createElement('div', { className: 'ch-hero-stat-label' }, 'Total Files')
-          ),
-          React.createElement('div', { className: 'ch-hero-stat' },
-            React.createElement('div', { className: 'ch-hero-stat-num' }, files.filter(f => f.pinned).length),
-            React.createElement('div', { className: 'ch-hero-stat-label' }, 'Pinned')
-          ),
-          React.createElement('div', { className: 'ch-hero-stat' },
-            React.createElement('div', { className: 'ch-hero-stat-num' }, files.filter(f => f.ai_generated).length),
-            React.createElement('div', { className: 'ch-hero-stat-label' }, 'AI Described')
-          )
-        )
-      )
-    ),
+  // ── Helpers ──
+  const displayName = teacherName || 'Teacher';
+  const tName = displayName.startsWith('Mr.') || displayName.startsWith('Ms.') || displayName.startsWith('Dr.') ? displayName : 'Mr. ' + displayName;
 
-    // ── Tab bar ──
-    React.createElement('div', { className: 'ch-cats' },
-      [{ id: 'manage', label: '📂 Manage', icon: '' },
-       { id: 'upload', label: '⬆ Upload', icon: '' },
-       { id: 'preview', label: '👁 Preview Mode', icon: '' }
-      ].map(t => React.createElement('button', {
-        key: t.id,
-        className: `ch-cat-btn ${tab === t.id ? 'active' : ''}`,
-        onClick: () => setTab(t.id)
-      }, t.label))
-    ),
+  // ── Stats ──
+  const totalFiles = files.length;
+  const publishedCount = files.filter(f => !f.draft).length;
+  const draftCount = files.filter(f => f.draft).length;
+  const viewsTotal = files.reduce((a, f) => a + (f.views || 0), 0) || '–';
 
-    // ── UPLOAD TAB ──
-    tab === 'upload' && React.createElement('div', { className: 'ch-body' },
-      React.createElement('div', { style: { display: 'grid', gridTemplateColumns: 'minmax(0,1.2fr) minmax(0,0.8fr)', gap: 20 } },
-        React.createElement('div', null,
-          React.createElement('div', { className: 'ch-form-panel' },
-            React.createElement('div', { className: 'ch-form-title' }, '⬆ Upload File'),
-            // Upload zone
-            React.createElement('div', {
-              className: `ch-upload-zone ${dragover ? 'dragover' : ''}`,
-              onDrop, onDragOver: e => { e.preventDefault(); setDragover(true); },
-              onDragLeave: () => setDragover(false),
-              style: { position: 'relative', marginBottom: 16 }
-            },
-              React.createElement('div', { className: 'ch-upload-icon' }, uploading ? '⏳' : '📂'),
-              React.createElement('div', { className: 'ch-upload-text' }, uploading ? 'Uploading…' : 'Drop files here or click to browse'),
-              React.createElement('div', { className: 'ch-upload-sub' }, 'PDF, PNG, JPG, GIF, MP4, DOCX, PPTX supported'),
-              uploading && React.createElement('div', { className: 'ch-progress-bar', style: { marginTop: 12 } },
-                React.createElement('div', { className: 'ch-progress-fill', style: { width: uploadProgress + '%' } })
-              ),
-              !uploading && React.createElement('input', {
-                type: 'file',
-                accept: '*/*',
-                style: { position: 'absolute', inset: 0, opacity: 0, cursor: 'pointer' },
-                onChange: e => e.target.files[0] && uploadFile(e.target.files[0])
-              })
+  // ── Tag style helper ──
+  function cm2TagClass(type) {
+    const map = { image:'cm2-tag cm2-tag-image', pdf:'cm2-tag cm2-tag-pdf', video:'cm2-tag cm2-tag-video', note:'cm2-tag cm2-tag-note', link:'cm2-tag cm2-tag-link', presentation:'cm2-tag cm2-tag-presentation', assignment:'cm2-tag cm2-tag-assignment' };
+    return map[type] || 'cm2-tag cm2-tag-note';
+  }
+
+  // ── Gradient bg for preview panel ──
+  function cm2PreviewBg(type) {
+    const map = { image:'img-bg-orange', pdf:'img-bg-blue', video:'img-bg-purple', link:'img-bg-cyan', note:'img-bg-green', presentation:'img-bg-purple', assignment:'img-bg-orange' };
+    return map[type] || 'img-bg-blue';
+  }
+
+  // Close menu on outside click
+  useEffect(() => {
+    function handleClick() { setOpenMenuIdx(null); }
+    document.addEventListener('click', handleClick);
+    return () => document.removeEventListener('click', handleClick);
+  }, []);
+
+  // ── Upload Tab Content ──
+  const uploadTabContent = React.createElement('div', { className: 'cm2-upload-panel' },
+    React.createElement('div', { className: 'cm2-upload-grid' },
+      React.createElement('div', null,
+        React.createElement('div', { className: 'cm2-upload-card' },
+          React.createElement('div', { className: 'cm2-upload-card-title' }, '⬆ Upload File'),
+          React.createElement('div', {
+            className: `cm2-upload-zone ${dragover ? 'dragover' : ''}`,
+            onDrop, onDragOver: e => { e.preventDefault(); setDragover(true); },
+            onDragLeave: () => setDragover(false),
+            style: { position: 'relative' }
+          },
+            React.createElement('div', { style: { fontSize: '2.8rem', marginBottom: 12 } }, uploading ? '⏳' : '📂'),
+            React.createElement('div', { style: { fontWeight: 600, color: 'var(--cm2-text1)', marginBottom: 4 } }, uploading ? 'Uploading…' : 'Drop files here or click to browse'),
+            React.createElement('div', { style: { fontSize: '0.8rem', color: 'var(--cm2-text2)' } }, 'PDF, PNG, JPG, GIF, MP4, DOCX, PPTX supported'),
+            uploading && React.createElement('div', { className: 'ch-progress-bar', style: { marginTop: 12 } },
+              React.createElement('div', { className: 'ch-progress-fill', style: { width: uploadProgress + '%' } })
             ),
-            // Metadata form
-            React.createElement('div', { className: 'ch-form-row' },
-              React.createElement('div', { className: 'form-group', style: { marginBottom: 10 } },
-                React.createElement('label', null, 'Custom Title (optional)'),
-                React.createElement('input', { value: uploadForm.title, onChange: e => setUploadForm(f => ({ ...f, title: e.target.value })), placeholder: 'e.g. Chapter 5 Notes…' })
-              ),
-              React.createElement('div', { className: 'form-group', style: { marginBottom: 10 } },
-                React.createElement('label', null, 'Subject / Topic'),
-                React.createElement('input', { value: uploadForm.subject, onChange: e => setUploadForm(f => ({ ...f, subject: e.target.value })), placeholder: 'e.g. Mathematics, History…' })
-              )
+            !uploading && React.createElement('input', {
+              type: 'file', accept: '*/*',
+              style: { position: 'absolute', inset: 0, opacity: 0, cursor: 'pointer' },
+              onChange: e => e.target.files[0] && uploadFile(e.target.files[0])
+            })
+          ),
+          React.createElement('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 10 } },
+            React.createElement('div', { className: 'cm2-form-group', style: { marginBottom: 0 } },
+              React.createElement('label', null, 'Custom Title (optional)'),
+              React.createElement('input', { value: uploadForm.title, onChange: e => setUploadForm(f => ({ ...f, title: e.target.value })), placeholder: 'e.g. Chapter 5 Notes…' })
             ),
-            React.createElement('div', { className: 'form-group', style: { marginBottom: 10 } },
-              React.createElement('label', null, 'Description (leave blank for AI auto-generate)'),
-              React.createElement('textarea', { rows: 3, value: uploadForm.description, onChange: e => setUploadForm(f => ({ ...f, description: e.target.value })), placeholder: 'Brief description for students… or leave blank for AI ✨' })
-            ),
-            React.createElement('div', { style: { display: 'flex', alignItems: 'center', gap: 12, marginTop: 8 } },
-              React.createElement('label', { style: { display: 'flex', alignItems: 'center', gap: 7, cursor: 'pointer', fontSize: '0.85rem' } },
-                React.createElement('input', { type: 'checkbox', checked: uploadForm.pinned, onChange: e => setUploadForm(f => ({ ...f, pinned: e.target.checked })), style: { width: 15, height: 15, accentColor: 'var(--accent)' } }),
-                '📌 Pin to top'
-              )
+            React.createElement('div', { className: 'cm2-form-group', style: { marginBottom: 0 } },
+              React.createElement('label', null, 'Subject / Topic'),
+              React.createElement('input', { value: uploadForm.subject, onChange: e => setUploadForm(f => ({ ...f, subject: e.target.value })), placeholder: 'e.g. Mathematics…' })
+            )
+          ),
+          React.createElement('div', { className: 'cm2-form-group' },
+            React.createElement('label', null, 'Description (leave blank for AI auto-generate)'),
+            React.createElement('textarea', { rows: 3, value: uploadForm.description, onChange: e => setUploadForm(f => ({ ...f, description: e.target.value })), placeholder: 'Brief description for students… or leave blank for AI ✨' })
+          ),
+          React.createElement('div', { style: { display: 'flex', alignItems: 'center', gap: 12, marginTop: 8 } },
+            React.createElement('label', { style: { display: 'flex', alignItems: 'center', gap: 7, cursor: 'pointer', fontSize: '0.85rem' } },
+              React.createElement('input', { type: 'checkbox', checked: uploadForm.pinned, onChange: e => setUploadForm(f => ({ ...f, pinned: e.target.checked })), style: { width: 15, height: 15, accentColor: 'var(--cm2-purple)' } }),
+              '📌 Pin to top'
+            )
+          ),
+          React.createElement('div', { style: { marginTop: 16 } },
+            React.createElement('div', { style: { fontSize: '0.82rem', fontWeight: 700, color: 'var(--cm2-text2)', marginBottom: 8 } }, '🔗 Or add a link:'),
+            React.createElement('div', { className: 'cm2-link-bar' },
+              React.createElement('input', { placeholder: 'Link title…', value: linkTitle, onChange: e => setLinkTitle(e.target.value), style: { minWidth: 0 } }),
+              React.createElement('input', { placeholder: 'https://…', value: linkUrl, onChange: e => setLinkUrl(e.target.value), style: { minWidth: 0, flex: 2 } }),
+              React.createElement('button', { className: 'cm2-add-link-btn', onClick: addLink }, '+ Add')
             )
           )
+        )
+      ),
+      React.createElement('div', null,
+        React.createElement('div', { className: 'cm2-upload-card' },
+          React.createElement('div', { className: 'cm2-upload-card-title' }, '✨ AI Description Preview'),
+          aiLoading
+            ? React.createElement('div', { style: { display: 'flex', alignItems: 'center', gap: 10, padding: 20, color: 'var(--cm2-text2)' } },
+                React.createElement('div', { className: 'ch-ai-spinner' }),
+                React.createElement('span', null, 'Generating AI description…')
+              )
+            : aiDesc
+            ? React.createElement('div', null,
+                React.createElement('div', { className: 'cm2-form-group' },
+                  React.createElement('label', null, 'AI Title'),
+                  React.createElement('input', { value: aiDesc.title || '', onChange: e => setAiDesc(d => ({ ...d, title: e.target.value })) })
+                ),
+                React.createElement('div', { className: 'cm2-form-group' },
+                  React.createElement('label', null, 'AI Description'),
+                  React.createElement('textarea', { rows: 3, value: aiDesc.description || '', onChange: e => setAiDesc(d => ({ ...d, description: e.target.value })) })
+                ),
+                React.createElement('div', { className: 'ch-ai-desc-box' },
+                  React.createElement('div', { className: 'ch-ai-label' }, '🎯 Learning Objective'),
+                  React.createElement('div', { className: 'ch-ai-text' }, aiDesc.objective)
+                ),
+                React.createElement('div', { style: { marginTop: 10, fontSize: '0.78rem', color: 'var(--cm2-text2)' } }, '✏️ You can edit these before publishing')
+              )
+            : React.createElement('div', { className: 'cm2-empty', style: { padding: '40px 20px' } },
+                React.createElement('div', { className: 'cm2-empty-icon' }, '✨'),
+                React.createElement('div', { className: 'cm2-empty-title', style: { fontSize: '0.9rem' } }, 'AI Auto-Description'),
+                React.createElement('div', { className: 'cm2-empty-sub' }, 'Upload a file and if you leave the description blank, AI will automatically generate a smart educational summary.')
+              )
+        )
+      )
+    )
+  );
+
+  // ── Content row renderer ──
+  function renderContentRow(f, i) {
+    const type = chGetType(f);
+    const sc   = f.session_code || sessionCode || '';
+    const enc  = encodeURIComponent(f.name || '');
+    const fileUrl = f.url || (f.name ? `${API}/api/content/file/${encodeURIComponent(sc)}/${enc}` : null);
+    const downloadUrl = f.url || (f.name ? `${API}/api/content/download/${encodeURIComponent(sc)}/${enc}` : null);
+    const isSelected = previewItem?.name === f.name;
+    const isMenuOpen = openMenuIdx === i;
+
+    return React.createElement('div', {
+      key: i,
+      className: `cm2-content-row ${isSelected ? 'selected' : ''}`,
+      onClick: () => { setPreviewItem(f); setShowFullDesc(false); }
+    },
+      // Thumbnail
+      React.createElement('div', { className: 'cm2-row-thumb' },
+        type === 'image' && fileUrl
+          ? React.createElement('img', { src: fileUrl, alt: f.name, onError: e => { e.target.style.display='none'; } })
+          : React.createElement('span', null, chTypeIcon(type))
+      ),
+      // Info
+      React.createElement('div', { className: 'cm2-row-info' },
+        React.createElement('div', { className: 'cm2-row-title-row' },
+          React.createElement('div', { className: 'cm2-row-title' }, f.title || f.name || 'Untitled'),
+          f.ai_generated && React.createElement('span', { className: 'cm2-ai-badge' }, '✨ AI Enhanced')
         ),
-        // AI description result panel
-        React.createElement('div', null,
-          React.createElement('div', { className: 'ch-form-panel', style: { height: '100%' } },
-            React.createElement('div', { className: 'ch-form-title' }, '✨ AI Description Preview'),
-            aiLoading
-              ? React.createElement('div', { style: { display: 'flex', alignItems: 'center', gap: 10, padding: 20, color: 'var(--text2)' } },
-                  React.createElement('div', { className: 'ch-ai-spinner' }),
-                  React.createElement('span', null, 'Generating AI description…')
-                )
-              : aiDesc
-              ? React.createElement('div', null,
-                  React.createElement('div', { className: 'form-group', style: { marginBottom: 10 } },
-                    React.createElement('label', null, 'AI Title'),
-                    React.createElement('input', { value: aiDesc.title || '', onChange: e => setAiDesc(d => ({ ...d, title: e.target.value })) })
-                  ),
-                  React.createElement('div', { className: 'form-group', style: { marginBottom: 10 } },
-                    React.createElement('label', null, 'AI Description'),
-                    React.createElement('textarea', { rows: 3, value: aiDesc.description || '', onChange: e => setAiDesc(d => ({ ...d, description: e.target.value })) })
-                  ),
-                  React.createElement('div', { className: 'ch-ai-desc-box' },
-                    React.createElement('div', { className: 'ch-ai-label' }, '🎯 Learning Objective'),
-                    React.createElement('div', { className: 'ch-ai-text' }, aiDesc.objective)
-                  ),
-                  React.createElement('div', { style: { marginTop: 10, fontSize: '0.78rem', color: 'var(--text3)' } }, '✏️ You can edit these before publishing')
-                )
-              : React.createElement('div', { className: 'ch-empty' },
-                  React.createElement('div', { className: 'ch-empty-icon' }, '✨'),
-                  React.createElement('div', { className: 'ch-empty-title', style: { fontSize: '0.9rem' } }, 'AI Auto-Description'),
-                  React.createElement('div', { className: 'ch-empty-sub' }, 'Upload a file and if you leave the description blank, AI will automatically generate a smart educational summary.')
-                )
+        React.createElement('div', { className: 'cm2-row-desc' }, f.description || 'No description available.'),
+        React.createElement('div', { className: 'cm2-row-tags' },
+          React.createElement('span', { className: cm2TagClass(type) }, type.charAt(0).toUpperCase() + type.slice(1)),
+          f.subject && React.createElement('span', { className: 'cm2-tag cm2-tag-subject' }, f.subject),
+          f.pinned && React.createElement('span', { className: 'cm2-tag', style: { background: 'rgba(234,179,8,0.12)', color: '#fbbf24', borderColor: 'rgba(234,179,8,0.2)' } }, '📌 Pinned')
+        )
+      ),
+      // Meta
+      React.createElement('div', { className: 'cm2-row-meta' },
+        React.createElement('div', { className: 'cm2-row-date' }, chFmtDate(f.uploaded_at) || 'Recently'),
+        React.createElement('div', { className: f.draft ? 'cm2-row-status-draft' : 'cm2-row-status-published' }, f.draft ? 'Draft' : 'Published'),
+        React.createElement('div', { className: 'cm2-row-counts' },
+          React.createElement('span', { className: 'cm2-row-count' }, '👁 ', f.views || 0),
+          React.createElement('span', { className: 'cm2-row-count' }, '💬 ', f.comments || 0)
+        )
+      ),
+      // Action menu
+      React.createElement('div', {
+        className: 'cm2-action-menu',
+        onClick: e => e.stopPropagation()
+      },
+        React.createElement('button', {
+          className: 'cm2-row-menu-btn',
+          onClick: e => { e.stopPropagation(); setOpenMenuIdx(isMenuOpen ? null : i); }
+        }, '⋮'),
+        isMenuOpen && React.createElement('div', { className: 'cm2-action-dropdown' },
+          React.createElement('button', { className: 'cm2-action-item', onClick: () => { setPreviewItem(f); setOpenMenuIdx(null); } }, '👁 Preview'),
+          downloadUrl && type !== 'link' && React.createElement('a', {
+            href: downloadUrl, download: f.name,
+            className: 'cm2-action-item', style: { textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 8 },
+            onClick: () => setOpenMenuIdx(null)
+          }, '⬇ Download'),
+          React.createElement('button', { className: 'cm2-action-item', onClick: () => { togglePin(f); setOpenMenuIdx(null); } }, f.pinned ? '📍 Unpin' : '📌 Pin to top'),
+          React.createElement('div', { className: 'cm2-action-divider' }),
+          React.createElement('button', { className: 'cm2-action-item danger', onClick: () => { deleteFile(f); setOpenMenuIdx(null); } }, '🗑 Delete')
+        )
+      )
+    );
+  }
+
+  // ── Right preview panel ──
+  function renderPreviewPanel() {
+    if (!previewItem) {
+      return React.createElement('div', { className: 'cm2-preview-empty' },
+        React.createElement('div', { className: 'cm2-preview-empty-icon' }, '📄'),
+        React.createElement('div', { className: 'cm2-preview-empty-text' }, 'Select an item to preview'),
+        React.createElement('div', { style: { fontSize: '0.78rem', color: 'var(--cm2-text3)', marginTop: 6 } }, 'Click any content row to see details here')
+      );
+    }
+
+    const f = previewItem;
+    const type = chGetType(f);
+    const sc   = f.session_code || sessionCode || '';
+    const enc  = encodeURIComponent(f.name || '');
+    const fileUrl = f.url || (f.name ? `${API}/api/content/file/${encodeURIComponent(sc)}/${enc}` : null);
+    const downloadUrl = f.url || (f.name ? `${API}/api/content/download/${encodeURIComponent(sc)}/${enc}` : null);
+    const bgColors = { image: 'linear-gradient(135deg,#f97316,#c2410c)', pdf: 'linear-gradient(135deg,#6366f1,#4338ca)', video: 'linear-gradient(135deg,#8b5cf6,#7c3aed)', link: 'linear-gradient(135deg,#06b6d4,#0891b2)', note: 'linear-gradient(135deg,#22c55e,#16a34a)', presentation: 'linear-gradient(135deg,#ec4899,#be185d)', assignment: 'linear-gradient(135deg,#f97316,#ea580c)' };
+    const bgColor = bgColors[type] || bgColors.note;
+    const desc = f.description || '';
+    const isLong = desc.length > 130;
+    const descDisplay = isLong && !showFullDesc ? desc.slice(0, 130) + '…' : desc;
+
+    return React.createElement('div', null,
+      // Preview image area
+      React.createElement('div', { className: 'cm2-preview-img-wrap', style: { background: bgColor } },
+        type === 'image' && fileUrl
+          ? React.createElement('img', { className: 'cm2-preview-img', src: fileUrl, alt: f.name, onError: e => { e.target.style.display='none'; } })
+          : React.createElement('div', { className: 'cm2-preview-img-overlay' }, chTypeIcon(type)),
+        React.createElement('button', { className: 'cm2-preview-btn-overlay', onClick: () => setPreviewItem(null) }, '🔍 Preview'),
+        React.createElement('button', { className: 'cm2-preview-expand-btn', onClick: () => setPreviewItem(f) }, '⛶')
+      ),
+      // Body
+      React.createElement('div', { className: 'cm2-preview-body' },
+        React.createElement('div', { className: 'cm2-preview-title-row' },
+          React.createElement('div', { className: 'cm2-preview-title' }, f.title || f.name || 'Untitled'),
+          f.ai_generated && React.createElement('span', { className: 'cm2-ai-badge' }, '✨ AI Enhanced')
+        ),
+        React.createElement('div', { className: 'cm2-preview-tags' },
+          React.createElement('span', { className: cm2TagClass(type) }, type.charAt(0).toUpperCase() + type.slice(1)),
+          f.subject && React.createElement('span', { className: 'cm2-tag cm2-tag-subject' }, f.subject),
+          React.createElement('button', { className: 'cm2-add-tag-btn' }, '+ Add Tag')
+        ),
+        desc
+          ? React.createElement('div', { className: 'cm2-preview-desc' },
+              descDisplay,
+              isLong && React.createElement('span', { className: 'cm2-show-more', onClick: e => { e.stopPropagation(); setShowFullDesc(v => !v); } },
+                showFullDesc ? ' Show less' : ' Show more'
+              )
+            )
+          : React.createElement('div', { className: 'cm2-preview-desc', style: { color: 'var(--cm2-text3)', fontStyle: 'italic' } }, 'No description available.')
+      ),
+      // Details
+      React.createElement('div', { className: 'cm2-details-section' },
+        React.createElement('div', { className: 'cm2-details-title' }, 'Details'),
+        [
+          { label: 'Created', val: chFmtDate(f.uploaded_at) || '–' },
+          { label: 'Updated', val: chFmtDate(f.uploaded_at) || '–' },
+          { label: 'File Size', val: chFmtSize(f.size) || '–' },
+          { label: 'Format', val: (f.content_type || type).toUpperCase() }
+        ].map((row, ri) => React.createElement('div', { key: ri, className: 'cm2-detail-row' },
+          React.createElement('div', { className: 'cm2-detail-label' },
+            React.createElement('div', { className: 'cm2-detail-label-icon' }),
+            row.label
+          ),
+          React.createElement('div', { className: 'cm2-detail-val' }, row.val)
+        )),
+        React.createElement('div', { className: 'cm2-detail-row' },
+          React.createElement('div', { className: 'cm2-detail-label' },
+            React.createElement('div', { className: 'cm2-detail-label-icon' }),
+            'Uploaded by'
+          ),
+          React.createElement('div', { className: 'cm2-detail-uploader' },
+            React.createElement('div', { className: 'cm2-uploader-av' }, (displayName || 'T')[0].toUpperCase()),
+            React.createElement('span', null, displayName || 'Teacher')
           )
         )
-      )
-    ),
-
-
-
-    // ── PREVIEW MODE TAB ──
-    tab === 'preview' && React.createElement('div', { className: 'ch-body' },
-      React.createElement('div', { className: 'ch-preview-mode-bar' },
-        React.createElement('span', { style: { fontSize: '0.82rem', fontWeight: 600, marginRight: 8, color: 'var(--text2)' } }, '👁 Student Preview:'),
-        ['desktop', 'tablet', 'mobile'].map(d => React.createElement('button', {
-          key: d,
-          className: `ch-preview-device-btn ${previewDevice === d ? 'active' : ''}`,
-          onClick: () => setPreviewDevice(d)
-        }, d === 'desktop' ? '🖥 Desktop' : d === 'tablet' ? '📱 Tablet' : '📱 Mobile'))
       ),
-      React.createElement('div', { style: { fontWeight: 600, fontSize: '0.85rem', color: 'var(--text2)', marginBottom: 12 } }, 'Sample card as students will see it:'),
-      previewCard,
-      files.length > 0 && React.createElement('div', { style: { marginTop: 24 } },
-        React.createElement('div', { style: { fontWeight: 600, fontSize: '0.85rem', color: 'var(--text2)', marginBottom: 12 } }, 'Your published content (' + files.length + ' items):'),
-        React.createElement('div', {
-          className: 'ch-grid',
-          style: previewDevice === 'mobile' ? { gridTemplateColumns: '1fr' } : previewDevice === 'tablet' ? { gridTemplateColumns: 'repeat(2, 1fr)' } : {}
-        },
-          files.slice(0, 6).map((f, i) => {
-            const type = chGetType(f);
-            const fileUrl = f.url || (f.name ? `${API}/api/content/file/${encodeURIComponent(sessionCode)}/${encodeURIComponent(f.name)}` : null);
-            return React.createElement('div', { key: i, className: 'ch-card', style: { cursor: 'default' } },
-              React.createElement('div', { className: 'ch-card-thumb' },
-                type === 'image' && fileUrl
-                  ? React.createElement('img', { src: fileUrl, className: 'ch-card-thumb-img', alt: f.name })
-                  : React.createElement('span', null, chTypeIcon(type))
-              ),
-              React.createElement('div', { className: 'ch-card-body' },
-                React.createElement('div', { className: 'ch-card-badges' },
-                  React.createElement('span', { className: chTypeBadgeClass(type) }, type.toUpperCase()),
-                  f.ai_generated && React.createElement('span', { className: 'ch-type-badge ch-badge-ai' }, '✨ AI')
-                ),
-                React.createElement('div', { className: 'ch-card-title' }, f.title || f.name),
-                React.createElement('div', { className: 'ch-card-desc' }, f.description || 'No description')
-              )
-            );
-          })
-        )
+      // Action buttons
+      React.createElement('div', { className: 'cm2-preview-actions' },
+        React.createElement('button', { className: 'cm2-edit-btn', onClick: () => setTab('upload') },
+          '✏️ Edit Content'
+        ),
+        React.createElement('button', { className: 'cm2-action-icon-btn', title: 'Duplicate', onClick: () => add('Duplicate coming soon', 'info') }, '⧉'),
+        downloadUrl && type !== 'link' && React.createElement('a', {
+          href: downloadUrl, download: f.name,
+          className: 'cm2-action-icon-btn', style: { textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center' },
+          title: 'Download'
+        }, '⬇'),
+        React.createElement('button', { className: 'cm2-action-icon-btn del', title: 'Delete', onClick: () => deleteFile(f) }, '🗑')
       )
-    ),
+    );
+  }
 
-    // ── MANAGE TAB ──
-    tab === 'manage' && React.createElement('div', null,
-      // Search/filter toolbar
-      React.createElement('div', { className: 'ch-toolbar' },
-        React.createElement('div', { className: 'ch-search-wrap' },
-          React.createElement('span', { className: 'ch-search-icon' }, '🔍'),
+  return React.createElement('div', { className: 'cm2-wrap' },
+
+    // ── Top Header ──
+    React.createElement('div', { className: 'cm2-header' },
+      React.createElement('div', { className: 'cm2-header-left' },
+        React.createElement('div', { className: 'cm2-welcome-title' },
+          'Welcome back, ', tName, '! ',
+          React.createElement('span', { className: 'cm2-wave' }, '👋')
+        ),
+        React.createElement('div', { className: 'cm2-welcome-sub' },
+          'Manage, organize and share engaging learning content with your students.'
+        )
+      ),
+      React.createElement('div', { className: 'cm2-header-center' },
+        React.createElement('div', { className: 'cm2-search-wrap' },
+          React.createElement('span', { className: 'cm2-search-icon' }, '🔍'),
           React.createElement('input', {
-            className: 'ch-search', value: searchQ,
-            onChange: e => setSearchQ(e.target.value), placeholder: 'Search content…'
-          })
-        ),
-        React.createElement('select', {
-          className: 'ch-filter-select', value: filterType,
-          onChange: e => setFilterType(e.target.value)
-        },
-          CH_CATEGORIES.map(c => React.createElement('option', { key: c.id, value: c.id }, c.icon + ' ' + c.label))
-        ),
-        React.createElement('button', { className: 'btn btn-primary btn-sm', onClick: () => setTab('upload') }, '⬆ Upload'),
-        React.createElement('button', { className: 'btn btn-ghost btn-sm', onClick: loadFiles }, '↺ Refresh')
+            className: 'cm2-search-input',
+            placeholder: 'Search content, topics…',
+            value: searchQ,
+            onChange: e => setSearchQ(e.target.value)
+          }),
+          React.createElement('span', { className: 'cm2-search-kbd' }, '⌘K')
+        )
       ),
-
-      React.createElement('div', { className: 'ch-body' },
-        loading
-          ? React.createElement(PencilLoader, { text: 'Loading content…' })
-          : files.length === 0
-          ? React.createElement('div', { className: 'ch-empty' },
-              React.createElement('div', { className: 'ch-empty-icon' }, '📚'),
-              React.createElement('div', { className: 'ch-empty-title' }, 'No content yet'),
-              React.createElement('div', { className: 'ch-empty-sub' }, 'Upload files, add links, or create notes. Students will see everything in a beautiful learning hub.'),
-              React.createElement('button', { className: 'btn btn-primary', style: { marginTop: 8 }, onClick: () => setTab('upload') }, '⬆ Upload First File')
-            )
-          : React.createElement('div', null,
-              // Pinned section
-              pinnedFiles.length > 0 && React.createElement('div', { style: { marginBottom: 24 } },
-                React.createElement('div', { className: 'ch-section-hd' },
-                  React.createElement('div', { className: 'ch-section-title' }, '📌 Pinned Content'),
-                  React.createElement('div', { className: 'ch-section-sub' }, pinnedFiles.length + ' item' + (pinnedFiles.length !== 1 ? 's' : ''))
-                ),
-                pinnedFiles.map((f, i) => React.createElement(ChManagerRow, { key: i, item: f, onPin: togglePin, onDelete: deleteFile, onPreview: setPreviewItem, teacherName: 'You' }))
-              ),
-              // All files
-              React.createElement('div', { className: 'ch-section-hd' },
-                React.createElement('div', { className: 'ch-section-title' }, '📂 All Content'),
-                React.createElement('div', { className: 'ch-section-sub' }, regularFiles.length + ' item' + (regularFiles.length !== 1 ? 's' : ''))
-              ),
-              regularFiles.length === 0 && pinnedFiles.length > 0
-                ? React.createElement('div', { style: { color: 'var(--text3)', fontSize: '0.85rem', padding: 16 } }, 'All content is pinned above.')
-                : regularFiles.length === 0
-                ? React.createElement('div', { style: { color: 'var(--text3)', fontSize: '0.85rem', padding: 16 } }, 'No results for your search.')
-                : regularFiles.map((f, i) => React.createElement(ChManagerRow, { key: i, item: f, onPin: togglePin, onDelete: deleteFile, onPreview: setPreviewItem, teacherName: 'You' }))
-            )
+      React.createElement('div', { className: 'cm2-header-right' },
+        React.createElement('div', { className: 'cm2-icon-btn' },
+          '🔔',
+          React.createElement('div', { className: 'cm2-notif-dot' }, '9')
+        ),
+        React.createElement('button', { className: 'cm2-icon-btn' }, '⚙️'),
+        React.createElement('button', { className: 'cm2-create-btn', onClick: () => setTab('upload') },
+          React.createElement('span', { className: 'cm2-create-plus' }, '+'),
+          'Create Content',
+          React.createElement('span', null, '▾')
+        )
       )
     ),
 
-    // ── Preview Modal ──
-    previewItem && React.createElement(ChPreviewModal, { item: previewItem, teacherName: 'You', onClose: () => setPreviewItem(null) })
+    // ── Stats Row ──
+    React.createElement('div', { className: 'cm2-stats-row' },
+      React.createElement('div', { className: 'cm2-stat-card' },
+        React.createElement('div', { className: 'cm2-stat-icon', style: { background: 'rgba(99,102,241,0.15)', color: '#6366f1', fontSize: '1.4rem', display:'flex', alignItems:'center', justifyContent:'center' } }, '📁'),
+        React.createElement('div', { className: 'cm2-stat-body' },
+          React.createElement('div', { className: 'cm2-stat-label' }, 'Total Resources'),
+          React.createElement('div', { className: 'cm2-stat-value' }, totalFiles),
+          React.createElement('div', { className: 'cm2-stat-sub' }, '↑ 12 this week')
+        )
+      ),
+      React.createElement('div', { className: 'cm2-stat-card' },
+        React.createElement('div', { className: 'cm2-stat-icon', style: { background: 'rgba(34,197,94,0.15)', color: '#22c55e', fontSize: '1.4rem', display:'flex', alignItems:'center', justifyContent:'center' } }, '✅'),
+        React.createElement('div', { className: 'cm2-stat-body' },
+          React.createElement('div', { className: 'cm2-stat-label' }, 'Published'),
+          React.createElement('div', { className: 'cm2-stat-value' }, publishedCount),
+          React.createElement('div', { className: 'cm2-stat-sub' }, '↑ 8 this week')
+        )
+      ),
+      React.createElement('div', { className: 'cm2-stat-card' },
+        React.createElement('div', { className: 'cm2-stat-icon', style: { background: 'rgba(249,115,22,0.15)', color: '#f97316', fontSize: '1.4rem', display:'flex', alignItems:'center', justifyContent:'center' } }, '📄'),
+        React.createElement('div', { className: 'cm2-stat-body' },
+          React.createElement('div', { className: 'cm2-stat-label' }, 'Drafts'),
+          React.createElement('div', { className: 'cm2-stat-value' }, draftCount),
+          React.createElement('div', { className: 'cm2-stat-sub' }, '↑ 2 this week')
+        )
+      ),
+      React.createElement('div', { className: 'cm2-stat-card' },
+        React.createElement('div', { className: 'cm2-stat-icon', style: { background: 'rgba(6,182,212,0.15)', color: '#06b6d4', fontSize: '1.4rem', display:'flex', alignItems:'center', justifyContent:'center' } }, '👁'),
+        React.createElement('div', { className: 'cm2-stat-body' },
+          React.createElement('div', { className: 'cm2-stat-label' }, 'Views'),
+          React.createElement('div', { className: 'cm2-stat-value' }, viewsTotal === 0 ? '–' : viewsTotal),
+          React.createElement('div', { className: 'cm2-stat-sub' }, '↑ 18% this week')
+        )
+      )
+    ),
+
+    // ── Category Tabs ──
+    React.createElement('div', { className: 'cm2-tabs-bar' },
+      CH_CATEGORIES.map(c => React.createElement('button', {
+        key: c.id,
+        className: `cm2-tab-btn ${filterType === c.id ? 'active' : ''}`,
+        onClick: () => { setFilterType(c.id); setTab('manage'); }
+      },
+        filterType === c.id && React.createElement('span', { className: 'cm2-tab-dot' }),
+        c.icon, ' ', c.label
+      )),
+      React.createElement('button', { className: 'cm2-tab-btn', style: { color: 'var(--cm2-text3)' } }, '+')
+    ),
+
+    // ── Tab: Upload ──
+    tab === 'upload' && uploadTabContent,
+
+    // ── Tab: Manage (default) ──
+    tab !== 'upload' && React.createElement('div', null,
+      // Filter bar
+      React.createElement('div', { className: 'cm2-filter-bar' },
+        React.createElement('div', { className: 'cm2-filter-search' },
+          React.createElement('span', { style: { fontSize: '0.85rem' } }, '🔍'),
+          React.createElement('input', {
+            placeholder: 'Search resources, topics, tags…',
+            value: searchQ,
+            onChange: e => setSearchQ(e.target.value)
+          })
+        ),
+        React.createElement('select', { className: 'cm2-dropdown' },
+          React.createElement('option', null, '↕ Newest First'),
+          React.createElement('option', null, '↕ Oldest First'),
+          React.createElement('option', null, '↕ By Type')
+        ),
+        React.createElement('select', { className: 'cm2-dropdown' },
+          React.createElement('option', null, '🏫 All Classes')
+        ),
+        React.createElement('select', { className: 'cm2-dropdown' },
+          React.createElement('option', null, '📚 All Topics')
+        ),
+        React.createElement('button', { className: 'cm2-filter-btn' }, '⚙ Filter'),
+        React.createElement('button', { className: 'cm2-filter-btn', style: { background: 'linear-gradient(135deg,var(--cm2-purple),var(--cm2-purple2))', color:'#fff', border: 'none' }, onClick: () => setTab('upload') }, '⬆ Upload'),
+        React.createElement('button', { className: 'cm2-filter-btn', onClick: loadFiles }, '↺ Refresh')
+      ),
+
+      // Main 2-col: list + preview
+      React.createElement('div', { className: 'cm2-main-area' },
+        // Content list
+        React.createElement('div', { className: 'cm2-content-list' },
+          loading
+            ? React.createElement(PencilLoader, { text: 'Loading content…' })
+            : filtered.length === 0
+            ? React.createElement('div', { className: 'cm2-empty' },
+                React.createElement('div', { className: 'cm2-empty-icon' }, '📚'),
+                React.createElement('div', { className: 'cm2-empty-title' }, files.length === 0 ? 'No content yet' : 'No results'),
+                React.createElement('div', { className: 'cm2-empty-sub' }, files.length === 0
+                  ? 'Upload files, add links, or create notes. Students will see everything in a beautiful learning hub.'
+                  : 'Try a different search or filter.'),
+                files.length === 0 && React.createElement('button', { className: 'cm2-create-btn', style: { marginTop: 8 }, onClick: () => setTab('upload') }, '⬆ Upload First File')
+              )
+            : filtered.map((f, i) => renderContentRow(f, i))
+        ),
+
+        // Preview panel (sticky right)
+        React.createElement('div', { className: 'cm2-preview-panel' },
+          renderPreviewPanel()
+        )
+      )
+    ),
+
+    // ── Full preview modal ──
+    previewItem && tab === 'upload' && React.createElement(ChPreviewModal, {
+      item: previewItem,
+      teacherName: displayName,
+      onClose: () => setPreviewItem(null)
+    })
   );
 }
 

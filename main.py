@@ -1046,11 +1046,28 @@ class SendMessageReq(BaseModel):
     content:      str
     chat_type:    str = "global"
     target_id:    Optional[str] = None
+    # ── Reply threading (Feature 1) ───────────────────────────────────
+    reply_to_message_id: Optional[str] = None
+    reply_preview:       Optional[str] = None   # excerpt for the reply preview
+    # ── Message type (Feature 5 & 6) ─────────────────────────────────
+    msg_type:  Optional[str] = "text"   # text | file | image | system
+    file_info: Optional[dict] = None    # {id, name, content_type, size} for file msgs
 
 class SubmitDoubtReq(BaseModel):
     session_code: str
     student_id:   str
     doubt_text:   str
+
+# ── Chat moderation / reaction models (Features 1-3, 7) ─────────────
+class ChatReactionReq(BaseModel):
+    session_code: str
+    message_id:   str
+    emoji:        str
+    user_id:      str   # sender_id of the reactor
+
+class SuspendChatReq(BaseModel):
+    session_code: str
+    student_id:   str
 
 class ResolveDoubtReq(BaseModel):
     session_code: str
@@ -1163,13 +1180,49 @@ async def session_timer_watcher():
                 started_at = s.get("started_at")
                 if duration_mins > 0 and started_at:
                     elapsed = now() - started_at
+                    remaining_secs = duration_mins * 60 - elapsed
+
+                    # ── Class-end warning notifications (Feature 4) ────────
+                    flags = s.setdefault("class_end_warning_flags", {})
+                    for warn_mins, flag_key in [(10, "10"), (5, "5"), (2, "2")]:
+                        warn_secs = warn_mins * 60
+                        if (remaining_secs <= warn_secs and
+                                remaining_secs > warn_secs - 15 and
+                                not flags.get(flag_key)):
+                            flags[flag_key] = True
+                            warn_msg = {
+                                "id":          gen_id("m"),
+                                "sender_id":   "system",
+                                "sender_name": "System",
+                                "content":     f"⏰ Class ends in {warn_mins} minute{'s' if warn_mins > 1 else ''}!",
+                                "chat_type":   "global",
+                                "target_id":   None,
+                                "timestamp":   now(),
+                                "msg_type":    "system",
+                                "reactions":   {},
+                                "reply_to_message_id": None,
+                                "reply_preview":       None,
+                                "file_info":   None,
+                            }
+                            s["chat_messages"].append(warn_msg)
+                            try:
+                                await ws_broadcast(s, {
+                                    "type":          "class_end_warning",
+                                    "minutes_left":  warn_mins,
+                                    "message":       warn_msg["content"],
+                                    "chat_message":  warn_msg,
+                                })
+                                log.info("[SESSION TIMER] Class-end warning (%d min) sent for session %s", warn_mins, s["code"])
+                            except Exception as e:
+                                log.warning("[SESSION TIMER] Warning broadcast error: %s", e)
+
                     if elapsed >= duration_mins * 60:
                         log.info("[SESSION TIMER] Auto-ending session %s after %d mins", s["code"], duration_mins)
                         try:
                             await end_session_automatically(s)
                         except Exception as e:
                             log.error("[SESSION TIMER] Error ending session %s automatically: %s", s["code"], e, exc_info=True)
-            
+
             # Safeguard: prevent sessions from running indefinitely
             # If a session is not ended and has been created for more than 12 hours, force end it.
             created_at = s.get("created_at", 0)
@@ -3499,13 +3552,26 @@ async def coding_analytics(code: str):
 async def send_message(req: SendMessageReq):
     s    = _S(req.session_code)
 
-    # Block student messages if chat is disabled (teachers can always send)
+    # Determine if sender is teacher
     is_teacher_sender = req.sender_id == "teacher" or req.sender_id not in s.get("students", {})
+
+    # ── Chat disabled check ───────────────────────────────────────────
     if not is_teacher_sender and not s.get("chat_enabled", True):
         raise HTTPException(403, "Chat is currently disabled by the teacher")
 
+    # ── Suspension check (Feature 3 & 7) ─────────────────────────────
+    suspended_set = s.setdefault("suspended_chat_students", set())
+    if not is_teacher_sender and req.sender_id in suspended_set:
+        raise HTTPException(403, "You are suspended from classroom chat")
+
     st   = s["students"].get(req.sender_id)
     name = st["name"] if st else "Teacher"
+
+    # ── Validate emoji / allowed types ───────────────────────────────
+    allowed_msg_types = {"text", "file", "image", "system"}
+    msg_type = (req.msg_type or "text").lower()
+    if msg_type not in allowed_msg_types:
+        msg_type = "text"
 
     msg = {
         "id":          gen_id("m"),
@@ -3515,6 +3581,14 @@ async def send_message(req: SendMessageReq):
         "chat_type":   req.chat_type,
         "target_id":   req.target_id,
         "timestamp":   now(),
+        # ── Extended fields ──────────────────────────────────────────
+        "msg_type":    msg_type,
+        "reactions":   {},   # emoji -> [user_id, ...]
+        # ── Reply threading ──────────────────────────────────────────
+        "reply_to_message_id": req.reply_to_message_id or None,
+        "reply_preview":       req.reply_preview or None,
+        # ── File attachment ──────────────────────────────────────────
+        "file_info":   req.file_info or None,
     }
     s["chat_messages"].append(msg)
     payload = {"type": "chat_message", "message": msg}
@@ -3543,6 +3617,246 @@ def get_chat(code: str, chat_type: str = Query("global"), limit: int = Query(200
     s    = _S(code)
     msgs = [m for m in s["chat_messages"] if m["chat_type"] == chat_type]
     return {"messages": msgs[-limit:]}
+
+
+# ══════════════════════════════════════════════════════════════════
+#  CHAT REACTIONS  (Feature 2)
+# ══════════════════════════════════════════════════════════════════
+
+ALLOWED_EMOJIS = {"👍", "❤️", "😂", "😮", "🔥", "👏"}
+
+@app.post("/api/chat/react")
+async def toggle_reaction(req: ChatReactionReq):
+    s = _S(req.session_code)
+    emoji = req.emoji
+    if emoji not in ALLOWED_EMOJIS:
+        raise HTTPException(400, "Invalid emoji")
+
+    msg = next((m for m in s["chat_messages"] if m.get("id") == req.message_id), None)
+    if not msg:
+        raise HTTPException(404, "Message not found")
+
+    msg.setdefault("reactions", {})
+    reactors: list = msg["reactions"].setdefault(emoji, [])
+    if req.user_id in reactors:
+        reactors.remove(req.user_id)
+    else:
+        reactors.append(req.user_id)
+
+    # Broadcast updated reactions to all clients
+    await ws_broadcast(s, {
+        "type":       "chat_reactions_update",
+        "message_id": req.message_id,
+        "reactions":  msg["reactions"],
+    })
+    save_session(req.session_code)
+    return {"message_id": req.message_id, "reactions": msg["reactions"]}
+
+
+# ══════════════════════════════════════════════════════════════════
+#  CHAT MODERATION  (Feature 3 & 7)
+# ══════════════════════════════════════════════════════════════════
+
+@app.post("/api/session/{code}/chat/suspend/{student_id}")
+async def suspend_student_chat(code: str, student_id: str):
+    s = _S(code)
+    student = s["students"].get(student_id)
+    if not student:
+        raise HTTPException(404, "Student not found")
+
+    s.setdefault("suspended_chat_students", set()).add(student_id)
+    save_session(code)
+
+    # Notify the suspended student
+    await ws_student(s, student_id, {
+        "type":    "chat_suspended",
+        "message": "You are temporarily suspended from classroom chat.",
+    })
+    # System message in chat
+    sys_msg = {
+        "id":          gen_id("m"),
+        "sender_id":   "system",
+        "sender_name": "System",
+        "content":     f"⚠️ {student.get('name', student_id)} has been suspended from chat.",
+        "chat_type":   "global",
+        "target_id":   None,
+        "timestamp":   now(),
+        "msg_type":    "system",
+        "reactions":   {},
+        "reply_to_message_id": None,
+        "reply_preview":       None,
+        "file_info":   None,
+    }
+    s["chat_messages"].append(sys_msg)
+    await ws_broadcast(s, {"type": "chat_message", "message": sys_msg})
+    await ws_teacher(s, {
+        "type":       "chat_suspension_update",
+        "student_id": student_id,
+        "suspended":  True,
+        "student_name": student.get("name", student_id),
+    })
+    log.info("[MODERATION] Student %s suspended from chat in session %s", student_id, code)
+    return {"suspended": True, "student_id": student_id}
+
+
+@app.post("/api/session/{code}/chat/unsuspend/{student_id}")
+async def unsuspend_student_chat(code: str, student_id: str):
+    s = _S(code)
+    student = s["students"].get(student_id)
+    if not student:
+        raise HTTPException(404, "Student not found")
+
+    s.setdefault("suspended_chat_students", set()).discard(student_id)
+    save_session(code)
+
+    await ws_student(s, student_id, {
+        "type":    "chat_unsuspended",
+        "message": "Your chat access has been restored.",
+    })
+    await ws_teacher(s, {
+        "type":       "chat_suspension_update",
+        "student_id": student_id,
+        "suspended":  False,
+        "student_name": student.get("name", student_id),
+    })
+    log.info("[MODERATION] Student %s unsuspended from chat in session %s", student_id, code)
+    return {"suspended": False, "student_id": student_id}
+
+
+@app.get("/api/session/{code}/chat/suspended")
+def get_suspended_chat_students(code: str):
+    s = _S(code)
+    return {"suspended": list(s.get("suspended_chat_students", set()))}
+
+
+# ══════════════════════════════════════════════════════════════════
+#  CHAT MESSAGE DELETION  (Feature 5)
+# ══════════════════════════════════════════════════════════════════
+
+@app.delete("/api/session/{code}/chat/{msg_id}")
+async def delete_chat_message(code: str, msg_id: str):
+    s = _S(code)
+    msgs = s.get("chat_messages", [])
+    idx = next((i for i, m in enumerate(msgs) if m.get("id") == msg_id), None)
+    if idx is None:
+        raise HTTPException(404, "Message not found")
+
+    # Remove the message
+    s["chat_messages"].pop(idx)
+    save_session(code)
+
+    # Broadcast deletion event
+    await ws_broadcast(s, {
+        "type":       "chat_message_deleted",
+        "message_id": msg_id,
+    })
+    log.info("[CHAT] Message %s deleted from session %s", msg_id, code)
+    return {"deleted": True, "message_id": msg_id}
+
+
+# ══════════════════════════════════════════════════════════════════
+#  TEACHER FILE UPLOAD IN CHAT  (Feature 5)
+# ══════════════════════════════════════════════════════════════════
+
+CHAT_ALLOWED_CT = {
+    "application/pdf",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+    "text/plain",
+    "image/png", "image/jpeg", "image/jpg", "image/gif", "image/webp",
+}
+CHAT_IMG_MAX = 8 * 1024 * 1024    # 8 MB for images
+CHAT_DOC_MAX = 20 * 1024 * 1024   # 20 MB for documents
+
+@app.post("/api/session/{code}/chat/upload_file")
+async def upload_file_to_chat(
+    code:    str,
+    file:    UploadFile = File(...),
+):
+    s  = _S(code)
+    ct = _guess_ct(file.filename or "", file.content_type or "")
+
+    # Validate content type
+    if ct not in CHAT_ALLOWED_CT and not ct.startswith("image/"):
+        raise HTTPException(415, "Unsupported file type for chat. Allowed: PDF, DOCX, PPTX, TXT, Images.")
+
+    raw = await file.read()
+    is_image = ct.startswith("image/")
+
+    # Size validation
+    if is_image and len(raw) > CHAT_IMG_MAX:
+        raise HTTPException(413, f"Image too large (max 8 MB)")
+    if not is_image and len(raw) > CHAT_DOC_MAX:
+        raise HTTPException(413, f"Document too large (max 20 MB)")
+
+    # Store in content_files (reusing existing system)
+    fname   = file.filename or f"chat_file_{int(now())}"
+    file_id = gen_id("cf")
+    encoded = base64.b64encode(raw).decode()
+    entry = {
+        "id":           file_id,
+        "name":         fname,
+        "data":         encoded,
+        "content_type": ct,
+        "size":         len(raw),
+        "uploaded_at":  now(),
+        "chat_file":    True,   # mark as chat file
+    }
+    s["content_files"][fname] = entry
+    save_session(code)
+
+    # Create chat message with file attachment
+    msg_type = "image" if is_image else "file"
+    sys_file_msg = {
+        "id":          gen_id("m"),
+        "sender_id":   "teacher",
+        "sender_name": "Teacher",
+        "content":     fname,
+        "chat_type":   "global",
+        "target_id":   None,
+        "timestamp":   now(),
+        "msg_type":    msg_type,
+        "reactions":   {},
+        "reply_to_message_id": None,
+        "reply_preview":       None,
+        "file_info":   {
+            "id":           file_id,
+            "name":         fname,
+            "content_type": ct,
+            "size":         len(raw),
+        },
+    }
+    s["chat_messages"].append(sys_file_msg)
+
+    # System event in chat
+    sys_event_msg = {
+        "id":          gen_id("m"),
+        "sender_id":   "system",
+        "sender_name": "System",
+        "content":     f"📎 Teacher uploaded a file: {fname}",
+        "chat_type":   "global",
+        "target_id":   None,
+        "timestamp":   now(),
+        "msg_type":    "system",
+        "reactions":   {},
+        "reply_to_message_id": None,
+        "reply_preview":       None,
+        "file_info":   None,
+    }
+    s["chat_messages"].append(sys_event_msg)
+
+    # Broadcast both messages
+    await ws_broadcast(s, {"type": "chat_message", "message": sys_file_msg})
+    await ws_broadcast(s, {"type": "chat_message", "message": sys_event_msg})
+
+    log.info("[CHAT FILE] Teacher uploaded %s (%s, %d bytes) in session %s", fname, ct, len(raw), code)
+    return {
+        "file_id":      file_id,
+        "filename":     fname,
+        "content_type": ct,
+        "size":         len(raw),
+        "message":      sys_file_msg,
+    }
 
 
 @app.post("/api/doubts/submit")
@@ -4454,6 +4768,90 @@ async def teacher_ws_endpoint(ws: WebSocket, session_code: str):
                     "attendance": compute_attendance_summary(s),
                 })
 
+            # ── CHAT MODERATION (teacher-side, Features 2 & 3) ──────────
+            elif cmd == "chat_react":
+                msg_id   = data.get("message_id", "")
+                emoji    = data.get("emoji", "")
+                user_id  = data.get("user_id", "teacher")
+                if emoji in ALLOWED_EMOJIS and msg_id:
+                    msg_obj = next((m for m in s.get("chat_messages", []) if m.get("id") == msg_id), None)
+                    if msg_obj:
+                        msg_obj.setdefault("reactions", {})
+                        reactors = msg_obj["reactions"].setdefault(emoji, [])
+                        if user_id in reactors:
+                            reactors.remove(user_id)
+                        else:
+                            reactors.append(user_id)
+                        save_session(session_code)
+                        await ws_broadcast(s, {
+                            "type":       "chat_reactions_update",
+                            "message_id": msg_id,
+                            "reactions":  msg_obj["reactions"],
+                        })
+
+            elif cmd == "suspend_chat_student":
+                sid_to_suspend = data.get("student_id", "")
+                student_obj = s["students"].get(sid_to_suspend)
+                if student_obj:
+                    s.setdefault("suspended_chat_students", set()).add(sid_to_suspend)
+                    save_session(session_code)
+                    await ws_student(s, sid_to_suspend, {
+                        "type":    "chat_suspended",
+                        "message": "You are temporarily suspended from classroom chat.",
+                    })
+                    sys_sus_msg = {
+                        "id":          gen_id("m"),
+                        "sender_id":   "system",
+                        "sender_name": "System",
+                        "content":     f"⚠️ {student_obj.get('name', sid_to_suspend)} has been suspended from chat.",
+                        "chat_type":   "global",
+                        "target_id":   None,
+                        "timestamp":   now(),
+                        "msg_type":    "system",
+                        "reactions":   {},
+                        "reply_to_message_id": None,
+                        "reply_preview": None,
+                        "file_info":   None,
+                    }
+                    s["chat_messages"].append(sys_sus_msg)
+                    await ws_broadcast(s, {"type": "chat_message", "message": sys_sus_msg})
+                    await ws_send(ws, {
+                        "type":       "chat_suspension_update",
+                        "student_id": sid_to_suspend,
+                        "suspended":  True,
+                        "student_name": student_obj.get("name", sid_to_suspend),
+                    })
+
+            elif cmd == "unsuspend_chat_student":
+                sid_to_unsuspend = data.get("student_id", "")
+                student_obj = s["students"].get(sid_to_unsuspend)
+                if student_obj:
+                    s.setdefault("suspended_chat_students", set()).discard(sid_to_unsuspend)
+                    save_session(session_code)
+                    await ws_student(s, sid_to_unsuspend, {
+                        "type":    "chat_unsuspended",
+                        "message": "Your chat access has been restored.",
+                    })
+                    await ws_send(ws, {
+                        "type":       "chat_suspension_update",
+                        "student_id": sid_to_unsuspend,
+                        "suspended":  False,
+                        "student_name": student_obj.get("name", sid_to_unsuspend),
+                    })
+
+            elif cmd == "delete_chat_msg":
+                del_msg_id = data.get("message_id", "")
+                if del_msg_id:
+                    msgs_list = s.get("chat_messages", [])
+                    idx = next((i for i, m in enumerate(msgs_list) if m.get("id") == del_msg_id), None)
+                    if idx is not None:
+                        s["chat_messages"].pop(idx)
+                        save_session(session_code)
+                        await ws_broadcast(s, {
+                            "type":       "chat_message_deleted",
+                            "message_id": del_msg_id,
+                        })
+
     except WebSocketDisconnect:
         log.info("Teacher disconnected: %s", session_code)
     finally:
@@ -4583,6 +4981,7 @@ async def student_ws_endpoint(ws: WebSocket, session_code: str, student_id: str)
         "vc_active":           s.get("vc_active", False),
         "hand_raised":         student_hand_raised,  # Sync hand state on reconnect
         "doubts":              [d for d in s.get("doubts", []) if d.get("student_id") == student_id],
+        "chat_suspended":      student_id in s.get("suspended_chat_students", set()),
     })
 
     if student_status == "active":
@@ -4692,6 +5091,28 @@ async def student_ws_endpoint(ws: WebSocket, session_code: str, student_id: str)
                         "task_id":     data.get("task_id", ""),
                         "student_id":  student_id,
                     })
+
+            # ── CHAT REACTIONS (student-side, Feature 2) ─────────────────
+            elif cmd == "chat_react":
+                # Block if student is suspended from chat
+                if student_id in s.get("suspended_chat_students", set()):
+                    continue
+                react_msg_id = data.get("message_id", "")
+                react_emoji  = data.get("emoji", "")
+                if react_emoji in ALLOWED_EMOJIS and react_msg_id:
+                    react_msg = next((m for m in s.get("chat_messages", []) if m.get("id") == react_msg_id), None)
+                    if react_msg:
+                        react_msg.setdefault("reactions", {})
+                        react_list = react_msg["reactions"].setdefault(react_emoji, [])
+                        if student_id in react_list:
+                            react_list.remove(student_id)
+                        else:
+                            react_list.append(student_id)
+                        await ws_broadcast(s, {
+                            "type":       "chat_reactions_update",
+                            "message_id": react_msg_id,
+                            "reactions":  react_msg["reactions"],
+                        })
 
 
     except WebSocketDisconnect:

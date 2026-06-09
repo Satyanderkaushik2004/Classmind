@@ -4345,7 +4345,188 @@ body.s-ui-active .toasts {
 }
 .s-chat-send:hover { transform: scale(1.1); }
 .s-chat-send:disabled { opacity: 0.5; cursor: not-allowed; }
-.s-doubt-card {
+
+/* ── Chat Reply Preview (Feature 1) ── */
+.chat-reply-preview {
+  display: flex; align-items: flex-start; gap: 8px;
+  padding: 8px 12px; margin: 4px 12px 0;
+  background: rgba(99,102,241,0.08); border-left: 3px solid rgba(99,102,241,0.5);
+  border-radius: 8px 8px 0 0; font-size: 0.78rem; color: rgba(241,245,249,0.65);
+  animation: fadeInUp .15s ease;
+}
+.chat-reply-preview strong { color: rgba(165,180,252,1); font-weight: 700; margin-right: 4px; }
+.chat-reply-preview-dismiss {
+  margin-left: auto; cursor: pointer; opacity: 0.5; padding: 0 4px;
+  font-size: 0.9rem; line-height: 1; background: none; border: none; color: inherit;
+  flex-shrink: 0;
+}
+.chat-reply-preview-dismiss:hover { opacity: 1; }
+.chat-reply-indicator {
+  display: flex; align-items: center; gap: 6px;
+  padding: 5px 10px; margin-bottom: 4px;
+  background: rgba(99,102,241,0.07); border-left: 2px solid rgba(99,102,241,0.4);
+  border-radius: 0 6px 6px 0; font-size: 0.73rem; color: rgba(165,180,252,0.8);
+  max-width: 90%; cursor: pointer;
+}
+.chat-reply-indicator:hover { background: rgba(99,102,241,0.12); }
+.chat-reply-indicator span { opacity: 0.6; margin-right: 3px; }
+
+/* ── Emoji Reactions (Feature 2) ── */
+.chat-reactions {
+  display: flex; flex-wrap: wrap; gap: 4px; margin-top: 5px;
+}
+.chat-reaction-pill {
+  display: inline-flex; align-items: center; gap: 3px;
+  padding: 2px 8px; border-radius: 100px;
+  background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);
+  font-size: 0.78rem; cursor: pointer; transition: all 0.15s ease;
+  user-select: none;
+}
+.chat-reaction-pill:hover { background: rgba(255,255,255,0.12); transform: scale(1.05); }
+.chat-reaction-pill.reacted { background: rgba(99,102,241,0.18); border-color: rgba(99,102,241,0.4); }
+.chat-reaction-pill .r-count { font-size: 0.72rem; opacity: 0.8; }
+.chat-reaction-picker {
+  position: absolute; z-index: 200;
+  display: flex; gap: 6px; flex-wrap: wrap;
+  padding: 8px 10px; border-radius: 14px;
+  background: rgba(18,20,40,0.97); border: 1px solid rgba(255,255,255,0.12);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5); backdrop-filter: blur(16px);
+  animation: fadeInUp .12s ease;
+}
+.chat-reaction-picker button {
+  font-size: 1.25rem; background: none; border: none; cursor: pointer;
+  padding: 4px 6px; border-radius: 8px; transition: transform .1s;
+}
+.chat-reaction-picker button:hover { transform: scale(1.2); background: rgba(255,255,255,0.08); }
+
+/* ── Chat Message Hover Actions (Feature 3) ── */
+.chat-msg-wrapper { position: relative; }
+.chat-msg-actions {
+  position: absolute; right: 4px; top: -8px;
+  display: none; gap: 4px; align-items: center;
+  background: rgba(18,20,40,0.95); border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 100px; padding: 3px 8px; box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+  backdrop-filter: blur(12px); z-index: 100;
+}
+.chat-msg-wrapper:hover .chat-msg-actions { display: flex; }
+.chat-msg-action-btn {
+  background: none; border: none; cursor: pointer; padding: 3px 6px;
+  border-radius: 8px; font-size: 0.85rem; color: rgba(241,245,249,0.7);
+  transition: all .12s;
+}
+.chat-msg-action-btn:hover { background: rgba(255,255,255,0.1); color: #fff; }
+.chat-msg-action-btn.danger:hover { background: rgba(239,68,68,0.15); color: #f87171; }
+.chat-moderation-menu {
+  position: absolute; right: 4px; top: 24px; z-index: 200;
+  min-width: 180px; background: rgba(18,20,40,0.98); border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 12px; padding: 6px; box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+  backdrop-filter: blur(16px); animation: fadeInDown .12s ease;
+}
+@keyframes fadeInDown { from{opacity:0;transform:translateY(-6px)} to{opacity:1;transform:translateY(0)} }
+.chat-moderation-menu button {
+  width: 100%; display: flex; align-items: center; gap: 8px;
+  padding: 8px 10px; border-radius: 8px; background: none; border: none;
+  cursor: pointer; text-align: left; font-size: 0.82rem;
+  color: rgba(241,245,249,0.8); transition: background .1s;
+}
+.chat-moderation-menu button:hover { background: rgba(255,255,255,0.08); }
+.chat-moderation-menu button.danger { color: #f87171; }
+.chat-moderation-menu button.danger:hover { background: rgba(239,68,68,0.12); }
+
+/* ── System Messages (Feature 8) ── */
+.chat-system-msg {
+  text-align: center; padding: 6px 16px; margin: 8px auto;
+  font-size: 0.74rem; color: rgba(241,245,249,0.4);
+  background: rgba(255,255,255,0.03); border-radius: 100px;
+  border: 1px solid rgba(255,255,255,0.06); max-width: 85%;
+}
+.comm-v2-msg-system {
+  display: flex; justify-content: center; padding: 4px 0;
+}
+.comm-v2-bubble-system {
+  font-size: 0.73rem; color: rgba(165,180,252,0.6);
+  background: rgba(99,102,241,0.06); border: 1px solid rgba(99,102,241,0.15);
+  padding: 5px 14px; border-radius: 100px; text-align: center;
+}
+
+/* ── File / Image Attachments (Feature 5 & 6) ── */
+.chat-file-card {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 14px; margin-top: 4px;
+  background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 12px; cursor: pointer; transition: all .15s;
+  text-decoration: none; color: inherit;
+}
+.chat-file-card:hover { background: rgba(255,255,255,0.09); border-color: rgba(255,255,255,0.2); }
+.chat-file-icon { font-size: 1.5rem; flex-shrink: 0; }
+.chat-file-info .fn { font-size: 0.82rem; font-weight: 600; color: rgba(241,245,249,0.9); }
+.chat-file-info .fs { font-size: 0.7rem; color: rgba(241,245,249,0.4); }
+.chat-img-preview {
+  max-width: 220px; max-height: 180px; object-fit: cover;
+  border-radius: 12px; cursor: zoom-in; display: block;
+  margin-top: 4px; transition: transform .2s, box-shadow .2s;
+  border: 1px solid rgba(255,255,255,0.08);
+}
+.chat-img-preview:hover { transform: scale(1.02); box-shadow: 0 6px 24px rgba(0,0,0,0.5); }
+
+/* ── Image Lightbox (Feature 6) ── */
+.lightbox-overlay {
+  position: fixed; inset: 0; z-index: 9999;
+  background: rgba(0,0,0,0.88); display: flex; align-items: center; justify-content: center;
+  animation: fadeIn .15s ease; backdrop-filter: blur(8px); cursor: zoom-out;
+}
+.lightbox-overlay img {
+  max-width: 92vw; max-height: 88vh; object-fit: contain;
+  border-radius: 12px; box-shadow: 0 24px 64px rgba(0,0,0,0.8);
+  cursor: default;
+}
+.lightbox-close {
+  position: absolute; top: 16px; right: 20px;
+  background: rgba(255,255,255,0.12); border: none; color: #fff;
+  border-radius: 50%; width: 36px; height: 36px; cursor: pointer;
+  font-size: 1.2rem; display: flex; align-items: center; justify-content: center;
+  transition: background .15s;
+}
+.lightbox-close:hover { background: rgba(255,255,255,0.22); }
+
+/* ── Chat Suspension Banner (Feature 7) ── */
+.chat-suspended-banner {
+  margin: 8px 12px; padding: 10px 14px;
+  background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3);
+  border-radius: 10px; font-size: 0.82rem; color: #fca5a5;
+  display: flex; align-items: center; gap: 8px;
+}
+
+/* ── Class End Warning Toast (Feature 4) ── */
+.class-end-toast {
+  position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+  z-index: 9998; padding: 12px 22px;
+  background: linear-gradient(135deg,rgba(245,158,11,0.95),rgba(239,68,68,0.9));
+  border-radius: 100px; color: #fff; font-weight: 700; font-size: 0.9rem;
+  box-shadow: 0 8px 32px rgba(239,68,68,0.4); animation: toastIn .3s cubic-bezier(.34,1.56,.64,1);
+  display: flex; align-items: center; gap: 8px; pointer-events: none;
+  white-space: nowrap;
+}
+@keyframes toastIn { from{opacity:0;transform:translateX(-50%) translateY(20px)} to{opacity:1;transform:translateX(-50%) translateY(0)} }
+@keyframes toastOut { from{opacity:1;transform:translateX(-50%) translateY(0)} to{opacity:0;transform:translateX(-50%) translateY(20px)} }
+.class-end-toast.exiting { animation: toastOut .3s ease forwards; }
+
+/* ── Teacher chat file upload button ── */
+.comm-v2-attach-btn {
+  background: rgba(99,102,241,0.1); border: 1px solid rgba(99,102,241,0.3);
+  color: rgba(165,180,252,0.85); border-radius: 100px; padding: 6px 10px;
+  cursor: pointer; font-size: 0.85rem; transition: all .15s; flex-shrink: 0;
+}
+.comm-v2-attach-btn:hover { background: rgba(99,102,241,0.2); color: #c4b5fd; }
+.comm-v2-attach-input { display: none; }
+
+/* ── comm-v2 delete button ── */
+.comm-v2-del-btn {
+  background: none; border: none; cursor: pointer;
+  color: rgba(239,68,68,0.5); font-size: 0.75rem; padding: 2px 4px;
+  border-radius: 4px; transition: all .12s; flex-shrink: 0;
+}
+.comm-v2-del-btn:hover { background: rgba(239,68,68,0.1); color: #f87171; 
   background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08);
   border-radius: 14px; padding: 14px; margin-bottom: 10px;
 }
@@ -15822,12 +16003,28 @@ function TeacherShell({
   } = useContext(AppCtx);
   // ── FEATURE 1: Chat Enable/Disable state ───────────────────────────────────
   const [chatEnabled, setChatEnabled] = useState(true);
+  // ── Feature 4: Class-end warning toast ────────────────────────────────────
+  const [classEndToast, setClassEndToast] = useState(null);   // {minutesLeft}
+  const classEndToastRef = useRef(null);
   // ── VIDEO CALL state ───────────────────────────────────────────────────────
   const [vcActive, setVcActive] = useState(false);
   useEffect(() => {
     localStorage.setItem('cm_theme', lightMode ? 'light' : 'dark');
     document.body.classList.toggle('light', lightMode);
   }, [lightMode]);
+
+  // Feature 4: Class-end warning toast for teacher
+  useEffect(() => {
+    function onClassEndWarn(e) {
+      const { minutes_left } = e.detail || {};
+      if (!minutes_left) return;
+      if (classEndToastRef.current) clearTimeout(classEndToastRef.current);
+      setClassEndToast({ minutesLeft: minutes_left });
+      classEndToastRef.current = setTimeout(() => setClassEndToast(null), 7000);
+    }
+    window.addEventListener('classmind:class_end_warning', onClassEndWarn);
+    return () => window.removeEventListener('classmind:class_end_warning', onClassEndWarn);
+  }, []);
 
   // ── Signal when dashboard page is fully rendered in DOM ──────────
   // Must reset to false first so the effect fires on EVERY dashboard visit.
@@ -15945,6 +16142,20 @@ function TeacherShell({
         window.dispatchEvent(new CustomEvent('classmind:doubt_resolved', { detail: msg }));
       } else if (msg.type === 'ai_evaluation_done') {
         window.dispatchEvent(new CustomEvent('classmind:ai_eval_done', { detail: msg }));
+      } else if (msg.type === 'chat_message') {
+        // Broadcast to CommunicationPanel via CustomEvent
+        window.dispatchEvent(new CustomEvent('classmind:chat_message', { detail: msg }));
+        playBeep();
+        setNotifications(n => ({ ...n, chat: (n.chat || 0) + 1 }));
+      } else if (msg.type === 'chat_reactions_update') {
+        window.dispatchEvent(new CustomEvent('classmind:chat_reactions_update', { detail: msg }));
+      } else if (msg.type === 'chat_message_deleted') {
+        window.dispatchEvent(new CustomEvent('classmind:chat_message_deleted', { detail: msg }));
+      } else if (msg.type === 'chat_suspension_update') {
+        window.dispatchEvent(new CustomEvent('classmind:chat_suspension_update', { detail: msg }));
+      } else if (msg.type === 'class_end_warning') {
+        window.dispatchEvent(new CustomEvent('classmind:class_end_warning', { detail: msg }));
+        add(`⏰ Class ends in ${msg.minutes_left} minute${msg.minutes_left > 1 ? 's' : ''}!`, 'warn');
       }
     } catch (err) {
       console.error("[WS Error] TeacherShell:", err);
@@ -16751,6 +16962,17 @@ function TeacherShell({
         role: 'teacher',
         onClose: () => setVcActive(false)
       })
+    ),
+
+    /* ── Feature 4: Class-ending-soon toast (teacher) ── */
+    classEndToast && /*#__PURE__*/React.createElement("div", {
+      className: "class-end-toast",
+      style: { bottom: 80 }
+    },
+      /*#__PURE__*/React.createElement("span", null, "⏰"),
+      /*#__PURE__*/React.createElement("span", null,
+        `Class ends in ${classEndToast.minutesLeft} minute${classEndToast.minutesLeft > 1 ? 's' : ''}!`
+      )
     )
   ));
 }
@@ -23866,34 +24088,36 @@ function CommunicationPage({
   const [resolveDoubt, setResolveDoubt] = useState(null);
   const [resolveText, setResolveText] = useState('');
   const [studentSearch, setStudentSearch] = useState('');
+  // Feature 1: Reply threading
+  const [replyTo, setReplyTo] = useState(null); // {id, sender_name, content}
+  // Feature 2: Emoji reaction picker state
+  const [reactionPickerFor, setReactionPickerFor] = useState(null); // msg id
+  // Feature 3: Moderation menu
+  const [moderationMenuFor, setModerationMenuFor] = useState(null); // msg id
+  const [suspendedStudents, setSuspendedStudents] = useState(new Set());
+  const [confirmKick, setConfirmKick] = useState(null); // {id, name}
+  // Feature 6: Lightbox
+  const [lightboxImg, setLightboxImg] = useState(null);
+  // File upload ref
+  const fileInputRef = useRef(null);
   const messagesEnd = useRef(null);
   const { add } = useContext(AppCtx);
   const TEACHER_ID = 'teacher';
+  const EMOJI_LIST = ['👍','❤️','😂','😮','🔥','👏'];
 
-  // ── Subscribe to hand raise and doubt events from WS (broadcast via CustomEvent) ──
+  // ── Subscribe to WS events dispatched from TeacherShell ──────────
   useEffect(() => {
     function onHandUpdate(e) {
-      try {
-        const { raised_hands } = e.detail || {};
-        setHands(Array.isArray(raised_hands) ? raised_hands : []);
-      } catch {}
+      try { const { raised_hands } = e.detail || {}; setHands(Array.isArray(raised_hands) ? raised_hands : []); } catch {}
     }
     function onNewDoubt(e) {
       try {
         const doubt = e.detail;
-        if (doubt && doubt.id) {
-          setDoubts(prev => {
-            const exists = prev.some(d => d.id === doubt.id);
-            return exists ? prev : [...prev, doubt];
-          });
-        }
+        if (doubt && doubt.id) setDoubts(prev => prev.some(d => d.id === doubt.id) ? prev : [...prev, doubt]);
       } catch {}
     }
     function onDoubtsRestore(e) {
-      try {
-        const { doubts: serverDoubts } = e.detail || {};
-        if (Array.isArray(serverDoubts)) setDoubts(serverDoubts);
-      } catch {}
+      try { const { doubts: sd } = e.detail || {}; if (Array.isArray(sd)) setDoubts(sd); } catch {}
     }
     function onDoubtResolved(e) {
       try {
@@ -23907,20 +24131,79 @@ function CommunicationPage({
             });
             return found ? updated : prev;
           });
-        } else {
-          loadAll();
-        }
+        } else { loadAll(); }
       } catch(err) { loadAll(); }
+    }
+    // Feature 2: Real-time reaction updates
+    function onReactionsUpdate(e) {
+      try {
+        const { message_id, reactions } = e.detail || {};
+        if (message_id) {
+          setMessages(prev => prev.map(m => m.id === message_id ? { ...m, reactions: reactions || {} } : m));
+        }
+      } catch {}
+    }
+    // Feature 5: Message deletion
+    function onMsgDeleted(e) {
+      try {
+        const { message_id } = e.detail || {};
+        if (message_id) setMessages(prev => prev.filter(m => m.id !== message_id));
+      } catch {}
+    }
+    // Feature 3: Suspension updates
+    function onSuspensionUpdate(e) {
+      try {
+        const { student_id, suspended } = e.detail || {};
+        if (student_id) {
+          setSuspendedStudents(prev => {
+            const s = new Set(prev);
+            if (suspended) s.add(student_id); else s.delete(student_id);
+            return s;
+          });
+        }
+      } catch {}
+    }
+    // Feature 1 & 5 & 8: New chat message via WS
+    function onChatMessage(e) {
+      try {
+        const { message } = e.detail || {};
+        if (message && message.id) {
+          setMessages(prev => {
+            if (prev.some(m => m.id === message.id)) return prev;
+            return [...prev, message];
+          });
+          setTimeout(() => messagesEnd.current?.scrollIntoView({ behavior: 'smooth' }), 80);
+        }
+      } catch {}
     }
     window.addEventListener('classmind:hand_update', onHandUpdate);
     window.addEventListener('classmind:new_doubt', onNewDoubt);
     window.addEventListener('classmind:doubts_restore', onDoubtsRestore);
     window.addEventListener('classmind:doubt_resolved', onDoubtResolved);
+    window.addEventListener('classmind:chat_reactions_update', onReactionsUpdate);
+    window.addEventListener('classmind:chat_message_deleted', onMsgDeleted);
+    window.addEventListener('classmind:chat_suspension_update', onSuspensionUpdate);
+    window.addEventListener('classmind:chat_message', onChatMessage);
+
+    // Close popup menus on outside click
+    function onDocClick(e) {
+      if (!e.target.closest('.chat-msg-actions') && !e.target.closest('.chat-reaction-picker') && !e.target.closest('.chat-moderation-menu')) {
+        setReactionPickerFor(null);
+        setModerationMenuFor(null);
+      }
+    }
+    document.addEventListener('mousedown', onDocClick);
+
     return () => {
       window.removeEventListener('classmind:hand_update', onHandUpdate);
       window.removeEventListener('classmind:new_doubt', onNewDoubt);
       window.removeEventListener('classmind:doubts_restore', onDoubtsRestore);
       window.removeEventListener('classmind:doubt_resolved', onDoubtResolved);
+      window.removeEventListener('classmind:chat_reactions_update', onReactionsUpdate);
+      window.removeEventListener('classmind:chat_message_deleted', onMsgDeleted);
+      window.removeEventListener('classmind:chat_suspension_update', onSuspensionUpdate);
+      window.removeEventListener('classmind:chat_message', onChatMessage);
+      document.removeEventListener('mousedown', onDocClick);
     };
   }, []);
 
@@ -23971,13 +24254,102 @@ function CommunicationPage({
   async function sendMsg() {
     if (!input.trim()) return;
     try {
-      await apiFetch('/api/chat/send', {
-        method: 'POST',
-        body: { session_code: sessionCode, sender_id: TEACHER_ID, content: input, chat_type: 'global', target_id: null }
-      });
+      const body = {
+        session_code: sessionCode, sender_id: TEACHER_ID,
+        content: input, chat_type: 'global', target_id: null,
+        msg_type: 'text',
+      };
+      if (replyTo) {
+        body.reply_to_message_id = replyTo.id;
+        body.reply_preview = (replyTo.content || '').slice(0, 80);
+      }
+      const newMsg = await apiFetch('/api/chat/send', { method: 'POST', body });
+      setMessages(prev => prev.some(m => m.id === newMsg.id) ? prev : [...prev, newMsg]);
       setInput('');
-      loadAll();
+      setReplyTo(null);
+      setTimeout(() => messagesEnd.current?.scrollIntoView({ behavior: 'smooth' }), 80);
     } catch (e) { add(e.message, 'error'); }
+  }
+
+  // Feature 2: Toggle emoji reaction
+  async function toggleReaction(msgId, emoji) {
+    try {
+      if (typeof wsSend === 'function') {
+        wsSend({ type: 'chat_react', message_id: msgId, emoji, user_id: TEACHER_ID });
+      } else {
+        await apiFetch('/api/chat/react', { method: 'POST', body: { session_code: sessionCode, message_id: msgId, emoji, user_id: TEACHER_ID } });
+      }
+      setReactionPickerFor(null);
+    } catch {}
+  }
+
+  // Feature 3: Moderation
+  async function suspendStudentChat(studentId) {
+    try {
+      if (typeof wsSend === 'function') {
+        wsSend({ type: 'suspend_chat_student', student_id: studentId });
+      } else {
+        await apiFetch(`/api/session/${sessionCode}/chat/suspend/${studentId}`, { method: 'POST', body: {} });
+      }
+      setSuspendedStudents(prev => { const s = new Set(prev); s.add(studentId); return s; });
+      add('Student suspended from chat', 'info');
+    } catch (e) { add(e.message || 'Failed', 'error'); }
+    setModerationMenuFor(null);
+  }
+
+  async function unsuspendStudentChat(studentId) {
+    try {
+      if (typeof wsSend === 'function') {
+        wsSend({ type: 'unsuspend_chat_student', student_id: studentId });
+      } else {
+        await apiFetch(`/api/session/${sessionCode}/chat/unsuspend/${studentId}`, { method: 'POST', body: {} });
+      }
+      setSuspendedStudents(prev => { const s = new Set(prev); s.delete(studentId); return s; });
+      add('Student chat access restored', 'success');
+    } catch (e) { add(e.message || 'Failed', 'error'); }
+    setModerationMenuFor(null);
+  }
+
+  async function removeStudentFromClass(studentId) {
+    try {
+      await apiFetch(`/api/session/${sessionCode}/kick/${studentId}`, { method: 'POST' });
+      add('Student removed from class', 'info');
+    } catch (e) { add(e.message || 'Failed', 'error'); }
+    setConfirmKick(null);
+    setModerationMenuFor(null);
+  }
+
+  // Feature 5: Delete chat message
+  async function deleteChatMsg(msgId) {
+    try {
+      if (typeof wsSend === 'function') {
+        wsSend({ type: 'delete_chat_msg', message_id: msgId });
+      } else {
+        await apiFetch(`/api/session/${sessionCode}/chat/${msgId}`, { method: 'DELETE' });
+      }
+      setMessages(prev => prev.filter(m => m.id !== msgId));
+    } catch (e) { add(e.message || 'Failed to delete', 'error'); }
+    setModerationMenuFor(null);
+  }
+
+  // Feature 5: Upload file to chat
+  async function handleFileUpload(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const formData = new FormData();
+    formData.append('file', file);
+    try {
+      const res = await fetch(`${typeof API !== 'undefined' ? API : ''}/api/session/${sessionCode}/chat/upload_file`, {
+        method: 'POST', body: formData,
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || 'Upload failed');
+      }
+      const data = await res.json();
+      add(`📎 File uploaded: ${data.filename}`, 'success');
+    } catch (e) { add(e.message || 'Upload failed', 'error'); }
+    if (fileInputRef.current) fileInputRef.current.value = '';
   }
 
   async function resolve(doubtId) {
@@ -24043,28 +24415,150 @@ function CommunicationPage({
   const pendingDoubts = (Array.isArray(doubts) ? doubts : []).filter(d => !d.resolved && d.status !== 'resolved').length;
 
   // ── Render helpers ──
+  function fileIcon(ct) {
+    if (!ct) return '📎';
+    if (ct.includes('pdf')) return '📄';
+    if (ct.includes('word') || ct.includes('document')) return '📝';
+    if (ct.includes('presentation') || ct.includes('powerpoint')) return '📊';
+    if (ct.startsWith('image/')) return '🖼️';
+    return '📎';
+  }
+  function fmtBytes(n) { if (!n) return ''; if (n < 1024) return `${n}B`; if (n < 1048576) return `${(n/1024).toFixed(1)}KB`; return `${(n/1048576).toFixed(1)}MB`; }
+
   function renderMessages() {
     if (messages.length === 0) return [
       React.createElement('div', { key: 'empty', className: 'comm-v2-empty' },
-        React.createElement('div', { className: 'comm-v2-empty-icon' }, '\uD83D\uDCAC'),
+        React.createElement('div', { className: 'comm-v2-empty-icon' }, '💬'),
         React.createElement('div', { className: 'comm-v2-empty-text' }, 'No messages yet. Start the conversation!')
       )
     ];
     return messages.map(m => {
       const isTeacher = m.sender_id === TEACHER_ID;
+      const isSystem  = m.msg_type === 'system' || m.sender_id === 'system';
       const senderName = m.sender_name || (isTeacher ? 'Teacher' : 'Student');
-      return React.createElement('div', { key: m.id, className: 'comm-v2-msg-row' + (isTeacher ? ' teacher-row' : '') },
-        React.createElement('div', {
-          className: 'comm-v2-msg-av' + (isTeacher ? ' teacher-av' : ''),
-          style: !isTeacher ? { background: hashColor(m.sender_id || m.sender_name) } : {}
-        }, isTeacher ? '\uD83D\uDC68\u200D\uD83C\uDFEB' : initials(senderName)),
-        React.createElement('div', { className: 'comm-v2-bubble-col' },
-          React.createElement('div', { className: 'comm-v2-bubble-header' },
-            React.createElement('span', { className: 'comm-v2-sender' }, senderName),
-            isTeacher && React.createElement('span', { className: 'comm-v2-teacher-badge' }, 'Teacher'),
-            React.createElement('span', { className: 'comm-v2-time' }, fmtTime(m.timestamp))
-          ),
-          React.createElement('div', { className: 'comm-v2-bubble' + (isTeacher ? ' teacher-bubble' : '') }, m.content)
+      const reactions = m.reactions || {};
+      const isSuspended = !isTeacher && !isSystem && suspendedStudents.has(m.sender_id);
+      const isMyReactionOpen = reactionPickerFor === m.id;
+      const isModeMenuOpen   = moderationMenuFor === m.id;
+      const fileInfo = m.file_info;
+      const isImg = m.msg_type === 'image' || (fileInfo && fileInfo.content_type && fileInfo.content_type.startsWith('image/'));
+      const replyId = m.reply_to_message_id;
+      const replyPreview = m.reply_preview;
+
+      // System message — compact centered pill
+      if (isSystem) {
+        return React.createElement('div', { key: m.id, className: 'comm-v2-msg-system' },
+          React.createElement('div', { className: 'comm-v2-bubble-system' }, m.content)
+        );
+      }
+
+      return React.createElement('div', { key: m.id, className: 'chat-msg-wrapper' },
+        // Hover action bar
+        React.createElement('div', { className: 'chat-msg-actions' },
+          React.createElement('button', {
+            className: 'chat-msg-action-btn', title: 'React',
+            onClick: () => setReactionPickerFor(isMyReactionOpen ? null : m.id)
+          }, '😊'),
+          React.createElement('button', {
+            className: 'chat-msg-action-btn', title: 'Reply',
+            onClick: () => setReplyTo({ id: m.id, sender_name: senderName, content: m.content })
+          }, '↩️'),
+          !isTeacher && React.createElement('button', {
+            className: 'chat-msg-action-btn', title: 'Moderate',
+            onClick: () => setModerationMenuFor(isModeMenuOpen ? null : m.id)
+          }, '⋯'),
+          isTeacher && React.createElement('button', {
+            className: 'chat-msg-action-btn danger', title: 'Delete',
+            onClick: () => deleteChatMsg(m.id)
+          }, '🗑️')
+        ),
+
+        // Emoji reaction picker
+        isMyReactionOpen && React.createElement('div', { className: 'chat-reaction-picker', style: { bottom: '100%', right: 0, position: 'absolute' } },
+          EMOJI_LIST.map(em => React.createElement('button', { key: em, onClick: () => toggleReaction(m.id, em) }, em))
+        ),
+
+        // Moderation menu (teacher only, student messages)
+        isModeMenuOpen && !isTeacher && !isSystem && React.createElement('div', { className: 'chat-moderation-menu', style: { top: 28, right: 4 } },
+          React.createElement('button', {
+            onClick: () => isSuspended ? unsuspendStudentChat(m.sender_id) : suspendStudentChat(m.sender_id)
+          }, isSuspended ? '🔓 Unsuspend Chat' : '🔇 Suspend Chat'),
+          React.createElement('button', {
+            className: 'danger',
+            onClick: () => { setConfirmKick({ id: m.sender_id, name: senderName }); setModerationMenuFor(null); }
+          }, '🚫 Remove Student'),
+          React.createElement('button', {
+            className: 'danger',
+            onClick: () => deleteChatMsg(m.id)
+          }, '🗑️ Delete Message')
+        ),
+
+        React.createElement('div', { className: 'comm-v2-msg-row' + (isTeacher ? ' teacher-row' : '') },
+          React.createElement('div', {
+            className: 'comm-v2-msg-av' + (isTeacher ? ' teacher-av' : ''),
+            style: !isTeacher ? { background: hashColor(m.sender_id || m.sender_name) } : {}
+          }, isTeacher ? '👨‍🏫' : initials(senderName)),
+          React.createElement('div', { className: 'comm-v2-bubble-col' },
+            React.createElement('div', { className: 'comm-v2-bubble-header' },
+              React.createElement('span', { className: 'comm-v2-sender' }, senderName),
+              isTeacher && React.createElement('span', { className: 'comm-v2-teacher-badge' }, 'Teacher'),
+              isSuspended && React.createElement('span', { style: { fontSize: '0.65rem', color: '#f87171', marginLeft: 4 } }, '🔇'),
+              React.createElement('span', { className: 'comm-v2-time' }, fmtTime(m.timestamp))
+            ),
+
+            // Reply indicator
+            replyId && replyPreview && React.createElement('div', {
+              className: 'chat-reply-indicator',
+              onClick: () => {
+                const el = document.getElementById(`chat-msg-${replyId}`);
+                if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              }
+            },
+              React.createElement('span', null, '↩'),
+              React.createElement('span', null, replyPreview.slice(0, 60) + (replyPreview.length > 60 ? '…' : ''))
+            ),
+
+            // Message body — file, image, or text
+            isImg && fileInfo
+              ? React.createElement('img', {
+                  src: `${typeof API !== 'undefined' ? API : ''}/api/content/file/${sessionCode}/${encodeURIComponent(fileInfo.name || fileInfo.id)}`,
+                  className: 'chat-img-preview',
+                  alt: fileInfo.name,
+                  loading: 'lazy',
+                  onClick: e => { e.stopPropagation(); setLightboxImg(`${typeof API !== 'undefined' ? API : ''}/api/content/file/${sessionCode}/${encodeURIComponent(fileInfo.name || fileInfo.id)}`); }
+                })
+              : m.msg_type === 'file' && fileInfo
+                ? React.createElement('a', {
+                    href: `${typeof API !== 'undefined' ? API : ''}/api/content/download/${sessionCode}/${encodeURIComponent(fileInfo.name || fileInfo.id)}`,
+                    target: '_blank', rel: 'noopener noreferrer',
+                    className: 'chat-file-card',
+                    onClick: e => e.stopPropagation()
+                  },
+                    React.createElement('div', { className: 'chat-file-icon' }, fileIcon(fileInfo.content_type)),
+                    React.createElement('div', { className: 'chat-file-info' },
+                      React.createElement('div', { className: 'fn' }, fileInfo.name || 'File'),
+                      React.createElement('div', { className: 'fs' }, fmtBytes(fileInfo.size))
+                    ),
+                    React.createElement('span', { style: { marginLeft: 'auto', fontSize: '0.75rem', opacity: 0.5 } }, '⬇')
+                  )
+                : React.createElement('div', { id: `chat-msg-${m.id}`, className: 'comm-v2-bubble' + (isTeacher ? ' teacher-bubble' : '') }, m.content),
+
+            // Reaction pills
+            Object.keys(reactions).filter(e => reactions[e].length > 0).length > 0 &&
+              React.createElement('div', { className: 'chat-reactions' },
+                Object.entries(reactions).filter(([, v]) => v.length > 0).map(([emoji, reactors]) =>
+                  React.createElement('button', {
+                    key: emoji,
+                    className: 'chat-reaction-pill' + (reactors.includes(TEACHER_ID) ? ' reacted' : ''),
+                    onClick: () => toggleReaction(m.id, emoji),
+                    title: reactors.join(', ')
+                  },
+                    React.createElement('span', null, emoji),
+                    React.createElement('span', { className: 'r-count' }, reactors.length)
+                  )
+                )
+              )
+          )
         )
       );
     });
@@ -24234,22 +24728,41 @@ function CommunicationPage({
             ),
 
         /* Input bar — only on global tab */
-        tab === 'global' && React.createElement('div', { className: 'comm-v2-input-area' },
-          React.createElement('input', {
-            className: 'comm-v2-input-field',
-            value: input,
-            onChange: e => setInput(e.target.value),
-            placeholder: 'Type your message\u2026',
-            disabled: !chatEnabled,
-            onKeyDown: e => e.key === 'Enter' && sendMsg()
-          }),
-          React.createElement('button', { className: 'comm-v2-icon-btn', title: 'Emoji', onClick: () => {} }, '\uD83D\uDE0A'),
-          React.createElement('button', { className: 'comm-v2-icon-btn', title: 'Attach', onClick: () => {} }, '\uD83D\uDCCE'),
-          React.createElement('button', {
-            className: 'comm-v2-send-btn',
-            onClick: sendMsg,
-            disabled: !chatEnabled || !input.trim()
-          }, SendIcon)
+        tab === 'global' && React.createElement('div', { className: 'comm-v2-input-area', style: { flexDirection: 'column', gap: 0, padding: 0 } },
+          // Reply preview
+          replyTo && React.createElement('div', { className: 'chat-reply-preview' },
+            React.createElement('span', null,
+              React.createElement('strong', null, replyTo.sender_name + ':'),
+              (replyTo.content || '').slice(0, 70) + ((replyTo.content || '').length > 70 ? '…' : '')
+            ),
+            React.createElement('button', { className: 'chat-reply-preview-dismiss', onClick: () => setReplyTo(null) }, '✕')
+          ),
+          React.createElement('div', { style: { display: 'flex', alignItems: 'center', gap: 6, padding: '10px 14px' } },
+            // Hidden file input
+            React.createElement('input', {
+              ref: fileInputRef, type: 'file', className: 'comm-v2-attach-input',
+              accept: 'image/*,.pdf,.docx,.pptx,.txt',
+              onChange: handleFileUpload
+            }),
+            React.createElement('button', {
+              className: 'comm-v2-attach-btn', title: 'Upload file to chat',
+              onClick: () => fileInputRef.current && fileInputRef.current.click()
+            }, '📎'),
+            React.createElement('input', {
+              className: 'comm-v2-input-field',
+              value: input,
+              onChange: e => setInput(e.target.value),
+              placeholder: replyTo ? `Replying to ${replyTo.sender_name}…` : 'Type your message…',
+              disabled: !chatEnabled,
+              onKeyDown: e => e.key === 'Enter' && sendMsg(),
+              style: { flex: 1 }
+            }),
+            React.createElement('button', {
+              className: 'comm-v2-send-btn',
+              onClick: sendMsg,
+              disabled: !chatEnabled || !input.trim()
+            }, SendIcon)
+          )
         )
       )
     ),
@@ -24361,6 +24874,40 @@ function CommunicationPage({
           }, 'Submit Answer')
         )
       )
+    ),
+
+    /* ════════ Kick Confirmation Modal (Feature 3) ════════ */
+    confirmKick && React.createElement('div', {
+      key: 'kick-modal-overlay',
+      style: { position:'fixed', inset:0, zIndex:10000, background:'rgba(0,0,0,0.7)', display:'flex', alignItems:'center', justifyContent:'center' },
+      onClick: e => { if (e.target === e.currentTarget) setConfirmKick(null); }
+    },
+      React.createElement('div', {
+        style: { background:'#1a1d2e', border:'1px solid rgba(239,68,68,0.4)', borderRadius:14, padding:'24px 28px', width:'min(380px,90vw)', boxShadow:'0 20px 60px rgba(0,0,0,0.6)' }
+      },
+        React.createElement('div', { style:{ fontSize:'2rem', textAlign:'center', marginBottom:12 } }, '🚫'),
+        React.createElement('h3', { style:{ margin:'0 0 8px', color:'#fca5a5', textAlign:'center', fontSize:'1.05rem' } }, 'Remove Student?'),
+        React.createElement('p', { style:{ color:'#94a3b8', fontSize:'0.85rem', textAlign:'center', margin:'0 0 20px' } },
+          `Are you sure you want to remove ${confirmKick.name} from the class? This cannot be undone.`
+        ),
+        React.createElement('div', { style:{ display:'flex', gap:10, justifyContent:'center' } },
+          React.createElement('button', { className:'btn btn-ghost btn-sm', onClick: () => setConfirmKick(null) }, 'Cancel'),
+          React.createElement('button', {
+            style:{ background:'rgba(239,68,68,0.85)', border:'none', color:'#fff', borderRadius:8, padding:'8px 20px', cursor:'pointer', fontWeight:700, fontSize:'0.85rem' },
+            onClick: () => removeStudentFromClass(confirmKick.id)
+          }, 'Yes, Remove')
+        )
+      )
+    ),
+
+    /* ════════ Lightbox (Feature 6) ════════ */
+    lightboxImg && React.createElement('div', {
+      key: 'lightbox',
+      className: 'lightbox-overlay',
+      onClick: () => setLightboxImg(null)
+    },
+      React.createElement('button', { className: 'lightbox-close', onClick: () => setLightboxImg(null) }, '✕'),
+      React.createElement('img', { src: lightboxImg, alt: 'Preview', onClick: e => e.stopPropagation() })
     )
   );
 }
@@ -27190,6 +27737,14 @@ function StudentTaskView({
   // ── FEATURE 1: Chat control (teacher can disable student chat) ──
   const [chatEnabled, setChatEnabled] = useState(true);
 
+  // ── Chat Feature States (Features 1-8) ───────────────────────────
+  const [chatSuspended, setChatSuspended] = useState(false);  // Feature 7
+  const [chatReplyTo, setChatReplyTo] = useState(null);       // Feature 1: {id, sender_name, content}
+  const [chatReactionPickerFor, setChatReactionPickerFor] = useState(null); // Feature 2
+  const [chatLightboxImg, setChatLightboxImg] = useState(null); // Feature 6
+  const [classEndToast, setClassEndToast] = useState(null);   // Feature 4: {minutes_left}
+  const classEndToastTimer = useRef(null);
+
   // ── STUDENT PERSONALIZATION ─────────────────────────────────────
   const STUDENT_AVATARS = ['🧑‍🎓','👩‍🎓','🧠','🦊','🐯','🦁','🐺','🦄','🐸','🐧','🦋','🌟','⚡','🔥','💎'];
   const [studentEmoji, setStudentEmoji] = useState(() => {
@@ -27198,6 +27753,17 @@ function StudentTaskView({
   useEffect(() => {
     try { localStorage.setItem(`cm_emoji_${studentId}`, studentEmoji); } catch {}
   }, [studentEmoji]);
+
+  // Close student chat reaction picker on outside click
+  useEffect(() => {
+    function onDocClick(e) {
+      if (!e.target.closest('.chat-reaction-picker') && !e.target.closest('.chat-msg-actions')) {
+        setChatReactionPickerFor(null);
+      }
+    }
+    document.addEventListener('mousedown', onDocClick);
+    return () => document.removeEventListener('mousedown', onDocClick);
+  }, []);
 
   // ── XP BURST + CONFETTI ─────────────────────────────────────────
   const [xpBurst, setXpBurst] = useState(null); // { pts, key }
@@ -27414,15 +27980,42 @@ function StudentTaskView({
         playStudentBeep('default');
         add('📄 Teacher shared new content — check the Content tab!', 'info');
       } else if (msg.type === 'chat_message') {
-        setMessages(m => [...m, msg.message]);
-        setTimeout(() => messagesEnd.current?.scrollIntoView({
-          behavior: 'smooth'
-        }), 100);
-        if (msg.message?.sender_id !== studentId) {
-          playStudentBeep('chat');
-          add('💬 New message in class chat', 'info');
-          setChatUnread(n => n + 1);
+        const incomingMsg = msg.message;
+        if (incomingMsg && incomingMsg.id) {
+          setMessages(m => m.some(x => x.id === incomingMsg.id) ? m : [...m, incomingMsg]);
+          setTimeout(() => messagesEnd.current?.scrollIntoView({ behavior: 'smooth' }), 100);
+          if (incomingMsg.sender_id !== studentId) {
+            playStudentBeep('chat');
+            setChatUnread(n => n + 1);
+            if (incomingMsg.msg_type !== 'system') add('💬 New message in class chat', 'info');
+          }
         }
+      }
+      // ── Feature 2: Emoji reactions realtime ──────────────────────
+      else if (msg.type === 'chat_reactions_update') {
+        const { message_id, reactions } = msg;
+        if (message_id) {
+          setMessages(prev => prev.map(m => m.id === message_id ? { ...m, reactions: reactions || {} } : m));
+        }
+      }
+      // ── Feature 5: Message deleted ────────────────────────────────
+      else if (msg.type === 'chat_message_deleted') {
+        const { message_id } = msg;
+        if (message_id) setMessages(prev => prev.filter(m => m.id !== message_id));
+      }
+      // ── Feature 7: Chat suspension ────────────────────────────────
+      else if (msg.type === 'chat_suspended') {
+        setChatSuspended(true);
+        add('🔇 You have been suspended from chat by the teacher.', 'error');
+      }
+      else if (msg.type === 'chat_unsuspended') {
+        setChatSuspended(false);
+        add('🔓 Your chat access has been restored.', 'success');
+      }
+      // ── Feature 4: Class-end warning ─────────────────────────────
+      else if (msg.type === 'class_end_warning') {
+        showClassEndToast(msg.minutes_left);
+        add(`⏰ Class ends in ${msg.minutes_left} minute${msg.minutes_left > 1 ? 's' : ''}!`, 'warn');
       }
       // ── FEATURE 1: Handle chat enable/disable from teacher ──────────
       else if (msg.type === 'chat_toggle') {
@@ -27547,6 +28140,8 @@ function StudentTaskView({
         if (msg.total_tasks !== undefined) setTotalTasks(msg.total_tasks);
         // Sync chat state from server on connect/reconnect
         if (msg.chat_enabled !== undefined) setChatEnabled(msg.chat_enabled);
+        // Feature 7: Sync chat suspension state on reconnect
+        if (msg.chat_suspended !== undefined) setChatSuspended(!!msg.chat_suspended);
         // Restore session name
         if (msg.session_name) setSessionDisplayName(msg.session_name);
         // Restore explanations from server
@@ -27729,22 +28324,51 @@ function StudentTaskView({
   }
   async function sendChat() {
     if (!chatInput.trim()) return;
-    // Guard: respect chat_enabled state — teacher controls this in real-time
-    if (!chatEnabled) {
-      return; // input is already disabled; this is a safety belt
+    if (!chatEnabled) return;
+    if (chatSuspended) {
+      add('You are suspended from classroom chat.', 'error');
+      return;
     }
     try {
-      await apiFetch('/api/chat/send', {
-        method: 'POST',
-        body: {
-          session_code: sessionCode,
-          sender_id: studentId,
-          content: chatInput,
-          chat_type: 'global'
-        }
-      });
+      const body = {
+        session_code: sessionCode,
+        sender_id: studentId,
+        content: chatInput,
+        chat_type: 'global',
+        msg_type: 'text',
+      };
+      if (chatReplyTo) {
+        body.reply_to_message_id = chatReplyTo.id;
+        body.reply_preview = (chatReplyTo.content || '').slice(0, 80);
+      }
+      const newMsg = await apiFetch('/api/chat/send', { method: 'POST', body });
+      setMessages(prev => prev.some(m => m.id === newMsg.id) ? prev : [...prev, newMsg]);
       setChatInput('');
+      setChatReplyTo(null);
+      setTimeout(() => messagesEnd.current?.scrollIntoView({ behavior: 'smooth' }), 80);
+    } catch(e) {
+      add(e.message || 'Failed to send message', 'error');
+    }
+  }
+
+  // Feature 2: Toggle emoji reaction (student-side)
+  async function toggleChatReaction(msgId, emoji) {
+    if (chatSuspended) return;
+    try {
+      if (typeof wsSend === 'function') {
+        wsSend({ type: 'chat_react', message_id: msgId, emoji, user_id: studentId });
+      } else {
+        await apiFetch('/api/chat/react', { method: 'POST', body: { session_code: sessionCode, message_id: msgId, emoji, user_id: studentId } });
+      }
     } catch {}
+    setChatReactionPickerFor(null);
+  }
+
+  // Feature 4: Show class-end toast once, auto-dismiss
+  function showClassEndToast(minutesLeft) {
+    if (classEndToastTimer.current) clearTimeout(classEndToastTimer.current);
+    setClassEndToast({ minutesLeft });
+    classEndToastTimer.current = setTimeout(() => setClassEndToast(null), 6000);
   }
   async function submitDoubt() {
     if (!doubtText.trim()) return;
@@ -28086,9 +28710,24 @@ function StudentTaskView({
 
   // ── Quiz mode renderer ────────────────────────────────────────────  // ── Chat renderer ────────────────────────────────────────────────
   function renderChat() {
-    const fmtChatTime = ts => { const d = new Date(ts*1000); return `${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`; };
+    const fmtChatTime = ts => { if (!ts) return ''; const d = new Date((ts > 1e10 ? ts : ts*1000)); return `${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`; };
+    const EMOJI_LIST = ['👍','❤️','😂','😮','🔥','👏'];
+    const isInputBlocked = !chatEnabled || chatSuspended;
+
+    // Helpers
+    function fileIcon(ct) {
+      if (!ct) return '📎';
+      if (ct.includes('pdf')) return '📄';
+      if (ct.includes('word') || ct.includes('document')) return '📝';
+      if (ct.includes('presentation') || ct.includes('powerpoint')) return '📊';
+      if (ct.startsWith('image/')) return '🖼️';
+      return '📎';
+    }
+    function fmtBytes(n) { if (!n) return ''; if (n < 1024) return `${n}B`; if (n < 1048576) return `${(n/1024).toFixed(1)}KB`; return `${(n/1048576).toFixed(1)}MB`; }
+
     return React.createElement('div', {className:'s-chat-wrap s-ui'},
-      // Doubts section
+
+      // ── Doubts section ────────────────────────────────────────────
       doubts.length > 0 && React.createElement('div', {style:{padding:'12px 16px',borderBottom:'1px solid rgba(255,255,255,0.06)'}},
         React.createElement('div', {style:{fontSize:'0.72rem',fontWeight:700,color:'rgba(241,245,249,0.3)',textTransform:'uppercase',letterSpacing:'0.08em',marginBottom:8}}, '❓ Your Doubts'),
         (Array.isArray(doubts) ? doubts : []).map((d,i)=>React.createElement('div', {key:d.id||i,className:`s-doubt-card ${(d.resolved||d.status==='resolved'||d.status==='answered')?'s-doubt-resolved':''}`},
@@ -28097,25 +28736,121 @@ function StudentTaskView({
         ))
       ),
 
-      // Messages
+      // ── Chat Suspension Banner (Feature 7) ────────────────────────
+      chatSuspended && React.createElement('div', {className:'chat-suspended-banner'},
+        React.createElement('span', null, '🔇'),
+        React.createElement('span', null, 'You are temporarily suspended from classroom chat.')
+      ),
+
+      // ── Messages list ─────────────────────────────────────────────
       React.createElement('div', {className:'s-chat-messages'},
         messages.length === 0 && React.createElement('div', {className:'s-empty',style:{padding:'40px 0'}},
           React.createElement('div', {style:{fontSize:'2rem',marginBottom:12}}, '💬'),
           React.createElement('div', {className:'s-empty-sub'}, 'No messages yet. Start the conversation!')
         ),
-        messages.map((msg,i)=>{
-          const isMe = msg.sender_id === studentId;
+        messages.map((msg, i) => {
+          const isMe      = msg.sender_id === studentId;
           const isTeacher = msg.sender_id === 'teacher';
-          return React.createElement('div', {key:i,className:`s-chat-msg ${isMe?'mine':isTeacher?'teacher':'theirs'}`},
-            !isMe && React.createElement('div', {className:'s-chat-sender'}, isTeacher?'👨‍🏫 Teacher':msg.sender_name||'Student'),
-            React.createElement('div', null, msg.content||msg.message||''),
-            React.createElement('div', {className:'s-chat-time'}, msg.sent_at?fmtChatTime(msg.sent_at):'')
+          const isSystem  = msg.msg_type === 'system' || msg.sender_id === 'system';
+          const reactions = msg.reactions || {};
+          const fileInfo  = msg.file_info;
+          const isImg     = msg.msg_type === 'image' || (fileInfo && fileInfo.content_type && fileInfo.content_type.startsWith('image/'));
+          const replyPreview = msg.reply_preview;
+          const isPickerOpen = chatReactionPickerFor === msg.id;
+
+          // System message pill
+          if (isSystem) {
+            return React.createElement('div', {key: msg.id || i, className:'comm-v2-msg-system', style:{margin:'6px 16px'}},
+              React.createElement('div', {className:'comm-v2-bubble-system'}, msg.content)
+            );
+          }
+
+          return React.createElement('div', {
+            key: msg.id || i,
+            className: `chat-msg-wrapper s-chat-msg ${isMe?'mine':isTeacher?'teacher':'theirs'}`
+          },
+            // Action bar on hover
+            React.createElement('div', {className:'chat-msg-actions'},
+              React.createElement('button', {
+                className:'chat-msg-action-btn', title:'React',
+                onClick: () => setChatReactionPickerFor(isPickerOpen ? null : msg.id)
+              }, '😊'),
+              !isMe && React.createElement('button', {
+                className:'chat-msg-action-btn', title:'Reply',
+                onClick: () => setChatReplyTo({id: msg.id, sender_name: msg.sender_name || 'Someone', content: msg.content || ''})
+              }, '↩️')
+            ),
+
+            // Emoji picker
+            isPickerOpen && React.createElement('div', {
+              className:'chat-reaction-picker',
+              style:{position:'absolute', bottom:'100%', left: isMe ? 'auto' : 0, right: isMe ? 0 : 'auto', zIndex:200}
+            },
+              EMOJI_LIST.map(em => React.createElement('button', {key:em, onClick:()=>toggleChatReaction(msg.id, em)}, em))
+            ),
+
+            !isMe && React.createElement('div', {className:'s-chat-sender'}, isTeacher ? '👨‍🏫 Teacher' : (msg.sender_name || 'Student')),
+
+            // Reply indicator
+            replyPreview && msg.reply_to_message_id && React.createElement('div', {
+              className:'chat-reply-indicator',
+              style:{cursor:'pointer'},
+              onClick: () => { const el = document.getElementById(`s-chat-msg-${msg.reply_to_message_id}`); if(el) el.scrollIntoView({behavior:'smooth',block:'center'}); }
+            },
+              React.createElement('span', null, '↩'),
+              React.createElement('span', null, replyPreview.slice(0,55) + (replyPreview.length > 55 ? '…' : ''))
+            ),
+
+            // Message body — image, file, or text
+            isImg && fileInfo
+              ? React.createElement('img', {
+                  id: `s-chat-msg-${msg.id}`,
+                  src: `/api/content/file/${sessionCode}/${encodeURIComponent(fileInfo.name || fileInfo.id)}`,
+                  className: 'chat-img-preview',
+                  alt: fileInfo.name || 'Image',
+                  loading: 'lazy',
+                  onClick: () => setChatLightboxImg(`/api/content/file/${sessionCode}/${encodeURIComponent(fileInfo.name || fileInfo.id)}`)
+                })
+              : msg.msg_type === 'file' && fileInfo
+                ? React.createElement('a', {
+                    href: `/api/content/download/${sessionCode}/${encodeURIComponent(fileInfo.name || fileInfo.id)}`,
+                    target:'_blank', rel:'noopener noreferrer',
+                    className:'chat-file-card',
+                    onClick: e => e.stopPropagation()
+                  },
+                    React.createElement('div', {className:'chat-file-icon'}, fileIcon(fileInfo.content_type)),
+                    React.createElement('div', {className:'chat-file-info'},
+                      React.createElement('div', {className:'fn'}, fileInfo.name || 'File'),
+                      React.createElement('div', {className:'fs'}, fmtBytes(fileInfo.size))
+                    ),
+                    React.createElement('span', {style:{marginLeft:'auto',fontSize:'0.75rem',opacity:0.5}}, '⬇')
+                  )
+                : React.createElement('div', {id:`s-chat-msg-${msg.id}`}, msg.content || msg.message || ''),
+
+            // Timestamp
+            React.createElement('div', {className:'s-chat-time'}, fmtChatTime(msg.timestamp || msg.sent_at)),
+
+            // Reaction pills
+            Object.keys(reactions).filter(e => reactions[e].length > 0).length > 0 &&
+              React.createElement('div', {className:'chat-reactions'},
+                Object.entries(reactions).filter(([,v])=>v.length>0).map(([emoji, reactors]) =>
+                  React.createElement('button', {
+                    key: emoji,
+                    className: 'chat-reaction-pill' + (reactors.includes(studentId) ? ' reacted' : ''),
+                    onClick: () => toggleChatReaction(msg.id, emoji),
+                    title: reactors.join(', ')
+                  },
+                    React.createElement('span', null, emoji),
+                    React.createElement('span', {className:'r-count'}, reactors.length)
+                  )
+                )
+              )
           );
         }),
         React.createElement('div', {ref:messagesEnd})
       ),
 
-      // Doubt input
+      // ── Doubt input ───────────────────────────────────────────────
       React.createElement('div', {style:{padding:'8px 16px',borderTop:'1px solid rgba(255,255,255,0.06)',background:'rgba(6,11,24,0.7)'}},
         React.createElement('div', {style:{fontSize:'0.7rem',fontWeight:700,color:'rgba(241,245,249,0.3)',textTransform:'uppercase',letterSpacing:'0.08em',marginBottom:6}}, '❓ Submit a Doubt'),
         React.createElement('div', {style:{display:'flex',gap:8}},
@@ -28130,20 +28865,56 @@ function StudentTaskView({
         )
       ),
 
-      // Chat input
-      React.createElement('div', {className:'s-chat-input-row'},
-        !chatEnabled && React.createElement('div', {style:{width:'100%',textAlign:'center',color:'rgba(241,245,249,0.3)',fontSize:'0.82rem',padding:'6px 0'}},
-          '🔒 Chat is disabled by the teacher'
+      // ── Chat input (Feature 1 reply preview + Feature 7 suspension) ──
+      React.createElement('div', {className:'s-chat-input-row', style:{flexDirection:'column',gap:0,padding:0}},
+        // Reply preview bar
+        chatReplyTo && React.createElement('div', {className:'chat-reply-preview'},
+          React.createElement('span', null,
+            React.createElement('strong', null, chatReplyTo.sender_name + ':'),
+            ' ' + (chatReplyTo.content || '').slice(0, 65) + ((chatReplyTo.content || '').length > 65 ? '…' : '')
+          ),
+          React.createElement('button', {className:'chat-reply-preview-dismiss', onClick:()=>setChatReplyTo(null)}, '✕')
         ),
-        chatEnabled && React.createElement(React.Fragment, null,
-          React.createElement('input', {
-            value:chatInput, onChange:e=>setChatInput(e.target.value),
-            placeholder:'Message the class…', className:'s-chat-input',
-            disabled:!chatEnabled,
-            onKeyDown:e=>e.key==='Enter'&&sendChat()
-          }),
-          React.createElement('button', {className:'s-chat-send',onClick:sendChat,disabled:!chatInput.trim()}, '↑')
+
+        React.createElement('div', {style:{display:'flex',alignItems:'center',gap:8,padding:'10px 14px'}},
+          !chatEnabled
+            ? React.createElement('div', {style:{width:'100%',textAlign:'center',color:'rgba(241,245,249,0.3)',fontSize:'0.82rem',padding:'6px 0'}},
+                '🔒 Chat is disabled by the teacher'
+              )
+            : chatSuspended
+              ? React.createElement('div', {style:{width:'100%',textAlign:'center',color:'#f87171',fontSize:'0.82rem',padding:'6px 0'}},
+                  '🔇 You are suspended from chat'
+                )
+              : React.createElement(React.Fragment, null,
+                  React.createElement('input', {
+                    value:chatInput, onChange:e=>setChatInput(e.target.value),
+                    placeholder: chatReplyTo ? `Replying to ${chatReplyTo.sender_name}…` : 'Message the class…',
+                    className:'s-chat-input', style:{flex:1},
+                    disabled: isInputBlocked,
+                    onKeyDown:e=>e.key==='Enter'&&sendChat()
+                  }),
+                  React.createElement('button', {
+                    className:'s-chat-send',
+                    onClick:sendChat,
+                    disabled:!chatInput.trim() || isInputBlocked
+                  }, '↑')
+                )
         )
+      ),
+
+      // ── Image Lightbox (Feature 6) ────────────────────────────────
+      chatLightboxImg && React.createElement('div', {
+        className:'lightbox-overlay',
+        onClick:()=>setChatLightboxImg(null)
+      },
+        React.createElement('button', {className:'lightbox-close', onClick:()=>setChatLightboxImg(null)}, '✕'),
+        React.createElement('img', {src:chatLightboxImg, alt:'Preview', onClick:e=>e.stopPropagation()})
+      ),
+
+      // ── Class-end warning toast (Feature 4) ──────────────────────
+      classEndToast && React.createElement('div', {className:'class-end-toast'},
+        React.createElement('span', null, '⏰'),
+        React.createElement('span', null, `Class ends in ${classEndToast.minutesLeft} minute${classEndToast.minutesLeft > 1 ? 's' : ''}!`)
       )
     );
   }

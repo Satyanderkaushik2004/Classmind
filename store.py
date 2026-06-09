@@ -106,6 +106,18 @@ def _deserialize_session(d: dict) -> dict:
         if "id" not in cf:
             import uuid as _uuid
             cf["id"] = "cf" + _uuid.uuid4().hex[:8]
+    # ── Migrate: add suspended_chat_students if missing ───────────────
+    if "suspended_chat_students" not in s:
+        s["suspended_chat_students"] = set()
+    elif not isinstance(s["suspended_chat_students"], set):
+        s["suspended_chat_students"] = set(s.get("suspended_chat_students") or [])
+    # ── Migrate: add class_end_warning_flags if missing ───────────────
+    if "class_end_warning_flags" not in s:
+        s["class_end_warning_flags"] = {}
+    # ── Migrate: ensure all chat messages have reactions dict ─────────
+    for m in s.get("chat_messages", []):
+        if isinstance(m, dict) and "reactions" not in m:
+            m["reactions"] = {}
     return s
 
 
@@ -199,6 +211,10 @@ def new_session(code: str, teacher_name: str) -> dict:
         # communication
         "chat_messages":    [],
         "doubts":           [],
+        # ── Chat moderation ───────────────────────────────────────────
+        "suspended_chat_students": set(),   # student_ids suspended from sending chat
+        # ── Class-end timer warnings (emitted once each) ──────────────
+        "class_end_warning_flags": {},      # {"10": False, "5": False, "2": False}
         "raised_hands":     {},         # dict: {student_id: {name, raised_at}}
         # content
         "content_files":    {},          # filename -> {name,data,content_type,size}

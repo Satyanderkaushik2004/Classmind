@@ -1544,10 +1544,15 @@ select option{background:var(--surface2)}
   font-family: var(--db-font);
   cursor: pointer;
   white-space: nowrap;
-  box-shadow: 0 4px 20px rgba(99,102,241,0.4);
+  box-shadow: 0 4px 20px rgba(99,102,241,0.4), 0 0 0 0 rgba(99,102,241,0.4);
   transition: all 0.2s;
+  animation: hs2-start-glow 2.5s ease-in-out infinite;
 }
-.db-hero-start-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(99,102,241,0.5); }
+@keyframes hs2-start-glow {
+  0%, 100% { box-shadow: 0 4px 20px rgba(99,102,241,0.4), 0 0 0 0 rgba(99,102,241,0); }
+  50%       { box-shadow: 0 4px 28px rgba(99,102,241,0.55), 0 0 0 6px rgba(99,102,241,0.1); }
+}
+.db-hero-start-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(99,102,241,0.6), 0 0 0 4px rgba(99,102,241,0.15); animation: none; }
 .db-hero-pause-btn {
   background: linear-gradient(135deg, #ca8a04, #d97706);
   box-shadow: 0 4px 20px rgba(234,179,8,0.35);
@@ -13085,6 +13090,991 @@ body.s-ui-active .toasts {
   .cm2-filter-bar { padding: 10px 14px; }
 }
 
+/* ═══════════════════════════════════════════════════════════
+   TI2 — Teaching Intelligence v2 (Carousel + Neural Mesh)
+   ═══════════════════════════════════════════════════════════ */
+.ti2-banner {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(135deg, #0a0a1a 0%, #120b2e 40%, #0d1535 70%, #0a1220 100%);
+  border: 1px solid rgba(99,102,241,0.4);
+  border-radius: 16px;
+  padding: 22px 28px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 20px;
+  min-height: 100px;
+  box-shadow: 0 0 40px rgba(99,102,241,0.14), 0 0 80px rgba(139,92,246,0.06), inset 0 1px 0 rgba(255,255,255,0.06);
+}
+.ti2-neural-canvas {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.55;
+}
+.ti2-glow-orb {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 0;
+}
+.ti2-glow-orb.a {
+  width: 260px; height: 260px;
+  top: -80px; right: 120px;
+  background: radial-gradient(circle, rgba(99,102,241,0.18) 0%, transparent 70%);
+  animation: ti2-orb-float 7s ease-in-out infinite alternate;
+}
+.ti2-glow-orb.b {
+  width: 180px; height: 180px;
+  bottom: -60px; left: 80px;
+  background: radial-gradient(circle, rgba(139,92,246,0.14) 0%, transparent 70%);
+  animation: ti2-orb-float 9s ease-in-out infinite alternate-reverse;
+}
+@keyframes ti2-orb-float {
+  0%   { transform: translate(0, 0) scale(1); }
+  50%  { transform: translate(12px, -8px) scale(1.05); }
+  100% { transform: translate(-8px, 6px) scale(0.97); }
+}
+.ti2-badge {
+  width: 52px; height: 52px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, rgba(99,102,241,0.3), rgba(139,92,246,0.3));
+  border: 1px solid rgba(99,102,241,0.45);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.5rem;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 1;
+  box-shadow: 0 0 18px rgba(99,102,241,0.3);
+  animation: ti2-badge-pulse 3s ease-in-out infinite;
+}
+@keyframes ti2-badge-pulse {
+  0%, 100% { box-shadow: 0 0 18px rgba(99,102,241,0.3); }
+  50%       { box-shadow: 0 0 32px rgba(99,102,241,0.55), 0 0 60px rgba(139,92,246,0.2); }
+}
+.ti2-content {
+  flex: 1;
+  min-width: 0;
+  position: relative;
+  z-index: 1;
+}
+.ti2-title {
+  font-size: 0.9rem;
+  font-weight: 800;
+  color: #e2e8f0;
+  margin-bottom: 2px;
+  letter-spacing: 0.01em;
+}
+.ti2-subtitle {
+  font-size: 0.75rem;
+  color: rgba(148,163,184,0.85);
+  margin-bottom: 12px;
+}
+.ti2-carousel {
+  position: relative;
+  min-height: 46px;
+  overflow: hidden;
+}
+.ti2-slide {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  transition: opacity 0.4s ease, transform 0.4s ease;
+}
+.ti2-slide.ti2-fading {
+  opacity: 0;
+  transform: translateY(6px);
+}
+.ti2-slide.ti2-entering {
+  animation: ti2-slide-in 0.4s ease both;
+}
+@keyframes ti2-slide-in {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.ti2-insight-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.83rem;
+  color: rgba(203,213,225,0.9);
+  line-height: 1.4;
+}
+.ti2-icon {
+  font-size: 1rem;
+  flex-shrink: 0;
+  animation: ti2-icon-pulse 2.5s ease-in-out infinite;
+  display: inline-block;
+}
+@keyframes ti2-icon-pulse {
+  0%, 100% { transform: scale(1); }
+  50%       { transform: scale(1.15); }
+}
+.ti2-dots {
+  display: flex;
+  gap: 5px;
+  margin-top: 10px;
+}
+.ti2-dot {
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: rgba(99,102,241,0.3);
+  transition: all 0.3s ease;
+}
+.ti2-dot.active {
+  width: 14px;
+  border-radius: 3px;
+  background: rgba(99,102,241,0.9);
+  box-shadow: 0 0 6px rgba(99,102,241,0.6);
+}
+.ti2-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 10px;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 1;
+}
+.ti2-view-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 20px;
+  background: linear-gradient(135deg, rgba(99,102,241,0.2), rgba(139,92,246,0.2));
+  border: 1px solid rgba(99,102,241,0.45);
+  border-radius: 10px;
+  color: #a5b4fc;
+  font-size: 0.83rem;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  white-space: nowrap;
+  letter-spacing: 0.01em;
+  transition: all 0.22s ease;
+  box-shadow: 0 0 14px rgba(99,102,241,0.15);
+}
+.ti2-view-btn:hover {
+  background: linear-gradient(135deg, rgba(99,102,241,0.35), rgba(139,92,246,0.35));
+  border-color: rgba(99,102,241,0.7);
+  box-shadow: 0 0 24px rgba(99,102,241,0.35);
+  transform: translateY(-1px);
+  color: #c4b5fd;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   HS2 — Hero Status Avatar v2
+   ═══════════════════════════════════════════════════════════ */
+.hs2-avatar-ring {
+  width: 76px; height: 76px;
+  border-radius: 50%;
+  border: 2px solid rgba(99,102,241,0.55);
+  background: linear-gradient(135deg, #1e1b4b, #312e81);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  position: relative;
+  box-shadow: 0 0 0 0 rgba(99,102,241,0.4);
+  animation: hs2-ring-glow 3s ease-in-out infinite;
+  overflow: hidden;
+}
+.hs2-avatar-ring img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+.hs2-initials {
+  font-size: 1.65rem;
+  font-weight: 800;
+  color: #c4b5fd;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  text-shadow: 0 0 12px rgba(139,92,246,0.6);
+}
+@keyframes hs2-ring-glow {
+  0%, 100% { box-shadow: 0 0 0 3px rgba(99,102,241,0.2), 0 0 18px rgba(99,102,241,0.15); }
+  50%       { box-shadow: 0 0 0 5px rgba(99,102,241,0.35), 0 0 30px rgba(99,102,241,0.25); }
+}
+.hs2-avatar-ring::after {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  background: linear-gradient(135deg, rgba(99,102,241,0.6), rgba(139,92,246,0.6), transparent, rgba(99,102,241,0.4)) border-box;
+  -webkit-mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: destination-out;
+  mask-composite: exclude;
+  animation: hs2-border-spin 4s linear infinite;
+  pointer-events: none;
+}
+@keyframes hs2-border-spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   SC2 — Share Code Panel v2
+   ═══════════════════════════════════════════════════════════ */
+.sc2-section {
+  position: relative;
+}
+.sc2-trigger {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--surface2);
+  margin-bottom: 8px;
+  cursor: pointer;
+  transition: all 0.18s;
+  font-family: inherit;
+  text-align: left;
+  width: 100%;
+}
+.sc2-trigger:hover { border-color: rgba(99,102,241,0.35); background: rgba(99,102,241,0.06); }
+.sc2-trigger.open { border-color: rgba(99,102,241,0.5); background: rgba(99,102,241,0.08); border-bottom-left-radius: 0; border-bottom-right-radius: 0; }
+.sc2-panel {
+  background: linear-gradient(135deg, #0f0f1e, #141428);
+  border: 1px solid rgba(99,102,241,0.35);
+  border-top: none;
+  border-radius: 0 0 12px 12px;
+  padding: 16px;
+  margin-bottom: 8px;
+  animation: sc2-expand 0.22s ease;
+}
+@keyframes sc2-expand {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.sc2-code-display {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 14px;
+  padding: 8px 12px;
+  background: rgba(99,102,241,0.08);
+  border: 1px solid rgba(99,102,241,0.2);
+  border-radius: 8px;
+}
+.sc2-code-label {
+  font-size: 0.72rem;
+  color: rgba(148,163,184,0.7);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.sc2-code-value {
+  font-family: monospace;
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #a5b4fc;
+  letter-spacing: 3px;
+  flex: 1;
+}
+.sc2-btns-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.sc2-share-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  flex: 1;
+  min-width: 60px;
+  padding: 10px 8px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.1);
+  background: rgba(255,255,255,0.05);
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+.sc2-share-btn:hover { transform: translateY(-3px); }
+.sc2-share-btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 0.2s;
+  border-radius: inherit;
+}
+.sc2-share-btn:hover::before { opacity: 1; }
+.sc2-share-btn.whatsapp { border-color: rgba(37,211,102,0.3); }
+.sc2-share-btn.whatsapp::before { background: rgba(37,211,102,0.12); }
+.sc2-share-btn.whatsapp:hover { box-shadow: 0 0 16px rgba(37,211,102,0.3); border-color: rgba(37,211,102,0.6); }
+.sc2-share-btn.telegram { border-color: rgba(0,136,204,0.3); }
+.sc2-share-btn.telegram::before { background: rgba(0,136,204,0.12); }
+.sc2-share-btn.telegram:hover { box-shadow: 0 0 16px rgba(0,136,204,0.3); border-color: rgba(0,136,204,0.6); }
+.sc2-share-btn.instagram { border-color: rgba(225,48,108,0.3); }
+.sc2-share-btn.instagram::before { background: rgba(225,48,108,0.1); }
+.sc2-share-btn.instagram:hover { box-shadow: 0 0 16px rgba(225,48,108,0.25); border-color: rgba(225,48,108,0.5); }
+.sc2-share-btn.copylink { border-color: rgba(99,102,241,0.3); }
+.sc2-share-btn.copylink::before { background: rgba(99,102,241,0.12); }
+.sc2-share-btn.copylink:hover { box-shadow: 0 0 16px rgba(99,102,241,0.3); border-color: rgba(99,102,241,0.6); }
+.sc2-btn-icon {
+  font-size: 1.3rem;
+  line-height: 1;
+  position: relative;
+  z-index: 1;
+}
+.sc2-btn-label {
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: rgba(203,213,225,0.8);
+  position: relative;
+  z-index: 1;
+  white-space: nowrap;
+}
+.sc2-copied-toast {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(34,197,94,0.9);
+  border-radius: inherit;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #fff;
+  animation: sc2-toast-pop 1.8s ease forwards;
+}
+@keyframes sc2-toast-pop {
+  0%   { opacity: 0; transform: scale(0.85); }
+  15%  { opacity: 1; transform: scale(1); }
+  75%  { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   TM2 — Test Mode Page v2 (Futuristic Redesign)
+   ═══════════════════════════════════════════════════════════ */
+.tm2-page {
+  padding: 24px;
+  max-width: 1400px;
+  margin: 0 auto;
+  position: relative;
+}
+
+/* Animated mesh background */
+.tm2-page::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 60% 40% at 80% 20%, rgba(99,102,241,0.08) 0%, transparent 60%),
+    radial-gradient(ellipse 50% 60% at 10% 80%, rgba(139,92,246,0.07) 0%, transparent 55%),
+    radial-gradient(ellipse 40% 30% at 50% 50%, rgba(59,130,246,0.05) 0%, transparent 50%);
+  pointer-events: none;
+  z-index: 0;
+  animation: tm2-bg-shift 12s ease-in-out infinite alternate;
+}
+@keyframes tm2-bg-shift {
+  0%   { opacity: 0.8; transform: scale(1); }
+  100% { opacity: 1;   transform: scale(1.03) translateX(12px); }
+}
+.tm2-page > * { position: relative; z-index: 1; }
+
+/* Header */
+.tm2-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 28px;
+}
+.tm2-header-icon {
+  width: 52px; height: 52px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, rgba(99,102,241,0.3), rgba(139,92,246,0.3));
+  border: 1px solid rgba(99,102,241,0.4);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.5rem;
+  box-shadow: 0 0 24px rgba(99,102,241,0.25);
+  flex-shrink: 0;
+}
+.tm2-header-info { flex: 1; }
+.tm2-header-title {
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: #e2e8f0;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  margin-bottom: 4px;
+}
+.tm2-header-sub {
+  font-size: 0.8rem;
+  color: rgba(148,163,184,0.8);
+}
+.tm2-launch-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 28px;
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  border: none;
+  border-radius: 12px;
+  color: #fff;
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.22s ease;
+  box-shadow: 0 0 28px rgba(99,102,241,0.4), 0 4px 16px rgba(0,0,0,0.3);
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.tm2-launch-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #7173f4, #9d6ef8);
+  box-shadow: 0 0 40px rgba(99,102,241,0.6), 0 4px 20px rgba(0,0,0,0.4);
+  transform: translateY(-2px);
+}
+.tm2-launch-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* Two-column grid */
+.tm2-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+@media (max-width: 900px) {
+  .tm2-grid { grid-template-columns: 1fr; }
+}
+
+/* Futuristic card base */
+.tm2-card {
+  background: linear-gradient(135deg, rgba(15,15,35,0.97) 0%, rgba(18,12,40,0.97) 50%, rgba(13,20,52,0.97) 100%);
+  border: 1px solid rgba(99,102,241,0.3);
+  border-radius: 18px;
+  padding: 24px;
+  position: relative;
+  overflow: hidden;
+  transition: border-color 0.25s ease, box-shadow 0.25s ease;
+  backdrop-filter: blur(12px);
+}
+.tm2-card:hover {
+  border-color: rgba(99,102,241,0.5);
+  box-shadow: 0 0 30px rgba(99,102,241,0.1), 0 8px 32px rgba(0,0,0,0.35);
+}
+.tm2-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(99,102,241,0.6), rgba(139,92,246,0.4), transparent);
+  opacity: 0.7;
+}
+.tm2-card-glow {
+  position: absolute;
+  top: -40px; right: -40px;
+  width: 180px; height: 180px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(99,102,241,0.12) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+/* Card headers */
+.tm2-card-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+.tm2-card-icon {
+  font-size: 1.2rem;
+}
+.tm2-card-label {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #e2e8f0;
+  letter-spacing: -0.01em;
+}
+.tm2-ai-badge {
+  padding: 2px 8px;
+  background: linear-gradient(135deg, rgba(99,102,241,0.3), rgba(139,92,246,0.3));
+  border: 1px solid rgba(99,102,241,0.4);
+  border-radius: 6px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #a5b4fc;
+  letter-spacing: 0.05em;
+}
+
+/* Test Settings inputs */
+.tm2-input {
+  width: 100%;
+  padding: 11px 14px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(99,102,241,0.25);
+  border-radius: 10px;
+  color: #e2e8f0;
+  font-size: 0.875rem;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.tm2-input:focus {
+  border-color: rgba(99,102,241,0.6);
+  box-shadow: 0 0 0 3px rgba(99,102,241,0.12);
+}
+.tm2-input::placeholder { color: rgba(148,163,184,0.5); }
+.tm2-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: rgba(148,163,184,0.8);
+  margin-bottom: 6px;
+  display: block;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+/* Duration pills */
+.tm2-duration-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.tm2-pill {
+  padding: 7px 14px;
+  border-radius: 8px;
+  border: 1px solid rgba(99,102,241,0.25);
+  background: rgba(255,255,255,0.04);
+  color: rgba(203,213,225,0.75);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.18s ease;
+}
+.tm2-pill:hover { border-color: rgba(99,102,241,0.45); background: rgba(99,102,241,0.1); color: #c4b5fd; }
+.tm2-pill.active {
+  background: linear-gradient(135deg, rgba(99,102,241,0.35), rgba(139,92,246,0.3));
+  border-color: rgba(99,102,241,0.7);
+  color: #e0e7ff;
+  box-shadow: 0 0 12px rgba(99,102,241,0.3);
+}
+.tm2-pill-custom {
+  width: 72px;
+  padding: 7px 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(99,102,241,0.25);
+  background: rgba(255,255,255,0.04);
+  color: rgba(203,213,225,0.75);
+  font-size: 0.8rem;
+  font-family: inherit;
+  outline: none;
+  text-align: center;
+  transition: border-color 0.18s;
+}
+.tm2-pill-custom:focus { border-color: rgba(99,102,241,0.5); }
+
+/* Stats summary row */
+.tm2-stats-row {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 12px 16px;
+  background: rgba(99,102,241,0.06);
+  border: 1px solid rgba(99,102,241,0.18);
+  border-radius: 10px;
+  margin-top: 16px;
+}
+.tm2-stat-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.82rem;
+  color: rgba(203,213,225,0.85);
+}
+.tm2-stat-chip strong { color: #e2e8f0; font-weight: 700; }
+
+/* Toggle row */
+.tm2-toggles-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px;
+}
+.tm2-toggle-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: rgba(34,197,94,0.1);
+  border: 1px solid rgba(34,197,94,0.25);
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: rgba(74,222,128,0.85);
+}
+
+/* AI Generator panel */
+.tm2-ai-panel {
+  position: relative;
+}
+.tm2-type-selector {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+.tm2-type-btn {
+  padding: 8px 18px;
+  border-radius: 8px;
+  border: 1px solid rgba(99,102,241,0.3);
+  background: rgba(255,255,255,0.04);
+  color: rgba(203,213,225,0.75);
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.18s;
+}
+.tm2-type-btn:hover { border-color: rgba(99,102,241,0.5); background: rgba(99,102,241,0.1); color: #c4b5fd; }
+.tm2-type-btn.active {
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  border-color: #8b5cf6;
+  color: #fff;
+  box-shadow: 0 0 16px rgba(99,102,241,0.35);
+}
+.tm2-gen-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 22px;
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  border: none;
+  border-radius: 10px;
+  color: #fff;
+  font-size: 0.875rem;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.22s ease;
+  box-shadow: 0 0 20px rgba(99,102,241,0.35);
+  width: 100%;
+  justify-content: center;
+  margin-top: 14px;
+}
+.tm2-gen-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #7173f4, #9d6ef8);
+  box-shadow: 0 0 32px rgba(99,102,241,0.55);
+  transform: translateY(-1px);
+}
+.tm2-gen-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.tm2-ai-illustration {
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 130px;
+  opacity: 0.15;
+  pointer-events: none;
+  font-size: 5rem;
+  text-align: center;
+  filter: blur(1px);
+}
+
+/* Add Question Directly */
+.tm2-add-q-bar {
+  background: linear-gradient(135deg, rgba(15,15,35,0.97) 0%, rgba(18,12,40,0.97) 100%);
+  border: 1px solid rgba(99,102,241,0.28);
+  border-radius: 16px;
+  padding: 18px 22px;
+  margin-bottom: 20px;
+  position: relative;
+  overflow: hidden;
+}
+.tm2-add-q-bar::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(99,102,241,0.5), transparent);
+}
+.tm2-add-q-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 0;
+}
+.tm2-add-q-plus {
+  width: 34px; height: 34px;
+  border-radius: 10px;
+  background: rgba(99,102,241,0.2);
+  border: 1px solid rgba(99,102,241,0.3);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+.tm2-add-q-label {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #e2e8f0;
+  flex: 1;
+}
+.tm2-add-q-marks {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.tm2-marks-select {
+  padding: 6px 10px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(99,102,241,0.3);
+  border-radius: 8px;
+  color: #e2e8f0;
+  font-size: 0.8rem;
+  font-family: inherit;
+  cursor: pointer;
+  outline: none;
+}
+.tm2-add-q-btn {
+  padding: 8px 18px;
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  border: none;
+  border-radius: 9px;
+  color: #fff;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.2s;
+  box-shadow: 0 0 14px rgba(99,102,241,0.3);
+  white-space: nowrap;
+}
+.tm2-add-q-btn:hover { box-shadow: 0 0 22px rgba(99,102,241,0.5); transform: translateY(-1px); }
+.tm2-add-q-input {
+  flex: 1;
+  padding: 9px 14px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(99,102,241,0.25);
+  border-radius: 9px;
+  color: #e2e8f0;
+  font-size: 0.85rem;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.tm2-add-q-input:focus { border-color: rgba(99,102,241,0.5); }
+.tm2-add-q-input::placeholder { color: rgba(148,163,184,0.45); }
+
+/* Questions List */
+.tm2-questions-card {
+  background: linear-gradient(135deg, rgba(15,15,35,0.97) 0%, rgba(18,12,40,0.97) 100%);
+  border: 1px solid rgba(99,102,241,0.28);
+  border-radius: 18px;
+  overflow: hidden;
+  position: relative;
+}
+.tm2-questions-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(99,102,241,0.55), rgba(139,92,246,0.4), transparent);
+}
+.tm2-q-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 18px 22px;
+  border-bottom: 1px solid rgba(99,102,241,0.15);
+}
+.tm2-q-title-text {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #e2e8f0;
+  flex: 1;
+}
+.tm2-q-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px; height: 26px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, rgba(99,102,241,0.35), rgba(139,92,246,0.3));
+  border: 1px solid rgba(99,102,241,0.4);
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: #a5b4fc;
+}
+.tm2-select-all-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 12px;
+  border-radius: 7px;
+  border: 1px solid rgba(99,102,241,0.3);
+  background: rgba(99,102,241,0.08);
+  color: #a5b4fc;
+  font-size: 0.76rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.18s;
+}
+.tm2-select-all-btn:hover { background: rgba(99,102,241,0.18); border-color: rgba(99,102,241,0.5); }
+.tm2-q-list { padding: 12px 16px; }
+.tm2-q-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  margin-bottom: 7px;
+  border: 1px solid rgba(99,102,241,0.15);
+  background: rgba(255,255,255,0.025);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+}
+.tm2-q-row:hover {
+  border-color: rgba(99,102,241,0.4);
+  background: rgba(99,102,241,0.07);
+  transform: translateX(2px);
+  box-shadow: 0 2px 12px rgba(0,0,0,0.2);
+}
+.tm2-q-row.selected {
+  border-color: rgba(99,102,241,0.45);
+  background: rgba(99,102,241,0.1);
+}
+.tm2-q-drag {
+  color: rgba(99,102,241,0.35);
+  font-size: 0.85rem;
+  cursor: grab;
+  flex-shrink: 0;
+  line-height: 1;
+}
+.tm2-q-checkbox {
+  width: 20px; height: 20px;
+  border-radius: 6px;
+  border: 2px solid rgba(99,102,241,0.5);
+  background: transparent;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.15s;
+}
+.tm2-q-checkbox.checked {
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  border-color: #8b5cf6;
+  box-shadow: 0 0 8px rgba(99,102,241,0.4);
+}
+.tm2-q-num {
+  width: 28px; height: 28px;
+  border-radius: 8px;
+  background: rgba(99,102,241,0.12);
+  border: 1px solid rgba(99,102,241,0.25);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: rgba(165,180,252,0.85);
+  flex-shrink: 0;
+}
+.tm2-q-type-badge {
+  padding: 3px 9px;
+  border-radius: 6px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  flex-shrink: 0;
+}
+.tm2-q-type-badge.mcq {
+  background: rgba(99,102,241,0.2);
+  color: #a5b4fc;
+  border: 1px solid rgba(99,102,241,0.3);
+}
+.tm2-q-type-badge.short {
+  background: rgba(234,179,8,0.15);
+  color: #fde68a;
+  border: 1px solid rgba(234,179,8,0.25);
+}
+.tm2-q-type-badge.long {
+  background: rgba(59,130,246,0.15);
+  color: #93c5fd;
+  border: 1px solid rgba(59,130,246,0.25);
+}
+.tm2-q-text {
+  flex: 1;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: rgba(226,232,240,0.9);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.3;
+}
+.tm2-q-marks-tag {
+  font-size: 0.75rem;
+  color: rgba(148,163,184,0.7);
+  flex-shrink: 0;
+  white-space: nowrap;
+  font-weight: 500;
+}
+.tm2-q-footer {
+  padding: 10px 22px 14px;
+  text-align: center;
+  font-size: 0.78rem;
+  color: rgba(148,163,184,0.6);
+  border-top: 1px solid rgba(99,102,241,0.1);
+}
+
+/* Key section */
+.tm2-api-section {
+  margin-top: 14px;
+  padding: 12px 14px;
+  background: rgba(99,102,241,0.06);
+  border: 1px solid rgba(99,102,241,0.2);
+  border-radius: 10px;
+}
+.tm2-api-label {
+  font-size: 0.76rem;
+  color: rgba(165,180,252,0.85);
+  font-weight: 600;
+  margin-bottom: 8px;
+  display: block;
+}
+.tm2-api-note {
+  font-size: 0.73rem;
+  color: rgba(148,163,184,0.65);
+  line-height: 1.4;
+  margin-top: 6px;
+}
+
+/* ── Mobile responsive for new components ── */
+@media (max-width: 768px) {
+  .ti2-banner { flex-wrap: wrap; padding: 16px; gap: 12px; }
+  .ti2-badge { width: 44px; height: 44px; font-size: 1.2rem; }
+  .ti2-right { width: 100%; align-items: flex-start; }
+  .hs2-avatar-ring { width: 60px; height: 60px; }
+  .hs2-initials { font-size: 1.35rem; }
+  .sc2-btns-row { gap: 6px; }
+  .sc2-share-btn { min-width: 52px; padding: 8px 6px; }
+  .tm2-page { padding: 16px; }
+  .tm2-header { flex-wrap: wrap; gap: 12px; }
+  .tm2-header-title { font-size: 1.15rem; }
+  .tm2-launch-btn { width: 100%; justify-content: center; }
+  .tm2-grid { grid-template-columns: 1fr; gap: 14px; }
+  .tm2-duration-row { gap: 6px; }
+  .tm2-pill { padding: 6px 10px; font-size: 0.75rem; }
+  .tm2-add-q-bar { padding: 14px; }
+  .tm2-q-row { flex-wrap: nowrap; gap: 8px; }
+  .tm2-q-text { font-size: 0.8rem; }
+  .tm2-q-drag { display: none; }
+  .tm2-q-marks-tag { display: none; }
+}
+
 </style>
 </head>
 <body>
@@ -17909,6 +18899,181 @@ function SelfContainedAIInsights() {
   );
 }
 
+// ═══════════════════════════════════════════════════════════════
+//  AI INSIGHTS BANNER V2 — Carousel with neural mesh background
+// ═══════════════════════════════════════════════════════════════
+function AIInsightsBannerV2({ insights, sessionStatus, onViewInsights }) {
+  const [slideIdx, setSlideIdx] = React.useState(0);
+  const [fading, setFading] = React.useState(false);
+  const [entering, setEntering] = React.useState(false);
+  const totalSlides = Math.ceil(insights.length / 2);
+
+  React.useEffect(() => {
+    if (insights.length <= 2) return;
+    const iv = setInterval(() => {
+      setFading(true);
+      setTimeout(() => {
+        setSlideIdx(i => (i + 1) % totalSlides);
+        setFading(false);
+        setEntering(true);
+        setTimeout(() => setEntering(false), 420);
+      }, 420);
+    }, 5000);
+    return () => clearInterval(iv);
+  }, [insights.length, totalSlides]);
+
+  const visibleInsights = insights.slice(slideIdx * 2, slideIdx * 2 + 2);
+
+  // SVG neural network lines
+  const neuralSVG = React.createElement('svg', {
+    className: 'ti2-neural-canvas',
+    viewBox: '0 0 800 100',
+    preserveAspectRatio: 'none',
+    xmlns: 'http://www.w3.org/2000/svg'
+  },
+    React.createElement('defs', null,
+      React.createElement('filter', { id: 'ti2glow' },
+        React.createElement('feGaussianBlur', { stdDeviation: '2.5', result: 'coloredBlur' }),
+        React.createElement('feMerge', null,
+          React.createElement('feMergeNode', { in: 'coloredBlur' }),
+          React.createElement('feMergeNode', { in: 'SourceGraphic' })
+        )
+      ),
+      React.createElement('linearGradient', { id: 'ti2line1', x1: '0%', y1: '0%', x2: '100%', y2: '0%' },
+        React.createElement('stop', { offset: '0%', stopColor: 'rgba(99,102,241,0)', stopOpacity: '0' }),
+        React.createElement('stop', { offset: '50%', stopColor: 'rgba(99,102,241,0.55)' }),
+        React.createElement('stop', { offset: '100%', stopColor: 'rgba(139,92,246,0)', stopOpacity: '0' })
+      )
+    ),
+    // Lines
+    React.createElement('line', { x1:'60', y1:'50', x2:'220', y2:'25', stroke:'url(#ti2line1)', strokeWidth:'0.8', filter:'url(#ti2glow)' }),
+    React.createElement('line', { x1:'220', y1:'25', x2:'390', y2:'65', stroke:'rgba(139,92,246,0.35)', strokeWidth:'0.8' }),
+    React.createElement('line', { x1:'390', y1:'65', x2:'560', y2:'30', stroke:'rgba(99,102,241,0.4)', strokeWidth:'0.8', filter:'url(#ti2glow)' }),
+    React.createElement('line', { x1:'560', y1:'30', x2:'740', y2:'55', stroke:'rgba(139,92,246,0.3)', strokeWidth:'0.8' }),
+    React.createElement('line', { x1:'220', y1:'25', x2:'390', y2:'20', stroke:'rgba(59,130,246,0.25)', strokeWidth:'0.5', strokeDasharray:'4 4' }),
+    React.createElement('line', { x1:'390', y1:'20', x2:'560', y2:'30', stroke:'rgba(59,130,246,0.2)', strokeWidth:'0.5', strokeDasharray:'4 4' }),
+    // Nodes
+    React.createElement('circle', { cx:'60', cy:'50', r:'4', fill:'rgba(99,102,241,0.6)', filter:'url(#ti2glow)' }),
+    React.createElement('circle', { cx:'220', cy:'25', r:'3.5', fill:'rgba(139,92,246,0.7)', filter:'url(#ti2glow)' }),
+    React.createElement('circle', { cx:'390', cy:'65', r:'3', fill:'rgba(99,102,241,0.55)' }),
+    React.createElement('circle', { cx:'390', cy:'20', r:'2.5', fill:'rgba(59,130,246,0.5)' }),
+    React.createElement('circle', { cx:'560', cy:'30', r:'4', fill:'rgba(139,92,246,0.65)', filter:'url(#ti2glow)' }),
+    React.createElement('circle', { cx:'740', cy:'55', r:'3', fill:'rgba(99,102,241,0.5)' })
+  );
+
+  return React.createElement('div', { className: 'ti2-banner' },
+    neuralSVG,
+    React.createElement('div', { className: 'ti2-glow-orb a' }),
+    React.createElement('div', { className: 'ti2-glow-orb b' }),
+    React.createElement('div', { className: 'ti2-badge' }, '✨'),
+    React.createElement('div', { className: 'ti2-content' },
+      React.createElement('div', { className: 'ti2-title' }, 'Teaching Intelligence'),
+      React.createElement('div', { className: 'ti2-subtitle' },
+        sessionStatus === 'active'
+          ? `${insights.length} live insight${insights.length !== 1 ? 's' : ''} from your classroom.`
+          : 'Start a session to generate live AI insights.'
+      ),
+      React.createElement('div', { className: 'ti2-carousel' },
+        React.createElement('div', {
+          className: `ti2-slide${fading ? ' ti2-fading' : ''}${entering ? ' ti2-entering' : ''}`
+        },
+          visibleInsights.map((ins, i) =>
+            React.createElement('div', { key: i, className: 'ti2-insight-row' },
+              React.createElement('span', { className: 'ti2-icon' }, ins.icon),
+              React.createElement('span', null, ins.text)
+            )
+          )
+        )
+      ),
+      totalSlides > 1 && React.createElement('div', { className: 'ti2-dots' },
+        Array.from({ length: totalSlides }, (_, i) =>
+          React.createElement('div', {
+            key: i,
+            className: `ti2-dot${i === slideIdx ? ' active' : ''}`
+          })
+        )
+      )
+    ),
+    React.createElement('div', { className: 'ti2-right' },
+      React.createElement('button', {
+        className: 'ti2-view-btn',
+        onClick: () => onViewInsights && onViewInsights()
+      }, 'View Insights →')
+    )
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  SHARE CODE PANEL — WhatsApp / Telegram / Instagram / Copy
+// ═══════════════════════════════════════════════════════════════
+function ShareCodePanel({ sessionCode, add }) {
+  const [open, setOpen] = React.useState(false);
+  const [copiedBtn, setCopiedBtn] = React.useState(null);
+
+  const inviteMsg = `Join my ClassMind classroom!\nUse code: ${sessionCode}\nhttps://classmind.app`;
+  const encodedMsg = encodeURIComponent(inviteMsg);
+
+  function handleShare(platform) {
+    if (platform === 'whatsapp') {
+      window.open(`https://wa.me/?text=${encodedMsg}`, '_blank');
+    } else if (platform === 'telegram') {
+      window.open(`https://t.me/share/url?url=${encodeURIComponent('https://classmind.app')}&text=${encodedMsg}`, '_blank');
+    } else if (platform === 'instagram') {
+      navigator.clipboard.writeText(inviteMsg).catch(() => {});
+      setCopiedBtn('instagram');
+      setTimeout(() => setCopiedBtn(null), 1800);
+      if (add) add('Message copied — paste it on Instagram!', 'success');
+    } else if (platform === 'copy') {
+      navigator.clipboard.writeText(sessionCode).catch(() => {});
+      setCopiedBtn('copy');
+      setTimeout(() => setCopiedBtn(null), 1800);
+      if (add) add('Class code copied!', 'success');
+    }
+  }
+
+  const platforms = [
+    { id: 'whatsapp', label: 'WhatsApp', icon: '📲' },
+    { id: 'telegram', label: 'Telegram', icon: '✈️' },
+    { id: 'instagram', label: 'Instagram', icon: '📸' },
+    { id: 'copy', label: 'Copy Link', icon: '🔗' },
+  ];
+
+  return React.createElement('div', { className: 'sc2-section' },
+    React.createElement('button', {
+      className: `sc2-trigger${open ? ' open' : ''}`,
+      onClick: () => setOpen(v => !v)
+    },
+      React.createElement('div', { className: 'db-qc-icon-wrap' }, '📡'),
+      React.createElement('div', { className: 'db-qc-text' },
+        React.createElement('div', { className: 'db-qc-title' }, 'Share Class Code'),
+        React.createElement('div', { className: 'db-qc-sub' }, sessionCode)
+      ),
+      React.createElement('span', { style: { color: 'var(--text3)', transition: 'transform 0.2s', transform: open ? 'rotate(90deg)' : 'none', fontSize: '1rem' } }, '›')
+    ),
+    open && React.createElement('div', { className: 'sc2-panel' },
+      React.createElement('div', { className: 'sc2-code-display' },
+        React.createElement('div', null,
+          React.createElement('div', { className: 'sc2-code-label' }, 'Class Code'),
+          React.createElement('div', { className: 'sc2-code-value' }, sessionCode)
+        )
+      ),
+      React.createElement('div', { className: 'sc2-btns-row' },
+        platforms.map(p =>
+          React.createElement('button', {
+            key: p.id,
+            className: `sc2-share-btn ${p.id}`,
+            onClick: () => handleShare(p.id)
+          },
+            copiedBtn === p.id && React.createElement('div', { className: 'sc2-copied-toast' }, '✓ Copied!'),
+            React.createElement('span', { className: 'sc2-btn-icon' }, p.icon),
+            React.createElement('span', { className: 'sc2-btn-label' }, p.label)
+          )
+        )
+      )
+    )
+  );
+}
+
 function TeacherDashboard({
   teacherName,
   sessionCode,
@@ -18310,9 +19475,13 @@ function TeacherDashboard({
       ),
       /* Dark overlay for readability */
       React.createElement("div", { className: "db-hero-overlay" }),
-      /* Status icon */
-      React.createElement("div", { className: "db-hero-status-icon" },
-        sessionStatus === 'active' ? "✅" : sessionStatus === 'paused' ? "⏸" : sessionStatus === 'ended' ? "🏁" : "✅"
+      /* Teacher Avatar (replaces old status icon) */
+      React.createElement("div", { className: "hs2-avatar-ring" },
+        React.createElement("div", { className: "hs2-initials" },
+          teacherName
+            ? teacherName.split(' ').slice(0, 2).map(w => w[0]).join('').toUpperCase()
+            : 'T'
+        )
       ),
       /* Info */
       React.createElement("div", { className: "db-hero-info" },
@@ -18470,24 +19639,12 @@ function TeacherDashboard({
       )
     ),
 
-    /* ══════════ AI INSIGHTS BANNER ══════════ */
-    React.createElement("div", { className: "db-ai-banner" },
-      React.createElement("div", { className: "db-ai-badge" }, "\u2728"),
-      React.createElement("div", { className: "db-ai-content" },
-        React.createElement("div", { className: "db-ai-title" }, "Teaching Intelligence"),
-        React.createElement("div", { className: "db-ai-subtitle" }, sessionStatus === 'active' ? `${AI_BANNER_INSIGHTS.length} live insight${AI_BANNER_INSIGHTS.length !== 1 ? 's' : ''} from your classroom.` : 'Start a session to generate live AI insights.'),
-        React.createElement("div", { className: "db-ai-insights-list" },
-          AI_BANNER_INSIGHTS.map((ins, i) =>
-            React.createElement("div", { key: ins.text, className: "db-ai-insight-item" },
-              React.createElement("span", { className: "db-ai-insight-icon" }, ins.icon),
-              React.createElement("span", null, ins.text)
-            )
-          )
-        )
-      ),
-      React.createElement("div", { className: "db-ai-brain-icon" }, "\uD83E\uDDE0"),
-      React.createElement("button", { className: "db-ai-view-btn", onClick: () => setPage && setPage('reports') }, "View Insights \u2192")
-    ),
+    /* ══════════ AI INSIGHTS BANNER v2 ══════════ */
+    React.createElement(AIInsightsBannerV2, {
+      insights: AI_BANNER_INSIGHTS,
+      sessionStatus: sessionStatus,
+      onViewInsights: () => setPage && setPage('reports')
+    }),
 
     /* ══════════ BOTTOM 3-COL GRID ══════════ */
     React.createElement("div", { className: "db-bottom-grid" },
@@ -18626,19 +19783,8 @@ function TeacherDashboard({
           ),
           React.createElement("span", { className: "db-qc-arrow" }, "\u203A")
         ),
-        /* Share Class Code */
-        React.createElement("button", {
-          className: "db-qc-item",
-          style: { border: 'none', width: '100%' },
-          onClick: () => { navigator.clipboard.writeText(sessionCode).catch(() => {}); add('Class code copied!', 'success'); }
-        },
-          React.createElement("div", { className: "db-qc-icon-wrap" }, "\uD83D\uDCF1"),
-          React.createElement("div", { className: "db-qc-text" },
-            React.createElement("div", { className: "db-qc-title" }, "Share Class Code"),
-            React.createElement("div", { className: "db-qc-sub" }, sessionCode)
-          ),
-          React.createElement("span", { className: "db-qc-arrow" }, "\u203A")
-        ),
+        /* Share Class Code — v2 expanded panel */
+        React.createElement(ShareCodePanel, { sessionCode: sessionCode, add: add }),
 
       )
     ),
@@ -25604,406 +26750,347 @@ No markdown, no explanation, just the raw JSON array.`
   const fmtTime = s => `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
   const timerColor = timeLeft < 60 ? 'var(--red)' : timeLeft < 300 ? 'var(--yellow)' : 'var(--green)';
 
-  // ── SETUP VIEW ─────────────────────────────────────────────────
-  if (view === 'setup') return /*#__PURE__*/React.createElement("div", {
-    className: "page"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "section-header",
-    style: {
-      marginBottom: 20
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "section-title"
-  }, "\uD83E\uDDEA Test Mode"), /*#__PURE__*/React.createElement("button", {
-    className: "btn btn-primary btn-lg",
-    onClick: startTest,
-    disabled: !testTasks.length || sessionStatus !== 'active',
-    title: sessionStatus !== 'active' ? 'Start the session first' : '',
-    style: {
-      minWidth: 140
-    }
-  }, "\uD83D\uDE80 Launch Test")), /*#__PURE__*/React.createElement("div", {
-    className: "grid grid-2"
-  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
-    className: "card",
-    style: {
-      marginBottom: 14
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "card-title"
-  }, "\uD83D\uDCCB Test Settings"), /*#__PURE__*/React.createElement("div", {
-    className: "form-group"
-  }, /*#__PURE__*/React.createElement("label", null, "Test Title"), /*#__PURE__*/React.createElement("input", {
-    value: testTitle,
-    onChange: e => setTestTitle(e.target.value),
-    placeholder: "e.g. Chapter 3 Quiz, Mid-term\u2026"
-  })), /*#__PURE__*/React.createElement("div", {
-    className: "form-group"
-  }, /*#__PURE__*/React.createElement("label", null, "Duration"), /*#__PURE__*/React.createElement("div", {
-    className: "flex gap-8",
-    style: {
-      flexWrap: 'wrap'
-    }
-  }, [10, 15, 20, 30, 45, 60].map(m => /*#__PURE__*/React.createElement("button", {
-    key: m,
-    className: `btn btn-sm ${duration === m ? 'btn-primary' : 'btn-ghost'}`,
-    onClick: () => setDuration(m)
-  }, m, " min")), /*#__PURE__*/React.createElement("input", {
-    type: "number",
-    min: 1,
-    max: 180,
-    value: duration,
-    onChange: e => setDuration(Number(e.target.value)),
-    style: {
-      width: 80
-    },
-    placeholder: "Custom"
-  }))), /*#__PURE__*/React.createElement("div", {
-    style: {
-      background: 'var(--surface2)',
-      borderRadius: 8,
-      padding: '10px 14px',
-      fontSize: '0.85rem',
-      lineHeight: 1.8
-    }
-  }, "\uD83D\uDCCA ", /*#__PURE__*/React.createElement("strong", null, testTasks.length), " questions \xA0\xB7\xA0 \u23F1 ", /*#__PURE__*/React.createElement("strong", null, duration, " min"), " \xA0\xB7\xA0 \uD83C\uDFC6 ", /*#__PURE__*/React.createElement("strong", null, totalMarks), " total marks", /*#__PURE__*/React.createElement("br", null), "\u2705 Questions shuffled \xA0\xB7\xA0 Single attempt \xA0\xB7\xA0 Auto-submit on timer"), /*#__PURE__*/React.createElement("div", {
-    className: "card",
-    style: {
-      marginTop: 14,
-      border: '1px solid rgba(99,102,241,0.3)'
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "card-title",
-    style: {
-      marginBottom: 14
-    }
-  }, "✨ AI Test Generator"), /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: 'flex',
-      gap: 8,
-      marginBottom: 10,
-      flexWrap: 'wrap'
-    }
-  }, [
-    { value: 'mcq', label: '🔘 MCQ' },
-    { value: 'short', label: '✍️ Short' },
-    { value: 'long', label: '📄 Long' }
-  ].map(t => React.createElement("button", {
-    key: t.value,
-    className: `btn btn-sm ${aiQType === t.value ? 'btn-primary' : 'btn-ghost'}`,
-    onClick: () => setAiQType(t.value)
-  }, t.label))), /*#__PURE__*/React.createElement("div", {
-    className: "form-group",
-    style: {
-      marginBottom: 10
-    }
-  }, /*#__PURE__*/React.createElement("label", null, "Topic for Test"), /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: 'flex',
-      gap: 8
-    }
-  }, /*#__PURE__*/React.createElement("input", {
-    value: aiTopic,
-    onChange: e => setAiTopic(e.target.value),
-    placeholder: "e.g. Fractions, Python Loops, Photosynthesis...",
-    onKeyDown: e => e.key === 'Enter' && generateAITestQuestions(),
-    style: {
-      flex: 1
-    }
-  }), /*#__PURE__*/React.createElement("button", {
-    className: "btn btn-primary",
-    onClick: generateAITestQuestions,
-    disabled: aiGenerating,
-    style: {
-      minWidth: 120
-    }
-  }, aiGenerating ? '⏳ Generating...' : 'Generate 5 Qs'))), /*#__PURE__*/React.createElement("details", {
-    style: {
-      marginBottom: 10
-    }
-  }, /*#__PURE__*/React.createElement("summary", {
-    className: "text-xs text-muted",
-    style: {
-      cursor: 'pointer',
-      userSelect: 'none'
-    }
-  }, "🔑 Gemini API Key (optional — enables real AI)"), /*#__PURE__*/React.createElement("div", {
-    style: {
-      marginTop: 8,
-      display: 'flex',
-      gap: 8,
-      alignItems: 'center'
-    }
-  }, /*#__PURE__*/React.createElement("input", {
-    type: "password",
-    value: apiKey,
-    placeholder: "AIzaSy...",
-    onChange: e => {
-      setApiKey(e.target.value);
-      localStorage.setItem('cm_gemini_key', e.target.value);
-    },
-    style: {
-      flex: 1,
-      fontSize: '0.8rem',
-      padding: '6px 10px',
-      borderRadius: 6,
-      border: '1px solid var(--border)',
-      background: 'var(--surface2)',
-      color: 'var(--text)'
-    }
-  }), apiKey && /*#__PURE__*/React.createElement("span", {
-    className: "badge badge-green"
-  }, "✓ Key saved")), /*#__PURE__*/React.createElement("div", {
-    className: "text-xs text-muted",
-    style: {
-      marginTop: 4
-    }
-  }, "Stored in browser only. Without key, realistic mock questions are generated.")), /*#__PURE__*/React.createElement("div", {
-    className: "text-xs text-muted"
-  }, `AI will generate and automatically add & select 5 ${aiQType.toUpperCase()} questions for this topic.`)))
-, aiGenerating && /*#__PURE__*/React.createElement(PencilLoader, { text: 'AI is crafting your questions\u2026' })
-, /*#__PURE__*/React.createElement("div", {
-    className: "card"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "flex justify-between items-center",
-    style: {
-      marginBottom: addingQ ? 12 : 0
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "card-title",
-    style: {
-      marginBottom: 0
-    }
-  }, "\u2795 Add Question Directly"), /*#__PURE__*/React.createElement("button", {
-    className: "btn btn-ghost btn-sm",
-    onClick: () => setAddingQ(!addingQ)
-  }, addingQ ? '▲ Cancel' : '+ New Question')), addingQ && /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
-    className: "flex gap-8 mb-10"
-  }, ['mcq', 'short', 'long'].map(t => /*#__PURE__*/React.createElement("button", {
-    key: t,
-    className: `btn btn-sm ${newQ.type === t ? 'btn-primary' : 'btn-ghost'}`,
-    onClick: () => setNewQ(q => ({
-      ...q,
-      type: t
-    }))
-  }, t === 'mcq' ? '🔘 MCQ' : t === 'short' ? '✍️ Short' : '📄 Long'))), /*#__PURE__*/React.createElement("div", {
-    className: "form-group"
-  }, /*#__PURE__*/React.createElement("label", null, "Question"), /*#__PURE__*/React.createElement("textarea", {
-    rows: 2,
-    value: newQ.question,
-    onChange: e => setNewQ(q => ({
-      ...q,
-      question: e.target.value
-    })),
-    placeholder: "Type question\u2026"
-  })), newQ.type === 'mcq' && ['A', 'B', 'C', 'D'].map((letter, j) => /*#__PURE__*/React.createElement("div", {
-    key: j,
-    style: {
-      display: 'flex',
-      alignItems: 'center',
-      gap: 8,
-      marginBottom: 6
-    }
-  }, /*#__PURE__*/React.createElement("input", {
-    type: "radio",
-    name: "nq_correct",
-    value: letter,
-    checked: newQ.correct_answer === letter,
-    onChange: () => setNewQ(q => ({
-      ...q,
-      correct_answer: letter
-    })),
-    style: {
-      width: 16,
-      height: 16,
-      accentColor: 'var(--green)',
-      cursor: 'pointer'
-    }
-  }), /*#__PURE__*/React.createElement("span", {
-    style: {
-      width: 22,
-      fontWeight: 600,
-      color: newQ.correct_answer === letter ? 'var(--green)' : 'var(--text2)'
-    }
-  }, letter, "."), /*#__PURE__*/React.createElement("input", {
-    value: newQ.options[j] || '',
-    placeholder: `Option ${letter}`,
-    style: {
-      flex: 1
-    },
-    onChange: e => {
-      const o = [...newQ.options];
-      o[j] = e.target.value;
-      setNewQ(q => ({
-        ...q,
-        options: o
-      }));
-    }
-  }))),       ((newQ.type === 'short' || newQ.type === 'long') && /*#__PURE__*/React.createElement("div", null,
-        /*#__PURE__*/React.createElement("div", { className: "form-group" },
-          /*#__PURE__*/React.createElement("label", null, "Expected Answer" + (newQ.evaluation_mode === 'ai' ? " (Required for AI)" : " (Optional)")),
-          /*#__PURE__*/React.createElement("textarea", {
-            rows: 2,
-            value: newQ.correct_answer || '',
-            onChange: e => setNewQ(q => ({ ...q, correct_answer: e.target.value })),
-            placeholder: newQ.evaluation_mode === 'ai' ? "Type expected answer for AI comparison..." : "Optional expected answer..."
+  // ── SETUP VIEW v2 (Futuristic Redesign) ──────────────────────
+  if (view === 'setup') return React.createElement("div", { className: "tm2-page" },
+
+    /* ── Header ── */
+    React.createElement("div", { className: "tm2-header" },
+      React.createElement("div", { className: "tm2-header-icon" }, "🧪"),
+      React.createElement("div", { className: "tm2-header-info" },
+        React.createElement("div", { className: "tm2-header-title" }, "Test Mode"),
+        React.createElement("div", { className: "tm2-header-sub" }, "Create, customize and launch AI-powered tests effortlessly.")
+      ),
+      React.createElement("button", {
+        className: "tm2-launch-btn",
+        onClick: startTest,
+        disabled: !testTasks.length || sessionStatus !== 'active',
+        title: sessionStatus !== 'active' ? 'Start the session first' : ''
+      }, "🚀 Launch Test")
+    ),
+
+    /* ── Two-column grid: Settings + AI Generator ── */
+    React.createElement("div", { className: "tm2-grid" },
+
+      /* ── LEFT: Test Settings ── */
+      React.createElement("div", { className: "tm2-card" },
+        React.createElement("div", { className: "tm2-card-glow" }),
+        React.createElement("div", { className: "tm2-card-title" },
+          React.createElement("span", { className: "tm2-card-icon" }, "📋"),
+          React.createElement("span", { className: "tm2-card-label" }, "Test Settings")
+        ),
+        /* Test Title */
+        React.createElement("div", { style: { marginBottom: 16 } },
+          React.createElement("label", { className: "tm2-label" }, "Test Title"),
+          React.createElement("input", {
+            className: "tm2-input",
+            value: testTitle,
+            onChange: e => setTestTitle(e.target.value),
+            placeholder: "e.g. Chapter 3 Quiz: Mid-term…"
           })
         ),
-        /*#__PURE__*/React.createElement("div", { className: "grid grid-2", style: { gap: 10, marginBottom: 10 } },
-          /*#__PURE__*/React.createElement("div", { className: "form-group" },
-            /*#__PURE__*/React.createElement("label", null, "Evaluation Mode"),
-            /*#__PURE__*/React.createElement("select", {
-              value: newQ.evaluation_mode || 'manual',
-              onChange: e => setNewQ(q => ({ ...q, evaluation_mode: e.target.value })),
-              style: { width: '100%', padding: '6px 10px', borderRadius: 6, border: '1px solid var(--border)', background: 'var(--surface2)', color: 'var(--text)' }
-            },
-              /*#__PURE__*/React.createElement("option", { value: "manual" }, "👨‍🏫 Manual Grading"),
-              /*#__PURE__*/React.createElement("option", { value: "ai" }, "🤖 AI Evaluation")
-            ))
+        /* Duration pills */
+        React.createElement("div", { style: { marginBottom: 6 } },
+          React.createElement("label", { className: "tm2-label" }, "Duration"),
+          React.createElement("div", { className: "tm2-duration-row" },
+            [10, 15, 20, 30, 45, 60].map(m =>
+              React.createElement("button", {
+                key: m,
+                className: `tm2-pill${duration === m ? ' active' : ''}`,
+                onClick: () => setDuration(m)
+              }, m + " min")
+            ),
+            React.createElement("input", {
+              type: "number",
+              min: 1,
+              max: 180,
+              value: duration,
+              onChange: e => setDuration(Number(e.target.value)),
+              className: "tm2-pill-custom",
+              placeholder: "—"
+            })
+          )
+        ),
+        /* Stats summary */
+        React.createElement("div", { className: "tm2-stats-row" },
+          React.createElement("div", { className: "tm2-stat-chip" },
+            "📊 ", React.createElement("strong", null, testTasks.length), " questions"
           ),
-          newQ.evaluation_mode === 'ai' && /*#__PURE__*/React.createElement("div", { className: "form-group" },
-            /*#__PURE__*/React.createElement("label", null, "Maximum Marks"),
-            /*#__PURE__*/React.createElement("input", {
+          React.createElement("div", { className: "tm2-stat-chip" },
+            "⏱ ", React.createElement("strong", null, duration + " min")
+          ),
+          React.createElement("div", { className: "tm2-stat-chip" },
+            "🏆 ", React.createElement("strong", null, totalMarks), " total marks"
+          )
+        ),
+        /* Toggles */
+        React.createElement("div", { className: "tm2-toggles-row" },
+          React.createElement("div", { className: "tm2-toggle-chip" }, "✅ Questions shuffled"),
+          React.createElement("div", { className: "tm2-toggle-chip" }, "🛡 Single attempt"),
+          React.createElement("div", { className: "tm2-toggle-chip" }, "⏰ Auto-submit on timer")
+        )
+      ),
+
+      /* ── RIGHT: AI Test Generator ── */
+      React.createElement("div", { className: "tm2-card tm2-ai-panel" },
+        React.createElement("div", { className: "tm2-card-glow", style: { background: 'radial-gradient(circle, rgba(139,92,246,0.14) 0%, transparent 70%)' } }),
+        React.createElement("div", { className: "tm2-card-title" },
+          React.createElement("span", { className: "tm2-card-icon" }, "👑"),
+          React.createElement("span", { className: "tm2-card-label" }, "AI Test Generator"),
+          React.createElement("span", { className: "tm2-ai-badge" }, "AI")
+        ),
+        /* Type selector */
+        React.createElement("div", { className: "tm2-type-selector" },
+          [
+            { value: 'mcq', label: 'MCQ' },
+            { value: 'short', label: '✍️ Short' },
+            { value: 'long', label: 'Long' }
+          ].map(t => React.createElement("button", {
+            key: t.value,
+            className: `tm2-type-btn${aiQType === t.value ? ' active' : ''}`,
+            onClick: () => setAiQType(t.value)
+          }, t.label))
+        ),
+        /* Topic input */
+        React.createElement("label", { className: "tm2-label" }, "Topic for Test"),
+        React.createElement("div", { style: { display: 'flex', gap: 8 } },
+          React.createElement("input", {
+            className: "tm2-input",
+            value: aiTopic,
+            onChange: e => setAiTopic(e.target.value),
+            placeholder: "e.g. Fractions, Python Loops, Photosynthesis…",
+            onKeyDown: e => e.key === 'Enter' && generateAITestQuestions(),
+            style: { flex: 1 }
+          })
+        ),
+        /* Generate button */
+        React.createElement("button", {
+          className: "tm2-gen-btn",
+          onClick: generateAITestQuestions,
+          disabled: aiGenerating
+        }, aiGenerating ? '⏳ Generating…' : '✦ Generate 5 Qs'),
+        aiGenerating && React.createElement(PencilLoader, { text: 'AI is crafting your questions…' }),
+        /* API Key section */
+        React.createElement("details", { style: { marginTop: 12 } },
+          React.createElement("summary", {
+            style: { fontSize: '0.78rem', color: 'rgba(165,180,252,0.8)', cursor: 'pointer', userSelect: 'none', fontWeight: 600 }
+          }, "🔑 Gemini API Key (optional — enables real AI)"),
+          React.createElement("div", { className: "tm2-api-section" },
+            React.createElement("div", { style: { display: 'flex', gap: 8, alignItems: 'center', marginBottom: 8 } },
+              React.createElement("input", {
+                type: "password",
+                value: apiKey,
+                placeholder: "AIzaSy…",
+                className: "tm2-input",
+                style: { flex: 1, fontSize: '0.8rem', padding: '7px 10px' },
+                onChange: e => {
+                  setApiKey(e.target.value);
+                  localStorage.setItem('cm_gemini_key', e.target.value);
+                }
+              }),
+              apiKey && React.createElement("span", {
+                style: { padding: '4px 10px', background: 'rgba(34,197,94,0.15)', border: '1px solid rgba(34,197,94,0.3)', borderRadius: 6, fontSize: '0.72rem', color: '#4ade80', fontWeight: 700, whiteSpace: 'nowrap' }
+              }, "✓ Key saved")
+            ),
+            React.createElement("div", { className: "tm2-api-note" }, `AI will generate and automatically add & select 5 ${aiQType.toUpperCase()} questions for this topic. Without key, realistic mock questions are generated.`)
+          )
+        )
+      )
+    ),
+
+    /* ── Add Question Directly bar ── */
+    React.createElement("div", { className: "tm2-add-q-bar" },
+      React.createElement("div", { className: "tm2-add-q-header" },
+        React.createElement("div", { className: "tm2-add-q-plus" }, "➕"),
+        React.createElement("div", { className: "tm2-add-q-label" }, "Add Question Directly"),
+        !addingQ && React.createElement("div", { style: { flex: 1 } }),
+        !addingQ && React.createElement("button", {
+          className: "tm2-add-q-btn",
+          onClick: () => setAddingQ(true)
+        }, "+ New Question"),
+        addingQ && React.createElement("button", {
+          style: { background: 'none', border: '1px solid rgba(99,102,241,0.3)', borderRadius: 8, padding: '6px 14px', color: 'rgba(148,163,184,0.8)', cursor: 'pointer', fontSize: '0.8rem', fontFamily: 'inherit', marginLeft: 'auto' },
+          onClick: () => setAddingQ(false)
+        }, "▲ Cancel")
+      ),
+      addingQ && React.createElement("div", { style: { marginTop: 16 } },
+        /* Type selector */
+        React.createElement("div", { className: "tm2-type-selector", style: { marginBottom: 14 } },
+          ['mcq', 'short', 'long'].map(t =>
+            React.createElement("button", {
+              key: t,
+              className: `tm2-type-btn${newQ.type === t ? ' active' : ''}`,
+              onClick: () => setNewQ(q => ({ ...q, type: t }))
+            }, t === 'mcq' ? '🔘 MCQ' : t === 'short' ? '✍️ Short' : '📄 Long')
+          )
+        ),
+        /* Question */
+        React.createElement("div", { style: { marginBottom: 12 } },
+          React.createElement("label", { className: "tm2-label" }, "Question"),
+          React.createElement("textarea", {
+            rows: 2,
+            className: "tm2-input",
+            value: newQ.question,
+            onChange: e => setNewQ(q => ({ ...q, question: e.target.value })),
+            placeholder: "Type question…",
+            style: { resize: 'vertical', minHeight: 60 }
+          })
+        ),
+        /* MCQ options */
+        newQ.type === 'mcq' && ['A', 'B', 'C', 'D'].map((letter, j) =>
+          React.createElement("div", {
+            key: j,
+            style: { display: 'flex', alignItems: 'center', gap: 8, marginBottom: 7 }
+          },
+            React.createElement("input", {
+              type: "radio",
+              name: "nq_correct",
+              value: letter,
+              checked: newQ.correct_answer === letter,
+              onChange: () => setNewQ(q => ({ ...q, correct_answer: letter })),
+              style: { width: 16, height: 16, accentColor: '#22c55e', cursor: 'pointer' }
+            }),
+            React.createElement("span", {
+              style: { width: 22, fontWeight: 600, color: newQ.correct_answer === letter ? '#22c55e' : 'rgba(148,163,184,0.7)', fontSize: '0.85rem' }
+            }, letter + "."),
+            React.createElement("input", {
+              value: newQ.options[j] || '',
+              placeholder: `Option ${letter}`,
+              className: "tm2-input",
+              style: { flex: 1, padding: '7px 12px' },
+              onChange: e => {
+                const o = [...newQ.options];
+                o[j] = e.target.value;
+                setNewQ(q => ({ ...q, options: o }));
+              }
+            })
+          )
+        ),
+        /* Short/Long fields */
+        (newQ.type === 'short' || newQ.type === 'long') && React.createElement("div", null,
+          React.createElement("div", { style: { marginBottom: 10 } },
+            React.createElement("label", { className: "tm2-label" }, "Expected Answer" + (newQ.evaluation_mode === 'ai' ? " (Required for AI)" : " (Optional)")),
+            React.createElement("textarea", {
+              rows: 2,
+              className: "tm2-input",
+              value: newQ.correct_answer || '',
+              onChange: e => setNewQ(q => ({ ...q, correct_answer: e.target.value })),
+              placeholder: newQ.evaluation_mode === 'ai' ? "Type expected answer for AI comparison..." : "Optional expected answer…",
+              style: { resize: 'vertical', minHeight: 60 }
+            })
+          ),
+          React.createElement("div", { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 10 } },
+            React.createElement("div", null,
+              React.createElement("label", { className: "tm2-label" }, "Evaluation Mode"),
+              React.createElement("select", {
+                value: newQ.evaluation_mode || 'manual',
+                onChange: e => setNewQ(q => ({ ...q, evaluation_mode: e.target.value })),
+                className: "tm2-input",
+                style: { cursor: 'pointer' }
+              },
+                React.createElement("option", { value: "manual" }, "👨‍🏫 Manual Grading"),
+                React.createElement("option", { value: "ai" }, "🤖 AI Evaluation")
+              )
+            ),
+            newQ.evaluation_mode === 'ai' && React.createElement("div", null,
+              React.createElement("label", { className: "tm2-label" }, "Maximum Marks"),
+              React.createElement("input", {
+                type: "number",
+                min: 1,
+                max: 100,
+                value: newQ.max_marks || 10,
+                onChange: e => setNewQ(q => ({ ...q, max_marks: Number(e.target.value) })),
+                className: "tm2-input",
+                style: { padding: '7px 12px' }
+              })
+            )
+          )
+        ),
+        /* Hint + Marks row */
+        React.createElement("div", { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 14 } },
+          React.createElement("div", null,
+            React.createElement("label", { className: "tm2-label" }, "💡 Hint"),
+            React.createElement("input", {
+              value: newQ.hint || '',
+              placeholder: "Optional hint…",
+              className: "tm2-input",
+              style: { padding: '7px 12px' },
+              onChange: e => setNewQ(q => ({ ...q, hint: e.target.value }))
+            })
+          ),
+          React.createElement("div", null,
+            React.createElement("label", { className: "tm2-label" }, newQ.evaluation_mode === 'ai' ? "Marks (AI Max)" : "Marks"),
+            React.createElement("input", {
               type: "number",
               min: 1,
               max: 100,
-              value: newQ.max_marks || 10,
-              onChange: e => setNewQ(q => ({ ...q, max_marks: Number(e.target.value) })),
-              style: { width: '100%', padding: '6px 10px', borderRadius: 6, border: '1px solid var(--border)', background: 'var(--surface2)', color: 'var(--text)' }
+              disabled: newQ.evaluation_mode === 'ai',
+              value: newQ.evaluation_mode === 'ai' ? (newQ.max_marks || 10) : (newQ.marks || 1),
+              onChange: e => setNewQ(q => ({ ...q, marks: Number(e.target.value) })),
+              className: "tm2-input",
+              style: { padding: '7px 12px' }
             })
           )
-        )
-      )), /*#__PURE__*/React.createElement("div", {
-        className: "grid grid-2",
-        style: {
-          gap: 10
-        }
-      }, /*#__PURE__*/React.createElement("div", {
-        className: "form-group",
-        style: {
-          marginBottom: 0
-        }
-      }, /*#__PURE__*/React.createElement("label", null, "\uD83D\uDCA1 Hint"), /*#__PURE__*/React.createElement("input", {
-        value: newQ.hint || '',
-        placeholder: "Optional hint\u2026",
-        onChange: e => setNewQ(q => ({
-          ...q,
-          hint: e.target.value
-        }))
-      })), /*#__PURE__*/React.createElement("div", {
-        className: "form-group",
-        style: {
-          marginBottom: 0
-        }
-      }, /*#__PURE__*/React.createElement("label", null, newQ.evaluation_mode === 'ai' ? "Marks (AI Max)" : "Marks"), /*#__PURE__*/React.createElement("input", {
-        type: "number",
-        min: 1,
-        max: 100,
-        disabled: newQ.evaluation_mode === 'ai',
-        value: newQ.evaluation_mode === 'ai' ? (newQ.max_marks || 10) : (newQ.marks || 1),
-        onChange: e => setNewQ(q => ({
-          ...q,
-          marks: Number(e.target.value)
-        }))
-      }))), /*#__PURE__*/React.createElement("button", {
-    className: "btn btn-success mt-12",
-    onClick: addCustomQuestion
-  }, "\u271A Add to Test")))), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
-    className: "card"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "flex justify-between items-center mb-12"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "card-title",
-    style: {
-      marginBottom: 0
-    }
-  }, "\uD83D\uDCDD Questions (", testTasks.length, ")"), allAvailable.length > 0 && /*#__PURE__*/React.createElement("button", {
-    className: "btn btn-ghost btn-sm",
-    onClick: () => setSelectedIds(selectedIds.length === allAvailable.length ? [] : allAvailable.map(t => t.id))
-  }, selectedIds.length === allAvailable.length ? 'Deselect All' : 'Select All')), allAvailable.length === 0 && /*#__PURE__*/React.createElement("div", {
-    className: "text-center text-muted",
-    style: {
-      padding: 24
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      fontSize: '2rem',
-      marginBottom: 8
-    }
-  }, "\uD83D\uDCED"), "No questions yet. Add questions from the Tasks page or use \"+ New Question\" above."), allAvailable.map((t, i) => {
-    const included = selectedIds.length === 0 || selectedIds.includes(t.id);
-    const isCustom = t.id.startsWith('cq_');
-    return /*#__PURE__*/React.createElement("div", {
-      key: t.id,
-      style: {
-        display: 'flex',
-        alignItems: 'flex-start',
-        gap: 10,
-        padding: '10px 12px',
-        borderRadius: 8,
-        marginBottom: 6,
-        background: included ? 'var(--surface2)' : 'transparent',
-        border: `1px solid ${included ? 'var(--accent)' : 'var(--border)'}`,
-        opacity: included ? 1 : 0.5,
-        transition: 'all 0.2s',
-        cursor: 'pointer'
-      },
-      onClick: () => setSelectedIds(prev => prev.includes(t.id) ? prev.filter(id => id !== t.id) : [...prev, t.id])
-    }, /*#__PURE__*/React.createElement("div", {
-      style: {
-        paddingTop: 2
-      }
-    }, /*#__PURE__*/React.createElement("div", {
-      style: {
-        width: 18,
-        height: 18,
-        borderRadius: 4,
-        border: `2px solid ${included ? 'var(--accent)' : 'var(--border)'}`,
-        background: included ? 'var(--accent)' : 'transparent',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center'
-      }
-    }, included && /*#__PURE__*/React.createElement("span", {
-      style: {
-        color: '#fff',
-        fontSize: '0.7rem',
-        fontWeight: 700
-      }
-    }, "\u2713"))), /*#__PURE__*/React.createElement("div", {
-      style: {
-        flex: 1,
-        minWidth: 0
-      }
-    }, /*#__PURE__*/React.createElement("div", {
-      style: {
-        display: 'flex',
-        gap: 6,
-        marginBottom: 3,
-        flexWrap: 'wrap'
-      }
-    }, /*#__PURE__*/React.createElement("span", {
-      className: `badge badge-${t.type === 'mcq' ? 'purple' : t.type === 'coding' ? 'blue' : 'yellow'}`,
-      style: {
-        fontSize: '0.7rem'
-      }
-    }, t.type.toUpperCase()), isCustom && /*#__PURE__*/React.createElement("span", {
-      className: "badge badge-green",
-      style: {
-        fontSize: '0.7rem'
-      }
-    }, "Custom"), /*#__PURE__*/React.createElement("span", {
-      className: "text-xs text-muted"
-    }, t.marks || 1, " mark", (t.marks || 1) !== 1 ? 's' : '')), /*#__PURE__*/React.createElement("div", {
-      style: {
-        fontSize: '0.875rem',
-        fontWeight: 500,
-        whiteSpace: 'nowrap',
-        overflow: 'hidden',
-        textOverflow: 'ellipsis'
-      }
-    }, i + 1, ". ", t.question)));
-  }))));
+        ),
+        React.createElement("button", {
+          className: "tm2-add-q-btn",
+          onClick: addCustomQuestion,
+          style: { width: '100%', padding: '11px', fontSize: '0.875rem', justifyContent: 'center', display: 'flex', alignItems: 'center', gap: 8 }
+        }, "✚ Add to Test")
+      )
+    ),
+
+    /* ── Questions List ── */
+    React.createElement("div", { className: "tm2-questions-card" },
+      React.createElement("div", { className: "tm2-q-header" },
+        React.createElement("span", { style: { fontSize: '1.1rem' } }, "📝"),
+        React.createElement("span", { className: "tm2-q-title-text" }, "Questions"),
+        React.createElement("span", { className: "tm2-q-count" }, testTasks.length),
+        React.createElement("div", { style: { flex: 1 } }),
+        allAvailable.length > 0 && React.createElement("button", {
+          className: "tm2-select-all-btn",
+          onClick: () => setSelectedIds(selectedIds.length === allAvailable.length ? [] : allAvailable.map(t => t.id))
+        }, selectedIds.length === allAvailable.length ? 'Deselect All' : 'Select All', " ✓")
+      ),
+      React.createElement("div", { className: "tm2-q-list" },
+        allAvailable.length === 0
+          ? React.createElement("div", {
+              style: { padding: '32px 16px', textAlign: 'center', color: 'rgba(148,163,184,0.5)' }
+            },
+              React.createElement("div", { style: { fontSize: '2.5rem', marginBottom: 12, opacity: 0.4 } }, "🧪"),
+              React.createElement("div", { style: { fontSize: '0.9rem', fontWeight: 600, marginBottom: 4, color: 'rgba(203,213,225,0.6)' } }, "No questions yet"),
+              React.createElement("div", { style: { fontSize: '0.78rem' } }, "Add questions from the Tasks page or use the AI Generator above.")
+            )
+          : allAvailable.map((t, i) => {
+              const included = selectedIds.length === 0 || selectedIds.includes(t.id);
+              const isCustom = t.id.startsWith('cq_');
+              const typeClass = t.type === 'mcq' ? 'mcq' : t.type === 'short' ? 'short' : 'long';
+              return React.createElement("div", {
+                key: t.id,
+                className: `tm2-q-row${included ? ' selected' : ''}`,
+                onClick: () => setSelectedIds(prev => prev.includes(t.id) ? prev.filter(id => id !== t.id) : [...prev, t.id])
+              },
+                React.createElement("div", { className: "tm2-q-drag" }, "⠿"),
+                React.createElement("div", { className: `tm2-q-checkbox${included ? ' checked' : ''}` },
+                  included && React.createElement("span", { style: { color: '#fff', fontSize: '0.7rem', fontWeight: 700 } }, "✓")
+                ),
+                React.createElement("div", { className: "tm2-q-num" }, i + 1),
+                React.createElement("span", { className: `tm2-q-type-badge ${typeClass}` }, t.type.toUpperCase()),
+                isCustom && React.createElement("span", {
+                  style: { padding: '2px 7px', background: 'rgba(34,197,94,0.15)', border: '1px solid rgba(34,197,94,0.25)', borderRadius: 5, fontSize: '0.68rem', fontWeight: 700, color: '#4ade80' }
+                }, "Custom"),
+                React.createElement("div", { className: "tm2-q-text" }, t.question),
+                React.createElement("span", { className: "tm2-q-marks-tag" }, (t.marks || 1) + " Mark" + ((t.marks || 1) !== 1 ? 's' : ''))
+              );
+            })
+      ),
+      allAvailable.length > 0 && React.createElement("div", { className: "tm2-q-footer" },
+        testTasks.length === allAvailable.length
+          ? "All questions ready to go! 🚀"
+          : `${testTasks.length} of ${allAvailable.length} questions selected`
+      )
+    )
+  );
+
 
   // ── LIVE VIEW ──────────────────────────────────────────────────
   if (view === 'live') return /*#__PURE__*/React.createElement("div", {

@@ -4029,8 +4029,8 @@ body.s-ui-active .toasts {
 
 /* ── Main Content Area ── */
 .s-main {
-  flex: 1; padding: 20px;
-  max-width: 900px; margin: 0 auto; width: 100%;
+  flex: 1; padding: 0;
+  max-width: 100%; margin: 0; width: 100%;
   box-sizing: border-box;
   --bg: #060B18;
   --surface: rgba(255, 255, 255, 0.03);
@@ -5721,9 +5721,1106 @@ body.s-ui-active .toasts {
 .theme-toggle-btn:hover{background:var(--surface3);color:var(--text)}
 
 /* ═══════════════════════════════════════════════════════════════════
+   STUDENT UI v2 — 3-Column Layout System
+   Matches premium Discord+Linear+AI EdTech reference design
+   All classes namespaced sv2- to avoid teacher UI conflicts
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ── Design Tokens ── */
+:root {
+  --sv2-bg:          #0D0F1A;
+  --sv2-surface:     rgba(255,255,255,0.04);
+  --sv2-surface2:    rgba(255,255,255,0.07);
+  --sv2-surface3:    rgba(255,255,255,0.10);
+  --sv2-border:      rgba(255,255,255,0.08);
+  --sv2-border2:     rgba(255,255,255,0.12);
+  --sv2-text:        #F1F5F9;
+  --sv2-text2:       rgba(241,245,249,0.65);
+  --sv2-text3:       rgba(241,245,249,0.35);
+  --sv2-purple:      #7C3AED;
+  --sv2-purple-dim:  rgba(124,58,237,0.15);
+  --sv2-purple-glow: rgba(124,58,237,0.35);
+  --sv2-blue:        #0EA5E9;
+  --sv2-blue-dim:    rgba(14,165,233,0.12);
+  --sv2-blue-glow:   rgba(14,165,233,0.3);
+  --sv2-green:       #10B981;
+  --sv2-gold:        #F59E0B;
+  --sv2-red:         #EF4444;
+  --sv2-sidebar-w:   242px;
+  --sv2-right-w:     260px;
+  --sv2-nav-h:       58px;
+}
+
+/* ── New Nav Overrides ── */
+.s-nav {
+  background: rgba(13,15,26,0.92) !important;
+  border-bottom: 1px solid rgba(255,255,255,0.07) !important;
+  padding: 0 16px !important;
+  height: var(--sv2-nav-h) !important;
+  gap: 6px !important;
+}
+.s-nav-brand {
+  font-size: 1rem !important;
+  margin-right: 4px !important;
+  display: flex; align-items: center; gap: 6px;
+}
+/* Nav tab recolor to match reference purple active */
+.s-nav-tab.active {
+  color: #fff !important;
+  background: rgba(124,58,237,0.2) !important;
+  border: 1px solid rgba(124,58,237,0.45) !important;
+}
+.s-nav-tab:hover { background: rgba(255,255,255,0.05) !important; }
+
+/* ═══════════════════════════════════════════════════════════════════
+   STUDENT DASHBOARD v3 — Premium Redesign (sd- prefix, isolated)
+   All classes prefixed sd- to fully isolate from teacher side UI
+═══════════════════════════════════════════════════════════════════ */
+:root {
+  --sd-bg: #0b0d1a;
+  --sd-surface: #131626;
+  --sd-surface2: #1a1d30;
+  --sd-surface3: #22263d;
+  --sd-purple: #7c3aed;
+  --sd-purple-light: #a78bfa;
+  --sd-purple-glow: rgba(124,58,237,0.35);
+  --sd-purple-dim: rgba(124,58,237,0.12);
+  --sd-sky: #0ea5e9;
+  --sd-green: #22c55e;
+  --sd-orange: #f97316;
+  --sd-text: #f1f5f9;
+  --sd-text2: #94a3b8;
+  --sd-text3: #64748b;
+  --sd-border: rgba(255,255,255,0.06);
+  --sd-border2: rgba(255,255,255,0.10);
+  --sd-sidebar-w: 218px;
+  --sd-header-h: 66px;
+  --sd-radius: 16px;
+}
+
+/* ── Root Shell ── */
+.sd-app {
+  display: flex;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  background: var(--sd-bg);
+  font-family: 'Inter', system-ui, sans-serif;
+  position: relative;
+}
+
+/* ══════════════════════════════
+   SIDEBAR
+══════════════════════════════ */
+.sd-sidebar {
+  width: var(--sd-sidebar-w);
+  min-width: var(--sd-sidebar-w);
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: rgba(8,10,22,0.96);
+  border-right: 1px solid var(--sd-border);
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: none;
+  position: relative;
+  z-index: 20;
+  flex-shrink: 0;
+}
+.sd-sidebar::-webkit-scrollbar { display: none; }
+.sd-sidebar::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 200px;
+  background: linear-gradient(180deg, rgba(124,58,237,0.06) 0%, transparent 100%);
+  pointer-events: none;
+}
+
+.sd-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 18px 16px 16px;
+  border-bottom: 1px solid var(--sd-border);
+  flex-shrink: 0;
+}
+.sd-logo-icon {
+  width: 32px; height: 32px; border-radius: 9px;
+  background: linear-gradient(135deg, #7c3aed, #0ea5e9);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.95rem; flex-shrink: 0;
+  box-shadow: 0 0 16px rgba(124,58,237,0.4);
+}
+.sd-logo-text {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800; font-size: 1rem;
+  background: linear-gradient(135deg, #c4b5fd, #7dd3fc);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+
+.sd-nav { padding: 10px 0; flex: 1; }
+.sd-nav-section {
+  font-size: 0.62rem; font-weight: 700;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--sd-text3);
+  padding: 14px 16px 6px;
+}
+.sd-nav-item {
+  display: flex; align-items: center; gap: 11px;
+  width: 100%; padding: 9px 14px 9px 16px;
+  border: none; border-radius: 0;
+  background: transparent; color: var(--sd-text2);
+  font-family: inherit; font-size: 0.855rem; font-weight: 500;
+  cursor: pointer; transition: all 0.15s;
+  text-align: left; position: relative; white-space: nowrap;
+}
+.sd-nav-item:hover { background: rgba(255,255,255,0.035); color: var(--sd-text); }
+.sd-nav-item.active {
+  background: rgba(124,58,237,0.18);
+  color: #fff; font-weight: 600;
+}
+.sd-nav-item.active::before {
+  content: '';
+  position: absolute; left: 0; top: 5px; bottom: 5px;
+  width: 3px; background: var(--sd-purple);
+  border-radius: 0 3px 3px 0;
+}
+.sd-nav-item-icon {
+  width: 20px; height: 20px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; font-size: 0.95rem;
+}
+
+.sd-join-card {
+  margin: 0 10px 14px;
+  padding: 13px 14px; border-radius: 13px;
+  background: linear-gradient(135deg, rgba(124,58,237,0.14), rgba(14,165,233,0.08));
+  border: 1px solid rgba(124,58,237,0.22);
+  position: relative; overflow: hidden; cursor: pointer;
+}
+.sd-join-card::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(135deg, rgba(124,58,237,0.05), transparent);
+  pointer-events: none;
+}
+.sd-join-card-top { display: flex; align-items: center; gap: 8px; margin-bottom: 3px; }
+.sd-join-card-icon {
+  width: 28px; height: 28px; border-radius: 8px;
+  background: rgba(124,58,237,0.2);
+  border: 1px solid rgba(124,58,237,0.3);
+  display: flex; align-items: center; justify-content: center; font-size: 0.85rem;
+}
+.sd-join-card-title { font-size: 0.82rem; font-weight: 700; color: var(--sd-text); }
+.sd-join-card-sub { font-size: 0.7rem; color: var(--sd-text2); }
+.sd-join-card-arrow { margin-left: auto; color: var(--sd-text3); font-size: 0.85rem; }
+
+/* ══════════════════════════════
+   MAIN AREA
+══════════════════════════════ */
+.sd-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--sd-bg);
+  min-width: 0;
+}
+
+/* ── Header ── */
+.sd-header {
+  height: var(--sd-header-h);
+  background: rgba(8,10,22,0.80);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border-bottom: 1px solid var(--sd-border);
+  display: flex; align-items: center;
+  padding: 0 26px; gap: 14px; flex-shrink: 0;
+}
+.sd-header-avatar-wrap {
+  position: relative; cursor: pointer;
+}
+.sd-header-avatar {
+  width: 42px; height: 42px; border-radius: 13px;
+  background: linear-gradient(135deg, rgba(124,58,237,0.28), rgba(14,165,233,0.18));
+  border: 1.5px solid rgba(124,58,237,0.4);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.35rem;
+  box-shadow: 0 0 16px rgba(124,58,237,0.2);
+  transition: box-shadow 0.2s;
+}
+.sd-header-avatar:hover { box-shadow: 0 0 24px rgba(124,58,237,0.4); }
+.sd-header-welcome { flex: 1; min-width: 0; }
+.sd-header-hi {
+  font-weight: 700; font-size: 0.98rem; color: var(--sd-text);
+  display: flex; align-items: center; gap: 5px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.sd-header-sub {
+  font-size: 0.76rem; color: var(--sd-text2); margin-top: 1px;
+}
+.sd-header-right {
+  display: flex; align-items: center; gap: 8px; flex-shrink: 0;
+}
+.sd-notif-btn {
+  position: relative; width: 36px; height: 36px; border-radius: 50%;
+  border: 1px solid var(--sd-border2); background: var(--sd-surface2);
+  color: var(--sd-text2); cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1rem; transition: all 0.2s;
+}
+.sd-notif-btn:hover { border-color: rgba(124,58,237,0.4); color: var(--sd-text); }
+.sd-notif-badge {
+  position: absolute; top: -3px; right: -3px;
+  width: 16px; height: 16px; border-radius: 50%;
+  background: #ef4444; font-size: 0.58rem; font-weight: 800;
+  color: #fff; display: flex; align-items: center; justify-content: center;
+  border: 2px solid var(--sd-bg);
+}
+.sd-profile-chip {
+  display: flex; align-items: center; gap: 8px;
+  padding: 5px 12px 5px 5px; border-radius: 100px;
+  border: 1px solid var(--sd-border2); background: var(--sd-surface2);
+  cursor: pointer; transition: all 0.2s;
+  color: var(--sd-text); font-size: 0.83rem; font-weight: 500;
+}
+.sd-profile-chip:hover { border-color: rgba(124,58,237,0.35); }
+.sd-profile-av {
+  width: 26px; height: 26px; border-radius: 50%;
+  background: linear-gradient(135deg, #7c3aed, #0ea5e9);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.74rem; font-weight: 800; color: #fff; flex-shrink: 0;
+}
+.sd-profile-caret { color: var(--sd-text3); font-size: 0.7rem; margin-left: 2px; }
+
+/* ── Utility bar (announcements/paused) ── */
+.sd-utility-bar { flex-shrink: 0; }
+
+/* ── Content ── */
+.sd-content {
+  flex: 1; overflow-y: auto; overflow-x: hidden;
+}
+.sd-content::-webkit-scrollbar { width: 5px; }
+.sd-content::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 3px; }
+
+/* ══════════════════════════════
+   DASHBOARD HOME PAGE
+══════════════════════════════ */
+.sd-dashboard {
+  padding: 22px 26px 32px;
+}
+
+/* ── Hero Live Class Card ── */
+.sd-hero {
+  border-radius: 20px;
+  background: linear-gradient(135deg, #10142a 0%, #1a0e30 55%, #0c1626 100%);
+  border: 1px solid rgba(124,58,237,0.22);
+  padding: 0;
+  display: flex;
+  overflow: hidden;
+  position: relative;
+  margin-bottom: 18px;
+  min-height: 158px;
+}
+.sd-hero::before {
+  content: '';
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(ellipse at 15% 60%, rgba(124,58,237,0.14) 0%, transparent 55%),
+    radial-gradient(ellipse at 85% 40%, rgba(14,165,233,0.07) 0%, transparent 50%);
+  pointer-events: none;
+}
+.sd-hero-left {
+  flex: 1; padding: 26px 28px;
+  display: flex; align-items: center; gap: 18px;
+  position: relative; z-index: 1;
+}
+.sd-hero-avatar {
+  width: 56px; height: 56px; border-radius: 15px;
+  background: linear-gradient(135deg, rgba(34,197,94,0.18), rgba(14,165,233,0.14));
+  border: 1.5px solid rgba(34,197,94,0.32);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.7rem; flex-shrink: 0;
+  box-shadow: 0 0 22px rgba(34,197,94,0.16);
+}
+.sd-hero-info { flex: 1; min-width: 0; }
+.sd-hero-session-label {
+  font-size: 0.63rem; font-weight: 700;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  color: rgba(241,245,249,0.38); margin-bottom: 7px;
+}
+.sd-hero-title-row {
+  display: flex; align-items: center; gap: 10px; margin-bottom: 5px;
+}
+.sd-hero-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 1.6rem; font-weight: 800; color: var(--sd-text);
+  line-height: 1;
+}
+.sd-live-dot {
+  width: 10px; height: 10px; border-radius: 50%;
+  background: #22c55e;
+  box-shadow: 0 0 10px rgba(34,197,94,0.7), 0 0 20px rgba(34,197,94,0.3);
+  animation: sd-livepulse 1.5s ease infinite;
+  flex-shrink: 0;
+}
+@keyframes sd-livepulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.55;transform:scale(0.8)} }
+.sd-hero-subtitle {
+  font-size: 0.82rem; color: var(--sd-text2); margin-bottom: 16px;
+}
+.sd-hero-code-row {
+  display: flex; align-items: center; gap: 10px;
+}
+.sd-hero-code-label { font-size: 0.76rem; color: var(--sd-text3); }
+.sd-hero-code {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.92rem; font-weight: 700; color: var(--sd-text);
+  background: rgba(255,255,255,0.07); padding: 5px 12px;
+  border-radius: 8px; border: 1px solid rgba(255,255,255,0.12);
+  letter-spacing: 0.05em;
+}
+.sd-hero-copy-btn {
+  width: 28px; height: 28px; border-radius: 8px;
+  border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.04);
+  color: var(--sd-text2); cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.85rem; transition: all 0.2s;
+}
+.sd-hero-copy-btn:hover { border-color: rgba(124,58,237,0.4); color: var(--sd-text); }
+
+/* Hero divider */
+.sd-hero-divider {
+  width: 1px; background: rgba(255,255,255,0.07);
+  align-self: stretch; margin: 20px 0; flex-shrink: 0;
+}
+
+/* Hero right stats panel */
+.sd-hero-right {
+  padding: 26px 32px; display: flex; flex-direction: column;
+  justify-content: center; gap: 18px;
+  position: relative; z-index: 1; flex-shrink: 0;
+  min-width: 200px;
+}
+.sd-hero-stat { text-align: right; }
+.sd-hero-stat-label {
+  font-size: 0.63rem; font-weight: 700; letter-spacing: 0.1em;
+  text-transform: uppercase; color: rgba(241,245,249,0.38); margin-bottom: 5px;
+}
+.sd-hero-stat-timer {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 1.9rem; font-weight: 800; color: #22c55e;
+  text-shadow: 0 0 18px rgba(34,197,94,0.45); line-height: 1;
+}
+.sd-hero-stat-num {
+  font-size: 1.6rem; font-weight: 800; color: var(--sd-text); line-height: 1; margin-bottom: 2px;
+}
+.sd-hero-stat-sub { font-size: 0.74rem; color: var(--sd-text2); }
+
+/* Decorative graph in hero top-right */
+.sd-hero-graph {
+  position: absolute; right: 0; top: 0; bottom: 0; width: 260px;
+  opacity: 0.18; pointer-events: none; overflow: hidden;
+}
+
+/* ── Stat Cards Row ── */
+.sd-stat-row {
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  gap: 14px; margin-bottom: 18px;
+}
+.sd-stat-card {
+  background: var(--sd-surface);
+  border: 1px solid var(--sd-border); border-radius: var(--sd-radius);
+  padding: 20px 20px 16px; position: relative;
+  overflow: hidden; transition: all 0.22s; cursor: pointer;
+}
+.sd-stat-card:hover {
+  border-color: rgba(124,58,237,0.22);
+  box-shadow: 0 0 28px rgba(124,58,237,0.07);
+  transform: translateY(-1px);
+}
+.sd-stat-card::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.018), transparent);
+  pointer-events: none;
+}
+.sd-stat-icon {
+  width: 44px; height: 44px; border-radius: 13px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.15rem; margin-bottom: 14px;
+}
+.sd-stat-icon.purple { background: rgba(124,58,237,0.18); border: 1px solid rgba(124,58,237,0.28); }
+.sd-stat-icon.green  { background: rgba(34,197,94,0.14); border: 1px solid rgba(34,197,94,0.28); }
+.sd-stat-icon.orange { background: rgba(249,115,22,0.14); border: 1px solid rgba(249,115,22,0.28); }
+.sd-stat-label { font-size: 0.76rem; color: var(--sd-text2); font-weight: 500; margin-bottom: 3px; }
+.sd-stat-value {
+  font-size: 1.9rem; font-weight: 800; color: var(--sd-text);
+  line-height: 1; margin-bottom: 2px;
+}
+.sd-stat-sub { font-size: 0.76rem; color: var(--sd-text2); margin-bottom: 14px; }
+.sd-stat-cta {
+  display: flex; align-items: center; gap: 5px;
+  font-size: 0.79rem; color: var(--sd-purple-light); font-weight: 600;
+  cursor: pointer; background: none; border: none; padding: 0;
+  font-family: inherit; transition: gap 0.18s;
+}
+.sd-stat-cta:hover { gap: 9px; }
+
+/* ── Live Class Tools Section ── */
+.sd-tools-section { margin-bottom: 18px; }
+.sd-section-header { margin-bottom: 14px; }
+.sd-section-title { font-size: 0.97rem; font-weight: 700; color: var(--sd-text); margin-bottom: 3px; }
+.sd-section-sub { font-size: 0.76rem; color: var(--sd-text2); }
+.sd-tools-row {
+  display: grid; grid-template-columns: repeat(5, 1fr); gap: 11px;
+}
+.sd-tool-card {
+  background: var(--sd-surface); border: 1px solid var(--sd-border);
+  border-radius: 14px; padding: 20px 10px;
+  display: flex; flex-direction: column; align-items: center; gap: 9px;
+  cursor: pointer; transition: all 0.2s;
+  position: relative; overflow: hidden;
+  font-family: inherit; color: var(--sd-text);
+  text-align: center;
+}
+.sd-tool-card::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.018), transparent);
+  pointer-events: none;
+}
+.sd-tool-card:hover {
+  border-color: rgba(124,58,237,0.28);
+  box-shadow: 0 0 22px rgba(124,58,237,0.1);
+  transform: translateY(-3px);
+}
+.sd-tool-icon {
+  width: 52px; height: 52px; border-radius: 14px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.5rem;
+}
+.sd-tool-label { font-size: 0.8rem; font-weight: 600; }
+
+/* ── Learning Hub Section ── */
+.sd-hub-section { margin-bottom: 16px; }
+.sd-hub-card {
+  background: var(--sd-surface);
+  border: 1px solid var(--sd-border); border-radius: var(--sd-radius);
+  padding: 18px 20px;
+}
+.sd-hub-grid {
+  display: grid; grid-template-columns: repeat(5, 1fr);
+}
+.sd-hub-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 8px 16px; cursor: pointer; transition: background 0.15s;
+  border-right: 1px solid var(--sd-border); border-radius: 10px;
+}
+.sd-hub-item:first-child { padding-left: 0; }
+.sd-hub-item:last-child { border-right: none; }
+.sd-hub-item:hover { background: rgba(255,255,255,0.025); }
+.sd-hub-icon {
+  width: 42px; height: 42px; border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.2rem; flex-shrink: 0;
+}
+.sd-hub-title { font-size: 0.8rem; font-weight: 600; color: var(--sd-text); margin-bottom: 2px; }
+.sd-hub-sub { font-size: 0.7rem; color: var(--sd-text2); line-height: 1.4; }
+
+/* ── Inline page wrapper (non-dashboard pages) ── */
+.sd-page-inner {
+  height: 100%; display: flex; flex-direction: column; overflow: hidden;
+}
+
+/* ── Responsive ── */
+@media (max-width: 1100px) {
+  .sd-tools-row { grid-template-columns: repeat(3, 1fr); }
+  .sd-hub-grid { grid-template-columns: repeat(3, 1fr); }
+  .sd-hub-item:nth-child(3) { border-right: none; }
+}
+@media (max-width: 900px) {
+  :root { --sd-sidebar-w: 190px; }
+  .sd-stat-row { grid-template-columns: repeat(2, 1fr); }
+  .sd-hero-right { min-width: 160px; padding: 20px; }
+  .sd-hero-stat-timer { font-size: 1.5rem; }
+}
+@media (max-width: 768px) {
+  .sd-sidebar { display: none; }
+  .sd-tools-row { grid-template-columns: repeat(3, 1fr); }
+  .sd-stat-row { grid-template-columns: 1fr; }
+  .sd-hub-grid { grid-template-columns: repeat(2, 1fr); }
+  .sd-hero { flex-direction: column; min-height: auto; }
+  .sd-hero-right { text-align: left; border-left: none; border-top: 1px solid rgba(255,255,255,0.06); padding: 16px 22px; }
+  .sd-hero-stat { text-align: left; }
+  .sd-hero-stat-timer { font-size: 1.4rem; }
+}
+
+/* Raise Hand premium button */
+.sv2-raise-btn {
+  display: flex; align-items: center; gap: 6px;
+  padding: 7px 14px; border-radius: 100px;
+  border: 1px solid rgba(251,191,36,0.35);
+  background: rgba(251,191,36,0.08);
+  color: #FBBF24; cursor: pointer; font-size: 0.8rem;
+  font-weight: 600; font-family: inherit; transition: all 0.2s;
+  white-space: nowrap;
+}
+.sv2-raise-btn:hover { background: rgba(251,191,36,0.15); box-shadow: 0 0 12px rgba(251,191,36,0.2); }
+.sv2-raise-btn.raised { background: rgba(251,191,36,0.2); box-shadow: 0 0 16px rgba(251,191,36,0.3); }
+.sv2-leave-btn {
+  display: flex; align-items: center; gap: 5px;
+  padding: 7px 14px; border-radius: 100px;
+  border: 1px solid rgba(239,68,68,0.4);
+  background: rgba(239,68,68,0.1);
+  color: #FCA5A5; cursor: pointer; font-size: 0.8rem;
+  font-weight: 600; font-family: inherit; transition: all 0.2s;
+  white-space: nowrap;
+}
+.sv2-leave-btn:hover { background: rgba(239,68,68,0.18); box-shadow: 0 0 12px rgba(239,68,68,0.2); }
+.sv2-session-code {
+  padding: 5px 12px; border-radius: 100px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.85rem; font-weight: 700;
+  color: var(--sv2-blue); letter-spacing: 0.1em;
+  cursor: pointer; transition: all 0.2s;
+}
+.sv2-session-code:hover { border-color: rgba(14,165,233,0.4); box-shadow: 0 0 10px rgba(14,165,233,0.15); }
+.sv2-ws-dot {
+  width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+}
+.sv2-ws-dot.online  { background: var(--sv2-green); box-shadow: 0 0 6px rgba(16,185,129,0.6); }
+.sv2-ws-dot.offline { background: var(--sv2-red); animation: sv2-blink 1.2s infinite; }
+@keyframes sv2-blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+/* ── 3-Column Shell ── */
+.sv2-shell {
+  display: flex; width: 100%;
+  height: calc(100vh - var(--sv2-nav-h) - 80px);
+  background: var(--sv2-bg); overflow: hidden;
+}
+
+/* ── Left Sidebar ── */
+.sv2-left {
+  width: var(--sv2-sidebar-w); min-width: var(--sv2-sidebar-w);
+  height: 100%; overflow-y: auto; overflow-x: hidden;
+  background: rgba(13,15,26,0.85);
+  border-right: 1px solid var(--sv2-border);
+  display: flex; flex-direction: column;
+  padding: 12px 0; flex-shrink: 0;
+  scrollbar-width: none;
+}
+.sv2-left::-webkit-scrollbar { display: none; }
+
+/* Live class card in sidebar */
+.sv2-live-card {
+  margin: 0 10px 14px;
+  padding: 14px; border-radius: 14px;
+  background: linear-gradient(135deg, rgba(124,58,237,0.2), rgba(14,165,233,0.15));
+  border: 1px solid rgba(124,58,237,0.3);
+  position: relative; overflow: hidden;
+}
+.sv2-live-card::before {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(135deg, rgba(124,58,237,0.08), transparent);
+  pointer-events: none;
+}
+.sv2-live-badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 3px 9px; border-radius: 100px; font-size: 0.65rem;
+  font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em;
+  background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.35);
+  color: #34D399; margin-bottom: 6px;
+}
+.sv2-live-badge-dot {
+  width: 5px; height: 5px; border-radius: 50%; background: #34D399;
+  animation: sv2-livepulse 1.5s ease infinite;
+}
+@keyframes sv2-livepulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(0.85)} }
+.sv2-live-title {
+  font-size: 0.88rem; font-weight: 700; color: var(--sv2-text);
+  margin-bottom: 3px; font-family: 'Syne', sans-serif;
+}
+.sv2-live-sub { font-size: 0.7rem; color: var(--sv2-text3); margin-bottom: 10px; }
+.sv2-progress-row {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 5px;
+}
+.sv2-progress-label { font-size: 0.68rem; color: var(--sv2-text3); font-weight: 600; }
+.sv2-progress-val { font-size: 0.68rem; color: var(--sv2-text2); font-weight: 700; }
+.sv2-progress-bar {
+  height: 4px; border-radius: 2px; background: rgba(255,255,255,0.08);
+  overflow: hidden; margin-bottom: 10px;
+}
+.sv2-progress-fill {
+  height: 100%; border-radius: 2px;
+  background: linear-gradient(90deg, var(--sv2-blue), var(--sv2-purple));
+  transition: width 0.5s ease;
+}
+.sv2-rank-row {
+  display: flex; align-items: center; justify-content: space-between;
+}
+.sv2-rank-chip {
+  display: flex; align-items: center; gap: 4px;
+  font-size: 0.7rem; font-weight: 700; color: var(--sv2-gold);
+}
+.sv2-teacher-pill {
+  display: flex; align-items: center; gap: 4px;
+  font-size: 0.65rem; color: var(--sv2-purple); font-weight: 600;
+}
+.sv2-teacher-dot {
+  width: 5px; height: 5px; border-radius: 50%; background: var(--sv2-purple);
+  box-shadow: 0 0 6px var(--sv2-purple-glow);
+}
+
+/* Sidebar section labels */
+.sv2-section-label {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 6px 14px 4px; margin-top: 4px;
+  font-size: 0.62rem; font-weight: 700; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--sv2-text3);
+}
+.sv2-section-add {
+  width: 18px; height: 18px; border-radius: 5px; border: none;
+  background: var(--sv2-surface2); color: var(--sv2-text3);
+  cursor: pointer; font-size: 0.85rem; display: flex;
+  align-items: center; justify-content: center;
+  transition: all 0.2s;
+}
+.sv2-section-add:hover { background: var(--sv2-surface3); color: var(--sv2-text); }
+
+/* Sidebar nav items */
+.sv2-nav-item {
+  display: flex; align-items: center; gap: 9px;
+  padding: 8px 14px; margin: 0 6px 2px; border-radius: 10px;
+  cursor: pointer; transition: all 0.15s; border: none;
+  background: transparent; width: calc(100% - 12px);
+  color: var(--sv2-text2); font-size: 0.83rem; font-family: inherit;
+  font-weight: 500; text-align: left; position: relative;
+}
+.sv2-nav-item:hover { background: var(--sv2-surface2); color: var(--sv2-text); }
+.sv2-nav-item.active {
+  background: rgba(124,58,237,0.15);
+  color: var(--sv2-text);
+  border: 1px solid rgba(124,58,237,0.25);
+}
+.sv2-nav-item.active .sv2-item-icon { filter: drop-shadow(0 0 4px var(--sv2-purple-glow)); }
+.sv2-item-icon { font-size: 0.9rem; flex-shrink: 0; width: 18px; text-align: center; }
+.sv2-item-label { flex: 1; }
+.sv2-item-badge {
+  font-size: 0.55rem; padding: 1px 5px; border-radius: 100px;
+  background: var(--sv2-purple); color: #fff; font-weight: 700;
+}
+
+/* DM items */
+.sv2-dm-item {
+  display: flex; align-items: center; gap: 8px;
+  padding: 7px 14px; margin: 0 6px 1px; border-radius: 10px;
+  cursor: pointer; transition: all 0.15s;
+  color: var(--sv2-text2); font-size: 0.82rem;
+}
+.sv2-dm-item:hover { background: var(--sv2-surface2); color: var(--sv2-text); }
+.sv2-dm-avatar {
+  width: 26px; height: 26px; border-radius: 50%; flex-shrink: 0;
+  background: linear-gradient(135deg, var(--sv2-purple), var(--sv2-blue));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.75rem; font-weight: 700; color: #fff; overflow: hidden;
+  position: relative;
+}
+.sv2-dm-online {
+  position: absolute; bottom: 0; right: 0;
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--sv2-green); border: 1.5px solid var(--sv2-bg);
+}
+.sv2-dm-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* Motivational card at bottom of sidebar */
+.sv2-motivate-card {
+  margin: auto 10px 0;
+  padding: 14px; border-radius: 14px;
+  background: linear-gradient(135deg, rgba(14,165,233,0.12), rgba(124,58,237,0.18));
+  border: 1px solid rgba(124,58,237,0.2);
+  position: relative; overflow: hidden;
+  margin-top: 16px;
+}
+.sv2-motivate-card::before {
+  content: ''; position: absolute;
+  width: 80px; height: 80px;
+  background: radial-gradient(circle, rgba(124,58,237,0.3), transparent);
+  right: -20px; bottom: -20px; border-radius: 50%;
+}
+.sv2-motivate-emoji { font-size: 1.1rem; margin-bottom: 6px; display: block; }
+.sv2-motivate-title {
+  font-size: 0.78rem; font-weight: 700; color: var(--sv2-text);
+  margin-bottom: 4px; font-family: 'Syne', sans-serif;
+}
+.sv2-motivate-text { font-size: 0.68rem; color: var(--sv2-text3); line-height: 1.5; }
+
+/* ── Center Content ── */
+.sv2-center {
+  flex: 1; height: 100%; overflow-y: auto; overflow-x: hidden;
+  display: flex; flex-direction: column;
+  background: var(--sv2-bg);
+  scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.1) transparent;
+  min-width: 0;
+}
+.sv2-center::-webkit-scrollbar { width: 4px; }
+.sv2-center::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
+
+/* ── Right Panel ── */
+.sv2-right {
+  width: var(--sv2-right-w); min-width: var(--sv2-right-w);
+  height: 100%; overflow-y: auto; overflow-x: hidden;
+  background: rgba(13,15,26,0.85);
+  border-left: 1px solid var(--sv2-border);
+  padding: 14px 12px; flex-shrink: 0;
+  scrollbar-width: none;
+}
+.sv2-right::-webkit-scrollbar { display: none; }
+
+.sv2-panel-card {
+  background: var(--sv2-surface);
+  border: 1px solid var(--sv2-border);
+  border-radius: 14px; padding: 14px; margin-bottom: 12px;
+  transition: border-color 0.2s;
+}
+.sv2-panel-card:hover { border-color: var(--sv2-border2); }
+.sv2-panel-title {
+  display: flex; align-items: center; gap: 7px;
+  font-size: 0.78rem; font-weight: 700; color: var(--sv2-text);
+  margin-bottom: 12px; font-family: 'Syne', sans-serif;
+}
+.sv2-panel-title-icon { font-size: 0.9rem; }
+
+/* Participants */
+.sv2-participants-row {
+  display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px;
+}
+.sv2-participant-av {
+  width: 30px; height: 30px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--sv2-purple), var(--sv2-blue));
+  border: 2px solid var(--sv2-bg);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.75rem; font-weight: 700; color: #fff;
+  cursor: default; transition: transform 0.2s;
+}
+.sv2-participant-av:hover { transform: scale(1.15); z-index: 1; }
+.sv2-participant-more {
+  width: 30px; height: 30px; border-radius: 50%;
+  background: var(--sv2-surface3);
+  border: 2px solid var(--sv2-bg);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.6rem; font-weight: 700; color: var(--sv2-text3);
+}
+.sv2-invite-btn {
+  width: 100%; padding: 8px; border-radius: 8px;
+  border: 1px dashed var(--sv2-border2);
+  background: transparent; color: var(--sv2-text3);
+  cursor: pointer; font-size: 0.75rem; font-family: inherit;
+  transition: all 0.2s; display: flex; align-items: center;
+  justify-content: center; gap: 5px;
+}
+.sv2-invite-btn:hover { border-color: var(--sv2-purple); color: var(--sv2-purple); background: var(--sv2-purple-dim); }
+
+/* Leaderboard */
+.sv2-lb-row {
+  display: flex; align-items: center; gap: 9px;
+  padding: 7px 0; border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+.sv2-lb-row:last-child { border-bottom: none; }
+.sv2-lb-rank {
+  width: 18px; font-size: 0.7rem; font-weight: 700;
+  color: var(--sv2-text3); text-align: center; flex-shrink: 0;
+}
+.sv2-lb-rank.top { color: var(--sv2-gold); }
+.sv2-lb-av {
+  width: 26px; height: 26px; border-radius: 50%; flex-shrink: 0;
+  background: linear-gradient(135deg, var(--sv2-purple), var(--sv2-blue));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.72rem; font-weight: 700; color: #fff;
+}
+.sv2-lb-name { flex: 1; font-size: 0.78rem; color: var(--sv2-text2); font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sv2-lb-xp { font-size: 0.72rem; font-weight: 700; color: var(--sv2-purple); }
+.sv2-view-all-btn {
+  width: 100%; padding: 7px; border-radius: 8px;
+  border: 1px solid var(--sv2-border); background: transparent;
+  color: var(--sv2-text3); cursor: pointer; font-size: 0.73rem;
+  font-family: inherit; margin-top: 8px; transition: all 0.2s;
+}
+.sv2-view-all-btn:hover { border-color: var(--sv2-purple); color: var(--sv2-purple); }
+
+/* Agenda */
+.sv2-agenda-item {
+  display: flex; align-items: center; gap: 8px; padding: 5px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+.sv2-agenda-item:last-child { border-bottom: none; }
+.sv2-agenda-time { font-size: 0.68rem; color: var(--sv2-text3); font-family: 'JetBrains Mono', monospace; min-width: 50px; }
+.sv2-agenda-label { font-size: 0.75rem; color: var(--sv2-text2); flex: 1; }
+.sv2-agenda-check {
+  width: 14px; height: 14px; border-radius: 50%; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+}
+.sv2-agenda-check.done { background: var(--sv2-blue); font-size: 0.55rem; color: #fff; }
+.sv2-agenda-check.pending { border: 1.5px solid var(--sv2-border2); }
+
+/* Motivational widget in right panel */
+.sv2-motivate-widget {
+  background: linear-gradient(135deg, rgba(245,158,11,0.08), rgba(124,58,237,0.1));
+  border: 1px solid rgba(245,158,11,0.18); border-radius: 14px; padding: 14px;
+}
+.sv2-motivate-widget-title {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 0.78rem; font-weight: 700; color: var(--sv2-gold); margin-bottom: 6px;
+}
+.sv2-motivate-widget-text { font-size: 0.72rem; color: var(--sv2-text3); line-height: 1.6; }
+
+/* ── Chat v2 (inside sv2-center) ── */
+.sv2-chat-layout {
+  display: flex; flex-direction: column; height: 100%;
+  background: var(--sv2-bg);
+}
+.sv2-chat-header {
+  display: flex; align-items: center; gap: 12px;
+  padding: 14px 20px; border-bottom: 1px solid var(--sv2-border);
+  background: rgba(13,15,26,0.9); flex-shrink: 0;
+}
+.sv2-chat-header-avatar {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--sv2-purple), var(--sv2-blue));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.1rem; flex-shrink: 0;
+}
+.sv2-chat-header-info { flex: 1; }
+.sv2-chat-header-title {
+  font-size: 0.92rem; font-weight: 700; color: var(--sv2-text);
+  font-family: 'Syne', sans-serif;
+}
+.sv2-chat-header-sub { font-size: 0.72rem; color: var(--sv2-text3); }
+.sv2-chat-header-actions { display: flex; gap: 6px; align-items: center; }
+.sv2-chat-icon-btn {
+  width: 32px; height: 32px; border-radius: 8px; border: none;
+  background: var(--sv2-surface2); color: var(--sv2-text3);
+  cursor: pointer; font-size: 0.85rem; transition: all 0.2s;
+  display: flex; align-items: center; justify-content: center;
+}
+.sv2-chat-icon-btn:hover { background: var(--sv2-surface3); color: var(--sv2-text); }
+
+/* Chat messages area */
+.sv2-chat-messages {
+  flex: 1; overflow-y: auto; padding: 16px 20px;
+  display: flex; flex-direction: column; gap: 4px;
+  scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.08) transparent;
+}
+.sv2-chat-messages::-webkit-scrollbar { width: 4px; }
+.sv2-chat-messages::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 2px; }
+
+/* System / join messages */
+.sv2-msg-system {
+  display: flex; justify-content: center; margin: 8px 0;
+}
+.sv2-msg-system-pill {
+  padding: 4px 14px; border-radius: 100px;
+  background: rgba(124,58,237,0.12); border: 1px solid rgba(124,58,237,0.2);
+  font-size: 0.7rem; color: var(--sv2-text3); display: flex; align-items: center; gap: 5px;
+}
+
+/* Message groups */
+.sv2-msg-group { margin-bottom: 14px; }
+.sv2-msg-row {
+  display: flex; align-items: flex-end; gap: 10px; margin-bottom: 2px;
+}
+.sv2-msg-row.mine { flex-direction: row-reverse; }
+.sv2-msg-sender-av {
+  width: 34px; height: 34px; border-radius: 50%; flex-shrink: 0;
+  background: linear-gradient(135deg, #7C3AED, #0EA5E9);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.82rem; font-weight: 700; color: #fff;
+  align-self: flex-start;
+}
+.sv2-msg-sender-av.teacher-av { background: linear-gradient(135deg, #F59E0B, #EF4444); }
+.sv2-msg-col { display: flex; flex-direction: column; max-width: 68%; }
+.sv2-msg-row.mine .sv2-msg-col { align-items: flex-end; }
+.sv2-msg-sender-name { font-size: 0.68rem; color: var(--sv2-text3); margin-bottom: 4px; font-weight: 600; padding: 0 4px; }
+.sv2-msg-sender-name.teacher { color: var(--sv2-gold); }
+.sv2-msg-bubble {
+  padding: 10px 14px; border-radius: 18px;
+  font-size: 0.86rem; line-height: 1.55; color: var(--sv2-text);
+  background: var(--sv2-surface2);
+  border: 1px solid var(--sv2-border);
+  border-bottom-left-radius: 6px;
+  position: relative; word-break: break-word;
+  transition: all 0.15s;
+}
+.sv2-msg-bubble:hover { border-color: var(--sv2-border2); }
+.sv2-msg-bubble.mine {
+  background: linear-gradient(135deg, rgba(124,58,237,0.25), rgba(14,165,233,0.2));
+  border-color: rgba(124,58,237,0.3);
+  border-bottom-right-radius: 6px; border-bottom-left-radius: 18px;
+}
+.sv2-msg-bubble.teacher {
+  background: rgba(245,158,11,0.1);
+  border-color: rgba(245,158,11,0.2);
+}
+.sv2-msg-meta {
+  display: flex; align-items: center; gap: 6px; margin-top: 3px; padding: 0 4px;
+}
+.sv2-msg-time { font-size: 0.62rem; color: var(--sv2-text3); font-family: 'JetBrains Mono', monospace; }
+.sv2-msg-read { font-size: 0.62rem; color: var(--sv2-blue); }
+
+/* File card in chat */
+.sv2-file-card {
+  display: flex; align-items: center; gap: 10px;
+  padding: 11px 13px; border-radius: 12px;
+  background: var(--sv2-surface2); border: 1px solid var(--sv2-border);
+  text-decoration: none; color: var(--sv2-text);
+  transition: all 0.2s; cursor: pointer;
+}
+.sv2-file-card:hover { border-color: var(--sv2-blue); background: var(--sv2-blue-dim); }
+.sv2-file-icon { font-size: 1.6rem; }
+.sv2-file-name { font-size: 0.82rem; font-weight: 600; color: var(--sv2-text); margin-bottom: 2px; }
+.sv2-file-size { font-size: 0.68rem; color: var(--sv2-text3); }
+.sv2-file-dl { margin-left: auto; font-size: 0.85rem; color: var(--sv2-blue); opacity: 0.7; }
+
+/* Reactions */
+.sv2-reactions { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 5px; padding: 0 4px; }
+.sv2-reaction-pill {
+  display: flex; align-items: center; gap: 3px;
+  padding: 2px 8px; border-radius: 100px;
+  background: var(--sv2-surface2); border: 1px solid var(--sv2-border);
+  cursor: pointer; font-size: 0.78rem; transition: all 0.15s;
+}
+.sv2-reaction-pill:hover { border-color: var(--sv2-purple); background: var(--sv2-purple-dim); }
+.sv2-reaction-pill.reacted { background: rgba(124,58,237,0.2); border-color: rgba(124,58,237,0.45); }
+.sv2-reaction-count { font-size: 0.65rem; color: var(--sv2-text3); font-weight: 600; }
+
+/* New messages indicator */
+.sv2-new-messages {
+  display: flex; justify-content: center; padding: 6px;
+}
+.sv2-new-messages-pill {
+  padding: 4px 14px; border-radius: 100px; cursor: pointer;
+  background: linear-gradient(135deg, rgba(124,58,237,0.25), rgba(14,165,233,0.2));
+  border: 1px solid rgba(124,58,237,0.35);
+  font-size: 0.72rem; font-weight: 600; color: var(--sv2-text2);
+  display: flex; align-items: center; gap: 5px;
+  transition: all 0.2s;
+}
+.sv2-new-messages-pill:hover { background: rgba(124,58,237,0.35); }
+
+/* Chat input composer */
+.sv2-composer {
+  flex-shrink: 0; border-top: 1px solid var(--sv2-border);
+  background: rgba(13,15,26,0.9);
+}
+.sv2-reply-bar {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 16px 0; font-size: 0.75rem; color: var(--sv2-text3);
+  border-top: 1px solid rgba(124,58,237,0.2);
+}
+.sv2-reply-bar-dismiss {
+  margin-left: auto; background: none; border: none;
+  color: var(--sv2-text3); cursor: pointer; font-size: 1rem;
+}
+.sv2-composer-row {
+  display: flex; align-items: center; gap: 10px; padding: 12px 16px;
+}
+.sv2-composer-input {
+  flex: 1; background: var(--sv2-surface2);
+  border: 1px solid var(--sv2-border); border-radius: 24px;
+  padding: 10px 18px; color: var(--sv2-text);
+  font-size: 0.86rem; font-family: inherit; outline: none;
+  transition: all 0.2s; resize: none; min-height: 40px; max-height: 120px;
+  scrollbar-width: none;
+}
+.sv2-composer-input::placeholder { color: var(--sv2-text3); }
+.sv2-composer-input:focus { border-color: rgba(124,58,237,0.4); background: rgba(255,255,255,0.06); box-shadow: 0 0 0 3px rgba(124,58,237,0.08); }
+.sv2-composer-btn {
+  background: none; border: none; cursor: pointer;
+  color: var(--sv2-text3); font-size: 1.1rem; padding: 4px;
+  transition: all 0.2s; border-radius: 6px;
+}
+.sv2-composer-btn:hover { color: var(--sv2-text2); background: var(--sv2-surface2); }
+.sv2-composer-send {
+  width: 38px; height: 38px; border-radius: 50%; border: none; cursor: pointer;
+  background: linear-gradient(135deg, var(--sv2-purple), var(--sv2-blue));
+  color: #fff; font-size: 1rem; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.2s; box-shadow: 0 0 12px rgba(124,58,237,0.35);
+}
+.sv2-composer-send:hover { transform: scale(1.08); box-shadow: 0 0 20px rgba(124,58,237,0.5); }
+.sv2-composer-send:disabled { opacity: 0.4; transform: none; cursor: not-allowed; box-shadow: none; }
+
+/* Doubt section */
+.sv2-doubt-section {
+  padding: 10px 16px; border-top: 1px solid var(--sv2-border);
+  background: rgba(13,15,26,0.9);
+}
+.sv2-doubt-label {
+  font-size: 0.62rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.08em; color: var(--sv2-text3); margin-bottom: 6px;
+}
+.sv2-doubt-row { display: flex; gap: 7px; }
+.sv2-doubt-input {
+  flex: 1; background: var(--sv2-surface2);
+  border: 1px solid var(--sv2-border); border-radius: 10px;
+  padding: 7px 12px; color: var(--sv2-text);
+  font-size: 0.8rem; font-family: inherit; outline: none;
+  transition: border-color 0.2s;
+}
+.sv2-doubt-input:focus { border-color: rgba(234,179,8,0.4); }
+.sv2-doubt-btn {
+  padding: 7px 12px; border-radius: 10px;
+  border: 1px solid rgba(234,179,8,0.3);
+  background: rgba(234,179,8,0.08); color: #EAB308;
+  cursor: pointer; font-size: 0.78rem; font-family: inherit;
+  font-weight: 700; white-space: nowrap; transition: all 0.2s;
+}
+.sv2-doubt-btn:hover { background: rgba(234,179,8,0.15); }
+.sv2-doubt-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* ── Library v2 (inside sv2-center) ── */
+.sv2-library-layout { display: flex; flex-direction: column; height: 100%; }
+
+/* ── Content area padding for non-chat pages ── */
+.sv2-content-pad { padding: 20px 24px; flex: 1; }
+
+/* ── HUD adjustments in new layout ── */
+.sv2-hud-wrap { flex-shrink: 0; }
+
+/* ── Announcement bar override ── */
+.sv2-announce {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 20px; background: rgba(234,179,8,0.1);
+  border-bottom: 1px solid rgba(234,179,8,0.2); flex-shrink: 0;
+}
+
+/* ── Session ended overlay ── */
+.sv2-ended {
+  display: flex; flex-direction: column; align-items: center;
+  justify-content: center; flex: 1; padding: 40px;
+  text-align: center;
+}
+
+/* ── Responsive: collapse sidebars on smaller screens ── */
+@media (max-width: 1100px) {
+  :root { --sv2-right-w: 230px; }
+}
+@media (max-width: 900px) {
+  .sv2-right { display: none; }
+}
+@media (max-width: 700px) {
+  .sv2-left { display: none; }
+  .sv2-shell { display: block; }
+  .sv2-center { height: auto; overflow: visible; }
+}
+
+/* ══════════════════════════════════════════════════════════════════
    MOBILE ENHANCEMENT LAYER — additive only, desktop unchanged
    Breakpoints: 480px / 768px / 1024px
-   ═══════════════════════════════════════════════════════════════════ */
+   ══════════════════════════════════════════════════════════════════ */
 
 /* ── Touch targets — globally enforced on mobile ── */
 @media(max-width:768px){
@@ -6652,7 +7749,7 @@ body.s-ui-active .toasts {
 ═══════════════════════════════════════════════════════════════════ */
 
 /* ── Hub Page Wrapper ── */
-.ch-page { padding: 0; max-width: 1400px; margin: 0 auto; }
+.ch-page { padding: 0; max-width: 100%; margin: 0; }
 
 /* ── Hero Banner (Student) ── */
 .ch-hero {
@@ -28965,8 +30062,8 @@ function StudentTaskView({
   const [sPage, setSPage] = useState(() => {
     try {
       const saved = _loadTestState(sessionCode, studentId);
-      return (saved?.active && !saved?.submitted) ? 'test' : 'task';
-    } catch { return 'task'; }
+      return (saved?.active && !saved?.submitted) ? 'test' : 'home';
+    } catch { return 'home'; }
   });
   const [currentTask, setCurrentTask] = useState(null);
   const [sessionStatus, setSessionStatus] = useState('active');
@@ -29124,6 +30221,18 @@ function StudentTaskView({
   function bumpScore() {
     setScoreAnim(true);
     setTimeout(() => setScoreAnim(false), 400);
+  }
+
+  // ── SESSION ELAPSED TIMER (for dashboard hero card) ──────────────
+  const [sessionElapsed, setSessionElapsed] = React.useState(0);
+  const [studentsOnline, setStudentsOnline] = React.useState(1);
+  React.useEffect(() => {
+    const iv = setInterval(() => setSessionElapsed(s => s + 1), 1000);
+    return () => clearInterval(iv);
+  }, []);
+  function fmtElapsed(secs) {
+    const m = Math.floor(secs / 60), s = secs % 60;
+    return String(m).padStart(2,'0') + 'm ' + String(s).padStart(2,'0') + 's';
   }
 
   // ── QUIZ STATE ENGINE (single source of truth) ───────────────────
@@ -30026,6 +31135,244 @@ function StudentTaskView({
   }
 
   // ── Quiz mode renderer ────────────────────────────────────────────  // ── Chat renderer ────────────────────────────────────────────────
+  // ── Premium Chat v2 — matches reference design exactly ──────────
+  function renderStudentChatV2() {
+    const fmtChatTime = ts => { if (!ts) return ''; const d = new Date((ts > 1e10 ? ts : ts*1000)); return `${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')} ${d.getHours() >= 12 ? 'PM':'AM'}`; };
+    const EMOJI_LIST = ['👍','❤️','😂','😮','🔥','👏'];
+    const isInputBlocked = !chatEnabled || chatSuspended;
+
+    function fileIcon(ct) {
+      if (!ct) return '📎';
+      if (ct.includes('pdf')) return '📄';
+      if (ct.includes('word') || ct.includes('document')) return '📝';
+      if (ct.includes('presentation') || ct.includes('powerpoint')) return '📊';
+      if (ct.startsWith('image/')) return '🖼️';
+      return '📎';
+    }
+    function fmtBytes(n) { if (!n) return ''; if (n < 1024) return `${n}B`; if (n < 1048576) return `${(n/1024).toFixed(1)}KB`; return `${(n/1048576).toFixed(1)}MB`; }
+
+    return React.createElement('div', {className:'sv2-chat-layout'},
+
+      // ── Chat header ──
+      React.createElement('div', {className:'sv2-chat-header'},
+        React.createElement('div', {className:'sv2-chat-header-avatar'}, '💬'),
+        React.createElement('div', {className:'sv2-chat-header-info'},
+          React.createElement('div', {className:'sv2-chat-header-title'}, 'General Chat'),
+          React.createElement('div', {className:'sv2-chat-header-sub'}, 'Connect with your classmates & teacher')
+        ),
+        React.createElement('div', {className:'sv2-chat-header-actions'},
+          React.createElement('button', {className:'sv2-chat-icon-btn', title:'Search'}, '🔍'),
+          React.createElement('button', {className:'sv2-chat-icon-btn', title:'Notifications'}, '🔔'),
+          React.createElement('button', {className:'sv2-chat-icon-btn', title:'More'}, '⋯')
+        )
+      ),
+
+      // ── Doubts panel (if any) ──
+      doubts.length > 0 && React.createElement('div', {style:{padding:'10px 16px',borderBottom:'1px solid rgba(255,255,255,0.06)',background:'rgba(6,11,24,0.5)'}},
+        React.createElement('div', {className:'sv2-doubt-label'}, '❓ Your Doubts'),
+        (Array.isArray(doubts) ? doubts : []).map((d,i)=>React.createElement('div', {key:d.id||i, className:`s-doubt-card ${(d.resolved||d.status==='resolved'||d.status==='answered')?'s-doubt-resolved':''}`},
+          React.createElement('div', {className:'s-doubt-text'}, d.doubt_text || d.text || ''),
+          (d.resolved || d.status==='resolved' || d.status==='answered') && React.createElement('div', {className:'s-doubt-answer'}, '✅ ', d.answer || d.reply || '')
+        ))
+      ),
+
+      chatSuspended && React.createElement('div', {className:'chat-suspended-banner'},
+        React.createElement('span', null, '🔇'),
+        React.createElement('span', null, 'You are temporarily suspended from classroom chat.')
+      ),
+
+      // ── Messages ──
+      React.createElement('div', {className:'sv2-chat-messages'},
+        messages.length === 0 && React.createElement('div', {style:{display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',flex:1,padding:'40px 0',color:'rgba(241,245,249,0.35)',textAlign:'center'}},
+          React.createElement('div', {style:{fontSize:'2.5rem',marginBottom:12}}, '💬'),
+          React.createElement('div', {style:{fontSize:'0.88rem'}}, 'No messages yet. Say hello!')
+        ),
+
+        messages.map((msg, i) => {
+          const isMe      = msg.sender_id === studentId;
+          const isTeacher = msg.sender_id === 'teacher';
+          const isSystem  = msg.msg_type === 'system' || msg.sender_id === 'system';
+          const reactions = msg.reactions || {};
+          const fileInfo  = msg.file_info;
+          const isImg     = msg.msg_type === 'image' || (fileInfo && fileInfo.content_type && fileInfo.content_type.startsWith('image/'));
+          const replyPreview = msg.reply_preview;
+          const isPickerOpen = chatReactionPickerFor === msg.id;
+
+          if (isSystem) {
+            return React.createElement('div', {key: msg.id||i, className:'sv2-msg-system'},
+              React.createElement('div', {className:'sv2-msg-system-pill'}, '⚡ ', msg.content)
+            );
+          }
+
+          const avatarLetter = isTeacher ? '👨‍🏫' : (msg.sender_name || 'S')[0].toUpperCase();
+          const timeStr = fmtChatTime(msg.timestamp || msg.sent_at);
+
+          return React.createElement('div', {key: msg.id||i, className:'sv2-msg-group'},
+            React.createElement('div', {className:`sv2-msg-row${isMe?' mine':''}`},
+
+              // Avatar (left for others, right for me)
+              !isMe && React.createElement('div', {
+                className:`sv2-msg-sender-av${isTeacher?' teacher-av':''}`,
+                title: isTeacher ? 'Teacher' : (msg.sender_name || 'Student')
+              }, avatarLetter),
+
+              React.createElement('div', {className:'sv2-msg-col'},
+                // Sender name
+                !isMe && React.createElement('div', {className:`sv2-msg-sender-name${isTeacher?' teacher':''}`},
+                  isTeacher ? '👨‍🏫 Teacher' : (msg.sender_name || 'Student'),
+                  React.createElement('span', {style:{marginLeft:8,fontSize:'0.62rem',color:'rgba(241,245,249,0.3)',fontFamily:"'JetBrains Mono',monospace"}}, timeStr)
+                ),
+
+                // Reply indicator
+                replyPreview && msg.reply_to_message_id && React.createElement('div', {
+                  className:'chat-reply-indicator', style:{cursor:'pointer',marginBottom:4},
+                  onClick: () => { const el = document.getElementById(`sv2-msg-${msg.reply_to_message_id}`); if(el) el.scrollIntoView({behavior:'smooth',block:'center'}); }
+                },
+                  React.createElement('span', null, '↩ '),
+                  React.createElement('span', null, (replyPreview||'').slice(0,55) + ((replyPreview||'').length > 55 ? '…' : ''))
+                ),
+
+                // Bubble
+                React.createElement('div', {style:{position:'relative'}},
+                  // Action bar
+                  React.createElement('div', {className:'chat-msg-actions'},
+                    React.createElement('button', {
+                      className:'chat-msg-action-btn', title:'React',
+                      onClick: () => setChatReactionPickerFor(isPickerOpen ? null : msg.id)
+                    }, '😊'),
+                    !isMe && React.createElement('button', {
+                      className:'chat-msg-action-btn', title:'Reply',
+                      onClick: () => setChatReplyTo({id: msg.id, sender_name: msg.sender_name || 'Someone', content: msg.content || ''})
+                    }, '↩️')
+                  ),
+
+                  // Emoji picker
+                  isPickerOpen && React.createElement('div', {
+                    className:'chat-reaction-picker',
+                    style:{position:'absolute',bottom:'100%',left:isMe?'auto':0,right:isMe?0:'auto',zIndex:200}
+                  },
+                    EMOJI_LIST.map(em => React.createElement('button', {key:em, onClick:()=>toggleChatReaction(msg.id, em)}, em))
+                  ),
+
+                  // Message body
+                  isImg && fileInfo
+                    ? React.createElement('img', {
+                        id:`sv2-msg-${msg.id}`,
+                        src:`/api/content/file/${sessionCode}/${encodeURIComponent(fileInfo.name||fileInfo.id)}`,
+                        className:'chat-img-preview', alt:fileInfo.name||'Image', loading:'lazy',
+                        onClick:()=>setChatLightboxImg(`/api/content/file/${sessionCode}/${encodeURIComponent(fileInfo.name||fileInfo.id)}`)
+                      })
+                    : msg.msg_type === 'file' && fileInfo
+                      ? React.createElement('a', {
+                          href:`/api/content/download/${sessionCode}/${encodeURIComponent(fileInfo.name||fileInfo.id)}`,
+                          target:'_blank', rel:'noopener noreferrer', className:'sv2-file-card',
+                          onClick:e=>e.stopPropagation()
+                        },
+                          React.createElement('div', {className:'sv2-file-icon'}, fileIcon(fileInfo.content_type)),
+                          React.createElement('div', null,
+                            React.createElement('div', {className:'sv2-file-name'}, fileInfo.name||'File'),
+                            React.createElement('div', {className:'sv2-file-size'}, fmtBytes(fileInfo.size))
+                          ),
+                          React.createElement('span', {className:'sv2-file-dl'}, '⬇')
+                        )
+                      : React.createElement('div', {
+                          id:`sv2-msg-${msg.id}`,
+                          className:`sv2-msg-bubble${isMe?' mine':isTeacher?' teacher':''}`
+                        }, msg.content || msg.message || '')
+                ),
+
+                // Meta row (time for self)
+                isMe && React.createElement('div', {className:'sv2-msg-meta'},
+                  React.createElement('span', {className:'sv2-msg-time'}, timeStr),
+                  React.createElement('span', {className:'sv2-msg-read'}, '✓✓')
+                ),
+
+                // Reactions
+                Object.keys(reactions).filter(e=>reactions[e].length>0).length > 0 &&
+                  React.createElement('div', {className:'sv2-reactions'},
+                    Object.entries(reactions).filter(([,v])=>v.length>0).map(([emoji,reactors]) =>
+                      React.createElement('button', {
+                        key:emoji,
+                        className:`sv2-reaction-pill${reactors.includes(studentId)?' reacted':''}`,
+                        onClick:()=>toggleChatReaction(msg.id, emoji),
+                        title:reactors.join(', ')
+                      },
+                        React.createElement('span', null, emoji),
+                        React.createElement('span', {className:'sv2-reaction-count'}, reactors.length)
+                      )
+                    )
+                  )
+              )
+            )
+          );
+        }),
+        React.createElement('div', {ref:messagesEnd})
+      ),
+
+      // ── Doubt input ──
+      React.createElement('div', {className:'sv2-doubt-section'},
+        React.createElement('div', {className:'sv2-doubt-label'}, '❓ Submit a Doubt'),
+        React.createElement('div', {className:'sv2-doubt-row'},
+          React.createElement('input', {
+            value:doubtText, onChange:e=>setDoubtText(e.target.value),
+            placeholder:'Type your doubt…', className:'sv2-doubt-input',
+            onKeyDown:e=>e.key==='Enter'&&submitDoubt()
+          }),
+          React.createElement('button', {
+            className:'sv2-doubt-btn',
+            onClick:submitDoubt, disabled:!doubtText.trim()
+          }, '❓ Ask')
+        )
+      ),
+
+      // ── Chat Composer ──
+      React.createElement('div', {className:'sv2-composer'},
+        chatReplyTo && React.createElement('div', {className:'sv2-reply-bar'},
+          React.createElement('span', null, '↩ Replying to ', React.createElement('strong', null, chatReplyTo.sender_name), ': ', (chatReplyTo.content||'').slice(0,50)),
+          React.createElement('button', {className:'sv2-reply-bar-dismiss', onClick:()=>setChatReplyTo(null)}, '✕')
+        ),
+        React.createElement('div', {className:'sv2-composer-row'},
+          !chatEnabled
+            ? React.createElement('div', {style:{flex:1,textAlign:'center',color:'rgba(241,245,249,0.3)',fontSize:'0.82rem'}}, '🔒 Chat is disabled by the teacher')
+            : chatSuspended
+              ? React.createElement('div', {style:{flex:1,textAlign:'center',color:'#f87171',fontSize:'0.82rem'}}, '🔇 You are suspended from chat')
+              : React.createElement(React.Fragment, null,
+                  React.createElement('button', {className:'sv2-composer-btn', title:'Attach'}, '📎'),
+                  React.createElement('button', {className:'sv2-composer-btn', title:'Emoji'}, '😊'),
+                  React.createElement('button', {className:'sv2-composer-btn', title:'GIF'}, 'GIF'),
+                  React.createElement('button', {className:'sv2-composer-btn', title:'Voice'}, '🎤'),
+                  React.createElement('input', {
+                    value:chatInput, onChange:e=>setChatInput(e.target.value),
+                    placeholder: chatReplyTo ? `Replying to ${chatReplyTo.sender_name}…` : 'Type your message...',
+                    className:'sv2-composer-input',
+                    disabled:isInputBlocked,
+                    onKeyDown:e=>e.key==='Enter'&&!e.shiftKey&&sendChat()
+                  }),
+                  React.createElement('button', {
+                    className:'sv2-composer-send',
+                    onClick:sendChat,
+                    disabled:!chatInput.trim()||isInputBlocked
+                  }, '➤')
+                )
+        )
+      ),
+
+      // Lightbox
+      chatLightboxImg && React.createElement('div', {
+        className:'lightbox-overlay', onClick:()=>setChatLightboxImg(null)
+      },
+        React.createElement('button', {className:'lightbox-close', onClick:()=>setChatLightboxImg(null)}, '✕'),
+        React.createElement('img', {src:chatLightboxImg, alt:'Preview', onClick:e=>e.stopPropagation()})
+      ),
+
+      // Class-end toast
+      classEndToast && React.createElement('div', {className:'class-end-toast'},
+        React.createElement('span', null, '⏰'),
+        React.createElement('span', null, `Class ends in ${classEndToast.minutesLeft} minute${classEndToast.minutesLeft>1?'s':''}!`)
+      )
+    );
+  }
+
   function renderChat() {
     const fmtChatTime = ts => { if (!ts) return ''; const d = new Date((ts > 1e10 ? ts : ts*1000)); return `${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`; };
     const EMOJI_LIST = ['👍','❤️','😂','😮','🔥','👏'];
@@ -30331,16 +31678,211 @@ function StudentTaskView({
     return map[task?.difficulty] || 10;
   }
 
-  // ── Main return ──────────────────────────────────────────────────
-  return React.createElement('div', {className:'app s-ui', style:{background:'#060B18',minHeight:'100vh'}},
-    // Aurora background
+  // ── renderStudentDashboardHome ─────────────────────────────────
+  function renderStudentDashboardHome() {
+    const sessionName = sessionDisplayName || 'Live Class';
+    return React.createElement('div', {className:'sd-dashboard'},
+
+      // ── HERO LIVE CLASS CARD ──
+      React.createElement('div', {className:'sd-hero'},
+        // Decorative SVG graph (top-right)
+        React.createElement('div', {className:'sd-hero-graph'},
+          React.createElement('svg', {viewBox:'0 0 260 160', preserveAspectRatio:'none', style:{width:'100%',height:'100%'}},
+            React.createElement('polyline', {
+              points:'20,140 50,110 80,120 110,80 140,90 170,50 200,60 240,20',
+              fill:'none', stroke:'rgba(99,102,241,0.6)', strokeWidth:'2',
+              strokeLinejoin:'round', strokeLinecap:'round'
+            }),
+            React.createElement('circle', {cx:'50', cy:'110', r:'4', fill:'rgba(99,102,241,0.7)'}),
+            React.createElement('circle', {cx:'110', cy:'80', r:'4', fill:'rgba(99,102,241,0.7)'}),
+            React.createElement('circle', {cx:'170', cy:'50', r:'4', fill:'rgba(99,102,241,0.7)'}),
+            React.createElement('circle', {cx:'240', cy:'20', r:'5', fill:'rgba(99,102,241,0.9)'})
+          )
+        ),
+
+        // Left side
+        React.createElement('div', {className:'sd-hero-left'},
+          React.createElement('div', {className:'sd-hero-avatar'}, '\uD83E\uDDE0'),
+          React.createElement('div', {className:'sd-hero-info'},
+            React.createElement('div', {className:'sd-hero-session-label'}, 'CURRENT SESSION'),
+            React.createElement('div', {className:'sd-hero-title-row'},
+              React.createElement('div', {className:'sd-hero-title'}, sessionName),
+              React.createElement('div', {className:'sd-live-dot'})
+            ),
+            React.createElement('div', {className:'sd-hero-subtitle'}, 'You are live in the classroom'),
+            React.createElement('div', {className:'sd-hero-code-row'},
+              React.createElement('span', {className:'sd-hero-code-label'}, 'Class Code'),
+              React.createElement('span', {className:'sd-hero-code'}, sessionCode),
+              React.createElement('button', {
+                className:'sd-hero-copy-btn',
+                title:'Copy code',
+                onClick:()=>{
+                  navigator.clipboard?.writeText(sessionCode).catch(()=>{});
+                  add('\u2713 Code copied!','success');
+                }
+              }, '\uD83D\uDCCB')
+            )
+          )
+        ),
+
+        // Divider
+        React.createElement('div', {className:'sd-hero-divider'}),
+
+        // Right stats
+        React.createElement('div', {className:'sd-hero-right'},
+          React.createElement('div', {className:'sd-hero-stat'},
+            React.createElement('div', {className:'sd-hero-stat-label'}, 'TIME ELAPSED'),
+            React.createElement('div', {className:'sd-hero-stat-timer'}, fmtElapsed(sessionElapsed))
+          ),
+          React.createElement('div', {className:'sd-hero-stat'},
+            React.createElement('div', {className:'sd-hero-stat-num'}, studentsOnline),
+            React.createElement('div', {className:'sd-hero-stat-sub'}, 'Students Online')
+          )
+        )
+      ),
+
+      // ── STAT CARDS ROW ──
+      React.createElement('div', {className:'sd-stat-row'},
+        // Today's Agenda
+        React.createElement('div', {className:'sd-stat-card', onClick:()=>setSPage('task')},
+          React.createElement('div', {className:'sd-stat-icon purple'}, '\uD83D\uDCDA'),
+          React.createElement('div', {className:'sd-stat-label'}, "Today's Agenda"),
+          React.createElement('div', {className:'sd-stat-value'}, '4'),
+          React.createElement('div', {className:'sd-stat-sub'}, 'Topics'),
+          React.createElement('button', {className:'sd-stat-cta'}, 'View Agenda \u2192')
+        ),
+        // My Tasks
+        React.createElement('div', {className:'sd-stat-card', onClick:()=>setSPage('task')},
+          React.createElement('div', {className:'sd-stat-icon green'}, '\u2705'),
+          React.createElement('div', {className:'sd-stat-label'}, 'My Tasks'),
+          React.createElement('div', {className:'sd-stat-value'}, totalTasks > 0 ? totalTasks : '0'),
+          React.createElement('div', {className:'sd-stat-sub'}, 'Pending Tasks'),
+          React.createElement('button', {className:'sd-stat-cta'}, 'View Tasks \u2192')
+        ),
+        // My Progress
+        React.createElement('div', {className:'sd-stat-card', onClick:()=>setSPage('reports')},
+          React.createElement('div', {className:'sd-stat-icon orange'}, '\uD83D\uDCCA'),
+          React.createElement('div', {className:'sd-stat-label'}, 'My Progress'),
+          React.createElement('div', {className:'sd-stat-value'},
+            answeredCount > 0 ? Math.round(correctCount/answeredCount*100)+'%' : '\u2014'
+          ),
+          React.createElement('div', {className:'sd-stat-sub'}, 'Understanding'),
+          React.createElement('button', {className:'sd-stat-cta'}, 'View Progress \u2192')
+        )
+      ),
+
+      // ── LIVE CLASS TOOLS ──
+      React.createElement('div', {className:'sd-tools-section'},
+        React.createElement('div', {className:'sd-section-header'},
+          React.createElement('div', {className:'sd-section-title'}, 'Live Class Tools'),
+          React.createElement('div', {className:'sd-section-sub'}, 'Quick actions for your learning')
+        ),
+        React.createElement('div', {className:'sd-tools-row'},
+          // Raise Hand
+          React.createElement('button', {
+            className:'sd-tool-card',
+            onClick: toggleHand,
+            style: handRaised ? {borderColor:'rgba(251,191,36,0.45)',boxShadow:'0 0 22px rgba(251,191,36,0.15)'} : {}
+          },
+            React.createElement('div', {className:'sd-tool-icon', style:{background:'rgba(251,191,36,0.14)',border:'1px solid rgba(251,191,36,0.28)'}}, '\u270B'),
+            React.createElement('div', {className:'sd-tool-label', style:handRaised?{color:'#FBBF24'}:{}}, handRaised ? 'Hand Raised' : 'Raise Hand')
+          ),
+          // Ask Question
+          React.createElement('button', {className:'sd-tool-card', onClick:()=>setSPage('task')},
+            React.createElement('div', {className:'sd-tool-icon', style:{background:'rgba(124,58,237,0.14)',border:'1px solid rgba(124,58,237,0.28)'}}, '\uD83D\uDCAC'),
+            React.createElement('div', {className:'sd-tool-label'}, 'Ask Question')
+          ),
+          // Notes
+          React.createElement('button', {className:'sd-tool-card', onClick:()=>setSPage('library')},
+            React.createElement('div', {className:'sd-tool-icon', style:{background:'rgba(34,197,94,0.12)',border:'1px solid rgba(34,197,94,0.25)'}}, '\uD83D\uDCDD'),
+            React.createElement('div', {className:'sd-tool-label'}, 'Notes')
+          ),
+          // Resources
+          React.createElement('button', {className:'sd-tool-card', onClick:()=>setSPage('library')},
+            React.createElement('div', {className:'sd-tool-icon', style:{background:'rgba(59,130,246,0.14)',border:'1px solid rgba(59,130,246,0.28)'}}, '\uD83D\uDCC1'),
+            React.createElement('div', {className:'sd-tool-label'}, 'Resources')
+          ),
+          // Chat
+          React.createElement('button', {
+            className:'sd-tool-card',
+            onClick:()=>{setSPage('chat');setChatUnread(0);}
+          },
+            React.createElement('div', {className:'sd-tool-icon', style:{background:'rgba(249,115,22,0.12)',border:'1px solid rgba(249,115,22,0.25)'}}, '\uD83D\uDCAC'),
+            React.createElement('div', {className:'sd-tool-label'}, 'Chat',
+              chatUnread > 0 && React.createElement('span', {style:{
+                marginLeft:5,background:'#ef4444',color:'#fff',borderRadius:'50%',
+                fontSize:'0.58rem',padding:'1px 5px',fontWeight:800
+              }}, chatUnread)
+            )
+          )
+        )
+      ),
+
+      // ── LEARNING HUB ──
+      React.createElement('div', {className:'sd-hub-section'},
+        React.createElement('div', {className:'sd-section-header'},
+          React.createElement('div', {className:'sd-section-title'}, 'Learning Hub'),
+          React.createElement('div', {className:'sd-section-sub'}, 'Everything you need to succeed')
+        ),
+        React.createElement('div', {className:'sd-hub-card'},
+          React.createElement('div', {className:'sd-hub-grid'},
+            // Class Recordings
+            React.createElement('div', {className:'sd-hub-item', onClick:()=>setSPage('library')},
+              React.createElement('div', {className:'sd-hub-icon', style:{background:'rgba(124,58,237,0.15)',border:'1px solid rgba(124,58,237,0.25)'}}, '\u25B6\uFE0F'),
+              React.createElement('div', {className:'sd-hub-info'},
+                React.createElement('div', {className:'sd-hub-title'}, 'Class Recordings'),
+                React.createElement('div', {className:'sd-hub-sub'}, 'Watch recorded sessions anytime')
+              )
+            ),
+            // Quizzes & Tests
+            React.createElement('div', {className:'sd-hub-item', onClick:()=>setSPage('task')},
+              React.createElement('div', {className:'sd-hub-icon', style:{background:'rgba(34,197,94,0.12)',border:'1px solid rgba(34,197,94,0.22)'}}, '\uD83D\uDCDD'),
+              React.createElement('div', {className:'sd-hub-info'},
+                React.createElement('div', {className:'sd-hub-title'}, 'Quizzes & Tests'),
+                React.createElement('div', {className:'sd-hub-sub'}, 'Test your knowledge and track progress')
+              )
+            ),
+            // Achievements
+            React.createElement('div', {className:'sd-hub-item', onClick:()=>setSPage('reports')},
+              React.createElement('div', {className:'sd-hub-icon', style:{background:'rgba(249,115,22,0.12)',border:'1px solid rgba(249,115,22,0.22)'}}, '\uD83C\uDFC6'),
+              React.createElement('div', {className:'sd-hub-info'},
+                React.createElement('div', {className:'sd-hub-title'}, 'Achievements'),
+                React.createElement('div', {className:'sd-hub-sub'}, 'View badges and milestones earned')
+              )
+            ),
+            // Saved Content
+            React.createElement('div', {className:'sd-hub-item', onClick:()=>setSPage('library')},
+              React.createElement('div', {className:'sd-hub-icon', style:{background:'rgba(59,130,246,0.12)',border:'1px solid rgba(59,130,246,0.22)'}}, '\uD83D\uDD16'),
+              React.createElement('div', {className:'sd-hub-info'},
+                React.createElement('div', {className:'sd-hub-title'}, 'Saved Content'),
+                React.createElement('div', {className:'sd-hub-sub'}, 'Access your saved lessons and notes')
+              )
+            ),
+            // Study Stats
+            React.createElement('div', {className:'sd-hub-item', onClick:()=>setSPage('reports')},
+              React.createElement('div', {className:'sd-hub-icon', style:{background:'rgba(168,85,247,0.12)',border:'1px solid rgba(168,85,247,0.22)'}}, '\uD83D\uDCCA'),
+              React.createElement('div', {className:'sd-hub-info'},
+                React.createElement('div', {className:'sd-hub-title'}, 'Study Stats'),
+                React.createElement('div', {className:'sd-hub-sub'}, 'Detailed insights into your learning')
+              )
+            )
+          )
+        )
+      )
+    );
+  }
+
+  // ── Main return (Premium Sidebar Layout) ──────────────────────
+  return React.createElement('div', {className:'sd-app s-ui'},
+
+    // ── Aurora background ──
     React.createElement('div', {className:'s-aurora-bg'},
       React.createElement('div', {className:'s-aurora-layer s-aurora-1'}),
       React.createElement('div', {className:'s-aurora-layer s-aurora-2'}),
       React.createElement('div', {className:'s-aurora-layer s-aurora-3'})
     ),
 
-    // ── VC Join Banner ──────────────────────────────────────────
+    // ── Overlays (VC, Profile, XP) — unchanged functionality ──
     vcBanner && !vcActive && React.createElement('div', { className: 'vc-banner' },
       React.createElement('div', { className: 'vc-banner-icon' },
         React.createElement('svg', { viewBox:'0 0 24 24', fill:'none', stroke:'#a5b4fc', strokeWidth:2, strokeLinecap:'round', strokeLinejoin:'round', style:{width:'18px',height:'18px'} },
@@ -30370,300 +31912,299 @@ function StudentTaskView({
       )
     ),
 
-    // ── VC Room overlay (when student joined) ───────────────────
     vcActive && React.createElement(VideoCallRoom, {
-      sessionCode: sessionCode,
-      userId: studentId,
-      role: 'student',
-      onClose: () => setVcActive(false)
+      sessionCode: sessionCode, userId: studentId, role: 'student', onClose: () => setVcActive(false)
     }),
 
-    // Profile modal — with avatar picker
     profileOpen && React.createElement('div', {className:'s-profile-overlay',onClick:e=>{if(e.target===e.currentTarget)setProfileOpen(false)}},
       React.createElement('div', {className:'s-profile-card'},
-        // Header with big emoji avatar
         React.createElement('div', {style:{display:'flex',alignItems:'center',gap:14,marginBottom:20}},
-          React.createElement('div', {style:{width:60,height:60,borderRadius:18,
-            background:'rgba(14,165,233,0.15)',border:'2px solid rgba(14,165,233,0.3)',
-            display:'flex',alignItems:'center',justifyContent:'center',
-            fontSize:'2rem',boxShadow:'0 0 20px rgba(14,165,233,0.2)'}},
-            studentEmoji
-          ),
+          React.createElement('div', {style:{width:60,height:60,borderRadius:18,background:'rgba(14,165,233,0.15)',border:'2px solid rgba(14,165,233,0.3)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'2rem',boxShadow:'0 0 20px rgba(14,165,233,0.2)'}}, studentEmoji),
           React.createElement('div', null,
             React.createElement('div', {style:{fontFamily:"'Syne',sans-serif",fontSize:'1.1rem',fontWeight:800,color:'#F1F5F9'}}, studentName),
-            React.createElement('div', {className:'s-badge s-badge-live', style:{display:'inline-flex',marginTop:4,borderRadius:6,fontSize:'0.7rem'}}, '🧑‍🎓 Student'),
+            React.createElement('div', {className:'s-badge s-badge-live', style:{display:'inline-flex',marginTop:4,borderRadius:6,fontSize:'0.7rem'}}, '\uD83E\uDDD1\u200D\uD83C\uDF93 Student'),
             React.createElement('div', {style:{fontSize:'0.78rem',color:'rgba(241,245,249,0.4)',marginTop:4}},
               React.createElement('span', {style:{fontFamily:"'JetBrains Mono',monospace",color:'#0EA5E9',fontWeight:700}}, sessionCode)
             )
           ),
-          React.createElement('button', {onClick:()=>setProfileOpen(false),
-            style:{marginLeft:'auto',padding:'6px 10px',borderRadius:8,border:'1px solid rgba(255,255,255,0.1)',background:'transparent',color:'rgba(241,245,249,0.5)',cursor:'pointer',fontFamily:'inherit',fontSize:'0.85rem'}
-          }, '✕')
+          React.createElement('button', {onClick:()=>setProfileOpen(false),style:{marginLeft:'auto',padding:'6px 10px',borderRadius:8,border:'1px solid rgba(255,255,255,0.1)',background:'transparent',color:'rgba(241,245,249,0.5)',cursor:'pointer',fontFamily:'inherit',fontSize:'0.85rem'}}, '\u2715')
         ),
-
-        // ── Avatar picker ──
         React.createElement('div', {style:{marginBottom:20}},
-          React.createElement('div', {style:{fontSize:'0.7rem',fontWeight:700,color:'rgba(241,245,249,0.4)',textTransform:'uppercase',letterSpacing:'0.08em',marginBottom:8}},
-            '🎨 Choose Your Avatar'
-          ),
+          React.createElement('div', {style:{fontSize:'0.7rem',fontWeight:700,color:'rgba(241,245,249,0.4)',textTransform:'uppercase',letterSpacing:'0.08em',marginBottom:8}}, '\uD83C\uDFA8 Choose Your Avatar'),
           React.createElement('div', {className:'s-avatar-row'},
-            STUDENT_AVATARS.map((em, i) => React.createElement('div', {
-              key:i, className:`s-avatar-chip${studentEmoji===em?' selected':''}`,
-              onClick: () => setStudentEmoji(em), title: em
-            }, em))
+            STUDENT_AVATARS.map((em, i) => React.createElement('div', {key:i, className:'s-avatar-chip'+(studentEmoji===em?' selected':''), onClick: () => setStudentEmoji(em), title: em}, em))
           )
         ),
-
-        // Stats grid
         React.createElement('div', {className:'s-perf-row',style:{marginBottom:20}},
-          React.createElement('div', {className:'s-perf-card'},
-            React.createElement('div', {className:'s-perf-val'}, answeredCount),
-            React.createElement('div', {className:'s-perf-lbl'}, 'Answered')
-          ),
-          React.createElement('div', {className:'s-perf-card'},
-            React.createElement('div', {className:'s-perf-val green'}, answeredCount>0?`${Math.round(correctCount/answeredCount*100)}%`:'—'),
-            React.createElement('div', {className:'s-perf-lbl'}, 'Accuracy')
-          ),
-          React.createElement('div', {className:'s-perf-card'},
-            React.createElement('div', {className:'s-perf-val'}, myRank>0?`#${myRank}`:'—'),
-            React.createElement('div', {className:'s-perf-lbl'}, 'Rank')
-          ),
-          React.createElement('div', {className:'s-perf-card'},
-            React.createElement('div', {className:'s-perf-val', style:{color:sessionStatus==='active'?'#10B981':sessionStatus==='paused'?'#EAB308':'#EF4444',fontSize:'0.85rem'}}, sessionStatus),
-            React.createElement('div', {className:'s-perf-lbl'}, 'Session')
-          )
+          React.createElement('div', {className:'s-perf-card'}, React.createElement('div', {className:'s-perf-val'}, answeredCount), React.createElement('div', {className:'s-perf-lbl'}, 'Answered')),
+          React.createElement('div', {className:'s-perf-card'}, React.createElement('div', {className:'s-perf-val green'}, answeredCount>0?Math.round(correctCount/answeredCount*100)+'%':'—'), React.createElement('div', {className:'s-perf-lbl'}, 'Accuracy')),
+          React.createElement('div', {className:'s-perf-card'}, React.createElement('div', {className:'s-perf-val'}, myRank>0?'#'+myRank:'—'), React.createElement('div', {className:'s-perf-lbl'}, 'Rank')),
+          React.createElement('div', {className:'s-perf-card'}, React.createElement('div', {className:'s-perf-val',style:{color:sessionStatus==='active'?'#10B981':sessionStatus==='paused'?'#EAB308':'#EF4444',fontSize:'0.85rem'}}, sessionStatus), React.createElement('div', {className:'s-perf-lbl'}, 'Session'))
         ),
-
-        // Action buttons
         React.createElement('div', {style:{display:'flex',gap:10}},
           React.createElement('div', {style:{flex:1,display:'flex',alignItems:'center',justifyContent:'center',paddingTop:'4px'}},
             React.createElement('label', {className:'bb8-toggle bb8-toggle-md', title:isLightTheme?'Dark Mode':'Light Mode'},
-              React.createElement('input', {
-                className:'bb8-toggle__checkbox',
-                type:'checkbox',
-                checked:!isLightTheme,
-                onChange:()=>setIsLightTheme(v=>!v),
-                readOnly:false
-              }),
+              React.createElement('input', {className:'bb8-toggle__checkbox',type:'checkbox',checked:!isLightTheme,onChange:()=>setIsLightTheme(v=>!v),readOnly:false}),
               React.createElement('div', {className:'bb8-toggle__container'},
                 React.createElement('div', {className:'bb8-toggle__scenery'},
-                  React.createElement('div', {className:'bb8-toggle__star'}),
-                  React.createElement('div', {className:'bb8-toggle__star'}),
-                  React.createElement('div', {className:'bb8-toggle__star'}),
-                  React.createElement('div', {className:'bb8-toggle__star'}),
-                  React.createElement('div', {className:'bb8-toggle__star'}),
-                  React.createElement('div', {className:'bb8-toggle__star'}),
-                  React.createElement('div', {className:'bb8-toggle__star'}),
-                  React.createElement('div', {className:'tatto-1'}),
-                  React.createElement('div', {className:'tatto-2'}),
-                  React.createElement('div', {className:'gomrassen'}),
-                  React.createElement('div', {className:'hermes'}),
-                  React.createElement('div', {className:'chenini'}),
-                  React.createElement('div', {className:'bb8-toggle__cloud'}),
-                  React.createElement('div', {className:'bb8-toggle__cloud'}),
-                  React.createElement('div', {className:'bb8-toggle__cloud'})
+                  React.createElement('div', {className:'bb8-toggle__star'}),React.createElement('div', {className:'bb8-toggle__star'}),React.createElement('div', {className:'bb8-toggle__star'}),React.createElement('div', {className:'bb8-toggle__star'}),React.createElement('div', {className:'bb8-toggle__star'}),React.createElement('div', {className:'bb8-toggle__star'}),React.createElement('div', {className:'bb8-toggle__star'}),
+                  React.createElement('div', {className:'tatto-1'}),React.createElement('div', {className:'tatto-2'}),React.createElement('div', {className:'gomrassen'}),React.createElement('div', {className:'hermes'}),React.createElement('div', {className:'chenini'}),
+                  React.createElement('div', {className:'bb8-toggle__cloud'}),React.createElement('div', {className:'bb8-toggle__cloud'}),React.createElement('div', {className:'bb8-toggle__cloud'})
                 ),
                 React.createElement('div', {className:'bb8'},
                   React.createElement('div', {className:'bb8__head-container'},
-                    React.createElement('div', {className:'bb8__antenna'}),
-                    React.createElement('div', {className:'bb8__antenna'}),
-                    React.createElement('div', {className:'bb8__head'})
+                    React.createElement('div', {className:'bb8__antenna'}),React.createElement('div', {className:'bb8__antenna'}),React.createElement('div', {className:'bb8__head'})
                   ),
                   React.createElement('div', {className:'bb8__body'})
                 ),
-                React.createElement('div', {className:'artificial__hidden'},
-                  React.createElement('div', {className:'bb8__shadow'})
-                )
+                React.createElement('div', {className:'artificial__hidden'}, React.createElement('div', {className:'bb8__shadow'}))
               )
             )
           ),
-          React.createElement('button', {onClick:()=>setProfileOpen(false),
-            style:{flex:1,padding:'10px',borderRadius:12,border:'none',background:'linear-gradient(135deg,#0EA5E9,#7C3AED)',color:'#fff',cursor:'pointer',fontFamily:'inherit',fontWeight:700,fontSize:'0.85rem'}
-          }, 'Close')
+          React.createElement('button', {onClick:()=>setProfileOpen(false),style:{flex:1,padding:'10px',borderRadius:12,border:'none',background:'linear-gradient(135deg,#0EA5E9,#7C3AED)',color:'#fff',cursor:'pointer',fontFamily:'inherit',fontWeight:700,fontSize:'0.85rem'}}, 'Close')
         )
       )
     ),
 
-
-    // ── XP Burst overlay ──
     xpBurst && React.createElement('div', {key: xpBurst.key, className:'s-xp-burst'},
-      React.createElement('div', {className:'s-xp-num'}, `+${xpBurst.pts} XP`),
-      React.createElement('div', {className:'s-xp-label'}, '🎯 Correct!')
+      React.createElement('div', {className:'s-xp-num'}, '+'+xpBurst.pts+' XP'),
+      React.createElement('div', {className:'s-xp-label'}, '\uD83C\uDFAF Correct!')
     ),
 
-    // Top Nav — enhanced with emoji avatar, WS dot, session display
-    React.createElement('nav', {className:'s-nav'},
-      React.createElement('span', {className:'s-nav-brand'}, '🧠 ClassMind'),
+    // ══════════════════════════════════════════════════
+    // PREMIUM SIDEBAR
+    // ══════════════════════════════════════════════════
+    React.createElement('aside', {className:'sd-sidebar'},
 
-      // Emoji avatar in nav (personalization)
-      React.createElement('div', {className:'s-nav-emoji-avatar', title:studentName}, studentEmoji),
-      React.createElement('span', {className:'s-nav-student-name'}, studentName),
+      // Logo
+      React.createElement('div', {className:'sd-logo'},
+        React.createElement('div', {className:'sd-logo-icon'}, '\uD83E\uDDE0'),
+        React.createElement('span', {className:'sd-logo-text'}, 'ClassMind')
+      ),
 
-      // Desktop tab nav
-      React.createElement('div', {className:'s-nav-tabs'},
-        [{id:'task',label:'📝 Task'},{id:'test',label:'🧪 Test'},{id:'coding',label:'💻 Coding Lab'},{id:'chat',label:'💬 Chat'},{id:'library',label:'📚 Library'},{id:'reports',label:'📊 Reports'}].map(n=>
-          React.createElement('button', {key:n.id, className:`s-nav-tab ${sPage===n.id?'active':''}`,
-            onClick:()=>{setSPage(n.id);if(n.id==='chat')setChatUnread(0);}
-          },
-            n.label,
-            n.id==='chat'&&chatUnread>0&&React.createElement('span', {className:'s-badge'}),
+      // Navigation
+      React.createElement('nav', {className:'sd-nav'},
+
+        // MENU section
+        React.createElement('div', {className:'sd-nav-section'}, 'MENU'),
+        React.createElement('button', {
+          className:'sd-nav-item'+(sPage==='home'?' active':''),
+          onClick:()=>setSPage('home')
+        },
+          React.createElement('span', {className:'sd-nav-item-icon'}, '\uD83D\uDCCA'),
+          'Dashboard'
+        ),
+        React.createElement('button', {
+          className:'sd-nav-item'+(sPage==='task'?' active':''),
+          onClick:()=>setSPage('task')
+        },
+          React.createElement('span', {className:'sd-nav-item-icon'}, '\u2705'),
+          'My Tasks'
+        ),
+        React.createElement('button', {
+          className:'sd-nav-item'+(sPage==='library'?' active':''),
+          onClick:()=>setSPage('library')
+        },
+          React.createElement('span', {className:'sd-nav-item-icon'}, '\uD83D\uDCC1'),
+          'Content'
+        ),
+        React.createElement('button', {
+          className:'sd-nav-item',
+          onClick:()=>{ add('\uD83D\uDCCB Attendance view coming soon!','info'); }
+        },
+          React.createElement('span', {className:'sd-nav-item-icon'}, '\uD83D\uDCC5'),
+          'Attendance'
+        ),
+        React.createElement('button', {
+          className:'sd-nav-item'+(sPage==='reports'?' active':''),
+          onClick:()=>setSPage('reports')
+        },
+          React.createElement('span', {className:'sd-nav-item-icon'}, '\uD83D\uDCC8'),
+          'Reports'
+        ),
+        React.createElement('button', {
+          className:'sd-nav-item'+(sPage==='chat'?' active':''),
+          onClick:()=>{setSPage('chat');setChatUnread(0);}
+        },
+          React.createElement('span', {className:'sd-nav-item-icon'}, '\uD83D\uDCAC'),
+          'Chat',
+          chatUnread > 0 && React.createElement('span', {style:{marginLeft:'auto',background:'#ef4444',color:'#fff',borderRadius:'10px',fontSize:'0.58rem',padding:'1px 6px',fontWeight:800}}, chatUnread > 9 ? '9+' : chatUnread)
+        ),
+
+        // TOOLS section
+        React.createElement('div', {className:'sd-nav-section'}, 'TOOLS'),
+        React.createElement('button', {
+          className:'sd-nav-item',
+          onClick:()=>setSPage('task')
+        },
+          React.createElement('span', {className:'sd-nav-item-icon'}, '\u2753'),
+          'Ask Question'
+        ),
+        React.createElement('button', {
+          className:'sd-nav-item'+(sPage==='library'?' active':''),
+          onClick:()=>setSPage('library')
+        },
+          React.createElement('span', {className:'sd-nav-item-icon'}, '\uD83D\uDCDA'),
+          'Resources'
+        )
+      ),
+
+      // Join Class card at bottom
+      React.createElement('div', {className:'sd-join-card', onClick:()=>setProfileOpen(true)},
+        React.createElement('div', {className:'sd-join-card-top'},
+          React.createElement('div', {className:'sd-join-card-icon'}, '\uD83D\uDCBB'),
+          React.createElement('div', {className:'sd-join-card-title'}, 'My Session'),
+          React.createElement('span', {className:'sd-join-card-arrow'}, '\u2192')
+        ),
+        React.createElement('div', {className:'sd-join-card-sub'}, sessionCode ? 'Code: '+sessionCode : 'Enter class code to join')
+      )
+    ),
+
+    // ══════════════════════════════════════════════════
+    // MAIN AREA (header + content)
+    // ══════════════════════════════════════════════════
+    React.createElement('div', {className:'sd-main'},
+
+      // ── Top Header ──
+      React.createElement('header', {className:'sd-header'},
+        React.createElement('div', {className:'sd-header-avatar-wrap', onClick:()=>setProfileOpen(true)},
+          React.createElement('div', {className:'sd-header-avatar'}, studentEmoji)
+        ),
+        React.createElement('div', {className:'sd-header-welcome'},
+          React.createElement('div', {className:'sd-header-hi'},
+            'Welcome back, '+studentName+'! \uD83D\uDC4B'
+          ),
+          React.createElement('div', {className:'sd-header-sub'}, "Let's keep learning and growing together.")
+        ),
+        React.createElement('div', {className:'sd-header-right'},
+          // WS status dot
+          React.createElement('div', {
+            className:'sv2-ws-dot '+(wsConnected?'online':'offline'),
+            title: wsConnected ? 'Connected' : 'Reconnecting\u2026',
+            style:{marginRight:4}
+          }),
+          // VC join button if active
+          vcSessionActive && !vcActive && React.createElement('button', {
+            className:'s-vc-join-nav-btn',
+            onClick: () => { setVcActive(true); setVcBanner(false); }
+          }, '\uD83D\uDCF9 Join Call'),
+          // Raise hand
+          React.createElement('button', {
+            className:'sv2-raise-btn'+(handRaised?' raised':''),
+            onClick:toggleHand,
+            style:{fontSize:'0.78rem'}
+          }, '\u270B', handRaised ? ' Raised' : ' Raise Hand'),
+          // Notification bell
+          React.createElement('button', {className:'sd-notif-btn', title:'Notifications'},
+            '\uD83D\uDD14',
+            chatUnread > 0 && React.createElement('span', {className:'sd-notif-badge'}, chatUnread > 9 ? '9+' : chatUnread)
+          ),
+          // Profile chip
+          React.createElement('div', {className:'sd-profile-chip', onClick:()=>setProfileOpen(true)},
+            React.createElement('div', {className:'sd-profile-av'}, (studentName||'S').charAt(0).toUpperCase()),
+            React.createElement('span', null, studentName || 'Student'),
+            React.createElement('span', {className:'sd-profile-caret'}, '\u25BE'),
+            React.createElement('button', {
+              className:'sv2-leave-btn',
+              onClick: async (e) => {
+                e.stopPropagation();
+                if (confirm('Do you want to leave the session?')) {
+                  try {
+                    await apiFetch('/api/session/'+sessionCode+'/student/'+studentId+'/leave', {method:'POST'});
+                    add('You left the session.', 'info');
+                    navigate('landing');
+                  } catch (err) { add('Error leaving: '+err.message, 'error'); }
+                }
+              },
+              style:{fontSize:'0.72rem',padding:'4px 10px',borderRadius:8,marginLeft:4}
+            }, '\uD83D\uDEAA Leave')
           )
         )
       ),
 
-      // Right side — with WS dot indicator + session chip
-      React.createElement('div', {className:'s-nav-right'},
-        // WS connection dot
-        React.createElement('div', {
-          className:`s-ws-dot ${wsConnected?'online':'offline'}`,
-          title: wsConnected ? 'Connected' : 'Reconnecting…'
-        }),
-        vcSessionActive && !vcActive && React.createElement('button', {
-          className: 's-vc-join-nav-btn',
-          onClick: () => { setVcActive(true); setVcBanner(false); }
-        }, '📹 Join Call'),
-        React.createElement('button', {
-          className:`s-hand-btn ${handRaised?'raised s-hand-raised-anim':''}`,
-          onClick:toggleHand
-        }, handRaised?'✋ Raised':'✋ Raise Hand'),
-        // Leave Session button
-        React.createElement('button', {
-          className:'s-leave-btn',
-          onClick: async () => {
-            if (confirm('Kya aap session chhod dena chahte hain? (Do you want to leave the session?)')) {
-              try {
-                await apiFetch(`/api/session/${sessionCode}/student/${studentId}/leave`, {method:'POST'});
-                add('Aap session ko chhod diye. Aap baad mein dobara join kar sakte hain. (You left the session. You can rejoin later.)', 'info');
-                navigate('landing');
-              } catch (e) {
-                add('Error leaving session: ' + e.message, 'error');
-              }
-            }
-          },
-          title:'Leave session',
-          style:{padding:'6px 12px',borderRadius:8,border:'1px solid rgba(255,100,100,0.5)',background:'rgba(255,100,100,0.1)',color:'#ff6464',cursor:'pointer',fontSize:'0.85rem',fontWeight:600,fontFamily:'inherit',transition:'all 0.2s'}
-        }, '🚪 Leave'),
-        // Session pill with display name + code
-        React.createElement('div', {
-          className:'s-session-chip',
-          title: 'Click to copy session code',
-          style:{cursor:'pointer'},
-          onClick:() => {
-            navigator.clipboard?.writeText(sessionCode).catch(()=>{});
-            const el = document.createElement('div');
-            el.className = 's-copied-feedback';
-            el.textContent = '✓ Code copied!';
-            document.body.appendChild(el);
-            setTimeout(() => el.remove(), 1200);
-          }
-        },
-          sessionDisplayName && React.createElement('span', {className:'s-session-display-name'}, sessionDisplayName, ' ·'),
-          React.createElement('span', {className:'s-session-code s-session-code-enhanced'}, sessionCode)
+      // ── Utility Bars (announcements, paused, HUD) ──
+      React.createElement('div', {className:'sd-utility-bar'},
+        announcement && React.createElement('div', {className:'sv2-announce'},
+          React.createElement('span', {style:{marginRight:8}}, '\uD83D\uDCE2'),
+          React.createElement('span', null, announcement),
+          React.createElement('button', {onClick:()=>setAnnouncement(''),style:{background:'none',border:'none',color:'rgba(255,255,255,0.7)',cursor:'pointer',fontSize:'1rem',padding:'0 4px',marginLeft:'auto'}}, '\u2715')
         ),
-        // Avatar button showing emoji
-        React.createElement('button', {
-          className:'s-avatar-btn',
-          onClick:()=>setProfileOpen(true),
-          title:'Profile & Stats',
-          style:{fontSize:'1.1rem'}
-        }, studentEmoji)
-      )
-    ),
-
-    // HUD
-    React.createElement(StudentHUD, {
-      sessionStatus, taskIndex,
-      totalTasks,
-      wsConnected, hasTask:!!currentTask, myRank
-    }),
-
-    // Announcement (enhanced with icon pulse)
-    announcement && React.createElement('div', {className:'s-announce'},
-      React.createElement('span', {className:'s-announce-icon', style:{marginRight:8}}, '📢'),
-      React.createElement('span', null, announcement),
-      React.createElement('button', {onClick:()=>setAnnouncement(''),style:{background:'none',border:'none',color:'rgba(255,255,255,0.8)',cursor:'pointer',fontSize:'1rem',padding:'0 4px',marginLeft:'auto'}}, '✕')
-    ),
-
-    // Session paused bar
-    sessionStatus==='paused' && React.createElement('div', {className:'s-paused-bar'},
-      React.createElement('span', null, '⏸'),
-      React.createElement('span', null, 'Session paused by teacher — hang tight!')
-    ),
-
-    // Main content
-    React.createElement('div', {className:'s-main s-page-wrap',style:{paddingTop:16}},
-      // Session ended overlay
-      sessionStatus==='ended' && React.createElement('div', {className:'s-ended-bar'},
-        React.createElement('div', {style:{fontSize:'2.5rem',marginBottom:8}}, '🏁'),
-        React.createElement('div', {style:{fontFamily:"'Syne',sans-serif",fontWeight:800,fontSize:'1.2rem',marginBottom:4}}, 'Session Ended'),
-        React.createElement('div', {style:{fontSize:'0.88rem',color:'rgba(241,245,249,0.5)',marginBottom:16}}, 'Thank you for participating! Check your report for full results.'),
-        React.createElement('button', {
-          onClick:()=>setSPage('reports'),
-          style:{padding:'10px 24px',borderRadius:12,border:'none',background:'linear-gradient(135deg,#0EA5E9,#7C3AED)',color:'#fff',cursor:'pointer',fontFamily:'inherit',fontWeight:700,fontSize:'0.9rem'}
-        }, '📊 View My Report →')
+        sessionStatus==='paused' && React.createElement('div', {className:'s-paused-bar'},
+          React.createElement('span', null, '\u23F8'),
+          React.createElement('span', null, 'Session paused by teacher \u2014 hang tight!')
+        )
       ),
 
-      // Page content wrapped in error boundary
-      React.createElement(StudentPageErrorBoundary, null,
-        sPage==='task' && React.createElement('div', null,
-          React.createElement(StudentPerfPanel, {answered:answeredCount,correct:correctCount,rank:myRank,codingScore,codingSubmitted,scoreAnim}),
-          renderTaskCard()
+      // ── Page Content ──
+      React.createElement('div', {className:'sd-content'},
+
+        // Session ended banner
+        sessionStatus==='ended' && React.createElement('div', {className:'sv2-ended', style:{margin:'24px'}},
+          React.createElement('div', {style:{fontSize:'2.5rem',marginBottom:8}}, '\uD83C\uDFC1'),
+          React.createElement('div', {style:{fontFamily:"'Syne',sans-serif",fontWeight:800,fontSize:'1.2rem',color:'#F1F5F9',marginBottom:4}}, 'Session Ended'),
+          React.createElement('div', {style:{fontSize:'0.88rem',color:'rgba(241,245,249,0.5)',marginBottom:16}}, 'Thank you for participating! Check your report for full results.'),
+          React.createElement('button', {onClick:()=>setSPage('reports'),style:{padding:'10px 24px',borderRadius:12,border:'none',background:'linear-gradient(135deg,#0EA5E9,#7C3AED)',color:'#fff',cursor:'pointer',fontFamily:'inherit',fontWeight:700,fontSize:'0.9rem'}}, '\uD83D\uDCCA View My Report \u2192')
         ),
 
-        // ── TEST: CSS-hidden (not unmounted) so timer/answers survive tab switches ──
-        React.createElement('div', {
-          key: 'student-test-persistent',
-          style: { display: sPage === 'test' ? 'block' : 'none' }
-        }, renderTest()),
+        React.createElement(StudentPageErrorBoundary, null,
+          // DASHBOARD HOME
+          sPage==='home' && renderStudentDashboardHome(),
 
-        sPage==='chat' && renderChat(),
+          // TASK PAGE (existing)
+          sPage==='task' && React.createElement('div', {className:'sv2-content-pad'},
+            React.createElement(StudentPerfPanel, {answered:answeredCount,correct:correctCount,rank:myRank,codingScore,codingSubmitted,scoreAnim}),
+            renderTaskCard()
+          ),
 
-        sPage==='library' && React.createElement(StudentContentHub, {sessionCode, studentId, studentName, teacherName:null}),
+          // TEST (css-hidden to preserve timer)
+          React.createElement('div', {
+            key:'student-test-persistent',
+            style:{display: sPage==='test' ? 'block' : 'none', padding:'0 20px'}
+          }, renderTest()),
 
-        sPage==='reports' && React.createElement(ReportCenter, {sessionCode, studentId, studentName}),
+          // CHAT
+          sPage==='chat' && renderStudentChatV2(),
 
-        sPage==='coding' && React.createElement(CodingLabPage, {
-          sessionCode: sessionCode,
-          isTeacher: false,
-          studentId: studentId,
-          taskId: null
-        })
-      )
-    ),
+          // LIBRARY
+          sPage==='library' && React.createElement(StudentContentHub, {sessionCode, studentId, studentName, teacherName:null}),
 
-    // Copilot
-    React.createElement(StudentCopilotLight, {
-      currentTask, submitted, result, answeredCount, correctCount, selected, shortAnswer, timeSpent
-    }),
+          // REPORTS
+          sPage==='reports' && React.createElement('div', {className:'sv2-content-pad'},
+            React.createElement(ReportCenter, {sessionCode, studentId, studentName})
+          ),
 
-    // Mobile bottom navigation — enhanced with safe area + emoji + better badges
-    React.createElement('div', {className:'s-mobile-nav'},
-      React.createElement('div', {className:'s-mobile-nav-inner'},
-        [{id:'task',icon:'\uD83D\uDCDD',label:'Task'},{id:'coding',icon:'💻',label:'Coding'},{id:'chat',icon:'\uD83D\uDCAC',label:'Chat'},{id:'library',icon:'\uD83D\uDCDA',label:'Library'},{id:'reports',icon:'\uD83D\uDCCA',label:'Reports'},{id:'leaderboard',icon:'\uD83C\uDFC6',label:'Board'}].map(n=>
-          React.createElement('button', {key:n.id, className:`s-mobile-tab ${sPage===n.id?'active':''}`,
-            onClick:()=>{setSPage(n.id);if(n.id==='chat')setChatUnread(0);}
-          },
-            React.createElement('span', {className:'s-mobile-tab-icon'}, n.icon),
-            React.createElement('span', null, n.label),
-            n.id==='chat' && chatUnread>0 && React.createElement('span', {className:'s-badge',
-              style:{background:'#EF4444',color:'#fff',fontSize:'0.55rem',
-                width:14,height:14,display:'flex',alignItems:'center',justifyContent:'center',
-                borderRadius:'50%',position:'absolute',top:4,right:8,fontWeight:800,border:'2px solid #060B18'}}
-            , chatUnread > 9 ? '9+' : chatUnread)
+          // CODING LAB
+          sPage==='coding' && React.createElement('div', {className:'sv2-content-pad'},
+            React.createElement(CodingLabPage, {sessionCode, isTeacher:false, studentId, taskId:null})
           )
         ),
-        // Hand raise button in bottom nav
-        React.createElement('button', {className:`s-mobile-tab ${handRaised?'active':''}`,
-          onClick:toggleHand,
-          style:{color:handRaised?'#EAB308':''}
-        },
-          React.createElement('span', {className:'s-mobile-tab-icon'}, '✋'),
-          React.createElement('span', null, handRaised?'Raised':'Hand')
-        ),
-        // Profile button with emoji
-        React.createElement('button', {className:'s-mobile-tab',onClick:()=>setProfileOpen(true)},
-          React.createElement('span', {className:'s-mobile-tab-icon'}, studentEmoji),
-          React.createElement('span', null, 'Me')
+
+        // AI Copilot
+        React.createElement(StudentCopilotLight, {
+          currentTask, submitted, result, answeredCount, correctCount, selected, shortAnswer, timeSpent
+        })
+      ),
+
+      // ── Mobile Bottom Nav ──
+      React.createElement('div', {className:'s-mobile-nav'},
+        React.createElement('div', {className:'s-mobile-nav-inner'},
+          [{id:'home',icon:'\uD83C\uDFE0',label:'Home'},{id:'task',icon:'\uD83D\uDCDD',label:'Task'},{id:'chat',icon:'\uD83D\uDCAC',label:'Chat'},{id:'library',icon:'\uD83D\uDCDA',label:'Library'},{id:'reports',icon:'\uD83D\uDCCA',label:'Reports'}].map(n=>
+            React.createElement('button', {key:n.id, className:'s-mobile-tab '+(sPage===n.id?'active':''),
+              onClick:()=>{setSPage(n.id);if(n.id==='chat')setChatUnread(0);}
+            },
+              React.createElement('span', {className:'s-mobile-tab-icon'}, n.icon),
+              React.createElement('span', null, n.label),
+              n.id==='chat' && chatUnread>0 && React.createElement('span', {className:'s-badge',style:{background:'#EF4444',color:'#fff',fontSize:'0.55rem',width:14,height:14,display:'flex',alignItems:'center',justifyContent:'center',borderRadius:'50%',position:'absolute',top:4,right:8,fontWeight:800,border:'2px solid #060B18'}}, chatUnread > 9 ? '9+' : chatUnread)
+            )
+          ),
+          React.createElement('button', {className:'s-mobile-tab '+(handRaised?'active':''),onClick:toggleHand,style:{color:handRaised?'#EAB308':''}},
+            React.createElement('span', {className:'s-mobile-tab-icon'}, '\u270B'),
+            React.createElement('span', null, handRaised?'Raised':'Hand')
+          ),
+          React.createElement('button', {className:'s-mobile-tab',onClick:()=>setProfileOpen(true)},
+            React.createElement('span', {className:'s-mobile-tab-icon'}, studentEmoji),
+            React.createElement('span', null, 'Me')
+          )
         )
       )
     )

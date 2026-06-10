@@ -14075,6 +14075,478 @@ body.s-ui-active .toasts {
   .tm2-q-marks-tag { display: none; }
 }
 
+/* ═══════════════════════════════════════════════════════════════
+   NEW PREMIUM TASK PAGE REDESIGN
+   ═══════════════════════════════════════════════════════════════ */
+.tk2-page { padding: 24px; max-width: 100%; }
+.tk2-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; flex-wrap: wrap; gap: 12px; }
+.tk2-header-left { display: flex; align-items: center; gap: 16px; }
+.tk2-breadcrumb { display: flex; align-items: center; gap: 6px; font-size: 0.78rem; color: rgba(148,163,184,0.6); }
+.tk2-breadcrumb-sep { opacity: 0.4; }
+.tk2-breadcrumb-current { color: #a5b4fc; font-weight: 600; }
+.tk2-title { font-size: 1.35rem; font-weight: 800; background: linear-gradient(135deg,#e2e8f0,#a5b4fc); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.tk2-header-btns { display: flex; gap: 10px; flex-wrap: wrap; }
+.tk2-btn-ai { display: flex; align-items: center; gap: 7px; padding: 9px 18px; background: linear-gradient(135deg,#7c5cff,#5b7fff); border: none; border-radius: 10px; color: #fff; font-weight: 700; font-size: 0.85rem; cursor: pointer; font-family: var(--db-font); box-shadow: 0 4px 18px rgba(124,92,255,0.4); transition: all 0.2s; }
+.tk2-btn-ai:hover { transform: translateY(-1px); box-shadow: 0 6px 24px rgba(124,92,255,0.55); }
+.tk2-btn-secondary { display: flex; align-items: center; gap: 7px; padding: 9px 18px; background: rgba(255,255,255,0.05); border: 1px solid rgba(99,102,241,0.25); border-radius: 10px; color: #a5b4fc; font-weight: 600; font-size: 0.85rem; cursor: pointer; font-family: var(--db-font); transition: all 0.2s; }
+.tk2-btn-secondary:hover { background: rgba(99,102,241,0.12); border-color: rgba(99,102,241,0.4); }
+/* Stat cards */
+.tk2-stats-row { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; margin-bottom: 22px; }
+.tk2-stat-card { background: linear-gradient(135deg,rgba(16,18,42,.96),rgba(22,24,56,.94)); border: 1px solid rgba(99,102,241,0.18); border-radius: 14px; padding: 16px 18px; position: relative; overflow: hidden; transition: border-color 0.2s; }
+.tk2-stat-card:hover { border-color: rgba(124,92,255,0.4); }
+.tk2-stat-card::before { content: ''; position: absolute; inset: 0; opacity: 0; background: linear-gradient(135deg,rgba(124,92,255,0.05),transparent); transition: opacity 0.2s; }
+.tk2-stat-card:hover::before { opacity: 1; }
+.tk2-stat-label { font-size: 0.74rem; color: rgba(148,163,184,0.7); font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 8px; }
+.tk2-stat-val { font-size: 2.1rem; font-weight: 800; line-height: 1; margin-bottom: 4px; }
+.tk2-stat-sub { font-size: 0.72rem; color: rgba(148,163,184,0.55); }
+.tk2-stat-icon { position: absolute; top: 14px; right: 14px; font-size: 1.4rem; opacity: 0.5; }
+/* Filters row */
+.tk2-filters-row { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
+.tk2-select { padding: 9px 14px; background: rgba(16,18,42,.9); border: 1px solid rgba(99,102,241,0.2); border-radius: 10px; color: #e2e8f0; font-size: 0.83rem; font-family: var(--db-font); outline: none; cursor: pointer; }
+.tk2-search-wrap { position: relative; flex: 1; min-width: 180px; }
+.tk2-search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: rgba(148,163,184,0.4); font-size: 0.85rem; pointer-events: none; }
+.tk2-search-input { width: 100%; padding: 9px 14px 9px 34px; background: rgba(16,18,42,.9); border: 1px solid rgba(99,102,241,0.2); border-radius: 10px; color: #e2e8f0; font-size: 0.83rem; font-family: var(--db-font); outline: none; box-sizing: border-box; }
+.tk2-search-input:focus { border-color: rgba(124,92,255,0.45); }
+.tk2-filter-btn { width: 36px; height: 36px; border-radius: 9px; background: rgba(255,255,255,0.04); border: 1px solid rgba(99,102,241,0.2); color: #94a3b8; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 0.9rem; transition: all 0.2s; }
+.tk2-filter-btn:hover { background: rgba(124,92,255,0.12); color: #a5b4fc; }
+/* Task list items */
+.tk2-task-row { background: linear-gradient(135deg,rgba(16,18,42,.96),rgba(22,24,56,.94)); border: 1px solid rgba(99,102,241,0.14); border-left: 3px solid rgba(99,102,241,0.5); border-radius: 12px; padding: 16px 18px; margin-bottom: 10px; display: flex; align-items: center; gap: 14px; transition: all 0.18s; cursor: pointer; }
+.tk2-task-row:hover { border-left-color: #7c5cff; box-shadow: 0 4px 20px rgba(124,92,255,0.12); transform: translateX(2px); }
+.tk2-task-row.easy { border-left-color: rgba(34,197,94,0.7); }
+.tk2-task-row.medium { border-left-color: rgba(234,179,8,0.7); }
+.tk2-task-row.hard { border-left-color: rgba(239,68,68,0.7); }
+.tk2-task-num { width: 28px; height: 28px; border-radius: 50%; background: rgba(124,92,255,0.15); border: 1px solid rgba(124,92,255,0.3); display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 700; color: #a5b4fc; flex-shrink: 0; }
+.tk2-task-info { flex: 1; min-width: 0; }
+.tk2-task-q { font-size: 0.9rem; font-weight: 600; color: #e2e8f0; margin-bottom: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tk2-task-tags { display: flex; gap: 6px; flex-wrap: wrap; }
+.tk2-tag { padding: 2px 8px; border-radius: 20px; font-size: 0.7rem; font-weight: 600; }
+.tk2-tag-mcq { background: rgba(99,102,241,0.15); color: #a5b4fc; border: 1px solid rgba(99,102,241,0.25); }
+.tk2-tag-short { background: rgba(245,158,11,0.12); color: #fcd34d; border: 1px solid rgba(245,158,11,0.2); }
+.tk2-tag-long { background: rgba(16,185,129,0.12); color: #6ee7b7; border: 1px solid rgba(16,185,129,0.2); }
+.tk2-tag-coding { background: rgba(139,92,246,0.12); color: #c4b5fd; border: 1px solid rgba(139,92,246,0.25); }
+.tk2-tag-easy { background: rgba(34,197,94,0.1); color: #4ade80; border: 1px solid rgba(34,197,94,0.2); }
+.tk2-tag-medium { background: rgba(234,179,8,0.1); color: #fbbf24; border: 1px solid rgba(234,179,8,0.2); }
+.tk2-tag-hard { background: rgba(239,68,68,0.1); color: #f87171; border: 1px solid rgba(239,68,68,0.2); }
+.tk2-tag-class { background: rgba(56,189,248,0.1); color: #7dd3fc; border: 1px solid rgba(56,189,248,0.18); }
+.tk2-task-stats { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; flex-shrink: 0; }
+.tk2-task-score { font-size: 1.15rem; font-weight: 800; color: #4ade80; }
+.tk2-task-score-label { font-size: 0.68rem; color: rgba(148,163,184,0.55); }
+.tk2-task-attempts { font-size: 0.75rem; color: rgba(148,163,184,0.6); }
+.tk2-task-actions { display: flex; gap: 5px; flex-shrink: 0; flex-wrap: wrap; justify-content: flex-end; max-width: 320px; }
+.tk2-action-btn { padding: 6px 10px; border-radius: 8px; font-size: 0.75rem; font-weight: 600; cursor: pointer; border: none; font-family: var(--db-font); transition: all 0.18s; white-space: nowrap; }
+.tk2-action-btn { padding: 7px 14px; border-radius: 8px; font-size: 0.78rem; font-weight: 600; cursor: pointer; border: none; font-family: var(--db-font); transition: all 0.18s; }
+.tk2-action-btn.send { background: rgba(34,197,94,0.15); color: #4ade80; border: 1px solid rgba(34,197,94,0.25); }
+.tk2-action-btn.send:hover { background: rgba(34,197,94,0.25); }
+.tk2-action-btn.del { background: rgba(239,68,68,0.1); color: #f87171; border: 1px solid rgba(239,68,68,0.2); }
+.tk2-action-btn.del:hover { background: rgba(239,68,68,0.2); }
+.tk2-action-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.tk2-action-more { width: 32px; height: 32px; border-radius: 8px; background: rgba(255,255,255,0.04); border: 1px solid rgba(99,102,241,0.18); color: #94a3b8; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 1rem; transition: all 0.18s; }
+.tk2-action-more:hover { background: rgba(124,92,255,0.12); color: #a5b4fc; }
+/* Pagination */
+.tk2-pagination { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 20px; }
+.tk2-page-btn { width: 36px; height: 36px; border-radius: 9px; background: rgba(255,255,255,0.04); border: 1px solid rgba(99,102,241,0.18); color: #94a3b8; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 0.85rem; font-weight: 700; transition: all 0.2s; font-family: var(--db-font); }
+.tk2-page-btn:hover { background: rgba(124,92,255,0.12); color: #a5b4fc; border-color: rgba(124,92,255,0.35); }
+.tk2-page-btn.active { background: linear-gradient(135deg,#7c5cff,#5b7fff); color: #fff; border-color: transparent; box-shadow: 0 3px 12px rgba(124,92,255,0.4); }
+
+/* ═══ CREATE TASK PAGE ═══ */
+.tk2-create-wrap { display: flex; flex-direction: column; gap: 20px; max-width: 680px; }
+.tk2-form-section { background: linear-gradient(135deg,rgba(16,18,42,.96),rgba(22,24,56,.94)); border: 1px solid rgba(99,102,241,0.18); border-radius: 16px; padding: 22px; position: relative; overflow: hidden; }
+.tk2-form-section::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg,#7c5cff,#5b7fff,transparent); }
+.tk2-section-num { display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: 50%; background: linear-gradient(135deg,#7c5cff,#5b7fff); color: #fff; font-size: 0.75rem; font-weight: 800; margin-right: 10px; flex-shrink: 0; }
+.tk2-section-heading { display: flex; align-items: center; font-size: 0.9rem; font-weight: 700; color: #e2e8f0; margin-bottom: 16px; }
+/* Task type cards */
+.tk2-type-cards { display: grid; grid-template-columns: repeat(4,1fr); gap: 10px; }
+.tk2-type-card { padding: 16px 12px; border: 2px solid rgba(99,102,241,0.18); border-radius: 14px; background: rgba(22,24,52,0.7); cursor: pointer; text-align: center; transition: all 0.2s; position: relative; overflow: hidden; }
+.tk2-type-card:hover { border-color: rgba(124,92,255,0.45); background: rgba(124,92,255,0.07); transform: translateY(-2px); }
+.tk2-type-card.active { border-color: #7c5cff; background: rgba(124,92,255,0.12); box-shadow: 0 0 0 3px rgba(124,92,255,0.15), 0 8px 24px rgba(124,92,255,0.18); }
+.tk2-type-card-icon { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; margin: 0 auto 10px; }
+.tk2-type-card-icon.mcq { background: linear-gradient(135deg,rgba(99,102,241,0.25),rgba(124,92,255,0.25)); }
+.tk2-type-card-icon.short { background: linear-gradient(135deg,rgba(245,158,11,0.2),rgba(251,191,36,0.2)); }
+.tk2-type-card-icon.long { background: linear-gradient(135deg,rgba(16,185,129,0.2),rgba(5,150,105,0.2)); }
+.tk2-type-card-icon.coding { background: linear-gradient(135deg,rgba(139,92,246,0.25),rgba(109,40,217,0.25)); }
+.tk2-type-card-name { font-size: 0.82rem; font-weight: 700; color: #e2e8f0; margin-bottom: 4px; }
+.tk2-type-card-desc { font-size: 0.68rem; color: rgba(148,163,184,0.6); line-height: 1.3; }
+.tk2-type-card.active .tk2-type-card-name { color: #c4b5fd; }
+/* Form fields */
+.tk2-field-label { font-size: 0.78rem; font-weight: 700; color: rgba(148,163,184,0.8); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 7px; display: flex; align-items: center; gap: 6px; }
+.tk2-field-required { color: #f87171; }
+.tk2-input { width: 100%; padding: 11px 14px; background: rgba(12,14,35,.8); border: 1.5px solid rgba(99,102,241,0.18); border-radius: 10px; color: #e2e8f0; font-size: 0.87rem; font-family: var(--db-font); outline: none; transition: border-color 0.2s, box-shadow 0.2s; box-sizing: border-box; }
+.tk2-input:focus { border-color: rgba(124,92,255,0.55); box-shadow: 0 0 0 3px rgba(124,92,255,0.1); }
+.tk2-input::placeholder { color: rgba(148,163,184,0.35); }
+.tk2-textarea { resize: vertical; min-height: 80px; }
+.tk2-ai-btn-inline { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); padding: 5px 10px; background: linear-gradient(135deg,rgba(124,92,255,0.2),rgba(91,127,255,0.2)); border: 1px solid rgba(124,92,255,0.3); border-radius: 7px; color: #a5b4fc; font-size: 0.72rem; font-weight: 700; cursor: pointer; }
+.tk2-option-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+.tk2-option-radio { width: 18px; height: 18px; flex-shrink: 0; accent-color: #22c55e; cursor: pointer; }
+.tk2-option-letter { width: 24px; font-size: 0.85rem; font-weight: 700; color: rgba(148,163,184,0.6); flex-shrink: 0; }
+.tk2-option-del { width: 28px; height: 28px; border-radius: 7px; background: none; border: none; color: rgba(239,68,68,0.5); cursor: pointer; font-size: 0.9rem; display: flex; align-items: center; justify-content: center; transition: all 0.15s; }
+.tk2-option-del:hover { background: rgba(239,68,68,0.1); color: #f87171; }
+.tk2-correct-hint { font-size: 0.72rem; color: #f87171; margin-top: 4px; }
+/* Row with two cols */
+.tk2-fields-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+/* Difficulty pills */
+.tk2-difficulty-row { display: flex; gap: 8px; flex-wrap: wrap; }
+.tk2-diff-pill { padding: 7px 16px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; cursor: pointer; border: 1.5px solid transparent; transition: all 0.18s; font-family: var(--db-font); }
+.tk2-diff-pill.easy { background: rgba(34,197,94,0.08); color: #4ade80; border-color: rgba(34,197,94,0.2); }
+.tk2-diff-pill.easy.active, .tk2-diff-pill.easy:hover { background: rgba(34,197,94,0.18); border-color: rgba(34,197,94,0.45); }
+.tk2-diff-pill.medium { background: rgba(234,179,8,0.08); color: #fbbf24; border-color: rgba(234,179,8,0.2); }
+.tk2-diff-pill.medium.active, .tk2-diff-pill.medium:hover { background: rgba(234,179,8,0.18); border-color: rgba(234,179,8,0.45); }
+.tk2-diff-pill.hard { background: rgba(239,68,68,0.08); color: #f87171; border-color: rgba(239,68,68,0.2); }
+.tk2-diff-pill.hard.active, .tk2-diff-pill.hard:hover { background: rgba(239,68,68,0.18); border-color: rgba(239,68,68,0.45); }
+/* Timer chips */
+.tk2-timer-row { display: flex; gap: 7px; flex-wrap: wrap; }
+.tk2-timer-chip { padding: 7px 14px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; cursor: pointer; background: rgba(22,24,52,0.8); border: 1.5px solid rgba(99,102,241,0.18); color: rgba(148,163,184,0.7); transition: all 0.18s; font-family: var(--db-font); }
+.tk2-timer-chip.active, .tk2-timer-chip:hover { background: rgba(124,92,255,0.12); border-color: rgba(124,92,255,0.4); color: #a5b4fc; }
+/* Send to buttons */
+.tk2-send-to-row { display: flex; gap: 8px; }
+.tk2-send-btn { flex: 1; padding: 10px; border-radius: 10px; background: rgba(22,24,52,0.8); border: 2px solid rgba(99,102,241,0.18); color: rgba(148,163,184,0.7); font-size: 0.82rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; transition: all 0.18s; font-family: var(--db-font); }
+.tk2-send-btn.active, .tk2-send-btn:hover { background: rgba(124,92,255,0.12); border-color: #7c5cff; color: #c4b5fd; }
+/* Hint visibility select */
+.tk2-hint-select { width: 100%; padding: 10px 14px; background: rgba(12,14,35,.8); border: 1.5px solid rgba(99,102,241,0.18); border-radius: 10px; color: #e2e8f0; font-size: 0.85rem; font-family: var(--db-font); outline: none; cursor: pointer; }
+/* Bottom CTA buttons */
+.tk2-cta-row { display: flex; gap: 12px; padding-top: 4px; }
+.tk2-save-task-btn { flex: 1; padding: 14px; background: linear-gradient(135deg,#7c5cff,#5b7fff); border: none; border-radius: 12px; color: #fff; font-size: 0.95rem; font-weight: 700; cursor: pointer; font-family: var(--db-font); box-shadow: 0 6px 24px rgba(124,92,255,0.4); transition: all 0.2s; }
+.tk2-save-task-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(124,92,255,0.55); }
+.tk2-save-task-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+.tk2-save-send-btn { flex: 1; padding: 14px; background: linear-gradient(135deg,rgba(124,92,255,0.15),rgba(91,127,255,0.15)); border: 2px solid rgba(124,92,255,0.4); border-radius: 12px; color: #a5b4fc; font-size: 0.95rem; font-weight: 700; cursor: pointer; font-family: var(--db-font); transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; }
+.tk2-save-send-btn:hover { background: linear-gradient(135deg,rgba(124,92,255,0.25),rgba(91,127,255,0.25)); }
+.tk2-save-draft-btn { padding: 14px 20px; background: rgba(255,255,255,0.04); border: 1.5px solid rgba(99,102,241,0.2); border-radius: 12px; color: rgba(148,163,184,0.7); font-size: 0.9rem; font-weight: 600; cursor: pointer; font-family: var(--db-font); transition: all 0.2s; display: flex; align-items: center; gap: 6px; }
+.tk2-save-draft-btn:hover { background: rgba(255,255,255,0.07); color: #e2e8f0; }
+.tk2-reset-btn { width: 44px; height: 44px; border-radius: 10px; background: rgba(239,68,68,0.07); border: 1px solid rgba(239,68,68,0.2); color: rgba(239,68,68,0.6); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s; font-size: 1rem; }
+.tk2-reset-btn:hover { background: rgba(239,68,68,0.14); color: #f87171; }
+
+/* ═══ AI GENERATOR PAGE ═══ */
+.tk2-ai-page { display: flex; flex-direction: column; gap: 20px; }
+.tk2-ai-hero { background: linear-gradient(135deg,rgba(99,102,241,0.15),rgba(139,92,246,0.12),rgba(56,189,248,0.08)); border: 1px solid rgba(99,102,241,0.25); border-radius: 18px; padding: 28px 28px; display: flex; align-items: center; justify-content: space-between; position: relative; overflow: hidden; }
+.tk2-ai-hero::before { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse at 70% 50%,rgba(139,92,246,0.12) 0%,transparent 65%); }
+.tk2-ai-hero-left { position: relative; z-index: 1; }
+.tk2-ai-hero-title { font-size: 1.6rem; font-weight: 800; background: linear-gradient(135deg,#e2e8f0,#a5b4fc,#c4b5fd); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 6px; }
+.tk2-ai-hero-sub { font-size: 0.87rem; color: rgba(148,163,184,0.75); }
+.tk2-ai-hero-right { font-size: 4rem; position: relative; z-index: 1; animation: tk2-float 3s ease-in-out infinite; }
+@keyframes tk2-float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+/* AI type pills */
+.tk2-ai-pills { display: flex; gap: 8px; flex-wrap: wrap; }
+.tk2-ai-pill { padding: 9px 20px; border-radius: 24px; font-size: 0.83rem; font-weight: 700; cursor: pointer; border: 2px solid rgba(99,102,241,0.2); background: rgba(22,24,52,0.8); color: rgba(148,163,184,0.7); transition: all 0.2s; font-family: var(--db-font); display: flex; align-items: center; gap: 6px; }
+.tk2-ai-pill.active { background: linear-gradient(135deg,#7c5cff,#5b7fff); border-color: transparent; color: #fff; box-shadow: 0 4px 16px rgba(124,92,255,0.4); }
+.tk2-ai-pill:not(.active):hover { background: rgba(124,92,255,0.1); border-color: rgba(124,92,255,0.35); color: #a5b4fc; }
+/* AI search/generate */
+.tk2-ai-search-row { display: flex; gap: 10px; align-items: stretch; }
+.tk2-ai-search-input { flex: 1; padding: 13px 18px; background: rgba(12,14,35,.85); border: 2px solid rgba(99,102,241,0.2); border-radius: 12px; color: #e2e8f0; font-size: 0.9rem; font-family: var(--db-font); outline: none; transition: all 0.2s; }
+.tk2-ai-search-input:focus { border-color: rgba(124,92,255,0.55); box-shadow: 0 0 0 4px rgba(124,92,255,0.1); }
+.tk2-ai-search-input::placeholder { color: rgba(148,163,184,0.35); }
+.tk2-ai-gen-btn { padding: 13px 24px; background: linear-gradient(135deg,#7c5cff,#5b7fff); border: none; border-radius: 12px; color: #fff; font-size: 0.9rem; font-weight: 700; cursor: pointer; font-family: var(--db-font); display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 18px rgba(124,92,255,0.4); transition: all 0.2s; white-space: nowrap; }
+.tk2-ai-gen-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 24px rgba(124,92,255,0.55); }
+.tk2-ai-gen-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+/* Generated questions */
+.tk2-ai-results-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+.tk2-ai-results-count { font-size: 0.82rem; color: rgba(148,163,184,0.65); font-weight: 600; }
+.tk2-add-all-btn { padding: 8px 16px; background: linear-gradient(135deg,rgba(124,92,255,0.18),rgba(91,127,255,0.18)); border: 1px solid rgba(124,92,255,0.35); border-radius: 9px; color: #a5b4fc; font-size: 0.8rem; font-weight: 700; cursor: pointer; font-family: var(--db-font); transition: all 0.2s; display: flex; align-items: center; gap: 6px; }
+.tk2-add-all-btn:hover { background: linear-gradient(135deg,rgba(124,92,255,0.28),rgba(91,127,255,0.28)); }
+.tk2-clear-btn { padding: 8px 14px; background: rgba(255,255,255,0.04); border: 1px solid rgba(99,102,241,0.18); border-radius: 9px; color: rgba(148,163,184,0.6); font-size: 0.8rem; font-weight: 600; cursor: pointer; font-family: var(--db-font); transition: all 0.2s; }
+.tk2-clear-btn:hover { background: rgba(255,255,255,0.08); color: #e2e8f0; }
+.tk2-q-gen-card { background: linear-gradient(135deg,rgba(16,18,42,.96),rgba(22,24,56,.94)); border: 1px solid rgba(99,102,241,0.16); border-radius: 14px; padding: 16px; margin-bottom: 10px; transition: all 0.18s; }
+.tk2-q-gen-card:hover { border-color: rgba(124,92,255,0.35); box-shadow: 0 4px 18px rgba(124,92,255,0.1); }
+.tk2-q-gen-card-header { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 10px; }
+.tk2-q-num-badge { width: 28px; height: 28px; border-radius: 50%; background: linear-gradient(135deg,#7c5cff,#5b7fff); display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 800; color: #fff; flex-shrink: 0; }
+.tk2-q-gen-text { flex: 1; font-size: 0.88rem; font-weight: 600; color: #e2e8f0; line-height: 1.4; }
+.tk2-q-gen-tags { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; margin-bottom: 10px; }
+.tk2-q-gen-options { display: flex; gap: 8px; flex-wrap: wrap; font-size: 0.77rem; color: rgba(148,163,184,0.6); margin-bottom: 10px; padding: 8px 12px; background: rgba(12,14,35,.5); border-radius: 8px; }
+.tk2-q-gen-options span { display: flex; align-items: center; gap: 4px; }
+.tk2-q-gen-actions { display: flex; gap: 8px; justify-content: flex-end; }
+.tk2-q-edit-btn { padding: 7px 16px; border-radius: 8px; background: rgba(255,255,255,0.04); border: 1px solid rgba(99,102,241,0.2); color: #94a3b8; font-size: 0.78rem; font-weight: 600; cursor: pointer; font-family: var(--db-font); transition: all 0.18s; }
+.tk2-q-edit-btn:hover { background: rgba(255,255,255,0.08); color: #e2e8f0; }
+.tk2-q-add-btn { padding: 7px 16px; border-radius: 8px; background: linear-gradient(135deg,rgba(124,92,255,0.2),rgba(91,127,255,0.2)); border: 1px solid rgba(124,92,255,0.35); color: #a5b4fc; font-size: 0.78rem; font-weight: 700; cursor: pointer; font-family: var(--db-font); transition: all 0.18s; display: flex; align-items: center; gap: 5px; }
+.tk2-q-add-btn:hover { background: linear-gradient(135deg,rgba(124,92,255,0.3),rgba(91,127,255,0.3)); }
+.tk2-q-add-btn.added { background: rgba(34,197,94,0.15); border-color: rgba(34,197,94,0.3); color: #4ade80; }
+.tk2-ai-footer { font-size: 0.78rem; color: rgba(148,163,184,0.5); display: flex; align-items: center; gap: 6px; padding: 12px 0 0; }
+
+/* ═══════════════════════════════════════════════════════════════
+   NEW PREMIUM CHAT INPUT BAR
+   ═══════════════════════════════════════════════════════════════ */
+.tk2-chat-input-wrap { padding: 10px 14px 14px; background: rgba(8,10,24,.9); border-top: 1px solid rgba(99,102,241,0.08); }
+.tk2-chat-reply-preview { display: flex; align-items: center; justify-content: space-between; padding: 7px 14px; background: rgba(124,92,255,0.08); border-left: 3px solid #7c5cff; border-radius: 8px; margin-bottom: 8px; font-size: 0.8rem; color: rgba(148,163,184,0.8); }
+.tk2-chat-reply-close { background: none; border: none; color: rgba(148,163,184,0.5); cursor: pointer; font-size: 1rem; padding: 2px 4px; }
+.tk2-chat-input-row { display: flex; align-items: center; gap: 8px; }
+.tk2-chat-add-btn { width: 44px; height: 44px; border-radius: 50%; background: rgba(124,92,255,0.12); border: 2px solid rgba(124,92,255,0.3); color: #a5b4fc; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 1.35rem; font-weight: 300; flex-shrink: 0; transition: all 0.2s; line-height: 1; }
+.tk2-chat-add-btn:hover { background: rgba(124,92,255,0.22); border-color: rgba(124,92,255,0.55); transform: scale(1.06); }
+.tk2-chat-input-container { flex: 1; display: flex; align-items: center; background: rgba(16,18,42,.85); border: 2px solid rgba(99,102,241,0.18); border-radius: 24px; padding: 4px 8px 4px 16px; gap: 6px; transition: border-color 0.2s, box-shadow 0.2s; min-height: 48px; }
+.tk2-chat-input-container:focus-within { border-color: rgba(124,92,255,0.5); box-shadow: 0 0 0 3px rgba(124,92,255,0.1), 0 0 20px rgba(124,92,255,0.08); }
+.tk2-chat-msg-input { flex: 1; background: none; border: none; outline: none; color: #e2e8f0; font-size: 0.9rem; font-family: var(--db-font); resize: none; max-height: 120px; min-height: 28px; padding: 8px 0; line-height: 1.4; overflow-y: auto; }
+.tk2-chat-msg-input::placeholder { color: rgba(148,163,184,0.35); }
+.tk2-chat-msg-input:disabled { opacity: 0.4; }
+.tk2-chat-emoji-btn, .tk2-chat-gif-btn { width: 34px; height: 34px; border-radius: 8px; background: none; border: none; color: rgba(148,163,184,0.5); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.15rem; transition: all 0.18s; flex-shrink: 0; }
+.tk2-chat-emoji-btn:hover, .tk2-chat-gif-btn:hover { background: rgba(124,92,255,0.1); color: #a5b4fc; }
+.tk2-chat-gif-btn { font-size: 0.72rem; font-weight: 800; color: rgba(148,163,184,0.45); border: 1px solid rgba(99,102,241,0.2); border-radius: 6px; width: auto; padding: 3px 6px; }
+.tk2-chat-send-btn { width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg,#7c5cff,#5b7fff); border: none; color: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; box-shadow: 0 4px 16px rgba(124,92,255,0.5); transition: all 0.2s; }
+.tk2-chat-send-btn:hover:not(:disabled) { transform: scale(1.1); box-shadow: 0 6px 22px rgba(124,92,255,0.65); }
+.tk2-chat-send-btn:active:not(:disabled) { transform: scale(0.95); }
+.tk2-chat-send-btn:disabled { opacity: 0.38; cursor: not-allowed; box-shadow: none; }
+
+/* ═══════════════════════════════════════════════════════════════
+   ONLINE STUDENT KICK BUTTON
+   ═══════════════════════════════════════════════════════════════ */
+.comm-v2-student-row { position: relative; }
+.comm-v2-student-kick-btn { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); width: 26px; height: 26px; border-radius: 6px; background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.18); color: rgba(239,68,68,0.55); display: none; align-items: center; justify-content: center; cursor: pointer; font-size: 0.75rem; transition: all 0.18s; }
+.comm-v2-student-row:hover .comm-v2-student-kick-btn { display: flex; }
+.comm-v2-student-kick-btn:hover { background: rgba(239,68,68,0.2); border-color: rgba(239,68,68,0.45); color: #f87171; }
+
+/* ═══════════════════════════════════════════════════════════════
+   CONTENT SHARE BUTTONS
+   ═══════════════════════════════════════════════════════════════ */
+.cm2-share-divider { height: 1px; background: rgba(99,102,241,0.12); margin: 4px 0; }
+.cm2-action-item.whatsapp:hover { background: rgba(37,211,102,0.12); color: #25d366; }
+.cm2-action-item.telegram:hover { background: rgba(0,136,204,0.12); color: #0088cc; }
+.cm2-action-item.instagram:hover { background: rgba(225,48,108,0.12); color: #e1306c; }
+.cm2-share-group { padding: 4px 0; }
+.cm2-share-label { font-size: 0.68rem; color: rgba(148,163,184,0.4); text-transform: uppercase; letter-spacing: 0.07em; padding: 4px 14px 2px; font-weight: 700; }
+
+/* ═══════════════════════════════════════════════════════════════
+   CODING OPTION IN TEST MODE AI GENERATOR
+   ═══════════════════════════════════════════════════════════════ */
+.tm2-coding-badge { display: inline-flex; align-items: center; gap: 4px; font-size: 0.65rem; padding: 2px 7px; background: rgba(139,92,246,0.15); border: 1px solid rgba(139,92,246,0.3); border-radius: 20px; color: #c4b5fd; font-weight: 700; margin-left: 4px; }
+
+/* ═══════════════════════════════════════════════════════════════
+   CINEMATIC WALKTHROUGH v3 — Film Slate Edition
+   ═══════════════════════════════════════════════════════════════ */
+
+/* Overlay blocker layer */
+.wt3-overlay { position: fixed; inset: 0; z-index: 9000; pointer-events: all; }
+
+/* Spotlight: cutout via clip-path on pseudo, main technique: box-shadow tunnel */
+.wt3-spotlight {
+  position: fixed;
+  z-index: 9002;
+  border-radius: 12px;
+  pointer-events: none;
+  box-shadow: 0 0 0 9999px rgba(2,4,18,0.82), 0 0 0 2px rgba(139,92,246,0.9), 0 0 0 4px rgba(139,92,246,0.25), 0 0 40px 8px rgba(139,92,246,0.3);
+  transition: top 0.45s cubic-bezier(0.34,1.56,0.64,1), left 0.45s cubic-bezier(0.34,1.56,0.64,1), width 0.4s cubic-bezier(0.25,0.46,0.45,0.94), height 0.4s cubic-bezier(0.25,0.46,0.45,0.94);
+  animation: wt3-pulse-ring 2.4s ease-in-out infinite;
+}
+@keyframes wt3-pulse-ring {
+  0%, 100% { box-shadow: 0 0 0 9999px rgba(2,4,18,0.82), 0 0 0 2px rgba(139,92,246,0.9), 0 0 0 4px rgba(139,92,246,0.25), 0 0 40px 8px rgba(139,92,246,0.3); }
+  50% { box-shadow: 0 0 0 9999px rgba(2,4,18,0.82), 0 0 0 2px rgba(167,139,250,1), 0 0 0 6px rgba(139,92,246,0.4), 0 0 60px 14px rgba(139,92,246,0.45); }
+}
+
+/* Connector beam from spotlight to card */
+.wt3-beam {
+  position: fixed;
+  z-index: 9003;
+  pointer-events: none;
+  background: linear-gradient(to bottom, rgba(139,92,246,0.7), rgba(139,92,246,0));
+  width: 2px;
+  border-radius: 2px;
+  transform-origin: top center;
+  filter: blur(0.5px);
+  transition: opacity 0.3s ease;
+}
+
+/* ── MAIN CARD — Film Production Slate ── */
+.wt3-card {
+  position: fixed;
+  z-index: 9010;
+  width: 340px;
+  background: #080b1a;
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 0 0 1px rgba(139,92,246,0.4), 0 30px 80px rgba(0,0,0,0.75), 0 0 60px rgba(139,92,246,0.12);
+  transition: opacity 0.25s ease, transform 0.25s cubic-bezier(0.34,1.56,0.64,1);
+  animation: wt3-float 4s ease-in-out infinite;
+  transform-style: preserve-3d;
+}
+.wt3-card.fading { opacity: 0; transform: scale(0.94) translateY(8px); animation: none; }
+@keyframes wt3-float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-4px); }
+}
+.wt3-card.entering { animation: wt3-enter 0.4s cubic-bezier(0.34,1.56,0.64,1) forwards, wt3-float 4s ease-in-out 0.4s infinite; }
+@keyframes wt3-enter {
+  from { opacity: 0; transform: scale(0.88) translateY(16px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* ── CLAPPER HEADER ── */
+.wt3-clapper {
+  position: relative;
+  background: #0d1022;
+  padding: 0;
+  overflow: hidden;
+  border-bottom: 1px solid rgba(139,92,246,0.25);
+}
+/* Animated shimmer line at top of card */
+.wt3-clapper::before {
+  content: '';
+  position: absolute;
+  top: 0; left: -100%; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(139,92,246,0.4), #8b5cf6, #a78bfa, #7c3aed, rgba(139,92,246,0.4), transparent);
+  background-size: 200% 100%;
+  animation: wt3-shimmer 2.5s linear infinite;
+}
+@keyframes wt3-shimmer { 0%{left:-100%} 100%{left:200%} }
+
+/* Clapper stripes (the black/white zebra top of a clapperboard) */
+.wt3-stripes {
+  display: flex;
+  height: 22px;
+  overflow: hidden;
+  transform: skewX(-12deg) scaleX(1.05);
+  transform-origin: left;
+}
+.wt3-stripe {
+  flex: 1;
+  animation: wt3-stripe-flash 0.08s steps(1) 1;
+}
+.wt3-stripe:nth-child(odd) { background: #1a1a2e; }
+.wt3-stripe:nth-child(even) { background: rgba(139,92,246,0.7); }
+@keyframes wt3-stripe-flash {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+/* Clapper meta grid */
+.wt3-clapper-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  border-top: 1px solid rgba(139,92,246,0.15);
+}
+.wt3-clapper-cell {
+  padding: 5px 8px;
+  border-right: 1px solid rgba(139,92,246,0.12);
+  font-family: 'Courier New', monospace;
+}
+.wt3-clapper-cell:last-child { border-right: none; }
+.wt3-clapper-key {
+  font-size: 0.55rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: rgba(139,92,246,0.6);
+  display: block;
+  margin-bottom: 1px;
+}
+.wt3-clapper-val {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #e2e8f0;
+  display: block;
+  letter-spacing: 0.04em;
+}
+.wt3-clapper-title-row {
+  padding: 5px 10px 6px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.wt3-prod-label {
+  font-size: 0.6rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: rgba(139,92,246,0.5);
+  font-family: 'Courier New', monospace;
+}
+.wt3-prod-name {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #c4b5fd;
+  font-family: 'Courier New', monospace;
+  letter-spacing: 0.04em;
+}
+
+/* ── CARD BODY ── */
+.wt3-body { padding: 16px 20px 18px; }
+
+/* Progress dots */
+.wt3-progress {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 14px;
+}
+.wt3-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: rgba(139,92,246,0.2);
+  border: 1px solid rgba(139,92,246,0.25);
+  transition: all 0.25s cubic-bezier(0.34,1.56,0.64,1);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.wt3-dot:hover { background: rgba(139,92,246,0.4); transform: scale(1.2); }
+.wt3-dot.active { background: #8b5cf6; width: 24px; border-radius: 3px; box-shadow: 0 0 10px rgba(139,92,246,0.7); border-color: #8b5cf6; }
+.wt3-dot.done { background: rgba(34,197,94,0.55); border-color: rgba(34,197,94,0.6); }
+.wt3-scene-label {
+  margin-left: auto;
+  font-size: 0.65rem;
+  font-weight: 900;
+  font-family: 'Courier New', monospace;
+  color: rgba(139,92,246,0.65);
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+}
+
+/* Emoji & content */
+.wt3-emoji { font-size: 1.7rem; display: block; margin-bottom: 8px; filter: drop-shadow(0 0 8px rgba(139,92,246,0.4)); }
+.wt3-title { font-size: 0.97rem; font-weight: 800; color: #f1f5f9; margin-bottom: 7px; line-height: 1.25; letter-spacing: -0.01em; }
+.wt3-text { font-size: 0.82rem; color: rgba(148,163,184,0.85); line-height: 1.58; }
+.wt3-text strong { color: #c4b5fd; font-weight: 700; }
+
+/* Finish banner */
+.wt3-finish-banner {
+  margin-top: 12px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: linear-gradient(135deg,rgba(99,102,241,0.12),rgba(34,197,94,0.08));
+  border: 1px solid rgba(99,102,241,0.22);
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #a5b4fc;
+  line-height: 1.4;
+}
+
+/* Buttons */
+.wt3-btns { display: flex; align-items: center; gap: 7px; margin-top: 15px; }
+.wt3-skip-btn { padding: 7px; background: none; border: none; color: rgba(148,163,184,0.38); font-size: 0.72rem; cursor: pointer; font-family: var(--db-font); transition: color 0.18s; flex-shrink: 0; }
+.wt3-skip-btn:hover { color: rgba(148,163,184,0.65); }
+.wt3-prev-btn { padding: 7px 13px; border-radius: 8px; background: rgba(255,255,255,0.04); border: 1px solid rgba(99,102,241,0.18); color: rgba(148,163,184,0.65); font-size: 0.78rem; font-weight: 600; cursor: pointer; font-family: var(--db-font); transition: all 0.18s; }
+.wt3-prev-btn:hover { background: rgba(255,255,255,0.08); color: #e2e8f0; border-color: rgba(139,92,246,0.35); }
+.wt3-next-btn { flex: 1; padding: 9px 14px; border-radius: 8px; background: linear-gradient(135deg,#7c3aed,#6d28d9); border: none; color: #fff; font-size: 0.83rem; font-weight: 700; cursor: pointer; font-family: var(--db-font); box-shadow: 0 4px 16px rgba(124,58,237,0.45), inset 0 1px 0 rgba(255,255,255,0.15); transition: all 0.2s; position: relative; overflow: hidden; }
+.wt3-next-btn::after { content:''; position:absolute; inset:0; background: linear-gradient(135deg,rgba(255,255,255,0.12),transparent); border-radius: 8px; }
+.wt3-next-btn:hover { box-shadow: 0 6px 22px rgba(124,58,237,0.6), inset 0 1px 0 rgba(255,255,255,0.2); transform: translateY(-1px); }
+
+/* Arrow pointer from card to target */
+.wt3-arrow-tip {
+  position: absolute;
+  width: 10px; height: 10px;
+  background: #080b1a;
+  border: 1px solid rgba(139,92,246,0.4);
+  transform: rotate(45deg);
+  z-index: 9011;
+}
+
+/* Glow scan line */
+.wt3-scanline {
+  position: absolute;
+  left: 0; right: 0;
+  height: 60px;
+  background: linear-gradient(to bottom, transparent, rgba(139,92,246,0.04), transparent);
+  pointer-events: none;
+  animation: wt3-scan 3s linear infinite;
+}
+@keyframes wt3-scan {
+  0% { top: -60px; }
+  100% { top: 100%; }
+}
+
+@media (max-width: 768px) {
+  .tk2-stats-row { grid-template-columns: repeat(2,1fr); }
+  .tk2-type-cards { grid-template-columns: repeat(2,1fr); }
+  .tk2-fields-row { grid-template-columns: 1fr; }
+  .tk2-ai-hero { flex-direction: column; gap: 12px; text-align: center; }
+  .tk2-ai-hero-right { font-size: 2.5rem; }
+  .wt3-card { width: calc(100vw - 24px); max-width: 340px; }
+  .wt3-clapper-grid { grid-template-columns: 1fr 1fr; }
+  .comm-v2-student-kick-btn { display: flex !important; opacity: 0.5; }
+}
 </style>
 </head>
 <body>
@@ -18272,7 +18744,10 @@ function SmartAttendancePage({ sessionCode, sessionStatus, roster, wsSend }) {
 
   function fmtTime(ts) {
     if (!ts) return '—';
-    return new Date(ts * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    // Handle both Unix seconds and ISO/ms timestamps
+    const d = (typeof ts === 'number' && ts < 1e12) ? new Date(ts * 1000) : new Date(ts);
+    if (isNaN(d.getTime())) return '—';
+    return d.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
   }
   function fmtDur(secs) {
     if (!secs) return '0s';
@@ -20434,6 +20909,7 @@ function AIQuestionGenerator({
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState([]); // editable drafts
   const [apiKey, setApiKey] = useState(localStorage.getItem('cm_gemini_key') || '');
+  const [expandedCard, setExpandedCard] = useState(null);
   const {
     add
   } = useContext(AppCtx);
@@ -20609,158 +21085,148 @@ No markdown, no explanation, just the raw JSON array.`
     }
     setLoading(false);
   }
-  const typeLabels = {
-    mcq: '🔘 MCQ',
-    short: '✍️ Short Answer',
-    long: '📄 Long Answer',
-    coding: '💻 Coding'
-  };
-  return /*#__PURE__*/React.createElement("div", {
-    style: {
-      marginBottom: 16
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "card",
-    style: {
-      marginBottom: 12,
-      border: '1px solid rgba(99,102,241,0.3)'
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "card-title",
-    style: {
-      marginBottom: 14
-    }
-  }, "\uD83E\uDD16 AI Question Generator"), /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: 'flex',
-      gap: 8,
-      marginBottom: 12,
-      flexWrap: 'wrap'
-    }
-  }, Object.entries(typeLabels).map(([t, label]) => /*#__PURE__*/React.createElement("button", {
-    key: t,
-    className: `btn btn-sm ${qType === t ? 'btn-primary' : 'btn-ghost'}`,
-    onClick: () => setQType(t)
-  }, label))), /*#__PURE__*/React.createElement("div", {
-    className: "flex gap-8 mb-8",
-    style: {
-      flexWrap: 'wrap'
-    }
-  }, /*#__PURE__*/React.createElement("input", {
-    value: topic,
-    onChange: e => setTopic(e.target.value),
-    placeholder: `Topic for ${typeLabels[qType]} questions…`,
-    style: {
-      flex: 1,
-      minWidth: 180
-    },
-    onKeyDown: e => e.key === 'Enter' && generate()
-  }), qType === 'coding' && /*#__PURE__*/React.createElement("select", {
-    value: aiLanguage,
-    onChange: e => setAiLanguage(e.target.value),
-    style: {
-      padding: '8px 10px',
-      borderRadius: 6,
-      border: '1px solid var(--border)',
-      background: 'var(--surface2)',
-      color: 'var(--text)',
-      outline: 'none',
-      width: 130
-    }
-  }, [
-    {value: 'python', label: 'Python 3'},
-    {value: 'javascript', label: 'JavaScript'},
-    {value: 'java', label: 'Java'},
-    {value: 'cpp', label: 'C++'},
-    {value: 'c', label: 'C'},
-    {value: 'go', label: 'Go'}
-  ].map(opt => React.createElement("option", {key: opt.value, value: opt.value}, opt.label))), /*#__PURE__*/React.createElement("select", {
-    value: count,
-    onChange: e => setCount(Number(e.target.value)),
-    style: {
-      width: 90
-    }
-  }, [2, 3, 4, 5, 6].map(n => /*#__PURE__*/React.createElement("option", {
-    key: n,
-    value: n
-  }, n, " questions"))), /*#__PURE__*/React.createElement("button", {
-    className: "btn btn-primary",
-    onClick: generate,
-    disabled: loading,
-    style: {
-      minWidth: 120
-    }
-  }, loading ? '⏳ Generating…' : '✨ Generate')), /*#__PURE__*/React.createElement("details", null, /*#__PURE__*/React.createElement("summary", {
-    className: "text-xs text-muted",
-    style: {
-      cursor: 'pointer',
-      userSelect: 'none'
-    }
-  }, "\uD83D\uDD11 Gemini API Key (optional \u2014 enables real AI)"), /*#__PURE__*/React.createElement("div", {
-    style: {
-      marginTop: 8,
-      display: 'flex',
-      gap: 8,
-      alignItems: 'center'
-    }
-  }, /*#__PURE__*/React.createElement("input", {
-    type: "password",
-    value: apiKey,
-    placeholder: "AIzaSy\u2026",
-    onChange: e => {
-      setApiKey(e.target.value);
-      localStorage.setItem('cm_gemini_key', e.target.value);
-    },
-    style: {
-      flex: 1,
-      fontSize: '0.8rem'
-    }
-  }), apiKey && /*#__PURE__*/React.createElement("span", {
-    className: "badge badge-green"
-  }, "\u2713 Key saved")), /*#__PURE__*/React.createElement("div", {
-    className: "text-xs text-muted",
-    style: {
-      marginTop: 4
-    }
-  }, "Stored in browser only. Without key, realistic mock questions are generated.")))
-, loading && /*#__PURE__*/React.createElement(PencilLoader, { text: 'AI is crafting your questions\u2026' })
-, results.length > 0 && /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: 'flex',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      marginBottom: 10
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "text-sm text-muted"
-  }, results.length, " question", results.length !== 1 ? 's' : '', " generated \u2014 edit before adding, or click \u271A Add directly"), /*#__PURE__*/React.createElement("div", {
-    className: "flex gap-8"
-  }, /*#__PURE__*/React.createElement("button", {
-    className: "btn btn-ghost btn-sm",
-    onClick: () => setResults([])
-  }, "Clear all"), /*#__PURE__*/React.createElement("button", {
-    className: "btn btn-success btn-sm",
-    onClick: async () => {
-      const snapshot = [...results];
-      console.log('[AI TASK GENERATED] Adding', snapshot.length, 'questions');
-      let added = 0;
-      for (const q of snapshot) {
-        try { await onAdd(q); added++; } catch(_) {}
-      }
-      setResults([]);
-      add(`✅ Added ${added} of ${snapshot.length} questions to Tasks`, added > 0 ? 'success' : 'error');
-    }
-  }, "\u271A Add All"))), results.map((q, i) => /*#__PURE__*/React.createElement(AIQuestionEditor, {
-    key: i,
-    q: q,
-    idx: i,
-    onChange: updateResult,
-    onAdd: q => {
-      onAdd(q);
-      discardResult(i);
-    },
-    onDiscard: discardResult
-  }))));
+  return React.createElement('div', { className: 'tk2-ai-page' },
+    React.createElement('div', { className: 'tk2-ai-hero' },
+      React.createElement('div', { className: 'tk2-ai-hero-left' },
+        React.createElement('div', { className: 'tk2-ai-hero-title' }, '\uD83E\uDD16 AI Question Generator'),
+        React.createElement('div', { className: 'tk2-ai-hero-sub' }, 'Generate high-quality questions in seconds with the power of AI \u2728')
+      ),
+      React.createElement('div', { className: 'tk2-ai-hero-right' }, '\uD83E\uDD16')
+    ),
+    React.createElement('div', { className: 'tk2-ai-pills' },
+      [
+        { v:'mcq', l:'\uD83D\uDD18 MCQ' },
+        { v:'short', l:'\u270D\uFE0F Short Answer' },
+        { v:'long', l:'\uD83D\uDCC4 Long Answer' },
+        { v:'coding', l:'\uD83D\uDCBB Coding' }
+      ].map(t => React.createElement('button', {
+        key: t.v,
+        className: 'tk2-ai-pill' + (qType === t.v ? ' active' : ''),
+        onClick: () => setQType(t.v)
+      }, t.l))
+    ),
+    /* Row 1: Topic input (always visible) */
+    React.createElement('div', { style:{ display:'flex', gap:10, marginBottom:10 } },
+      React.createElement('input', {
+        className: 'tk2-ai-search-input',
+        value: topic,
+        onChange: e => setTopic(e.target.value),
+        placeholder: qType === 'coding' ? 'Enter coding topic (e.g. Python Loops, Sorting, Recursion\u2026)' : 'Enter topic (e.g. Photosynthesis, French Revolution, Algebra\u2026)',
+        style: { flex:1 },
+        onKeyDown: e => e.key === 'Enter' && generate()
+      })
+    ),
+    /* Row 2: Language (coding only) + Count + Generate */
+    React.createElement('div', { className: 'tk2-ai-search-row', style:{ alignItems:'center' } },
+      qType === 'coding' && React.createElement('div', { style:{ display:'flex', alignItems:'center', gap:6 } },
+        React.createElement('span', { style:{ fontSize:'0.78rem', color:'rgba(148,163,184,0.55)', whiteSpace:'nowrap' } }, 'Language:'),
+        React.createElement('select', {
+          value: aiLanguage,
+          onChange: e => setAiLanguage(e.target.value),
+          className: 'tk2-select'
+        },
+          [{value:'python',label:'Python 3'},{value:'javascript',label:'JavaScript'},{value:'java',label:'Java'},{value:'cpp',label:'C++'},{value:'c',label:'C'},{value:'go',label:'Go'}]
+            .map(opt => React.createElement('option', { key:opt.value, value:opt.value }, opt.label))
+        )
+      ),
+      React.createElement('select', {
+        value: count,
+        onChange: e => setCount(Number(e.target.value)),
+        className: 'tk2-select', style:{ width:130 }
+      }, [2,3,4,5,6].map(n => React.createElement('option',{key:n,value:n}, n+' Questions'))),
+      React.createElement('button', {
+        className: 'tk2-ai-gen-btn',
+        style:{ marginLeft:'auto' },
+        onClick: generate,
+        disabled: loading || !topic.trim()
+      }, loading ? '\u23F3 Generating\u2026' : '\u2728 Generate')
+    ),
+    React.createElement('details', null,
+      React.createElement('summary', { style:{ fontSize:'0.78rem', color:'rgba(148,163,184,0.5)', cursor:'pointer', userSelect:'none' } },
+        '\uD83D\uDD11 AI API Key (optional \u2014 enables real AI)'
+      ),
+      React.createElement('div', { style:{ marginTop:8, display:'flex', gap:8, alignItems:'center' } },
+        React.createElement('input', {
+          type: 'password', value: apiKey,
+          placeholder: 'sk-or-v1-\u2026 or AIzaSy\u2026',
+          onChange: e => { setApiKey(e.target.value); localStorage.setItem('cm_gemini_key', e.target.value); },
+          className: 'tk2-input', style:{ flex:1, fontSize:'0.8rem' }
+        }),
+        apiKey && React.createElement('span', { style:{ color:'#4ade80', fontSize:'0.8rem', fontWeight:700 } }, '\u2713 Key saved')
+      ),
+      React.createElement('div', { style:{ marginTop:4, fontSize:'0.72rem', color:'rgba(148,163,184,0.4)' } }, 'Stored in browser only. Without key, realistic mock questions are generated.')
+    ),
+    loading && React.createElement(PencilLoader, { text: 'AI is crafting your questions\u2026' }),
+    results.length > 0 && React.createElement('div', null,
+      React.createElement('div', { className: 'tk2-ai-results-header' },
+        React.createElement('span', { className: 'tk2-ai-results-count' }, results.length + ' question' + (results.length !== 1 ? 's' : '') + ' generated'),
+        React.createElement('div', { style:{ display:'flex', gap:8 } },
+          React.createElement('button', { className: 'tk2-clear-btn', onClick: () => setResults([]) }, 'Clear all'),
+          React.createElement('button', {
+            className: 'tk2-add-all-btn',
+            onClick: async () => {
+              const snap = [...results];
+              let added = 0;
+              for (const q of snap) { try { await onAdd(q); added++; } catch(_) {} }
+              setResults([]);
+              add('\u2705 Added ' + added + ' of ' + snap.length + ' questions to Tasks', added > 0 ? 'success' : 'error');
+            }
+          }, '+ Add All')
+        )
+      ),
+      results.map((q, i) => {
+        const isExp = expandedCard === i;
+        const qTypeLbl = q.type==='mcq'?'MCQ':q.type==='coding'?'\uD83D\uDCBB Coding':q.long_answer?'Long Answer':'Short Answer';
+        const qTagCls = q.type==='mcq'?'tk2-tag-mcq':q.type==='coding'?'tk2-tag-coding':q.long_answer?'tk2-tag-long':'tk2-tag-short';
+        return React.createElement('div', { key:i, className:'tk2-q-gen-card' },
+          React.createElement('div', { className:'tk2-q-gen-card-header' },
+            React.createElement('div', { className:'tk2-q-num-badge' }, i+1),
+            React.createElement('div', { className:'tk2-q-gen-text' }, q.question)
+          ),
+          React.createElement('div', { className:'tk2-q-gen-tags', style:{ marginBottom:8 } },
+            React.createElement('span', { className:'tk2-tag '+qTagCls }, qTypeLbl),
+            q.difficulty && React.createElement('span', { className:'tk2-tag tk2-tag-'+q.difficulty }, q.difficulty),
+            q.language && React.createElement('span', { className:'tm2-coding-badge' }, q.language)
+          ),
+          q.options && React.createElement('div', { className:'tk2-q-gen-options' },
+            q.options.map((opt, j) => React.createElement('span', {
+              key:j,
+              style:{
+                color: q.correct_answer===String.fromCharCode(65+j)?'#4ade80':'rgba(148,163,184,0.65)',
+                fontWeight: q.correct_answer===String.fromCharCode(65+j)?700:400,
+                background: q.correct_answer===String.fromCharCode(65+j)?'rgba(34,197,94,0.1)':'transparent',
+                padding:'2px 6px', borderRadius:4, display:'inline-block', marginRight:4
+              }
+            }, String.fromCharCode(65+j)+'. '+opt))
+          ),
+          (q.type==='short'||q.type==='long'||q.long_answer) && q.correct_answer && React.createElement('div', {
+            style:{ background:'rgba(34,197,94,0.06)', border:'1px solid rgba(34,197,94,0.18)', borderRadius:8, padding:'8px 12px', marginBottom:8 }
+          },
+            React.createElement('div', { style:{ fontSize:'0.68rem', fontWeight:700, color:'rgba(34,197,94,0.7)', textTransform:'uppercase', letterSpacing:'0.06em', marginBottom:4 } }, '\u2713 Expected Answer'),
+            React.createElement('div', { style:{ fontSize:'0.82rem', color:'rgba(148,163,184,0.85)', lineHeight:1.5 } }, q.correct_answer)
+          ),
+          q.type==='coding' && React.createElement('div', {
+            style:{ background:'rgba(12,14,35,0.7)', border:'1px solid rgba(139,92,246,0.2)', borderRadius:8, padding:'8px 12px', marginBottom:8 }
+          },
+            React.createElement('div', { style:{ fontSize:'0.68rem', fontWeight:700, color:'rgba(139,92,246,0.7)', textTransform:'uppercase', letterSpacing:'0.06em', marginBottom:4 } }, '\uD83D\uDCBB Starter Code'),
+            React.createElement('div', { style:{ fontFamily:'monospace', fontSize:'0.78rem', color:'rgba(148,163,184,0.8)', whiteSpace:'pre-wrap', overflow:'auto', maxHeight:100 } }, q.starter_code||q.correct_answer)
+          ),
+          q.hint && isExp && React.createElement('div', {
+            style:{ background:'rgba(251,191,36,0.06)', border:'1px solid rgba(251,191,36,0.15)', borderRadius:8, padding:'8px 12px', marginBottom:8 }
+          },
+            React.createElement('div', { style:{ fontSize:'0.68rem', fontWeight:700, color:'rgba(251,191,36,0.7)', textTransform:'uppercase', letterSpacing:'0.06em', marginBottom:4 } }, '\uD83D\uDCA1 Hint'),
+            React.createElement('div', { style:{ fontSize:'0.82rem', color:'rgba(148,163,184,0.8)' } }, q.hint)
+          ),
+          React.createElement('div', { className:'tk2-q-gen-actions' },
+            q.hint && React.createElement('button', { className:'tk2-q-edit-btn', style:{fontSize:'0.72rem'}, onClick:()=>setExpandedCard(isExp?null:i) }, isExp?'\u25B2 Hide':'\uD83D\uDCA1 Hint'),
+            React.createElement('button', { className:'tk2-q-edit-btn', onClick:()=>{ const ed=window.prompt('Edit question:',q.question); if(ed!==null) updateResult(i,{...q,question:ed}); } }, '\u270F Edit'),
+            React.createElement('button', { className:'tk2-q-add-btn', onClick:async()=>{ await onAdd(q); discardResult(i); } }, '+ Add')
+          )
+        );
+      }),
+      React.createElement('div', { className:'tk2-ai-footer' }, '\uD83D\uDCA1 Use Add All to send to whole class, or + Add to assign individually.')
+    )
+  );
 }
 
 // ─── AI Coding Question Generator ────────────────────────────────
@@ -21273,711 +21739,341 @@ function TaskManagementPage({
     return () => document.removeEventListener('mousedown', onClickOutside);
   }, []);
 
-  // ─────────────────────────── RENDER ────────────────────────────
-  return /*#__PURE__*/React.createElement("div", {
-    className: "page"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "section-header",
-    style: {
-      marginBottom: 16
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "section-title"
-  }, "\uD83D\uDCDD Task Management"), /*#__PURE__*/React.createElement("div", {
-    className: "flex gap-8"
-  }, /*#__PURE__*/React.createElement("button", {
-    className: "btn btn-ghost",
-    onClick: () => setShowPDFModal(true),
-    disabled: !tasks.length,
-    title: "Export all tasks as PDF"
-  }, "\uD83D\uDCC4 Export PDF"), /*#__PURE__*/React.createElement("button", {
-    className: "btn btn-success",
-    onClick: sendNextTask,
-    disabled: !tasks.length || sessionStatus !== 'active',
-    title: sessionStatus !== 'active' ? 'Start the session first' : ''
-  }, "\uD83D\uDCE4 Send Next Task"), /*#__PURE__*/React.createElement("button", {
-    className: "btn btn-primary",
-    onClick: () => setTab(tab === 'list' ? 'create' : 'list')
-  }, tab !== 'list' ? '← Task List' : '+ Create Task'))), showPDFModal && /*#__PURE__*/React.createElement(PDFOptionsModal, {
-    tasks: tasks,
-    title: "Question Bank",
-    onClose: () => setShowPDFModal(false)
-  }), /*#__PURE__*/React.createElement("div", {
-    className: "tabs",
-    style: {
-      marginBottom: 20
-    }
-  }, [{
-    id: 'list',
-    label: `📋 Tasks (${tasks.length})`
-  }, {
-    id: 'create',
-    label: '✏️ Create'
-  }, {
-    id: 'ai',
-    label: '🤖 AI Generate'
-  }].map(t => /*#__PURE__*/React.createElement("button", {
-    key: t.id,
-    className: `tab ${tab === t.id ? 'active' : ''}`,
-    onClick: () => setTab(t.id)
-  }, t.label))), tab === 'list' && /*#__PURE__*/React.createElement("div", null, tasks.length === 0 && /*#__PURE__*/React.createElement("div", {
-    className: "card text-center",
-    style: {
-      padding: 48
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      fontSize: '3rem',
-      marginBottom: 12
-    }
-  }, "\uD83D\uDCED"), /*#__PURE__*/React.createElement("div", {
-    style: {
-      fontWeight: 600,
-      marginBottom: 6
-    }
-  }, "No tasks yet"), /*#__PURE__*/React.createElement("div", {
-    className: "text-muted text-sm"
-  }, "Create a task or use AI to generate questions."), /*#__PURE__*/React.createElement("button", {
-    className: "btn btn-primary mt-16",
-    onClick: () => setTab('create')
-  }, "+ Create First Task")), tasks.map((t, i) => /*#__PURE__*/React.createElement("div", {
-    key: t.id,
-    className: `card${sentTaskIds.has(t.id) ? ' task-card-sent' : ''}`,
-    style: {
-      marginBottom: 10
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "flex justify-between items-center",
-    style: {
-      flexWrap: 'wrap',
-      gap: 8
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      flex: 1,
-      minWidth: 0
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "flex gap-8 items-center mb-8",
-    style: {
-      flexWrap: 'wrap'
-    }
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "badge badge-purple"
-  }, t.type.toUpperCase()), /*#__PURE__*/React.createElement("span", {
-    className: "badge badge-blue"
-  }, t.topic || 'General'), /*#__PURE__*/React.createElement("span", {
-    className: `badge badge-${t.difficulty === 'easy' ? 'green' : t.difficulty === 'hard' ? 'red' : 'yellow'}`
-  }, t.difficulty), t.time_limit && /*#__PURE__*/React.createElement("span", {
-    className: "badge badge-yellow"
-  }, "\u23F1 ", t.time_limit, "s")), /*#__PURE__*/React.createElement("div", {
-    style: {
-      fontWeight: 600,
-      marginBottom: 4
-    }
-  }, i + 1, ". ", t.question), t.type === 'mcq' && t.options?.length > 0 && /*#__PURE__*/React.createElement("div", {
-    className: "text-sm text-muted"
-  }, t.options.map((o, j) => /*#__PURE__*/React.createElement("span", {
-    key: j,
-    style: {
-      marginRight: 8
-    }
-  }, String.fromCharCode(65 + j), ". ", o)))), /*#__PURE__*/React.createElement("div", {
-    className: "flex gap-8 items-center",
-    style: {
-      flexWrap: 'wrap'
-    }
-  }, sentTaskIds.has(t.id) && /*#__PURE__*/React.createElement("span", {
-    className: "sent-badge"
-  }, "\u2713 Sent"), /*#__PURE__*/React.createElement("div", {
-    style: {
-      position: 'relative',
-      display: 'flex',
-      gap: 4
-    }
-  }, /*#__PURE__*/React.createElement("button", {
-    className: "btn btn-success btn-sm",
-    disabled: sendingTaskId === t.id || sessionStatus !== 'active',
-    onClick: () => sendTask(t.id, 'all')
-  }, sendingTaskId === t.id ? '⏳' : '📤', " All"), /*#__PURE__*/React.createElement("button", {
-    className: "btn btn-primary btn-sm",
-    disabled: sendingTaskId === t.id || sessionStatus !== 'active',
-    onClick: () => setOpenDropdown(d => ({
-      ...d,
-      [t.id]: d[t.id] === 'student' ? null : 'student'
-    }))
-  }, "\uD83D\uDC64 Student"), openDropdown[t.id] === 'student' && /*#__PURE__*/React.createElement("div", {
-    className: "task-send-dropdown"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "task-send-dropdown-label"
-  }, "Select Student"), activeStudents.map(s => /*#__PURE__*/React.createElement("button", {
-    key: s.id,
-    className: "task-send-dropdown-item",
-    onClick: () => {
-      sendTask(t.id, 'student', s.id);
-    }
-  }, "\uD83D\uDC64 ", s.name)), /*#__PURE__*/React.createElement("button", {
-    className: "task-send-dropdown-item",
-    onClick: () => setOpenDropdown({})
-  }, "\u2715 Cancel"))), /*#__PURE__*/React.createElement("button", {
-    className: "btn btn-sm",
-    style: { background: 'linear-gradient(135deg,#6366f1,#8b5cf6)', color: '#fff' },
-    title: "AI Explain this question",
-    onClick: () => setExplainTask(t)
-  }, "\uD83E\uDD16 Explain"), /*#__PURE__*/React.createElement("button", {
-    className: "btn btn-danger btn-sm",
-    onClick: () => deleteTask(t.id)
-  }, "\uD83D\uDDD1"))))), tasks.length > 0 && /*#__PURE__*/React.createElement("div", {
-    className: "card",
-    style: {
-      background: 'var(--surface2)',
-      padding: '12px 16px'
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "text-sm text-muted"
-  }, "\uD83D\uDCE4 Use ", /*#__PURE__*/React.createElement("strong", null, "All"), " to send to the whole class, or ", /*#__PURE__*/React.createElement("strong", null, "\uD83D\uDC64 Student"), " for an individual. Or use ", /*#__PURE__*/React.createElement("strong", null, "\"Send Next Task\""), " above to push sequentially.")),
-  explainTask && /*#__PURE__*/React.createElement(AIExplainModal, {
-    task: explainTask,
-    sessionCode: sessionCode,
-    sessionStatus: sessionStatus,
-    apiKey: localStorage.getItem('cm_gemini_key') || '',
-    onClose: () => setExplainTask(null)
-  })), tab === 'create' && /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
-    className: "card",
-    style: {
-      marginBottom: 16
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "card-title"
-  }, "Select Task Type"), /*#__PURE__*/React.createElement("div", {
-    className: "flex gap-12",
-    style: {
-      flexWrap: 'wrap'
-    }
-  }, /*#__PURE__*/React.createElement(TaskTypeCard, {
-    icon: "\uD83D\uDD18",
-    label: "MCQ",
-    desc: "4 options, one correct answer",
-    selected: form.type === 'mcq',
-    onClick: () => setForm(f => ({
-      ...f,
-      type: 'mcq'
-    }))
-  }), /*#__PURE__*/React.createElement(TaskTypeCard, {
-    icon: "\u270D\uFE0F",
-    label: "Short Answer",
-    desc: "Brief typed response",
-    selected: form.type === 'short' && !form.long_answer,
-    onClick: () => setForm(f => ({
-      ...f,
-      type: 'short',
-      long_answer: false
-    }))
-  }), /*#__PURE__*/React.createElement(TaskTypeCard, {
-    icon: "\uD83D\uDCC4",
-    label: "Long Answer",
-    desc: "Detailed written response",
-    selected: form.type === 'short' && form.long_answer,
-    onClick: () => setForm(f => ({
-      ...f,
-      type: 'short',
-      long_answer: true
-    }))
-  }), /*#__PURE__*/React.createElement(TaskTypeCard, {
-    icon: "\uD83D\uDCBB",
-    label: "Coding",
-    desc: "Python code challenge",
-    selected: form.type === 'coding',
-    onClick: () => setForm(f => ({
-      ...f,
-      type: 'coding'
-    }))
-  }))), /*#__PURE__*/React.createElement("div", {
-    className: "card",
-    style: {
-      marginBottom: 16
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "card-title"
-  }, form.type === 'mcq' ? '🔘 MCQ Task' : form.long_answer ? '📄 Long Answer Task' : form.type === 'coding' ? '💻 Coding Task' : '✍️ Short Answer Task'), /*#__PURE__*/React.createElement("div", {
-    className: "form-group"
-  }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      marginBottom: 4
-    }
-  }, /*#__PURE__*/React.createElement("label", {
-    style: {
-      margin: 0
-    }
-  }, "Question ", /*#__PURE__*/React.createElement("span", {
-    style: {
-      color: 'var(--red)'
-    }
-  }, "*")), form.type === 'coding' && /*#__PURE__*/React.createElement(AICodingGenerator, {
-    language: form.language || 'python',
-    setLanguage: lang => setForm(f => ({
-      ...f,
-      language: lang,
-      starter_code: lang === 'javascript' ? 'function solution() {\n    // Your code here\n}\n\nconsole.log(solution());' :
-            lang === 'java' ? 'public class Main {\n    public static void main(String[] args) {\n        // Your code here\n    }\n}' :
-            lang === 'cpp' ? '#include <iostream>\nusing namespace std;\n\nint main() {\n    // Your code here\n    return 0;\n}' :
-            lang === 'c' ? '#include <stdio.h>\n\nint main() {\n    // Your code here\n    return 0;\n}' :
-            lang === 'go' ? 'package main\n\nimport "fmt"\n\nfunc main() {\n    // Your code here\n}' :
-            'def solution():\n    # Your code here\n    pass\n\nprint(solution())',
-      correct_answer: lang === 'javascript' ? 'function solution() {\n    // Write reference solution here\n    return 0;\n}\n\nconsole.log(solution());' :
-            lang === 'java' ? 'public class Main {\n    public static int solution() {\n        // Write reference solution here\n        return 0;\n    }\n    public static void main(String[] args) {\n        System.out.println(solution());\n    }\n}' :
-            lang === 'cpp' ? '#include <iostream>\nusing namespace std;\n\nint solution() {\n    // Write reference solution here\n    return 0;\n}\n\nint main() {\n    cout << solution() << endl;\n    return 0;\n}' :
-            lang === 'c' ? '#include <stdio.h>\n\nint solution() {\n    // Write reference solution here\n    return 0;\n}\n\nint main() {\n    printf("%d\\n", solution());\n    return 0;\n}' :
-            lang === 'go' ? 'package main\n\nimport "fmt"\n\nfunc solution() int {\n    // Write reference solution here\n    return 0\n}\n\nfunc main() {\n    fmt.Println(solution())\n}' :
-            'def solution():\n    # Write reference solution here\n    return 0\n\nprint(solution())'
-    })),
-    onGenerated: q => {
-      setForm(f => ({
-        ...f,
-        question: q.question,
-        starter_code: q.starter_code || f.starter_code,
-        correct_answer: q.reference_solution || f.correct_answer
-      }));
-    }
-  })), /*#__PURE__*/React.createElement("textarea", {
-    rows: form.long_answer ? 3 : form.type === 'coding' ? 4 : 2,
-    value: form.question,
-    onChange: e => setForm(f => ({
-      ...f,
-      question: e.target.value
-    })),
-    placeholder: form.type === 'coding' ? 'Describe the coding problem, input/output format, constraints, and sample test case…' : form.long_answer ? 'Enter your essay / long answer question…' : 'Type your question here…'
-  })), form.type === 'mcq' && /*#__PURE__*/React.createElement("div", {
-    style: {
-      marginBottom: 16
-    }
-  }, /*#__PURE__*/React.createElement("label", {
-    style: {
-      display: 'block',
-      fontSize: '0.85rem',
-      color: 'var(--text2)',
-      marginBottom: 10
-    }
-  }, "Answer Options ", /*#__PURE__*/React.createElement("span", {
-    style: {
-      color: 'var(--text3)'
-    }
-  }, "(click radio = correct answer)")), ['A', 'B', 'C', 'D'].map((letter, i) => /*#__PURE__*/React.createElement("div", {
-    key: i,
-    style: {
-      display: 'flex',
-      alignItems: 'center',
-      gap: 10,
-      marginBottom: 10
-    }
-  }, /*#__PURE__*/React.createElement("input", {
-    type: "radio",
-    name: "correct_ans",
-    value: letter,
-    checked: form.correct_answer === letter,
-    onChange: () => setForm(f => ({
-      ...f,
-      correct_answer: letter
-    })),
-    style: {
-      width: 18,
-      height: 18,
-      accentColor: 'var(--green)',
-      cursor: 'pointer'
-    }
-  }), /*#__PURE__*/React.createElement("div", {
-    style: {
-      width: 32,
-      height: 32,
-      borderRadius: '50%',
-      background: 'var(--surface3)',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      fontWeight: 700,
-      fontSize: '0.85rem',
-      flexShrink: 0,
-      border: form.correct_answer === letter ? '2px solid var(--green)' : '2px solid transparent',
-      color: form.correct_answer === letter ? 'var(--green)' : 'var(--text2)'
-    }
-  }, letter), /*#__PURE__*/React.createElement("input", {
-    value: form.options[i],
-    onChange: e => setOpt(i, e.target.value),
-    placeholder: `Option ${letter}`,
-    style: {
-      flex: 1
-    }
-  }))), !form.correct_answer && /*#__PURE__*/React.createElement("div", {
-    className: "text-xs",
-    style: {
-      color: 'var(--yellow)'
-    }
-  }, "\u26A0\uFE0F Select a radio to mark the correct answer"), form.correct_answer && /*#__PURE__*/React.createElement("div", {
-    className: "text-xs",
-    style: {
-      color: 'var(--green)'
-    }
-  }, "\u2713 Correct answer: Option ", form.correct_answer)), form.type === 'short' && /*#__PURE__*/React.createElement(React.Fragment, null,
-    /*#__PURE__*/React.createElement("div", {
-      className: "grid grid-2",
-      style: { gap: 12, marginBottom: 16 }
-    }, /*#__PURE__*/React.createElement("div", {
-      className: "form-group",
-      style: { marginBottom: 0 }
-    }, /*#__PURE__*/React.createElement("label", null, "Evaluation Mode"), /*#__PURE__*/React.createElement("select", {
-      value: form.evaluation_mode || 'manual',
-      onChange: e => setForm(f => ({
-        ...f,
-        evaluation_mode: e.target.value
-      })),
-      style: {
-        width: '100%',
-        padding: '8px 10px',
-        borderRadius: 6,
-        border: '1px solid var(--border)',
-        background: 'var(--surface2)',
-        color: 'var(--text)'
-      }
-    }, /*#__PURE__*/React.createElement("option", {
-      value: "manual"
-    }, "Manual"), /*#__PURE__*/React.createElement("option", {
-      value: "ai"
-    }, "AI Evaluation"))),
-    /*#__PURE__*/React.createElement("div", {
-      className: "form-group",
-      style: { marginBottom: 0 }
-    }, /*#__PURE__*/React.createElement("label", null, "Maximum Marks"), /*#__PURE__*/React.createElement("input", {
-      type: "number",
-      min: 1,
-      max: 100,
-      value: form.max_marks || 10,
-      disabled: form.evaluation_mode !== 'ai',
-      onChange: e => setForm(f => ({
-        ...f,
-        max_marks: parseInt(e.target.value) || 10
-      })),
-      placeholder: "e.g. 10"
-    }))),
-    /*#__PURE__*/React.createElement("div", {
-      className: "form-group"
-    }, /*#__PURE__*/React.createElement("label", null, "Expected Answer ", /*#__PURE__*/React.createElement("span", {
-      style: { color: form.evaluation_mode === 'ai' ? 'var(--red)' : 'var(--text3)' }
-    }, form.evaluation_mode === 'ai' ? '*' : ' (optional)')), form.long_answer ? /*#__PURE__*/React.createElement("textarea", {
-      rows: 3,
-      value: form.correct_answer,
-      onChange: e => setForm(f => ({
-        ...f,
-        correct_answer: e.target.value
-      })),
-      placeholder: form.evaluation_mode === 'ai' ? "Expected answer is required for AI evaluation..." : "Model answer (optional)…"
-    }) : /*#__PURE__*/React.createElement("input", {
-      value: form.correct_answer,
-      onChange: e => setForm(f => ({
-        ...f,
-        correct_answer: e.target.value
-      })),
-      placeholder: form.evaluation_mode === 'ai' ? "Expected answer is required for AI evaluation..." : "Expected answer (optional)"
-    }))
-  ), form.type === 'coding' && /*#__PURE__*/React.createElement(React.Fragment, null,
-    /*#__PURE__*/React.createElement("div", {
-      className: "form-group"
-    }, /*#__PURE__*/React.createElement("label", null, "Programming Language"), /*#__PURE__*/React.createElement("select", {
-      value: form.language || 'python',
-      onChange: e => {
-        const lang = e.target.value;
-        setForm(f => ({
-          ...f,
-          language: lang,
-          starter_code: f.starter_code ? f.starter_code : (
-            lang === 'javascript' ? 'function solution() {\n    // Your code here\n}\n\nconsole.log(solution());' :
-            lang === 'java' ? 'public class Main {\n    public static void main(String[] args) {\n        // Your code here\n    }\n}' :
-            lang === 'cpp' ? '#include <iostream>\nusing namespace std;\n\nint main() {\n    // Your code here\n    return 0;\n}' :
-            lang === 'c' ? '#include <stdio.h>\n\nint main() {\n    // Your code here\n    return 0;\n}' :
-            lang === 'go' ? 'package main\n\nimport "fmt"\n\nfunc main() {\n    // Your code here\n}' :
-            'def solution():\n    # Your code here\n    pass\n\nprint(solution())'
-          ),
-          correct_answer: f.correct_answer ? f.correct_answer : (
-            lang === 'javascript' ? 'function solution() {\n    // Write reference solution here\n    return 0;\n}\n\nconsole.log(solution());' :
-            lang === 'java' ? 'public class Main {\n    public static int solution() {\n        // Write reference solution here\n        return 0;\n    }\n    public static void main(String[] args) {\n        System.out.println(solution());\n    }\n}' :
-            lang === 'cpp' ? '#include <iostream>\nusing namespace std;\n\nint solution() {\n    // Write reference solution here\n    return 0;\n}\n\nint main() {\n    cout << solution() << endl;\n    return 0;\n}' :
-            lang === 'c' ? '#include <stdio.h>\n\nint solution() {\n    // Write reference solution here\n    return 0;\n}\n\nint main() {\n    printf("%d\\n", solution());\n    return 0;\n}' :
-            lang === 'go' ? 'package main\n\nimport "fmt"\n\nfunc solution() int {\n    // Write reference solution here\n    return 0\n}\n\nfunc main() {\n    fmt.Println(solution())\n}' :
-            'def solution():\n    # Write reference solution here\n    return 0\n\nprint(solution())'
-          )
-        }));
-      },
-      style: {
-        width: '100%',
-        padding: '8px 10px',
-        borderRadius: 6,
-        border: '1px solid var(--border)',
-        background: 'var(--surface2)',
-        color: 'var(--text)'
-      }
-    }, [
-      {value: 'python', label: 'Python 3'},
-      {value: 'javascript', label: 'JavaScript'},
-      {value: 'java', label: 'Java'},
-      {value: 'cpp', label: 'C++'},
-      {value: 'c', label: 'C'},
-      {value: 'go', label: 'Go'}
-    ].map(opt => React.createElement("option", {key: opt.value, value: opt.value}, opt.label)))),
-    /*#__PURE__*/React.createElement("div", {
-      className: "form-group"
-    }, /*#__PURE__*/React.createElement("label", null, "Starter Code ", /*#__PURE__*/React.createElement("span", {
-      className: "text-muted text-xs"
-    }, "(optional \u2014 pre-filled in student editor)")), /*#__PURE__*/React.createElement("textarea", {
-      rows: 4,
-      value: form.starter_code || '',
-      onChange: e => setForm(f => ({
-        ...f,
-        starter_code: e.target.value
-      })),
-      placeholder: form.language === 'javascript' ? '// JS starter code' : form.language === 'java' ? '// Java starter code' : form.language === 'cpp' ? '// C++ starter code' : form.language === 'go' ? '// Go starter code' : '# Python starter code',
-      style: {
-        fontFamily: "'Fira Code',Consolas,monospace",
-        fontSize: '0.85rem',
-        background: '#0d1117',
-        color: '#c9d1d9'
-      }
-    })),
-    /*#__PURE__*/React.createElement("div", {
-      className: "form-group"
-    }, /*#__PURE__*/React.createElement("label", null, "Reference Solution / Solution Code ", /*#__PURE__*/React.createElement("span", {
-      className: "text-muted text-xs"
-    }, "(required for output validation)")), /*#__PURE__*/React.createElement("textarea", {
-      rows: 4,
-      value: form.correct_answer || '',
-      onChange: e => setForm(f => ({
-        ...f,
-        correct_answer: e.target.value
-      })),
-      placeholder: form.language === 'javascript' ? '// JS solved reference code' : form.language === 'java' ? '// Java solved reference code' : form.language === 'cpp' ? '// C++ solved reference code' : form.language === 'go' ? '// Go solved reference code' : '# Python solved reference code',
-      style: {
-        fontFamily: "'Fira Code',Consolas,monospace",
-        fontSize: '0.85rem',
-        background: '#0d1117',
-        color: '#c9d1d9'
-      }
-    }))
+  // ─── RENDER — PREMIUM TASK PAGE v2 ───────────────────────────────────────────
+  const [taskSearch, setTaskSearch] = React.useState('');
+  const [taskFilterType, setTaskFilterType] = React.useState('all');
+  const [taskPage2, setTaskPage2] = React.useState(1);
+  const TASKS_PER_PAGE = 8;
 
-  ), /*#__PURE__*/React.createElement("div", {
-    className: "grid grid-2",
-    style: {
-      gap: 12,
-      marginBottom: 16
+  const filteredTasks2 = tasks.filter(t => {
+    if (taskFilterType !== 'all' && t.type !== taskFilterType) return false;
+    if (taskSearch) {
+      const q = taskSearch.toLowerCase();
+      return (t.question || '').toLowerCase().includes(q) || (t.topic || '').toLowerCase().includes(q);
     }
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "form-group",
-    style: {
-      marginBottom: 0
-    }
-  }, /*#__PURE__*/React.createElement("label", null, "Topic"), /*#__PURE__*/React.createElement("input", {
-    value: form.topic,
-    onChange: e => setForm(f => ({
-      ...f,
-      topic: e.target.value
-    })),
-    placeholder: "e.g. Algebra, Photosynthesis"
-  })), /*#__PURE__*/React.createElement("div", {
-    className: "form-group",
-    style: {
-      marginBottom: 0
-    }
-  }, /*#__PURE__*/React.createElement("label", null, "Difficulty"), /*#__PURE__*/React.createElement("select", {
-    value: form.difficulty,
-    onChange: e => setForm(f => ({
-      ...f,
-      difficulty: e.target.value
-    }))
-  }, /*#__PURE__*/React.createElement("option", {
-    value: "easy"
-  }, "\uD83D\uDFE2 Easy (+5 pts)"), /*#__PURE__*/React.createElement("option", {
-    value: "medium"
-  }, "\uD83D\uDFE1 Medium (+10 pts)"), /*#__PURE__*/React.createElement("option", {
-    value: "hard"
-  }, "\uD83D\uDD34 Hard (+20 pts)")))), /*#__PURE__*/React.createElement("div", {
-    style: {
-      marginBottom: 16
-    }
-  }, /*#__PURE__*/React.createElement(TimerPresets, {
-    value: form.time_limit,
-    onChange: v => setForm(f => ({
-      ...f,
-      time_limit: v
-    }))
-  })), /*#__PURE__*/React.createElement("div", {
-    className: "grid grid-2",
-    style: {
-      gap: 12,
-      marginBottom: 16
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "form-group",
-    style: {
-      marginBottom: 0
-    }
-  }, /*#__PURE__*/React.createElement("label", null, "\uD83D\uDCA1 Hint / Clue ", /*#__PURE__*/React.createElement("span", {
-    className: "text-muted text-xs"
-  }, "(optional)")), /*#__PURE__*/React.createElement("input", {
-    value: form.hint,
-    onChange: e => setForm(f => ({
-      ...f,
-      hint: e.target.value
-    })),
-    placeholder: "Give students a hint\u2026"
-  })), /*#__PURE__*/React.createElement("div", {
-    className: "form-group",
-    style: {
-      marginBottom: 0
-    }
-  }, /*#__PURE__*/React.createElement("label", null, "Hint Visibility"), /*#__PURE__*/React.createElement("select", {
-    value: form.hint_visibility,
-    onChange: e => setForm(f => ({
-      ...f,
-      hint_visibility: e.target.value
-    }))
-  }, /*#__PURE__*/React.createElement("option", {
-    value: "always"
-  }, "Always visible"), /*#__PURE__*/React.createElement("option", {
-    value: "on_request"
-  }, "On request only"), /*#__PURE__*/React.createElement("option", {
-    value: "after_submission"
-  }, "After submission")))), /*#__PURE__*/React.createElement("div", {
-    style: {
-      background: 'var(--surface2)',
-      borderRadius: 10,
-      padding: '14px 16px',
-      marginBottom: 16
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      fontSize: '0.85rem',
-      fontWeight: 600,
-      marginBottom: 10,
-      color: 'var(--text2)'
-    }
-  }, "\uD83D\uDCE1 Send To"), /*#__PURE__*/React.createElement("div", {
-    className: "flex gap-8",
-    style: {
-      flexWrap: 'wrap',
-      marginBottom: 8
-    }
-  }, ['class', 'student'].map(t => /*#__PURE__*/React.createElement("button", {
-    key: t,
-    type: "button",
-    className: `btn btn-sm ${form.send_to === t ? 'btn-primary' : 'btn-ghost'}`,
-    onClick: () => setForm(f => ({
-      ...f,
-      send_to: t
-    }))
-  }, t === 'class' ? '🌐 Entire Class' : '👤 Specific Student'))), form.send_to === 'student' && /*#__PURE__*/React.createElement("select", {
-    value: form.target_group,
-    onChange: e => setForm(f => ({
-      ...f,
-      target_group: e.target.value
-    }))
-  }, /*#__PURE__*/React.createElement("option", {
-    value: ""
-  }, "\u2014 Select student \u2014"), activeStudents.map(s => /*#__PURE__*/React.createElement("option", {
-    key: s.id,
-    value: s.id
-  }, s.name))), /*#__PURE__*/React.createElement("div", {
-    className: "text-xs text-muted",
-    style: {
-      marginTop: 6
-    }
-  }, "Task is saved to queue. Use ", /*#__PURE__*/React.createElement("strong", null, "\"Save & Send\""), " below to push instantly, or use \"Send Next Task\" for sequential delivery.")), /*#__PURE__*/React.createElement("div", {
-    className: "flex gap-12",
-    style: {
-      flexWrap: 'wrap'
-    }
-  }, /*#__PURE__*/React.createElement("button", {
-    className: "btn btn-primary btn-lg",
-    onClick: createTask,
-    disabled: loading || saveSending,
-    style: {
-      flex: 1,
-      minWidth: 140
-    }
-  }, loading ? '💾 Saving…' : '💾 Save Task'), /*#__PURE__*/React.createElement("button", {
-    className: "btn btn-success btn-lg",
-    onClick: createAndSendTask,
-    disabled: loading || saveSending || sessionStatus !== 'active',
-    title: sessionStatus !== 'active' ? 'Start session first to send' : 'Save and immediately send to students',
-    style: {
-      flex: 1,
-      minWidth: 160
-    }
-  }, saveSending ? '📤 Saving & Sending…' : '📤 Save & Send'), /*#__PURE__*/React.createElement("button", {
-    className: "btn btn-ghost",
-    onClick: resetForm
-  }, "\u21BA Reset"), /*#__PURE__*/React.createElement("button", {
-    className: "btn btn-ghost",
-    onClick: () => setTab('list')
-  }, "\u2190 Back to List")))), tab === 'ai' && /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(AIQuestionGenerator, {
-    onAdd: addAIQuestion
-  }), /*#__PURE__*/React.createElement("div", {
-    className: "card-sm text-sm text-muted"
-  }, "Generated questions are automatically saved to your task list. Switch to the \uD83D\uDCCB Tasks tab to review and send them.")), tab === 'upload' && /*#__PURE__*/React.createElement("div", {
-    className: "card"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "card-title"
-  }, "\u2B06\uFE0F Import Tasks from JSON"), /*#__PURE__*/React.createElement("div", {
-    className: "text-sm text-muted mb-16"
-  }, "Bulk-import tasks using a JSON file. Accepted format:"), /*#__PURE__*/React.createElement("pre", {
-    style: {
-      background: 'var(--surface2)',
-      padding: 14,
-      borderRadius: 8,
-      fontSize: '0.8rem',
-      marginBottom: 16,
-      overflowX: 'auto'
-    }
-  }, `[
-  {
-    "question": "What is 2+2?",
-    "type": "mcq",
-    "options": ["3","4","5","6"],
-    "correct_answer": "B",
-    "topic": "Math",
-    "difficulty": "easy",
-    "hint": "Think counting"
-  },
-  {
-    "question": "Describe photosynthesis.",
-    "type": "short",
-    "topic": "Biology",
-    "difficulty": "medium"
+    return true;
+  });
+  const totalPages2 = Math.max(1, Math.ceil(filteredTasks2.length / TASKS_PER_PAGE));
+  const pagedTasks2 = filteredTasks2.slice((taskPage2-1)*TASKS_PER_PAGE, taskPage2*TASKS_PER_PAGE);
+  const mcqCount2 = tasks.filter(t => t.type === 'mcq').length;
+  const shortCount2 = tasks.filter(t => (t.type==='short'||t.type==='short_answer') && !t.long_answer).length;
+  const longCount2 = tasks.filter(t => t.long_answer).length;
+  const codingCount2 = tasks.filter(t => t.type === 'coding').length;
+
+  function renderTaskListView2() {
+    return React.createElement('div', { className: 'tk2-page' },
+      React.createElement('div', { className: 'tk2-header' },
+        React.createElement('div', { className: 'tk2-header-left' },
+          React.createElement('div', { className: 'tk2-breadcrumb' },
+            React.createElement('span', null, '\uD83D\uDCCB Tasks'),
+            React.createElement('span', { className: 'tk2-breadcrumb-sep' }, '\u203A'),
+            React.createElement('span', { className: 'tk2-breadcrumb-current' }, 'List')
+          )
+        ),
+        React.createElement('div', { className: 'tk2-header-btns' },
+          React.createElement('button', { className: 'tk2-btn-secondary', onClick: () => setShowPDFModal(true), disabled: !tasks.length }, '\uD83D\uDCC4 Export PDF'),
+          React.createElement('button', {
+            className: 'tk2-btn-secondary',
+            onClick: sendNextTask,
+            disabled: !tasks.length || sessionStatus !== 'active',
+            style: { color:'#4ade80', borderColor:'rgba(34,197,94,0.3)' }
+          }, '\uD83D\uDCE4 Send Next Task'),
+          React.createElement('button', { className: 'tk2-btn-ai', onClick: () => setTab('create') }, '+ Create Task')
+        )
+      ),
+      React.createElement('div', { className: 'tk2-stats-row' },
+        [
+          { label:'Total Tasks', val:tasks.length, sub:'Task library', icon:'\uD83D\uDCCB', color:'#a5b4fc' },
+          { label:'MCQ Tasks', val:mcqCount2, sub: tasks.length ? Math.round(mcqCount2*100/tasks.length)+'% of total' : '0%', icon:'\uD83D\uDD18', color:'#7c5cff' },
+          { label:'Short Answer', val:shortCount2, sub: tasks.length ? Math.round(shortCount2*100/tasks.length)+'% of total' : '0%', icon:'\u270D\uFE0F', color:'#f59e0b' },
+          { label:'Long + Coding', val:longCount2+codingCount2, sub: tasks.length ? Math.round((longCount2+codingCount2)*100/tasks.length)+'% of total' : '0%', icon:'\uD83D\uDCDD', color:'#22c55e' }
+        ].map((s,i) => React.createElement('div', { key:i, className:'tk2-stat-card' },
+          React.createElement('div', { className:'tk2-stat-label' }, s.label),
+          React.createElement('div', { className:'tk2-stat-val', style:{color:s.color} }, s.val),
+          React.createElement('div', { className:'tk2-stat-sub' }, s.sub),
+          React.createElement('div', { className:'tk2-stat-icon' }, s.icon)
+        ))
+      ),
+      React.createElement('div', { className:'tk2-filters-row' },
+        React.createElement('select', {
+          className:'tk2-select',
+          value:taskFilterType,
+          onChange: e => { setTaskFilterType(e.target.value); setTaskPage2(1); }
+        },
+          React.createElement('option',{value:'all'},'All Types'),
+          React.createElement('option',{value:'mcq'},'MCQ'),
+          React.createElement('option',{value:'short'},'Short Answer'),
+          React.createElement('option',{value:'coding'},'Coding')
+        ),
+        React.createElement('div',{className:'tk2-search-wrap'},
+          React.createElement('span',{className:'tk2-search-icon'},'\uD83D\uDD0D'),
+          React.createElement('input',{
+            className:'tk2-search-input',
+            placeholder:'Search tasks\u2026',
+            value:taskSearch,
+            onChange: e => { setTaskSearch(e.target.value); setTaskPage2(1); }
+          })
+        )
+      ),
+      tasks.length === 0
+        ? React.createElement('div',{style:{textAlign:'center',padding:'48px 0',color:'rgba(148,163,184,0.5)'}},
+            React.createElement('div',{style:{fontSize:'3rem',marginBottom:12}},'\uD83D\uDCED'),
+            React.createElement('div',{style:{fontSize:'1rem',fontWeight:600,color:'#e2e8f0',marginBottom:6}},'No tasks yet'),
+            React.createElement('div',{style:{fontSize:'0.83rem',marginBottom:20}},'Create your first task or use AI to generate questions'),
+            React.createElement('button',{className:'tk2-btn-ai',onClick:()=>setTab('create')},'+ Create First Task')
+          )
+        : React.createElement('div',null,
+            pagedTasks2.map((t,i) => {
+              const idx2=(taskPage2-1)*TASKS_PER_PAGE+i;
+              const dc=t.difficulty==='easy'?'easy':t.difficulty==='hard'?'hard':'medium';
+              const isSent=sentTaskIds.has(t.id);
+              const ttype=t.type==='mcq'?'MCQ':t.type==='coding'?'\uD83D\uDCBB Coding':t.long_answer?'Long Answer':'Short Answer';
+              const ttag=t.type==='mcq'?'tk2-tag-mcq':t.type==='coding'?'tk2-tag-coding':t.long_answer?'tk2-tag-long':'tk2-tag-short';
+              return React.createElement('div',{key:t.id,className:'tk2-task-row '+dc+(isSent?' task-card-sent':'')},
+                React.createElement('div',{className:'tk2-task-num'},idx2+1),
+                React.createElement('div',{className:'tk2-task-info'},
+                  React.createElement('div',{className:'tk2-task-q'},t.question),
+                  React.createElement('div',{className:'tk2-task-tags'},
+                    React.createElement('span',{className:'tk2-tag '+ttag},ttype),
+                    t.topic && React.createElement('span',{className:'tk2-tag tk2-tag-class'},'\uD83D\uDCC2 '+t.topic),
+                    React.createElement('span',{className:'tk2-tag tk2-tag-'+dc},t.difficulty||'medium'),
+                    t.time_limit && React.createElement('span',{className:'tk2-tag',style:{background:'rgba(251,191,36,0.1)',color:'#fbbf24',borderColor:'rgba(251,191,36,0.2)'}},'\u23F1 '+t.time_limit+'s')
+                  )
+                ),
+                isSent && React.createElement('span',{className:'sent-badge'},'\u2713 Sent'),
+                React.createElement('div',{className:'tk2-task-actions'},
+                  React.createElement('button',{
+                    className:'tk2-action-btn send',
+                    disabled:sendingTaskId===t.id||sessionStatus!=='active',
+                    onClick:e=>{e.stopPropagation();sendTask(t.id,'all');},
+                    title:sessionStatus!=='active'?'Start session first':'Send to entire class'
+                  },sendingTaskId===t.id?'\u23F3':'\uD83C\uDF10 Send All'),
+                  React.createElement('button',{
+                    className:'tk2-action-btn',
+                    style:{background:'rgba(56,189,248,0.1)',color:'#7dd3fc',border:'1px solid rgba(56,189,248,0.2)'},
+                    disabled:sessionStatus!=='active',
+                    onClick:e=>{
+                      e.stopPropagation();
+                      const sid=window.prompt('Enter student ID or name to send to:');
+                      if(sid&&sid.trim()) sendTask(t.id,'student',sid.trim());
+                    },
+                    title:'Send to specific student'
+                  },'\uD83D\uDC64 Send To'),
+                  React.createElement('button',{
+                    className:'tk2-action-btn',
+                    style:{background:'rgba(168,85,247,0.1)',color:'#c4b5fd',border:'1px solid rgba(168,85,247,0.2)'},
+                    onClick:e=>{e.stopPropagation();setExplainTask(t);},
+                    title:'AI explain this task to students'
+                  },'\uD83E\uDD16 Explain'),
+                  React.createElement('button',{
+                    className:'tk2-action-btn del',
+                    onClick:e=>{e.stopPropagation();deleteTask(t.id);},
+                    title:'Delete task'
+                  },'\uD83D\uDDD1')
+                )
+              );
+            }),
+            totalPages2>1 && React.createElement('div',{className:'tk2-pagination'},
+              React.createElement('button',{className:'tk2-page-btn',disabled:taskPage2===1,onClick:()=>setTaskPage2(p=>Math.max(1,p-1))},'\u2190'),
+              Array.from({length:totalPages2},(_,i)=>React.createElement('button',{key:i,className:'tk2-page-btn'+(taskPage2===i+1?' active':''),onClick:()=>setTaskPage2(i+1)},i+1)),
+              React.createElement('button',{className:'tk2-page-btn',disabled:taskPage2===totalPages2,onClick:()=>setTaskPage2(p=>Math.min(totalPages2,p+1))},'\u2192')
+            )
+          )
+    );
   }
-]`), /*#__PURE__*/React.createElement("label", {
-    className: "upload-zone",
-    style: {
-      cursor: 'pointer',
-      position: 'relative'
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "upload-icon"
-  }, "\uD83D\uDCC2"), /*#__PURE__*/React.createElement("div", null, uploadFile ? `✓ ${uploadFile.name}` : 'Click to select JSON file'), /*#__PURE__*/React.createElement("input", {
-    type: "file",
-    accept: ".json",
-    style: {
-      display: 'none'
-    },
-    onChange: e => setUploadFile(e.target.files[0])
-  })), /*#__PURE__*/React.createElement("div", {
-    className: "flex gap-8 mt-16"
-  }, /*#__PURE__*/React.createElement("button", {
-    className: "btn btn-primary",
-    onClick: uploadJSON,
-    disabled: !uploadFile || loading
-  }, loading ? 'Importing…' : '⬆️ Import Tasks'), uploadFile && /*#__PURE__*/React.createElement("button", {
-    className: "btn btn-ghost",
-    onClick: () => setUploadFile(null)
-  }, "\u2715 Clear"))));
+
+  function renderCreateView2() {
+    const tcards=[
+      {id:'mcq',icon:'\uD83D\uDD18',ic:'mcq',name:'MCQ',desc:'4 options, one correct answer'},
+      {id:'short',icon:'\u270D\uFE0F',ic:'short',name:'Short Answer',desc:'Brief typed response'},
+      {id:'long',icon:'\uD83D\uDCDD',ic:'long',name:'Long Answer',desc:'Detailed written response'},
+      {id:'coding',icon:'\uD83D\uDCBB',ic:'coding',name:'Coding',desc:'Python code challenge'}
+    ];
+    const atype=form.type==='coding'?'coding':form.long_answer?'long':(form.type==='short'||form.type==='short_answer')?'short':'mcq';
+    return React.createElement('div',{className:'tk2-page'},
+      React.createElement('div',{className:'tk2-header'},
+        React.createElement('div',{className:'tk2-header-left'},
+          React.createElement('div',{className:'tk2-breadcrumb'},
+            React.createElement('span',{style:{cursor:'pointer',color:'#a5b4fc'},onClick:()=>setTab('list')},'\u2190 Tasks'),
+            React.createElement('span',{className:'tk2-breadcrumb-sep'},'\u203A'),
+            React.createElement('span',{className:'tk2-breadcrumb-current'},'Create Task')
+          )
+        ),
+        React.createElement('div',{className:'tk2-header-btns'},
+          React.createElement('button',{className:'tk2-btn-ai',onClick:()=>setTab('ai')},'\uD83E\uDD16 AI Generate'),
+          React.createElement('button',{className:'tk2-btn-secondary',onClick:()=>setTab('list')},'\uD83D\uDCCB Templates')
+        )
+      ),
+      React.createElement('div',{className:'tk2-create-wrap'},
+        React.createElement('div',{className:'tk2-form-section'},
+          React.createElement('div',{style:{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:16}},
+            React.createElement('div',{className:'tk2-section-heading',style:{marginBottom:0}},
+              React.createElement('span',{className:'tk2-section-num'},'1'),'Choose Task Type'),
+            React.createElement('button',{className:'tk2-save-draft-btn',style:{padding:'7px 14px',fontSize:'0.78rem'},onClick:()=>add('Draft saved','success')},'\uD83D\uDCBE Save Draft')
+          ),
+          React.createElement('div',{className:'tk2-type-cards'},
+            tcards.map(tc=>React.createElement('div',{
+              key:tc.id,
+              className:'tk2-type-card'+(atype===tc.id?' active':''),
+              onClick:()=>{
+                if(tc.id==='long') setForm(f=>({...f,type:'short',long_answer:true}));
+                else if(tc.id==='coding') setForm(f=>({...f,type:'coding',long_answer:false}));
+                else if(tc.id==='mcq') setForm(f=>({...f,type:'mcq',long_answer:false}));
+                else setForm(f=>({...f,type:'short',long_answer:false}));
+              }
+            },
+              React.createElement('div',{className:'tk2-type-card-icon '+tc.ic},tc.icon),
+              React.createElement('div',{className:'tk2-type-card-name'},tc.name),
+              React.createElement('div',{className:'tk2-type-card-desc'},tc.desc)
+            ))
+          )
+        ),
+        React.createElement('div',{className:'tk2-form-section'},
+          React.createElement('div',{className:'tk2-section-heading'},
+            React.createElement('span',{className:'tk2-section-num'},'2'),
+            atype==='mcq'?'MCQ Details':atype==='coding'?'Coding Details':atype==='long'?'Long Answer Details':'Short Answer Details'
+          ),
+          React.createElement('div',{style:{marginBottom:16}},
+            React.createElement('div',{className:'tk2-field-label'},'Question ',React.createElement('span',{className:'tk2-field-required'},'*')),
+            React.createElement('textarea',{
+              className:'tk2-input tk2-textarea',
+              placeholder:'Type your question here\u2026',
+              value:form.question,
+              onChange:e=>setForm(f=>({...f,question:e.target.value})),
+              rows:3
+            })
+          ),
+          atype==='mcq' && React.createElement('div',{style:{marginBottom:16}},
+            React.createElement('div',{className:'tk2-field-label'},'Answer Options',
+              React.createElement('span',{style:{color:'rgba(148,163,184,0.4)',fontWeight:400,textTransform:'none',fontSize:'0.73rem',marginLeft:6}},'(select correct answer)')),
+            ['A','B','C','D'].map((letter,j)=>React.createElement('div',{key:j,className:'tk2-option-row'},
+              React.createElement('input',{type:'radio',name:'correct_opt',value:letter,checked:form.correct_answer===letter,onChange:()=>setForm(f=>({...f,correct_answer:letter})),className:'tk2-option-radio'}),
+              React.createElement('span',{className:'tk2-option-letter',style:{color:form.correct_answer===letter?'#22c55e':undefined}},letter+'.'),
+              React.createElement('input',{className:'tk2-input',style:{flex:1,padding:'9px 12px'},placeholder:'Option '+letter,value:form.options[j]||'',onChange:e=>setOpt(j,e.target.value)}),
+              React.createElement('button',{className:'tk2-option-del',onClick:()=>setOpt(j,'')},'\uD83D\uDDD1')
+            )),
+            !form.correct_answer && React.createElement('div',{className:'tk2-correct-hint'},'\u26A0 Select the correct answer')
+          ),
+          atype==='coding' && React.createElement('div',{style:{marginBottom:16}},
+            React.createElement('div',{className:'tk2-field-label'},'Starter Code'),
+            React.createElement('textarea',{
+              className:'tk2-input tk2-textarea',style:{fontFamily:'monospace',fontSize:'0.82rem',minHeight:100},
+              placeholder:'# Write starter code here\ndef solve():\n    pass',
+              value:form.starter_code||'',
+              onChange:e=>setForm(f=>({...f,starter_code:e.target.value})),
+              rows:5
+            })
+          ),
+          (atype==='short'||atype==='long') && React.createElement('div',{style:{marginBottom:16}},
+            React.createElement('div',{className:'tk2-field-label'},'Model Answer'),
+            React.createElement('textarea',{
+              className:'tk2-input tk2-textarea',
+              placeholder:'Enter expected answer or key points\u2026',
+              value:form.correct_answer||'',
+              onChange:e=>setForm(f=>({...f,correct_answer:e.target.value})),
+              rows:3
+            })
+          ),
+          React.createElement('div',{className:'tk2-fields-row',style:{marginBottom:16}},
+            React.createElement('div',null,
+              React.createElement('div',{className:'tk2-field-label'},'Topic'),
+              React.createElement('input',{className:'tk2-input',placeholder:'e.g. Photosynthesis',value:form.topic||'',onChange:e=>setForm(f=>({...f,topic:e.target.value}))})
+            ),
+            React.createElement('div',null,
+              React.createElement('div',{className:'tk2-field-label'},'Difficulty'),
+              React.createElement('div',{className:'tk2-difficulty-row'},
+                ['easy','medium','hard'].map(d=>React.createElement('button',{
+                  key:d,
+                  className:'tk2-diff-pill '+d+(form.difficulty===d?' active':''),
+                  onClick:()=>setForm(f=>({...f,difficulty:d}))
+                },d==='easy'?'\uD83D\uDFE2 Easy':d==='medium'?'\uD83D\uDFE1 Medium':'\uD83D\uDD34 Hard'))
+              )
+            )
+          ),
+          React.createElement('div',{style:{marginBottom:16}},
+            React.createElement('div',{className:'tk2-field-label'},'\u23F1 Timer (optional)'),
+            React.createElement('div',{className:'tk2-timer-row'},
+              [{v:null,l:'None'},{v:'30',l:'30s'},{v:'60',l:'1 min'},{v:'120',l:'2 min'},{v:'300',l:'5 min'}].map(opt=>React.createElement('button',{
+                key:opt.l,
+                className:'tk2-timer-chip'+(String(form.time_limit||'')===String(opt.v||'')?' active':''),
+                onClick:()=>setForm(f=>({...f,time_limit:opt.v}))
+              },opt.l))
+            )
+          ),
+          React.createElement('div',{className:'tk2-fields-row',style:{marginBottom:16}},
+            React.createElement('div',null,
+              React.createElement('div',{className:'tk2-field-label'},'Hint / Clue (optional)'),
+              React.createElement('input',{className:'tk2-input',placeholder:'Give students a hint\u2026',value:form.hint||'',onChange:e=>setForm(f=>({...f,hint:e.target.value}))})
+            ),
+            React.createElement('div',null,
+              React.createElement('div',{className:'tk2-field-label'},'Hint Visibility'),
+              React.createElement('select',{className:'tk2-hint-select',value:form.hint_visibility,onChange:e=>setForm(f=>({...f,hint_visibility:e.target.value}))},
+                React.createElement('option',{value:'on_request'},'\uD83D\uDC41 On request only'),
+                React.createElement('option',{value:'always'},'\u2705 Always visible'),
+                React.createElement('option',{value:'never'},'\uD83D\uDEAB Never show')
+              )
+            )
+          ),
+          React.createElement('div',null,
+            React.createElement('div',{className:'tk2-field-label'},'Send To'),
+            React.createElement('div',{className:'tk2-send-to-row'},
+              [{v:'all',l:'\uD83C\uDF10 Entire Class'},{v:'student',l:'\uD83D\uDC64 Specific Student'}].map(opt=>React.createElement('button',{
+                key:opt.v,
+                className:'tk2-send-btn'+(form.send_to===opt.v?' active':''),
+                onClick:()=>setForm(f=>({...f,send_to:opt.v}))
+              },opt.l))
+            )
+          )
+        ),
+        React.createElement('div',{className:'tk2-cta-row'},
+          React.createElement('button',{className:'tk2-save-task-btn',onClick:createTask,disabled:loading},loading?'\u23F3 Saving\u2026':'\uD83D\uDCBE Save Task'),
+          React.createElement('button',{className:'tk2-save-send-btn',onClick:()=>createAndSendTask('all'),disabled:saveSending},saveSending?'\u23F3 Sending\u2026':'\uD83D\uDE80 Save & Send'),
+          React.createElement('button',{className:'tk2-reset-btn',onClick:resetForm,title:'Reset form'},'\u21BA')
+        )
+      )
+    );
+  }
+
+  return React.createElement("div", { className: "page" },
+    showPDFModal && React.createElement(PDFOptionsModal, { tasks: tasks, title: "Question Bank", onClose: () => setShowPDFModal(false) }),
+    explainTask && React.createElement(AIExplainModal, {
+      task: explainTask,
+      sessionCode: sessionCode,
+      sessionStatus: sessionStatus,
+      apiKey: typeof geminiApiKey !== 'undefined' ? geminiApiKey : (localStorage.getItem('cm_gemini_key')||''),
+      onClose: () => setExplainTask(null)
+    }),
+    tab === 'list' && renderTaskListView2(),
+    tab === 'create' && renderCreateView2(),
+    tab === 'ai' && React.createElement('div', { className: 'tk2-page' },
+      React.createElement('div', { className: 'tk2-header' },
+        React.createElement('div', { className: 'tk2-breadcrumb' },
+          React.createElement('span', { style:{ cursor:'pointer', color:'#a5b4fc' }, onClick: () => setTab('list') }, '\u2190 Tasks'),
+          React.createElement('span', { className: 'tk2-breadcrumb-sep' }, '\u203A'),
+          React.createElement('span', { className: 'tk2-breadcrumb-current' }, 'AI Generate')
+        ),
+        React.createElement('button', { className: 'tk2-btn-secondary', onClick: () => setShowPDFModal(true), disabled: !tasks.length }, '\uD83D\uDCC4 Export PDF')
+      ),
+      React.createElement(AIQuestionGenerator, { onAdd: addAIQuestion }),
+      React.createElement('div', { style: { padding:'10px 0 0', fontSize:'0.78rem', color:'rgba(148,163,184,0.5)', display:'flex', alignItems:'center', gap:6 } },
+        '\uD83D\uDCA1 Generated questions auto-save. Switch to the ',
+        React.createElement('span', { style:{ color:'#a5b4fc', fontWeight:700, cursor:'pointer' }, onClick: () => setTab('list') }, '\uD83D\uDCCB Tasks tab'),
+        ' to review and send them.'
+      )
+    ),
+    tab === 'upload' && React.createElement("div", { className: "card" },
+      React.createElement("div", { className: "card-title" }, "\u2B06\uFE0F Import Tasks from JSON"),
+      React.createElement("div", { className: "text-sm text-muted mb-16" }, "Bulk-import tasks using a JSON file."),
+      React.createElement("label", { className: "upload-zone", style: { cursor: 'pointer' } },
+        React.createElement("div", null, uploadFile ? uploadFile.name : "\uD83D\uDCC2 Click to select JSON file or drag & drop"),
+        React.createElement("input", { type: "file", accept: ".json", style: { display: 'none' }, onChange: e => setUploadFile(e.target.files[0]) })
+      ),
+      React.createElement("div", { className: "flex gap-8 mt-16" },
+        React.createElement("button", { className: "btn btn-primary", onClick: uploadJSON, disabled: loading || !uploadFile }, loading ? "Importing\u2026" : "\uD83D\uDCE5 Import"),
+        React.createElement("button", { className: "btn btn-ghost", onClick: () => setUploadFile(null) }, "\u2715 Clear")
+      )
+    )
+  );
 }
 
 // ═════════════════════════════════════════════════════════════════
@@ -22021,9 +22117,24 @@ function chTypeBadgeClass(type) {
 
 function chFmtDate(ts) {
   if (!ts) return '';
-  const d = new Date(ts);
-  if (isNaN(d)) return ts;
-  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  // Handle both seconds (Unix) and milliseconds / ISO strings
+  let d;
+  if (typeof ts === 'number' && ts < 1e12) {
+    d = new Date(ts * 1000); // Unix seconds → ms
+  } else {
+    d = new Date(ts);
+  }
+  if (isNaN(d.getTime())) return String(ts);
+  const now = new Date();
+  const diffMs = now - d;
+  const diffMin = Math.floor(diffMs / 60000);
+  const diffHrs = Math.floor(diffMs / 3600000);
+  const diffDays = Math.floor(diffMs / 86400000);
+  if (diffMin < 1) return 'Just now';
+  if (diffMin < 60) return diffMin + 'm ago';
+  if (diffHrs < 24) return diffHrs + 'h ago';
+  if (diffDays < 7) return diffDays + 'd ago';
+  return d.toLocaleDateString('en-IN', { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
 function chFmtSize(bytes) {
@@ -22684,6 +22795,36 @@ function ContentManagementPage({ sessionCode, tasks, teacherName }) {
             onClick: () => setOpenMenuIdx(null)
           }, '⬇ Download'),
           React.createElement('button', { className: 'cm2-action-item', onClick: () => { togglePin(f); setOpenMenuIdx(null); } }, f.pinned ? '📍 Unpin' : '📌 Pin to top'),
+          React.createElement('div', { className: 'cm2-action-divider' }),
+          /* Share buttons */
+          React.createElement('div', { className: 'cm2-share-label' }, '🔗 Share via'),
+          React.createElement('button', {
+            className: 'cm2-action-item whatsapp',
+            onClick: () => {
+              const url = fileUrl || window.location.href;
+              const text = encodeURIComponent((f.title || f.name || 'Resource') + ': ' + url);
+              window.open('https://wa.me/?text=' + text, '_blank');
+              setOpenMenuIdx(null);
+            }
+          }, '💬 WhatsApp'),
+          React.createElement('button', {
+            className: 'cm2-action-item telegram',
+            onClick: () => {
+              const url = encodeURIComponent(fileUrl || window.location.href);
+              const text = encodeURIComponent(f.title || f.name || 'Resource');
+              window.open('https://t.me/share/url?url=' + url + '&text=' + text, '_blank');
+              setOpenMenuIdx(null);
+            }
+          }, '✈️ Telegram'),
+          React.createElement('button', {
+            className: 'cm2-action-item instagram',
+            onClick: () => {
+              navigator.clipboard.writeText(fileUrl || window.location.href).then(() => {
+                add('Link copied! Paste in Instagram', 'success');
+              }).catch(() => add('Copy the link manually', 'info'));
+              setOpenMenuIdx(null);
+            }
+          }, '📸 Instagram (copy link)'),
           React.createElement('div', { className: 'cm2-action-divider' }),
           React.createElement('button', { className: 'cm2-action-item danger', onClick: () => { deleteFile(f); setOpenMenuIdx(null); } }, '🗑 Delete')
         )
@@ -25367,7 +25508,12 @@ function CommunicationPage({
   const SUBTITLES = ['Active in class','Learning enthusiast','Asking questions','Engaged student','Problem solver','Code explorer','Concept learner','Future engineer'];
   const studentSubtitle = id => { let h=0; for(let i=0;i<(id||'').length;i++) h=(h*31+id.charCodeAt(i))&0xffffffff; return SUBTITLES[Math.abs(h)%SUBTITLES.length]; };
   const initials = str => (str||'?').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
-  const fmtTime = ts => ts ? new Date(ts).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}) : '';
+  const fmtTime = ts => {
+    if (!ts) return '';
+    const d = (typeof ts === 'number' && ts < 1e12) ? new Date(ts * 1000) : new Date(ts);
+    if (isNaN(d.getTime())) return '';
+    return d.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
+  };
 
   // ── Data loading ──
   useEffect(() => { loadAll(); }, [tab]);
@@ -25787,7 +25933,47 @@ function CommunicationPage({
     hands:  { icon:'\u270B', title:'Raised Hands',   sub:'Students who raised their hand' }
   };
 
+  // ── Kick handler ──
+  async function handleKickStudent(studentId) {
+    try {
+      await apiFetch('/api/session/' + sessionCode + '/kick/' + studentId, { method: 'POST' });
+      setConfirmKick(null);
+      add('Student removed from session', 'success');
+    } catch(e) {
+      add('Could not remove student: ' + (e.message || 'error'), 'error');
+      setConfirmKick(null);
+    }
+  }
+
   return React.createElement('div', { className: 'comm-v2-page' },
+
+    /* Confirm Kick Modal */
+    confirmKick && React.createElement('div', {
+      style: { position:'fixed', inset:0, background:'rgba(0,0,0,0.65)', zIndex:9999, display:'flex', alignItems:'center', justifyContent:'center' },
+      onClick: () => setConfirmKick(null)
+    },
+      React.createElement('div', {
+        style: { background:'linear-gradient(135deg,rgba(16,18,42,.98),rgba(22,24,56,.98))', border:'1px solid rgba(239,68,68,0.3)', borderRadius:16, padding:'24px 28px', maxWidth:360, width:'90%', boxShadow:'0 20px 60px rgba(0,0,0,0.5)' },
+        onClick: e => e.stopPropagation()
+      },
+        React.createElement('div', { style:{ fontSize:'2rem', textAlign:'center', marginBottom:12 } }, '⚠️'),
+        React.createElement('div', { style:{ fontSize:'1rem', fontWeight:800, color:'#e2e8f0', textAlign:'center', marginBottom:8 } }, 'Remove Student?'),
+        React.createElement('div', { style:{ fontSize:'0.85rem', color:'rgba(148,163,184,0.75)', textAlign:'center', marginBottom:20, lineHeight:1.5 } },
+          React.createElement('strong', { style:{ color:'#f87171' } }, confirmKick.name),
+          ' will be disconnected from the session.'
+        ),
+        React.createElement('div', { style:{ display:'flex', gap:10 } },
+          React.createElement('button', {
+            style:{ flex:1, padding:'10px', borderRadius:10, background:'rgba(255,255,255,0.05)', border:'1px solid rgba(99,102,241,0.2)', color:'#94a3b8', cursor:'pointer', fontWeight:600, fontSize:'0.85rem', fontFamily:'var(--db-font)' },
+            onClick: () => setConfirmKick(null)
+          }, 'Cancel'),
+          React.createElement('button', {
+            style:{ flex:1, padding:'10px', borderRadius:10, background:'linear-gradient(135deg,#dc2626,#b91c1c)', border:'none', color:'#fff', cursor:'pointer', fontWeight:700, fontSize:'0.85rem', fontFamily:'var(--db-font)', boxShadow:'0 4px 14px rgba(220,38,38,0.4)' },
+            onClick: () => handleKickStudent(confirmKick.id)
+          }, '✖ Remove')
+        )
+      )
+    ),
 
     /* ════════ LEFT PANEL ════════ */
     React.createElement('div', { className: 'comm-v2-left' },
@@ -25868,38 +26054,64 @@ function CommunicationPage({
               ...(tab === 'doubts' ? renderDoubts() : renderHands())
             ),
 
-        /* Input bar — only on global tab */
-        tab === 'global' && React.createElement('div', { className: 'comm-v2-input-area', style: { flexDirection: 'column', gap: 0, padding: 0 } },
+        /* Input bar — Premium Redesign — only on global tab */
+        tab === 'global' && React.createElement('div', { className: 'tk2-chat-input-wrap' },
+          // Hidden file input
+          React.createElement('input', {
+            ref: fileInputRef, type: 'file', style: { display: 'none' },
+            accept: 'image/*,.pdf,.docx,.pptx,.txt',
+            onChange: handleFileUpload
+          }),
           // Reply preview
-          replyTo && React.createElement('div', { className: 'chat-reply-preview' },
+          replyTo && React.createElement('div', { className: 'tk2-chat-reply-preview' },
             React.createElement('span', null,
-              React.createElement('strong', null, replyTo.sender_name + ':'),
+              React.createElement('strong', { style:{ color:'#c4b5fd' } }, replyTo.sender_name + ': '),
               (replyTo.content || '').slice(0, 70) + ((replyTo.content || '').length > 70 ? '…' : '')
             ),
-            React.createElement('button', { className: 'chat-reply-preview-dismiss', onClick: () => setReplyTo(null) }, '✕')
+            React.createElement('button', { className: 'tk2-chat-reply-close', onClick: () => setReplyTo(null) }, '✕')
           ),
-          React.createElement('div', { style: { display: 'flex', alignItems: 'center', gap: 6, padding: '10px 14px' } },
-            // Hidden file input
-            React.createElement('input', {
-              ref: fileInputRef, type: 'file', className: 'comm-v2-attach-input',
-              accept: 'image/*,.pdf,.docx,.pptx,.txt',
-              onChange: handleFileUpload
-            }),
+          React.createElement('div', { className: 'tk2-chat-input-row' },
+            // + Attachment button
             React.createElement('button', {
-              className: 'comm-v2-attach-btn', title: 'Upload file to chat',
-              onClick: () => fileInputRef.current && fileInputRef.current.click()
-            }, '📎'),
-            React.createElement('input', {
-              className: 'comm-v2-input-field',
-              value: input,
-              onChange: e => setInput(e.target.value),
-              placeholder: replyTo ? `Replying to ${replyTo.sender_name}…` : 'Type your message…',
-              disabled: !chatEnabled,
-              onKeyDown: e => e.key === 'Enter' && sendMsg(),
-              style: { flex: 1 }
-            }),
+              className: 'tk2-chat-add-btn',
+              title: 'Attach file',
+              onClick: () => fileInputRef.current && fileInputRef.current.click(),
+              disabled: !chatEnabled
+            }, '+'),
+            // Main input container with emoji/gif
+            React.createElement('div', { className: 'tk2-chat-input-container' },
+              React.createElement('textarea', {
+                className: 'tk2-chat-msg-input',
+                rows: 1,
+                value: input,
+                onChange: e => {
+                  setInput(e.target.value);
+                  // Auto-resize
+                  e.target.style.height = 'auto';
+                  e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px';
+                },
+                placeholder: replyTo ? ('Replying to ' + replyTo.sender_name + '…') : (!chatEnabled ? 'Chat disabled…' : 'Type your message…'),
+                disabled: !chatEnabled,
+                onKeyDown: e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMsg(); } }
+              }),
+              React.createElement('button', {
+                className: 'tk2-chat-emoji-btn',
+                title: 'Emoji',
+                onClick: () => {
+                  // cycle through quick emojis
+                  const emojis = ['😊','👍','🔥','❤️','😂','🎉','👏','🤔'];
+                  setInput(prev => prev + emojis[Math.floor(Math.random()*emojis.length)]);
+                }
+              }, '😊'),
+              React.createElement('button', {
+                className: 'tk2-chat-gif-btn',
+                title: 'GIF',
+                onClick: () => add('GIF support coming soon!', 'info')
+              }, 'GIF')
+            ),
+            // Circular send button
             React.createElement('button', {
-              className: 'comm-v2-send-btn',
+              className: 'tk2-chat-send-btn',
               onClick: sendMsg,
               disabled: !chatEnabled || !input.trim()
             }, SendIcon)
@@ -25951,8 +26163,17 @@ function CommunicationPage({
                   ),
                   React.createElement('div', { className: 'comm-v2-student-info' },
                     React.createElement('div', { className: 'comm-v2-student-name' }, s.name || s.display_name || s.id),
-                    React.createElement('div', { className: 'comm-v2-student-sub' }, studentSubtitle(s.id))
-                  )
+                    React.createElement('div', { className: 'comm-v2-student-sub' },
+                      suspendedStudents.has(s.id)
+                        ? React.createElement('span', { style:{ color:"#f87171", fontSize:"0.67rem" } }, '🔇 Suspended')
+                        : studentSubtitle(s.id)
+                    )
+                  ),
+                  React.createElement('button', {
+                    className: 'comm-v2-student-kick-btn',
+                    title: 'Remove from session',
+                    onClick: e => { e.stopPropagation(); setConfirmKick({ id: s.id, name: s.name || s.display_name || s.id }); }
+                  }, 'x')
                 )
               )
         ),
@@ -26501,6 +26722,10 @@ No markdown, no explanation, just the raw JSON array.`,
           long: `Generate 5 long-answer/essay questions about "${topicText}" for a class assessment.
 Return ONLY a JSON array. Each object must have exactly these fields:
 {"type":"long","question":"...","correct_answer":"detailed model answer","hint":"key points to cover","difficulty":"medium|hard"}.
+No markdown, no explanation, just the raw JSON array.`,
+          coding: `Generate 5 coding challenge questions about "${topicText}" for a class assessment.
+Return ONLY a JSON array. Each object must have exactly these fields:
+{"type":"coding","question":"...","correct_answer":"expected solution approach","starter_code":"# Starter code here","hint":"algorithm hint","difficulty":"easy|medium|hard","language":"python"}.
 No markdown, no explanation, just the raw JSON array.`
         };
 
@@ -26549,9 +26774,18 @@ No markdown, no explanation, just the raw JSON array.`
             correct_answer: `A comprehensive answer should cover: 1) Definition of ${topicText}, 2) Key characteristics, 3) Real-world applications, 4) Limitations or challenges.`,
             hint: `Cover definition, characteristics, applications, and limitations`,
             difficulty: 'hard'
+          })),
+          coding: Array.from({ length: 5 }, (_, i) => ({
+            type: 'coding',
+            question: `[AI Coding ${i + 1}] Write a function related to ${topicText}.`,
+            starter_code: `# Write your solution below\ndef solve():\n    pass`,
+            correct_answer: `Implement a solution that demonstrates understanding of ${topicText}`,
+            hint: `Think about edge cases and time complexity`,
+            difficulty: i < 2 ? 'easy' : i < 4 ? 'medium' : 'hard',
+            language: 'python'
           }))
         };
-        generatedList = mocks[aiQType];
+        generatedList = mocks[aiQType] || mocks['mcq'];
       }
 
       const savedIds = [];
@@ -26838,7 +27072,8 @@ No markdown, no explanation, just the raw JSON array.`
           [
             { value: 'mcq', label: 'MCQ' },
             { value: 'short', label: '✍️ Short' },
-            { value: 'long', label: 'Long' }
+            { value: 'long', label: 'Long' },
+            { value: 'coding', label: '💻 Coding' }
           ].map(t => React.createElement("button", {
             key: t.value,
             className: `tm2-type-btn${aiQType === t.value ? ' active' : ''}`,
@@ -30789,7 +31024,25 @@ function ExcelToCSV() {
 }
 
 // ═════════════════════════════════════════════════════════════════
-//  QUIZ STUDIO  (Unified Quiz Builder + Organiser)
+//  CINEMATIC WALKTHROUGH v3 — Film Slate Edition
+// ═════════════════════════════════════════════════════════════════
+
+// targetId uses actual DOM IDs: nav-btn-<pageId>
+// The "reports" page is the analytics sidebar item (id = nav-btn-reports)
+const TOUR_STEPS_V3 = [
+  { emoji:'🎬', title:'Welcome to ClassMind!', text:'Your <strong>AI-powered classroom platform</strong> is ready. This 60-second tour will show you everything you need to run an amazing class.', targetId:'nav-btn-dashboard', page:'dashboard' },
+  { emoji:'📊', title:'Dashboard — Command Center', text:'The <strong>Dashboard</strong> shows live session stats, student activity, AI insights, and quick actions — everything at a glance.', targetId:'nav-btn-dashboard', page:'dashboard' },
+  { emoji:'📋', title:'Attendance — Smart & Automatic', text:'ClassMind <strong>auto-tracks attendance</strong> as students join. Lock records, export reports, and set minimum stay durations.', targetId:'nav-btn-attendance', page:'attendance' },
+  { emoji:'📝', title:'Tasks — Create Engaging Questions', text:'Create <strong>MCQ, Short Answer, Long Answer, and Coding</strong> tasks. Use the AI Generator to create 5 questions in seconds with a single topic keyword.', targetId:'nav-btn-tasks', page:'tasks' },
+  { emoji:'🤖', title:'AI Question Generator', text:'Type any topic like "Photosynthesis" or "Python Loops" and the AI instantly generates <strong>5 ready-to-send questions</strong> with difficulty tags.', targetId:'nav-btn-tasks', page:'tasks' },
+  { emoji:'💬', title:'Communication — Real-time Chat', text:'The <strong>Global Chat</strong> connects you with all students. Moderate messages, resolve doubts, manage raised hands, and share files instantly.', targetId:'nav-btn-communication', page:'communication' },
+  { emoji:'🙋', title:'Doubts & Raised Hands', text:'Students can raise their hands or submit doubts without interrupting class. You get <strong>live notifications</strong> and can respond from the same screen.', targetId:'nav-btn-communication', page:'communication' },
+  { emoji:'📈', title:'Analytics & Reports', text:'Deep <strong>per-question analytics</strong>, avg scores, attempt counts, and insights help you identify struggling students instantly.', targetId:'nav-btn-reports', page:'reports' },
+  { emoji:'📁', title:'Content Hub — Share Resources', text:'Upload notes, PDFs, videos and share them via <strong>WhatsApp, Telegram, or Instagram</strong>. AI auto-generates descriptions for every upload.', targetId:'nav-btn-content', page:'content' },
+  { emoji:'🧪', title:'Test Mode — Timed Assessments', text:'Launch a <strong>timed test</strong> for the whole class. The AI Test Generator creates MCQ, Short, Long, and Coding questions. Live leaderboard updates in real-time.', targetId:'nav-btn-test', page:'test' },
+  { emoji:'🎉', title:"You're Ready!", text:"You've seen all the key features. <strong>Start your session</strong> and run the most engaging class your students have ever had. You've got this! 🚀", targetId:'nav-btn-dashboard', page:'dashboard' }
+];
+
 function GuidedTour({
   setPage,
   onTourMessage,
@@ -30798,240 +31051,245 @@ function GuidedTour({
   dashboardReady,
   sessionCode
 }) {
-  const STORAGE_KEY = `walkthrough_seen_${sessionCode}`;
-  const [shouldStart, setShouldStart] = useState(false);
-  const [step, setStep] = useState(0);
-  const [rect, setRect] = useState(null);
-  const [tooltipPos, setTooltipPos] = useState({
-    top: 0,
-    left: 0
-  });
-  const [arrowStyle, setArrowStyle] = useState({});
-  const [fade, setFade] = useState(true); // for smooth step transitions
-  const tourSteps = (typeof TOUR_STEPS !== 'undefined' && Array.isArray(TOUR_STEPS)) ? TOUR_STEPS : [];
+  const STORAGE_KEY = `wt3_seen_${sessionCode}`;
+  const [shouldStart, setShouldStart] = React.useState(false);
+  const [step, setStep] = React.useState(0);
+  const [spotlightRect, setSpotlightRect] = React.useState(null);
+  const [cardStyle, setCardStyle] = React.useState({ top: 200, left: 200, width: 340 });
+  const [arrowStyle, setArrowStyle] = React.useState(null);
+  const [fading, setFading] = React.useState(false);
+  const [entering, setEntering] = React.useState(false);
+  const rafRef = React.useRef(null);
+  const stepRef = React.useRef(step);
+  stepRef.current = step;
 
-  // ── Trigger: fire ONCE per session (sessionCode-scoped localStorage key) ──
-  useEffect(() => {
+  // Trigger once per session
+  React.useEffect(() => {
     if (!dashboardReady) return;
     if (localStorage.getItem(STORAGE_KEY)) return;
     const t = setTimeout(() => {
       setStep(0);
-      setRect(null);
-      setFade(true);
+      setEntering(true);
       setShouldStart(true);
-      localStorage.setItem(STORAGE_KEY, 'true');
-    }, 400);
+      localStorage.setItem(STORAGE_KEY, '1');
+    }, 700);
     return () => clearTimeout(t);
   }, [dashboardReady]);
 
-  // ── Re-trigger: Copilot can restart tour at any time ────────────
-  useEffect(() => {
+  // Force re-trigger from Copilot
+  React.useEffect(() => {
     if (!forceTour) return;
     setStep(0);
-    setRect(null);
-    setFade(true);
+    setFading(false);
+    setEntering(true);
     setShouldStart(true);
     if (onForceTourConsumed) onForceTourConsumed();
   }, [forceTour]);
 
-  // ── Navigate to the right page when step changes ─────────────────
-  useEffect(() => {
+  // Navigate page & compute layout on step change
+  React.useEffect(() => {
     if (!shouldStart) return;
-    const s = tourSteps[step];
-    if (s?.page) setPage(s.page);
-    // Delay pos compute to allow page render
-    const t = setTimeout(() => {
-      setFade(true);
-      computePos();
-    }, 280);
-    window.addEventListener('resize', computePos);
-    return () => {
-      clearTimeout(t);
-      window.removeEventListener('resize', computePos);
-    };
+    const s = TOUR_STEPS_V3[step];
+    if (s && s.page) setPage(s.page);
+    const t = setTimeout(() => computeLayout(step), 400);
+    const onResize = () => computeLayout(stepRef.current);
+    window.addEventListener('resize', onResize);
+    return () => { clearTimeout(t); window.removeEventListener('resize', onResize); };
   }, [shouldStart, step]);
 
-  // ── Fire copilot hint when step advances ─────────────────────────
-  useEffect(() => {
+  // Fire copilot hint
+  React.useEffect(() => {
     if (!shouldStart || !onTourMessage) return;
-    const s = tourSteps[step];
-    if (s?.copilotHint) onTourMessage(s.copilotHint);
+    const s = TOUR_STEPS_V3[step];
+    if (s) onTourMessage('Now showing: ' + s.title);
   }, [step, shouldStart]);
-  function computePos() {
-    const s = tourSteps[step];
+
+  // Keyboard nav
+  React.useEffect(() => {
+    if (!shouldStart) return;
+    function onKey(e) {
+      if (e.key === 'ArrowRight' || e.key === 'Enter') next();
+      else if (e.key === 'ArrowLeft') prev();
+      else if (e.key === 'Escape') finish();
+    }
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [shouldStart, step]);
+
+  function computeLayout(currentStep) {
+    const s = TOUR_STEPS_V3[currentStep];
     if (!s) return;
     let el = document.getElementById(s.targetId);
-    if (!el && s.fallbackId) el = document.getElementById(s.fallbackId);
     if (!el) {
-      setRect(null);
+      // Graceful fallback: center the card
+      setSpotlightRect(null);
+      const vw = window.innerWidth, vh = window.innerHeight;
+      const cw = Math.min(340, vw - 24);
+      setCardStyle({ top: Math.max(60, vh / 2 - 160), left: Math.max(12, (vw - cw) / 2), width: cw });
+      setArrowStyle(null);
       return;
     }
-    el.scrollIntoView({
-      behavior: 'smooth',
-      block: 'nearest'
-    });
-    const r = el.getBoundingClientRect();
-    setRect({
-      top: r.top - 6,
-      left: r.left - 6,
-      width: r.width + 12,
-      height: r.height + 12
-    });
-    const vw = window.innerWidth;
-    const below = r.bottom + 20;
-    const above = r.top - 148;
-    const useBelow = below + 140 < window.innerHeight;
-    let tipLeft = r.left;
-    if (tipLeft + 310 > vw) tipLeft = vw - 320;
-    if (tipLeft < 10) tipLeft = 10;
-    setTooltipPos({
-      top: useBelow ? below : above,
-      left: tipLeft
-    });
-    setArrowStyle(useBelow ? {
-      top: -7,
-      left: Math.min(r.left - tipLeft + r.width / 2 - 6, 240),
-      bottom: 'auto'
-    } : {
-      bottom: -7,
-      left: Math.min(r.left - tipLeft + r.width / 2 - 6, 240),
-      top: 'auto'
+    el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    rafRef.current = requestAnimationFrame(() => {
+      const r = el.getBoundingClientRect();
+      const pad = 10;
+      setSpotlightRect({ top: r.top - pad, left: r.left - pad, width: r.width + pad * 2, height: r.height + pad * 2 });
+
+      const vw = window.innerWidth, vh = window.innerHeight;
+      const cardW = Math.min(340, vw - 24);
+      const cardH = 300;
+      const gap = 16;
+
+      let cTop, cLeft, placement;
+      const spaceRight  = vw - r.right - gap;
+      const spaceLeft   = r.left - gap;
+      const spaceBottom = vh - r.bottom - gap;
+
+      if (spaceRight >= cardW + 8) {
+        placement = 'right';
+        cLeft = r.right + gap;
+        cTop = Math.max(12, Math.min(r.top + r.height / 2 - cardH / 2, vh - cardH - 12));
+      } else if (spaceLeft >= cardW + 8) {
+        placement = 'left';
+        cLeft = r.left - cardW - gap;
+        cTop = Math.max(12, Math.min(r.top + r.height / 2 - cardH / 2, vh - cardH - 12));
+      } else if (spaceBottom >= cardH + 8) {
+        placement = 'bottom';
+        cTop = r.bottom + gap;
+        cLeft = Math.max(12, Math.min(r.left + r.width / 2 - cardW / 2, vw - cardW - 12));
+      } else {
+        placement = 'top';
+        cTop = r.top - cardH - gap;
+        cLeft = Math.max(12, Math.min(r.left + r.width / 2 - cardW / 2, vw - cardW - 12));
+      }
+
+      cTop  = Math.max(12, Math.min(cTop,  vh - cardH - 12));
+      cLeft = Math.max(12, Math.min(cLeft, vw - cardW - 12));
+      setCardStyle({ top: cTop, left: cLeft, width: cardW });
+
+      const arrowSz = 10;
+      const elCx = r.left + r.width / 2;
+      const elCy = r.top  + r.height / 2;
+      let aStyle = {};
+      if (placement === 'right') {
+        const ay = Math.max(16, Math.min(elCy - cTop - arrowSz / 2, cardH - 32));
+        aStyle = { left: -(arrowSz / 2) - 1, top: ay, borderRight: 'none', borderBottom: 'none' };
+      } else if (placement === 'left') {
+        const ay = Math.max(16, Math.min(elCy - cTop - arrowSz / 2, cardH - 32));
+        aStyle = { right: -(arrowSz / 2) - 1, top: ay, borderLeft: 'none', borderTop: 'none' };
+      } else if (placement === 'bottom') {
+        const ax = Math.max(20, Math.min(elCx - cLeft - arrowSz / 2, cardW - 28));
+        aStyle = { top: -(arrowSz / 2) - 1, left: ax, borderRight: 'none', borderBottom: 'none' };
+      } else {
+        const ax = Math.max(20, Math.min(elCx - cLeft - arrowSz / 2, cardW - 28));
+        aStyle = { bottom: -(arrowSz / 2) - 1, left: ax, borderLeft: 'none', borderTop: 'none' };
+      }
+      setArrowStyle(aStyle);
     });
   }
-  function goToStep(newStep) {
-    setFade(false);
+
+  function goStep(n) {
+    setFading(true);
+    setEntering(false);
     setTimeout(() => {
-      setStep(newStep);
-    }, 120);
+      setStep(n);
+      setFading(false);
+      setEntering(true);
+      setTimeout(() => setEntering(false), 450);
+    }, 220);
   }
-  function next() {
-    if (step >= tourSteps.length - 1) {
-      finish();
-      return;
-    }
-    goToStep(step + 1);
-  }
-  function prev() {
-    if (step === 0) return;
-    goToStep(step - 1);
-  }
-  function finish() {
-    setShouldStart(false);
-  }
-  function parseMarkdown(text) {
-    return text.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br/>');
-  }
-  if (!shouldStart || tourSteps.length === 0) return null;
-  const currentStep = tourSteps[step];
-  const isLast = step === tourSteps.length - 1;
-  const isFirst = step === 0;
-  return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
-    style: {
-      position: 'fixed',
-      inset: 0,
-      zIndex: 9000,
-      background: 'transparent',
-      pointerEvents: 'all'
+  function next() { if (step < TOUR_STEPS_V3.length - 1) goStep(step + 1); else finish(); }
+  function prev() { if (step > 0) goStep(step - 1); }
+  function finish() { setShouldStart(false); setSpotlightRect(null); if (rafRef.current) cancelAnimationFrame(rafRef.current); }
+
+  if (!shouldStart) return null;
+  const s = TOUR_STEPS_V3[step];
+  const isLast = step === TOUR_STEPS_V3.length - 1;
+  const totalSteps = TOUR_STEPS_V3.length;
+  const stripes = Array.from({ length: 14 });
+
+  return React.createElement(React.Fragment, null,
+    React.createElement('div', { className: 'wt3-overlay', onClick: function(e){ e.stopPropagation(); } }),
+
+    spotlightRect && React.createElement('div', {
+      className: 'wt3-spotlight',
+      style: { top: spotlightRect.top, left: spotlightRect.left, width: spotlightRect.width, height: spotlightRect.height }
+    }),
+
+    React.createElement('div', {
+      className: 'wt3-card' + (fading ? ' fading' : entering ? ' entering' : ''),
+      style: { top: cardStyle.top, left: cardStyle.left, width: cardStyle.width || 340 }
     },
-    onClick: e => e.stopPropagation()
-  }), rect && /*#__PURE__*/React.createElement("div", {
-    className: "tour-highlight",
-    style: {
-      position: 'fixed',
-      top: rect.top,
-      left: rect.left,
-      width: rect.width,
-      height: rect.height,
-      zIndex: 9001,
-      boxShadow: '0 0 0 9999px rgba(0,0,0,0.6), 0 0 0 3px var(--accent)',
-      borderRadius: 8,
-      background: 'transparent',
-      pointerEvents: 'none',
-      transition: 'top 0.3s ease, left 0.3s ease, width 0.3s ease, height 0.3s ease'
-    }
-  }), /*#__PURE__*/React.createElement("div", {
-    className: "tour-tooltip",
-    style: {
-      position: 'fixed',
-      top: tooltipPos.top,
-      left: tooltipPos.left,
-      zIndex: 9002,
-      opacity: fade ? 1 : 0,
-      transform: fade ? 'translateY(0)' : 'translateY(8px)',
-      transition: 'opacity 0.2s ease, transform 0.2s ease',
-      maxWidth: 320
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "tour-tooltip-arrow",
-    style: arrowStyle
-  }), /*#__PURE__*/React.createElement("div", {
-    className: "tour-progress",
-    style: {
-      display: 'flex',
-      gap: 4,
-      marginBottom: 8
-    }
-  }, tourSteps.map((_, i) => /*#__PURE__*/React.createElement("div", {
-    key: i,
-    className: `tour-dot ${i === step ? 'active' : i < step ? 'done' : ''}`
-  }))), /*#__PURE__*/React.createElement("div", {
-    className: "tour-step-num",
-    style: {
-      fontSize: '0.72rem',
-      fontWeight: 700,
-      color: 'var(--text3)',
-      textTransform: 'uppercase',
-      letterSpacing: '0.06em',
-      marginBottom: 6
-    }
-  }, "Step ", step + 1, " of ", tourSteps.length), /*#__PURE__*/React.createElement("div", {
-    className: "tour-tooltip-text",
-    dangerouslySetInnerHTML: {
-      __html: parseMarkdown(currentStep.text)
-    }
-  }), isLast && /*#__PURE__*/React.createElement("div", {
-    style: {
-      marginTop: 12,
-      padding: '10px 14px',
-      borderRadius: 8,
-      background: 'linear-gradient(135deg,rgba(99,102,241,0.18),rgba(34,197,94,0.12))',
-      border: '1px solid rgba(99,102,241,0.3)',
-      fontSize: '0.85rem',
-      fontWeight: 600,
-      color: 'var(--text)',
-      textAlign: 'center'
-    }
-  }, "\uD83D\uDE80 You're ready to run your classroom!"), /*#__PURE__*/React.createElement("div", {
-    className: "tour-actions",
-    style: {
-      display: 'flex',
-      gap: 8,
-      marginTop: 12,
-      alignItems: 'center'
-    }
-  }, /*#__PURE__*/React.createElement("button", {
-    className: "tour-btn-skip",
-    onClick: finish,
-    style: {
-      marginRight: 'auto'
-    }
-  }, isLast ? '✓ Close' : 'Skip tour'), !isFirst && /*#__PURE__*/React.createElement("button", {
-    className: "tour-btn-next",
-    style: {
-      background: 'var(--surface3)',
-      color: 'var(--text)'
-    },
-    onClick: prev
-  }, "\u2190 Prev"), !isLast && /*#__PURE__*/React.createElement("button", {
-    className: "tour-btn-next",
-    onClick: next
-  }, "Next \u2192"), isLast && /*#__PURE__*/React.createElement("button", {
-    className: "tour-btn-next",
-    onClick: finish,
-    style: {
-      background: 'linear-gradient(135deg,var(--accent),var(--green))'
-    }
-  }, "\uD83D\uDE80 Let's go!"))));
+      React.createElement('div', { className: 'wt3-scanline' }),
+
+      arrowStyle && React.createElement('div', { className: 'wt3-arrow-tip', style: arrowStyle }),
+
+      React.createElement('div', { className: 'wt3-clapper' },
+        React.createElement('div', { className: 'wt3-clapper-title-row' },
+          React.createElement('span', { className: 'wt3-prod-label' }, 'CLASSMIND'),
+          React.createElement('span', { className: 'wt3-prod-name' }, 'Feature Tour')
+        ),
+        React.createElement('div', { className: 'wt3-stripes' },
+          stripes.map(function(_, i) {
+            return React.createElement('div', {
+              key: i,
+              className: 'wt3-stripe',
+              style: { background: i % 2 === 0 ? '#12142a' : 'rgba(139,92,246,0.65)' }
+            });
+          })
+        ),
+        React.createElement('div', { className: 'wt3-clapper-grid' },
+          React.createElement('div', { className: 'wt3-clapper-cell' },
+            React.createElement('span', { className: 'wt3-clapper-key' }, 'SCENE'),
+            React.createElement('span', { className: 'wt3-clapper-val' }, String(step + 1).padStart(2, '0'))
+          ),
+          React.createElement('div', { className: 'wt3-clapper-cell' },
+            React.createElement('span', { className: 'wt3-clapper-key' }, 'OF'),
+            React.createElement('span', { className: 'wt3-clapper-val' }, String(totalSteps).padStart(2, '0'))
+          ),
+          React.createElement('div', { className: 'wt3-clapper-cell' },
+            React.createElement('span', { className: 'wt3-clapper-key' }, 'TAKE'),
+            React.createElement('span', { className: 'wt3-clapper-val' }, '01')
+          )
+        )
+      ),
+
+      React.createElement('div', { className: 'wt3-body' },
+        React.createElement('div', { className: 'wt3-progress' },
+          TOUR_STEPS_V3.map(function(_, i) {
+            return React.createElement('div', {
+              key: i,
+              className: 'wt3-dot' + (i === step ? ' active' : i < step ? ' done' : ''),
+              onClick: function() { goStep(i); },
+              title: TOUR_STEPS_V3[i].title
+            });
+          }),
+          React.createElement('span', { className: 'wt3-scene-label' },
+            'SCENE ' + String(step + 1).padStart(2,'0') + ' / ' + String(totalSteps).padStart(2,'0')
+          )
+        ),
+
+        React.createElement('span', { className: 'wt3-emoji' }, s.emoji),
+        React.createElement('div', { className: 'wt3-title' }, s.title),
+        React.createElement('div', { className: 'wt3-text', dangerouslySetInnerHTML: { __html: s.text.replace(/\n/g, '<br/>') } }),
+
+        isLast && React.createElement('div', { className: 'wt3-finish-banner' },
+          '🎯 Tip: Ask the AI Copilot to restart this tour anytime.'
+        ),
+
+        React.createElement('div', { className: 'wt3-btns' },
+          React.createElement('button', { className: 'wt3-skip-btn', onClick: finish }, isLast ? '✓ Close' : 'Skip'),
+          step > 0 && React.createElement('button', { className: 'wt3-prev-btn', onClick: prev }, '← Prev'),
+          React.createElement('button', {
+            className: 'wt3-next-btn',
+            onClick: next,
+            style: isLast ? { background: 'linear-gradient(135deg,#22c55e,#16a34a)', boxShadow: '0 4px 16px rgba(34,197,94,0.45)' } : {}
+          }, isLast ? '🚀 Action!' : 'Next →')
+        )
+      )
+    )
+  );
 }
 
 // ═════════════════════════════════════════════════════════════════
@@ -31065,7 +31323,7 @@ function InterventionPopup({
   //  4. Understanding is genuinely low (< 40%)
   function isTourActive() {
     try {
-      return !!document.querySelector('.tour-tooltip');
+      return !!document.querySelector('.wt3-overlay');
     } catch {
       return false;
     }

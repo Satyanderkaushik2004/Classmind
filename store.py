@@ -118,6 +118,10 @@ def _deserialize_session(d: dict) -> dict:
     for m in s.get("chat_messages", []):
         if isinstance(m, dict) and "reactions" not in m:
             m["reactions"] = {}
+    # ── Migrate: ensure all students have profile_photo field ─────────
+    for st in s.get("students", {}).values():
+        if isinstance(st, dict) and "profile_photo" not in st:
+            st["profile_photo"] = None
     return s
 
 
@@ -271,6 +275,8 @@ def new_student(name: str, anonymous: bool = True) -> dict:
         "last_seen":      now(),
         "allowed_students": set(),
         "active_rolls":   set(),
+        # profile photo (base64 data URL, stored on upload)
+        "profile_photo":  None,
         # coding analytics
         "coding_score":       0,
         "coding_submitted":   False,

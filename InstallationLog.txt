@@ -1,0 +1,13 @@
+************************************* Invoked: Sat Jun 13 02:30:32 2026
+[0] Arguments: C:\Users\robin\AppData\Local\Temp\WinGet\MSYS2.MSYS2.20260611\msys2-x86_64-20260611.exe, install, --confirm-command, --root, C:\msys64
+[7] Operations sanity check succeeded.
+[9] Using metadata cache from "C:/Users/robin/AppData/Local/cache\\qt-installer-framework\\d75f1c19-3379-3717-ae8d-1404b51494a9"
+[9] Found 0 cached items.
+[11] Loaded control script ":/metadata/installer-config/control_js"
+[12] TargetDirectoryInUse : Error : The directory you selected already exists and contains an installation. Choose a different target for installation.
+************************************* Invoked: Sat Jun 13 02:33:21 2026
+[0] Arguments: C:\Users\robin\Downloads\Classmind-main (1)\Classmind-main\msys2-installer.exe, /S, /D=C:\Users\robin\msys64
+[4] Operations sanity check succeeded.
+[4] Warning: Cannot create lock file "C:\Users\robin\AppData\Local\Temp\msys2-installer1234865.lock": The process cannot access the file because it is being used by another process.
+ (0x00000020)
+[20] UnableToStart : Unable to start installer : Another msys2-installer instance is already running. Wait until it finishes, close it, or restart your system.

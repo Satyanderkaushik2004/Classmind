@@ -2247,7 +2247,42 @@ async def kick_student(code: str, student_id: str):
     return {"kicked": True}
 
 
-@app.post("/api/session/{code}/student/{student_id}/leave")
+# ── Student Profile Photo ──────────────────────────────────────────
+
+class PhotoUploadReq(BaseModel):
+    photo: str   # base64 data URL, e.g. "data:image/jpeg;base64,..."
+
+@app.post("/api/session/{code}/student/{student_id}/photo")
+async def upload_student_photo(code: str, student_id: str, req: PhotoUploadReq):
+    """Store student's profile photo (base64 data URL) on their session record.
+    Returns immediately; no WebSocket broadcast needed — photo is cosmetic only."""
+    s = _S(code)
+    student = s["students"].get(student_id)
+    if not student:
+        raise HTTPException(404, "Student not found")
+    if not req.photo or not req.photo.startswith("data:image/"):
+        raise HTTPException(400, "Invalid photo format — must be a base64 image data URL")
+    # Limit to ~3 MB base64 payload (4 bytes per 3 raw bytes ≈ 4 MB base64 for 3 MB image)
+    if len(req.photo) > 4_100_000:
+        raise HTTPException(400, "Photo too large — max 3 MB")
+    student["profile_photo"] = req.photo
+    touch_session(s)
+    save_session(code)
+    log.info("[PHOTO] Saved profile photo for student %s in session %s", student_id, code)
+    return {"saved": True}
+
+@app.get("/api/session/{code}/student/{student_id}/photo")
+async def get_student_photo(code: str, student_id: str):
+    """Fetch student's stored profile photo."""
+    s = _S(code)
+    student = s["students"].get(student_id)
+    if not student:
+        raise HTTPException(404, "Student not found")
+    photo = student.get("profile_photo") or None
+    return {"photo": photo}
+
+
+
 async def student_leave_session(code: str, student_id: str):
     """Student voluntarily leaves/exits the session.
     
@@ -4982,6 +5017,8 @@ async def student_ws_endpoint(ws: WebSocket, session_code: str, student_id: str)
         "hand_raised":         student_hand_raised,  # Sync hand state on reconnect
         "doubts":              [d for d in s.get("doubts", []) if d.get("student_id") == student_id],
         "chat_suspended":      student_id in s.get("suspended_chat_students", set()),
+        # Photo: send stored photo so frontend can sync localStorage on reconnect
+        "profile_photo":       student.get("profile_photo") or None,
     })
 
     if student_status == "active":

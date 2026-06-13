@@ -22808,6 +22808,12 @@ function LoginModal({defaultRole, onComplete, onClose}) {
   }
 
   function initials(n) { return n.split(' ').map(w => w[0]).join('').toUpperCase().slice(0,2); }
+  // ── Global profile photo helper: checks roster-provided photo first, then local cache ──
+  window.getCachedPhoto = function(id, fallbackPhoto) {
+    if (fallbackPhoto) return fallbackPhoto;
+    if (!id) return null;
+    try { return localStorage.getItem('cm_photo_' + id) || null; } catch { return null; }
+  };
   function avatarColor(e) {
     const c = ['#6366f1','#8b5cf6','#a855f7','#ec4899','#06b6d4','#10b981','#f59e0b'];
     let h = 0; for (let i = 0; i < e.length; i++) h = (h * 31 + e.charCodeAt(i)) & 0xffffffff;
@@ -26555,12 +26561,20 @@ function SmartAttendancePage({ sessionCode, sessionStatus, roster, wsSend }) {
                 style: { animationDelay: `${Math.min(idx, 20) * 0.04}s` }
               },
                 // Avatar
-                React.createElement('div', { className: 'att-student-avatar' },
-                  (rec.name || '?')[0].toUpperCase(),
-                  React.createElement('div', {
-                    className: `att-avatar-status ${avatarDotClass(rec.status)}`
-                  })
-                ),
+                (() => {
+                  const _attPhoto = window.getCachedPhoto && window.getCachedPhoto(rec.student_id, rec.profile_photo);
+                  return React.createElement('div', {
+                    className: 'att-student-avatar',
+                    style: _attPhoto ? { background: 'transparent', padding: 0, overflow: 'hidden' } : {}
+                  },
+                    _attPhoto
+                      ? React.createElement('img', { src: _attPhoto, alt: rec.name || '?', style: { width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%', display: 'block' } })
+                      : (rec.name || '?')[0].toUpperCase(),
+                    React.createElement('div', {
+                      className: `att-avatar-status ${avatarDotClass(rec.status)}`
+                    })
+                  );
+                })(),
                 // Info
                 React.createElement('div', { className: 'att-student-info' },
                   React.createElement('div', { className: 'att-student-name' }, rec.name),
@@ -33696,9 +33710,17 @@ function CommunicationPage({
             : filteredStudents.map(s =>
                 React.createElement('div', { key: s.id, className: 'comm-v2-student-row' },
                   React.createElement('div', { className: 'comm-v2-student-av-wrap' },
-                    React.createElement('div', { className: 'comm-v2-student-av', style:{ background: hashColor(s.id || s.name || '') } },
-                      initials(s.name || s.display_name || s.id)
-                    ),
+                    (() => {
+                      const _avPhoto = getStudentChatPhoto(s.id);
+                      return React.createElement('div', {
+                        className: 'comm-v2-student-av',
+                        style: _avPhoto ? { background: 'transparent', padding: 0, overflow: 'hidden' } : { background: hashColor(s.id || s.name || '') }
+                      },
+                        _avPhoto
+                          ? React.createElement('img', { src: _avPhoto, alt: s.name || s.id, style: { width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%', display: 'block' } })
+                          : initials(s.name || s.display_name || s.id)
+                      );
+                    })(),
                     React.createElement('span', { className: 'comm-v2-student-online-dot' })
                   ),
                   React.createElement('div', { className: 'comm-v2-student-info' },
@@ -35079,6 +35101,7 @@ No markdown, no explanation, just the raw JSON array.`
                   const rankColors = ['rgba(251,191,36,0.12)','rgba(148,163,184,0.1)','rgba(180,83,9,0.1)'];
                   const rankBorders = ['rgba(251,191,36,0.3)','rgba(148,163,184,0.25)','rgba(180,83,9,0.25)'];
                   const initials = (r.student_name || r.student_id || 'S').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+                  const _lbPhoto = window.getCachedPhoto && window.getCachedPhoto(r.student_id);
                   return React.createElement('div', {key:r.student_id, style:{
                     display:'flex',alignItems:'center',gap:12,padding:'12px 14px',
                     background: i < 3 ? rankColors[i] : 'rgba(255,255,255,0.02)',
@@ -35096,10 +35119,13 @@ No markdown, no explanation, just the raw JSON array.`
                     // Avatar
                     React.createElement('div', {style:{
                       width:34,height:34,borderRadius:'50%',
-                      background:'linear-gradient(135deg,#6366f1,#8b5cf6)',
+                      background: _lbPhoto ? 'transparent' : 'linear-gradient(135deg,#6366f1,#8b5cf6)',
+                      padding: _lbPhoto ? 0 : undefined, overflow: _lbPhoto ? 'hidden' : undefined,
                       display:'flex',alignItems:'center',justifyContent:'center',
                       fontSize:'0.75rem',fontWeight:700,color:'#fff',flexShrink:0
-                    }}, initials),
+                    }}, _lbPhoto
+                      ? React.createElement('img', { src:_lbPhoto, alt: r.student_name || r.student_id, style:{ width:'100%', height:'100%', objectFit:'cover', borderRadius:'50%', display:'block' } })
+                      : initials),
                     // Name
                     React.createElement('div', {style:{flex:1,fontWeight: i < 3 ? 700 : 500,color:'var(--text)',fontSize:'0.88rem',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}},
                       r.student_name || r.student_id
@@ -38329,6 +38355,12 @@ function StudentTaskView({
           }
           const senderInitials = isTeacher ? '👨‍🏫' : (msg.sender_name || 'S').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
           const senderBg = isTeacher ? 'linear-gradient(135deg,#F59E0B,#EF4444)' : hashAvatarColor(msg.sender_id || msg.sender_name || '');
+          const otherPhoto = isTeacher
+            ? (window.getCachedPhoto && window.getCachedPhoto('teacher'))
+            : (window.getCachedPhoto && window.getCachedPhoto(msg.sender_id));
+          const otherAvatarContent = otherPhoto
+            ? React.createElement('img', {src:otherPhoto, alt: isTeacher ? 'Teacher' : (msg.sender_name||'Student'), style:{width:'100%',height:'100%',objectFit:'cover',borderRadius:'50%'}})
+            : senderInitials;
           const ownAvatarContent = studentPhoto
             ? React.createElement('img', {src:studentPhoto, alt:'You', style:{width:'100%',height:'100%',objectFit:'cover',borderRadius:'50%'}})
             : avatarLetter;
@@ -38341,7 +38373,7 @@ function StudentTaskView({
                 className:`sv2-msg-sender-av${isTeacher?' teacher-av':''}`,
                 title: isMe ? 'You' : (isTeacher ? 'Teacher' : (msg.sender_name || 'Student')),
                 style: isMe ? {} : { background: senderBg }
-              }, isMe ? ownAvatarContent : senderInitials),
+              }, isMe ? ownAvatarContent : otherAvatarContent),
 
               React.createElement('div', {className:'sv2-msg-col'},
                 // Sender name
@@ -39766,7 +39798,11 @@ function StudentTaskView({
           ),
           // Profile chip
           React.createElement('div', {className:'sd-profile-chip', onClick:()=>setProfileOpen(true)},
-            React.createElement('div', {className:'sd-profile-av'}, (studentName||'S').charAt(0).toUpperCase()),
+            React.createElement('div', {className:'sd-profile-av', style: studentPhoto ? {background:'transparent',padding:0,overflow:'hidden'} : {}},
+              studentPhoto
+                ? React.createElement('img', {src:studentPhoto, alt:studentName||'Student', style:{width:'100%',height:'100%',objectFit:'cover',borderRadius:'50%',display:'block'}})
+                : (studentName||'S').charAt(0).toUpperCase()
+            ),
             React.createElement('span', null, studentName || 'Student'),
             React.createElement('span', {className:'sd-profile-caret'}, '\u25BE')
           ),

@@ -2386,6 +2386,7 @@ async def get_student_photo(code: str, student_id: str):
 
 
 
+@app.post("/api/session/{code}/student/{student_id}/leave")
 async def student_leave_session(code: str, student_id: str):
     """Student voluntarily leaves/exits the session.
     
@@ -3143,6 +3144,7 @@ Do not include any markdown styling, code blocks, or extra text. Output only the
                         "type": "evaluation_approved",
                         "task_id": task["id"],
                         "score": score,
+                        "max_marks": max_marks,
                         "feedback": explanation,
                         "is_correct": is_correct,
                         "student_score": student.get("score", 0),
@@ -6106,6 +6108,7 @@ async def approve_evaluation_endpoint(code: str, req: ApproveEvalReq):
         "type": "evaluation_approved",
         "task_id": req.task_id,
         "score": score,
+        "max_marks": max_m,
         "feedback": req.feedback,
         "is_correct": is_correct,
         "student_score": student.get("score", 0),
@@ -6145,4 +6148,3 @@ if __name__ == "__main__":
         reload    = os.getenv("RELOAD", "true").lower() == "true",
         log_level = os.getenv("LOG_LEVEL", "info"),
     )
-    

@@ -616,7 +616,8 @@ async def push_roster(s: dict):
                 "status": st["status"],
                 "correct": st.get("correct", 0),
                 "total_answered": st.get("total_answered", 0),
-                "coding_submitted": st.get("coding_submitted", False)
+                "coding_submitted": st.get("coding_submitted", False),
+                "profile_photo": st.get("profile_photo") or None,
             })
     
     waiting = []
@@ -625,7 +626,8 @@ async def push_roster(s: dict):
             st = s["students"][sid]
             waiting.append({
                 "id": st["id"],
-                "name": st["name"]
+                "name": st["name"],
+                "profile_photo": st.get("profile_photo") or None,
             })
 
     # Normalise raised_hands — backend may still have old list format
@@ -2368,6 +2370,8 @@ async def upload_student_photo(code: str, student_id: str, req: PhotoUploadReq):
     touch_session(s)
     save_session(code)
     log.info("[PHOTO] Saved profile photo for student %s in session %s", student_id, code)
+    # Notify teacher so their roster/avatar updates immediately
+    await push_roster(s)
     return {"saved": True}
 
 @app.get("/api/session/{code}/student/{student_id}/photo")
@@ -6141,3 +6145,4 @@ if __name__ == "__main__":
         reload    = os.getenv("RELOAD", "true").lower() == "true",
         log_level = os.getenv("LOG_LEVEL", "info"),
     )
+    

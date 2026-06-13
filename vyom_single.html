@@ -14521,6 +14521,323 @@ body.s-ui-active .toasts {
 .light .tk2-section-heading,
 .light .tk2-task-q { color: #1A1A1A; }
 
+.light .tk2-stat-card:nth-child(1) .tk2-stat-val { color: #0B2D63 !important; }
+.light .tk2-stat-card:nth-child(2) .tk2-stat-val { color: #5B21B6 !important; }
+.light .tk2-stat-card:nth-child(3) .tk2-stat-val { color: #8B6400 !important; }
+.light .tk2-stat-card:nth-child(4) .tk2-stat-val { color: #166534 !important; }
+
+/* Global helper overrides for problematic light/neon inline colors in Light Mode */
+.light [style*="color: #4ade80"],
+.light [style*="color:#4ade80"],
+.light [style*="color: '#4ade80'"],
+.light [style*="color:'#4ade80'"],
+.light [style*="color: #4ADE80"],
+.light [style*="color:#4ADE80"],
+.light [style*="color: '#4ADE80'"],
+.light [style*="color:'#4ADE80'"],
+.light [style*="color: #34D399"],
+.light [style*="color:#34D399"],
+.light [style*="color: '#34D399'"],
+.light [style*="color:'#34D399'"],
+.light [style*="color: #6EE7B7"],
+.light [style*="color:#6EE7B7"],
+.light [style*="color: '#6EE7B7'"],
+.light [style*="color:'#6EE7B7'"],
+.light [style*="color: #10B981"],
+.light [style*="color:#10B981"],
+.light [style*="color: '#10B981'"],
+.light [style*="color:'#10B981'"] {
+  color: var(--green) !important;
+}
+
+.light [style*="color: #f87171"],
+.light [style*="color:#f87171"],
+.light [style*="color: '#f87171'"],
+.light [style*="color:'#f87171'"],
+.light [style*="color: #F87171"],
+.light [style*="color:#F87171"],
+.light [style*="color: '#F87171'"],
+.light [style*="color:'#F87171'"],
+.light [style*="color: #FCA5A5"],
+.light [style*="color:#FCA5A5"],
+.light [style*="color: '#FCA5A5'"],
+.light [style*="color:'#FCA5A5'"],
+.light [style*="color: #ef4444"],
+.light [style*="color:#ef4444"],
+.light [style*="color: '#ef4444'"],
+.light [style*="color:'#ef4444'"] {
+  color: var(--red) !important;
+}
+
+.light [style*="color: #EAB308"],
+.light [style*="color:#EAB308"],
+.light [style*="color: '#EAB308'"],
+.light [style*="color:'#EAB308'"],
+.light [style*="color: #FFD166"],
+.light [style*="color:#FFD166"],
+.light [style*="color: '#FFD166'"],
+.light [style*="color:'#FFD166'"],
+.light [style*="color: #FBBF24"],
+.light [style*="color:#FBBF24"],
+.light [style*="color: '#FBBF24'"],
+.light [style*="color:'#FBBF24'"] {
+  color: #b45309 !important; /* Dark amber/brown for readable yellow/gold text */
+}
+
+.light [style*="color: #0EA5E9"],
+.light [style*="color:#0EA5E9"],
+.light [style*="color: '#0EA5E9'"],
+.light [style*="color:'#0EA5E9'"],
+.light [style*="color: #22d3ee"],
+.light [style*="color:#22d3ee"],
+.light [style*="color: '#22d3ee'"],
+.light [style*="color:'#22d3ee'"] {
+  color: var(--blue) !important;
+}
+
+.light [style*="color: #fb923c"],
+.light [style*="color:#fb923c"],
+.light [style*="color: '#fb923c'"],
+.light [style*="color:'#fb923c'"] {
+  color: var(--orange) !important;
+}
+
+.light [style*="color: #818cf8"],
+.light [style*="color:#818cf8"],
+.light [style*="color: '#818cf8'"],
+.light [style*="color:'#818cf8'"] {
+  color: var(--accent) !important;
+}
+
+.light [style*="color: #94A3B8"],
+.light [style*="color:#94A3B8"],
+.light [style*="color: '#94A3B8'"],
+.light [style*="color:'#94A3B8'"],
+.light [style*="color: #94a3b8"],
+.light [style*="color:#94a3b8"],
+.light [style*="color: '#94a3b8'"],
+.light [style*="color:'#94a3b8'"],
+.light [style*="color: #cbd5e1"],
+.light [style*="color:#cbd5e1"],
+.light [style*="color: '#cbd5e1'"],
+.light [style*="color:'#cbd5e1'"],
+.light [style*="color: #c9d1d9"],
+.light [style*="color:#c9d1d9"],
+.light [style*="color: '#c9d1d9'"],
+.light [style*="color:'#c9d1d9'"] {
+  color: var(--text3) !important;
+}
+
+/* ════════════════════════════════════════════════════
+   END VYOM LIGHT MODE FIX v3
+   ════════════════════════════════════════════════════ */
+
+/* ── COMPREHENSIVE LIGHT THEME OVERRIDES FOR VYOM ── */
+
+/* 1. General Student and UI Elements */
+.light .s-text-muted { color: var(--text3) !important; }
+.light .s-nav-student-name { color: var(--text) !important; }
+.light .s-nav-tab { color: var(--text3) !important; }
+.light .s-nav-tab:hover { color: var(--text2) !important; background: rgba(11, 45, 99, 0.05) !important; }
+.light .s-nav-tab.active { color: #fff !important; background: var(--accent) !important; }
+.light .s-session-chip { color: var(--text2) !important; background: var(--surface3) !important; border-color: var(--border) !important; }
+.light .s-hand-btn { color: var(--text2) !important; border-color: var(--border) !important; background: var(--surface) !important; }
+.light .s-hud-item { color: var(--text3) !important; }
+.light .s-hud-rank { color: var(--accent2) !important; font-weight: 800 !important; }
+.light .s-main .section-title { color: var(--text) !important; }
+.light .s-perf-lbl { color: var(--text3) !important; }
+.light .s-option { color: var(--text2) !important; background: var(--surface2) !important; border-color: var(--border) !important; }
+.light .s-option:hover { background: var(--surface3) !important; border-color: var(--accent) !important; }
+.light .s-option-letter { color: var(--text3) !important; background: rgba(11, 45, 99, 0.08) !important; }
+.light .s-option.selected { background: rgba(11, 45, 99, 0.08) !important; border-color: var(--accent) !important; color: var(--accent) !important; }
+.light .s-option.selected .s-option-letter { color: #fff !important; background: var(--accent) !important; }
+.light .s-option.correct-ans { background: rgba(46, 125, 50, 0.1) !important; border-color: var(--green) !important; color: var(--green) !important; }
+.light .s-option.correct-ans .s-option-letter { color: #fff !important; background: var(--green) !important; }
+.light .s-option.wrong-ans { background: rgba(211, 47, 47, 0.1) !important; border-color: var(--red) !important; color: var(--red) !important; }
+.light .s-option.wrong-ans .s-option-letter { color: #fff !important; background: var(--red) !important; }
+.light .s-btn-submit { color: #fff !important; }
+.light .s-short-area { color: var(--text) !important; background: var(--surface) !important; border: 1.5px solid var(--border) !important; }
+.light .s-code-lang { color: var(--text3) !important; }
+.light .s-quiz-dot { color: var(--text3) !important; background: var(--surface3) !important; }
+.light .s-quiz-dot.answered { background: var(--accent) !important; color: #fff !important; }
+.light .s-quiz-nav-btn { color: var(--text2) !important; background: var(--surface2) !important; }
+.light .s-quiz-finish { color: #fff !important; }
+.light .s-empty { color: var(--text3) !important; }
+.light .s-empty-title { color: var(--text2) !important; }
+.light .s-empty-sub { color: var(--text3) !important; }
+
+/* 2. Chat and Doubt Sections */
+.light .s-chat-input { color: var(--text) !important; background: var(--surface) !important; }
+.light .s-chat-msg.theirs { color: var(--text2) !important; background: var(--surface2) !important; }
+.light .s-chat-msg.teacher { color: var(--text) !important; background: rgba(212, 160, 23, 0.1) !important; border: 1px solid rgba(212, 160, 23, 0.25) !important; }
+.light .sv2-doubt-label { color: var(--text) !important; }
+.light .sv2-composer-input { color: var(--text) !important; background: var(--surface2) !important; border-color: var(--border) !important; }
+.light .sv2-file-name { color: var(--text) !important; }
+.light .sv2-file-size { color: var(--text3) !important; }
+.light .sv3-top-title { color: var(--text) !important; }
+.light .sv3-resource-name { color: var(--text) !important; }
+.light .sv3-resource-size { color: var(--text3) !important; }
+.light .sv3-empty-note { color: var(--text3) !important; }
+.light .sv2-msg-sender-name { color: var(--text2) !important; }
+.light .sv2-msg-sender-name.teacher { color: var(--accent) !important; font-weight: 700 !important; }
+.light .sv2-file-card { background: var(--surface2) !important; border-color: var(--border) !important; }
+.light .sv2-msg-bubble { background: var(--surface2) !important; color: var(--text) !important; }
+.light .sv2-msg-bubble.mine { background: var(--accent) !important; color: #fff !important; }
+.light .sv2-msg-bubble.teacher { background: rgba(212, 160, 23, 0.1) !important; border: 1px solid rgba(212, 160, 23, 0.25) !important; color: var(--text) !important; }
+.light .sv2-doubt-input { color: var(--text) !important; background: var(--surface2) !important; border-color: var(--border) !important; }
+.light .sv2-doubt-input:focus { border-color: var(--accent) !important; }
+.light .s-doubt-card { background: var(--surface) !important; border-color: var(--border) !important; }
+.light .s-doubt-card.s-doubt-resolved { background: rgba(46, 125, 50, 0.05) !important; border-color: rgba(46, 125, 50, 0.18) !important; }
+.light .s-doubt-text { color: var(--text) !important; }
+.light .s-doubt-answer { color: var(--green) !important; font-weight: 600 !important; }
+
+/* Teacher Chat / Doubt Panel */
+.light .comm-v2-chat-hdr-title { color: var(--text) !important; }
+.light .comm-v2-sender { color: var(--text) !important; }
+.light .comm-v2-time { color: var(--text3) !important; }
+.light .comm-v2-bubble { background: var(--surface2) !important; color: var(--text) !important; }
+.light .comm-v2-bubble.teacher-bubble { background: var(--accent) !important; color: #fff !important; }
+.light .chat-file-card { background: var(--surface3) !important; border-color: var(--border) !important; }
+.light .chat-file-info .fn { color: var(--text) !important; }
+.light .chat-file-info .fs { color: var(--text3) !important; }
+.light .comm-v2-doubt-card { background: var(--surface) !important; border-color: var(--border) !important; }
+.light .comm-v2-doubt-card:hover { border-color: var(--accent) !important; }
+.light .comm-v2-doubt-card span[style*="color"] { color: var(--text) !important; }
+
+/* 3. Reports & Analytics Overrides */
+.light .rc-tab { color: var(--text3) !important; }
+.light .rc-tab:hover { color: var(--text2) !important; }
+.light .rc-tab.active { color: #fff !important; background: var(--accent) !important; border-color: var(--accent) !important; }
+.light .rc-empty { color: var(--text3) !important; }
+.light .rc-empty-title { color: var(--text2) !important; }
+.light .rc-stat-lbl { color: var(--text3) !important; }
+.light .rc-card-title { color: var(--text) !important; }
+.light .rc-card-meta { color: var(--text3) !important; }
+.light .rc-q-text { color: var(--text) !important; }
+.light .rc-q-meta { color: var(--text3) !important; }
+.light .rc-q-opt { color: var(--text2) !important; }
+.light .rc-topic-name { color: var(--text2) !important; }
+.light .rc-topic-pct { color: var(--text3) !important; }
+.light .rc-dl-btn { color: var(--text2) !important; background: var(--surface2) !important; border-color: var(--border) !important; }
+.light .rc-dl-btn:hover { color: var(--text) !important; background: var(--surface3) !important; }
+
+/* Session Activity Cards & Stats */
+.light .sd-analytics-card { background: var(--surface) !important; border-color: var(--border) !important; }
+.light .sd-ac-label { color: var(--text3) !important; }
+.light .sd-ac-value { color: var(--text) !important; }
+.light .sd-ac-meta { color: var(--text2) !important; }
+.light .sd-ac-bar-label { color: var(--text3) !important; }
+
+/* 4. Student Attendance Page */
+.light .s-attendance-container { color: var(--text) !important; }
+.light .s-att-title {
+  background: linear-gradient(135deg, #0B2D63, #8B6400) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+}
+.light .s-att-subtitle { color: var(--text3) !important; }
+.light .s-btn-back {
+  background: rgba(11, 45, 99, 0.05) !important;
+  border-color: rgba(11, 45, 99, 0.15) !important;
+  color: var(--text2) !important;
+}
+.light .s-btn-back:hover { background: rgba(11, 45, 99, 0.1) !important; }
+.light .s-att-hero {
+  background: var(--surface2) !important;
+  border-color: var(--border) !important;
+  box-shadow: 0 8px 30px rgba(11, 45, 99, 0.08) !important;
+}
+.light .s-att-hero-main h3 { color: var(--text) !important; }
+.light .s-att-hero-main p { color: var(--text3) !important; }
+.light .s-att-hero-info { border-left-color: var(--border) !important; }
+.light .s-att-hero-info-label { color: var(--text3) !important; }
+.light .s-att-hero-info-val { color: var(--text) !important; }
+.light .s-att-hero-info-val.code-pill {
+  background: rgba(11, 45, 99, 0.08) !important;
+  color: #0B2D63 !important;
+  border-color: rgba(11, 45, 99, 0.2) !important;
+}
+.light .s-att-hero-badge { border-left-color: var(--border) !important; }
+.light .s-att-badge-text p { color: var(--text3) !important; }
+.light .s-att-quick-card {
+  background: var(--surface) !important;
+  border-color: var(--border) !important;
+  box-shadow: 0 4px 15px rgba(11, 45, 99, 0.04) !important;
+}
+.light .s-att-quick-card:hover {
+  background: var(--surface2) !important;
+  border-color: var(--accent) !important;
+  box-shadow: 0 8px 24px rgba(11, 45, 99, 0.08) !important;
+}
+.light .s-att-qc-info h6 { color: var(--text3) !important; }
+.light .s-att-qc-info h4 { color: var(--text) !important; }
+.light .s-att-qc-info p { color: var(--text3) !important; }
+.light .s-att-panel {
+  background: var(--surface) !important;
+  border-color: var(--border) !important;
+  box-shadow: 0 8px 30px rgba(11, 45, 99, 0.04) !important;
+}
+.light .s-att-panel-title { color: var(--text) !important; }
+.light .s-att-timeline-name { color: var(--text) !important; }
+.light .s-att-timeline-desc { color: var(--text3) !important; }
+.light .s-att-timeline-time { color: var(--text3) !important; }
+.light .s-att-feedback-quote {
+  color: var(--text) !important;
+  background: var(--surface2) !important;
+  border-color: var(--border) !important;
+}
+.light .s-att-feedback-quote p { color: var(--text) !important; }
+.light .s-att-feedback-quote::after { color: rgba(11, 45, 99, 0.03) !important; }
+.light .s-att-author-name h6 { color: var(--text) !important; }
+.light .s-att-author-name p { color: var(--text3) !important; }
+.light .s-att-ai-card {
+  background: linear-gradient(135deg, rgba(11, 45, 99, 0.05) 0%, rgba(212, 160, 23, 0.03) 100%) !important;
+  border-color: rgba(11, 45, 99, 0.15) !important;
+}
+.light .s-att-ai-info h5 { color: var(--accent) !important; }
+.light .s-att-ai-info p { color: var(--text2) !important; }
+.light .s-att-banner {
+  background: var(--surface2) !important;
+  border-color: var(--border) !important;
+  color: var(--text3) !important;
+}
+
+/* 5. Tasks & Test Mode */
+.light .s-task-topic { color: var(--text3) !important; }
+.light .s-task-q { color: var(--text) !important; }
+.light .s-task-hint { color: var(--text2) !important; }
+.light .s-test-q-btn { color: var(--text2) !important; }
+.light .student-copilot-no-task { color: var(--text3) !important; }
+.light .s-task-card {
+  background: var(--surface) !important;
+  border-color: var(--border) !important;
+  box-shadow: 0 4px 15px rgba(11, 45, 99, 0.04) !important;
+}
+.light .s-task-meta { color: var(--text3) !important; }
+.light .s-lb-name { color: var(--text) !important; }
+.light .s-lb-item {
+  background: var(--surface) !important;
+  border-color: var(--border) !important;
+}
+.light .s-lb-item.mine {
+  background: var(--surface2) !important;
+  border-color: var(--accent) !important;
+}
+.light .sc-quick-btn {
+  background: var(--surface2) !important;
+  border-color: var(--border) !important;
+  color: var(--text2) !important;
+}
+.light .sc-quick-btn:hover {
+  background: var(--surface3) !important;
+  color: var(--text) !important;
+}
+
+/* Ensure no hardcoded white text leaks in light */
+.light .tk2-type-card-name,
+.light .tk2-section-heading,
+.light .tk2-task-q { color: #1A1A1A; }
+
 /* ── 8. NEW LIGHT MODE POLISHES (Tasks, Video Call, Attendance, Chat, Logo) ── */
 
 /* Brand logo rounding */
@@ -32249,6 +32566,13 @@ function CommunicationPage({
           )
         ),
         React.createElement('div', { style: { fontSize:'0.85rem', color:'#a5b0d0', marginBottom:8, lineHeight:1.4 } }, doubtBody || '(no text)'),
+        d.image_url && React.createElement('img', {
+          src: d.image_url,
+          alt: 'Doubt image',
+          className: 'chat-img-preview',
+          style: { marginTop: 8, marginBottom: 8, maxHeight: 150, borderRadius: 8, cursor: 'pointer', objectFit: 'contain', display: 'block' },
+          onClick: function() { setLightboxImg(d.image_url); }
+        }),
         isResolved
           ? React.createElement('div', { style: { display:'flex', alignItems:'flex-start', justifyContent:'space-between', gap:8 } },
               React.createElement('div', { style: { flex:1, fontSize:'0.8rem', color:'#22c55e', background:'rgba(34,197,94,0.08)', padding:'6px 10px', borderRadius:6 } },
@@ -36658,11 +36982,11 @@ function StudentTaskView({
             style:{padding:'2px 8px',borderRadius:6,fontSize:'0.7rem',fontWeight:600}
           }, currentTask.topic),
           // Q number
-          totalTasks > 0 && React.createElement('span', {style:{fontSize:'0.72rem',color:'rgba(241,245,249,0.3)',fontFamily:"'JetBrains Mono',monospace"}},
+          totalTasks > 0 && React.createElement('span', {style:{fontSize:'0.72rem',color:'var(--text3)',fontFamily:"'JetBrains Mono',monospace"}},
             `Q${taskIndex}/${totalTasks}`
           ),
           // Timer
-          taskStartTime && !submitted && React.createElement('div', {style:{marginLeft:'auto',display:'flex',alignItems:'center',gap:5,fontFamily:"'JetBrains Mono',monospace",fontSize:'0.75rem',color:'rgba(241,245,249,0.4)'}},
+          taskStartTime && !submitted && React.createElement('div', {style:{marginLeft:'auto',display:'flex',alignItems:'center',gap:5,fontFamily:"'JetBrains Mono',monospace",fontSize:'0.75rem',color:'var(--text3)'}},
             '⏱ ', fmtSecs(timeSpent)
           )
         ),
@@ -36901,6 +37225,13 @@ function StudentTaskView({
         React.createElement('div', {className:'sv2-doubt-label'}, '❓ Your Doubts'),
         (Array.isArray(doubts) ? doubts : []).map((d,i)=>React.createElement('div', {key:d.id||i, className:`s-doubt-card ${(d.resolved||d.status==='resolved'||d.status==='answered')?'s-doubt-resolved':''}`},
           React.createElement('div', {className:'s-doubt-text'}, d.doubt_text || d.text || ''),
+          d.image_url && React.createElement('img', {
+            src: d.image_url,
+            alt: 'Doubt image',
+            className: 'chat-img-preview',
+            style: { marginTop: 8, maxHeight: 150, borderRadius: 8, cursor: 'pointer', objectFit: 'contain', display: 'block' },
+            onClick: () => setChatLightboxImg(d.image_url)
+          }),
           (d.resolved || d.status==='resolved' || d.status==='answered') && React.createElement('div', {className:'s-doubt-answer'}, '✅ ', d.answer || d.reply || '')
         ))
       ),
@@ -37320,6 +37651,13 @@ function StudentTaskView({
         React.createElement('div', {style:{fontSize:'0.72rem',fontWeight:700,color:'rgba(241,245,249,0.3)',textTransform:'uppercase',letterSpacing:'0.08em',marginBottom:8}}, '❓ Your Doubts'),
         (Array.isArray(doubts) ? doubts : []).map((d,i)=>React.createElement('div', {key:d.id||i,className:`s-doubt-card ${(d.resolved||d.status==='resolved'||d.status==='answered')?'s-doubt-resolved':''}`},
           React.createElement('div', {className:'s-doubt-text'}, d.doubt_text || d.text || ''),
+          d.image_url && React.createElement('img', {
+            src: d.image_url,
+            alt: 'Doubt image',
+            className: 'chat-img-preview',
+            style: { marginTop: 8, maxHeight: 150, borderRadius: 8, cursor: 'pointer', objectFit: 'contain', display: 'block' },
+            onClick: () => setChatLightboxImg(d.image_url)
+          }),
           (d.resolved || d.status==='resolved' || d.status==='answered') && React.createElement('div', {className:'s-doubt-answer'}, '✅ ', d.answer || d.reply || '')
         ))
       ),
@@ -37529,11 +37867,11 @@ function StudentTaskView({
       React.createElement('div', {className:'s-test-header'},
         React.createElement('div', null,
           React.createElement('div', {style:{fontSize:'0.7rem',fontWeight:700,color:'rgba(239,68,68,0.7)',textTransform:'uppercase',letterSpacing:'0.08em',marginBottom:4}}, '🧪 Test Mode'),
-          React.createElement('div', {style:{fontSize:'0.85rem',color:'rgba(241,245,249,0.6)'}}, `${tasks.length} questions`)
+          React.createElement('div', {style:{fontSize:'0.85rem',color:'var(--text2)'}}, `${tasks.length} questions`)
         ),
         React.createElement('div', {style:{marginLeft:'auto',textAlign:'center'}},
           React.createElement('div', {className:`s-test-timer ${safeTime?'safe':warnTime?'warn':''}`}, fmtSecs(testTimeLeft)),
-          React.createElement('div', {style:{fontSize:'0.65rem',color:'rgba(241,245,249,0.4)',marginTop:2}}, 'remaining')
+          React.createElement('div', {style:{fontSize:'0.65rem',color:'var(--text3)',marginTop:2}}, 'remaining')
         ),
         React.createElement('button', {
           onClick:()=>setShowTestSubmitConfirm(true),
@@ -37556,7 +37894,7 @@ function StudentTaskView({
       // Questions
       tasks.map((task,i)=>React.createElement('div', {key:task.id,id:`test-q-${i}`,className:'s-task-card task-card-animated',style:{marginBottom:14}},
         React.createElement('div', {className:'s-task-meta'},
-          React.createElement('span', {style:{fontSize:'0.72rem',fontWeight:700,color:'rgba(241,245,249,0.4)',fontFamily:"'JetBrains Mono',monospace"}}, `Q${i+1}`),
+          React.createElement('span', {style:{fontSize:'0.72rem',fontWeight:700,color:'var(--text3)',fontFamily:"'JetBrains Mono',monospace"}}, `Q${i+1}`),
           React.createElement('span', {className:`s-task-type-chip s-chip-${task.type}`}, task.type),
           React.createElement('span', {className:`s-chip-diff s-chip-${task.difficulty||'medium'}`}, task.difficulty||'medium'),
           testAnswers[task.id] && React.createElement('span', {style:{marginLeft:'auto',fontSize:'0.7rem',color:'#10B981',fontWeight:700}}, '✓ Answered')
@@ -39041,7 +39379,7 @@ body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--t
   <div class="rp2-hero">
     <div class="rp2-hero-top">
       <div class="rp2-brand">
-        <div class="rp2-brand-icon">📚</div>
+        <img src="/vyom_logo.png" alt="VYOM Logo" style="height:44px; width:auto; object-fit:contain; filter:drop-shadow(0 4px 12px rgba(99,102,241,0.35));" />
         <div>
           <div class="rp2-brand-name">VYOM</div>
           <div class="rp2-brand-sub">AI-Powered Learning</div>
@@ -40347,7 +40685,7 @@ RESPONSE STYLE:
     },
       /*#__PURE__*/React.createElement('span', {className:'copilot-pulse'}),
       /*#__PURE__*/React.createElement('span', {className:'copilot-pulse2'}),
-      open ? '✕' : '🧠',
+      open ? '✕' : React.createElement('img', {src:'/vyom_logo.png', style:{width:'30px', height:'30px', objectFit:'contain', filter:'drop-shadow(0 2px 6px rgba(0,0,0,0.15))'}}),
       !open && unread>0 && /*#__PURE__*/React.createElement('span', {className:'copilot-badge'}, unread>9?'9+':unread),
       /*#__PURE__*/React.createElement('span', {className:'copilot-kb-hint'},
         /*#__PURE__*/React.createElement('kbd', null, 'Ctrl'),
@@ -40365,7 +40703,7 @@ RESPONSE STYLE:
       /*#__PURE__*/React.createElement('div', {className:'copilot-header'},
         /*#__PURE__*/React.createElement('div', {className:'copilot-header-info'},
           /*#__PURE__*/React.createElement('div', {className:'copilot-avatar'},
-            '🧠',
+            React.createElement('img', {src:'/vyom_logo.png', style:{width:'24px', height:'24px', objectFit:'contain'}}),
             /*#__PURE__*/React.createElement('div', {className:'copilot-avatar-dot'})
           ),
           /*#__PURE__*/React.createElement('div', null,
@@ -40502,11 +40840,11 @@ function StudentHUD({sessionStatus, taskIndex, totalTasks, wsConnected, hasTask,
     totalTasks > 0 && React.createElement(React.Fragment, null,
       React.createElement('div', {className: 's-hud-sep'}),
       React.createElement('div', {className: 's-hud-item s-hud-progress'},
-        React.createElement('span', {style:{color:'rgba(241,245,249,0.4)'}}, 'Progress'),
+        React.createElement('span', {style:{color:'var(--text3)'}}, 'Progress'),
         React.createElement('div', {className: 's-hud-track'},
           React.createElement('div', {className: 's-hud-fill s-prog-multi', style:{width:`${progress}%`}})
         ),
-        React.createElement('span', {style:{fontFamily:"'JetBrains Mono',monospace",fontWeight:700,fontSize:'0.78rem',color:'rgba(241,245,249,0.7)'}},
+        React.createElement('span', {style:{fontFamily:"'JetBrains Mono',monospace",fontWeight:700,fontSize:'0.78rem',color:'var(--text2)'}},
           `${taskIndex}/${totalTasks}`
         )
       )
@@ -40515,7 +40853,7 @@ function StudentHUD({sessionStatus, taskIndex, totalTasks, wsConnected, hasTask,
     myRank > 0 && React.createElement(React.Fragment, null,
       React.createElement('div', {className: 's-hud-sep'}),
       React.createElement('div', {className: 's-hud-item'},
-        React.createElement('span', {style:{color:'rgba(241,245,249,0.4)'}}, '🏆'),
+        React.createElement('span', {style:{color:'var(--text3)'}}, '🏆'),
         React.createElement('span', {className: 's-hud-rank'}, `#${myRank}`)
       )
     ),
@@ -40579,7 +40917,7 @@ function StudentAttendancePage({ sessionCode, studentId, studentName, studentPho
         }
       `),
       React.createElement('div', { className: 's-att-loader-spinner' }),
-      React.createElement('div', { style: { color: 'rgba(241,245,249,0.5)', fontSize: '0.9rem' } }, 'Syncing session data...')
+      React.createElement('div', { style: { color: 'var(--text3)', fontSize: '0.9rem' } }, 'Syncing session data...')
     );
   }
 
@@ -41388,11 +41726,11 @@ function StudentAttendancePage({ sessionCode, studentId, studentName, studentPho
                   ),
                   React.createElement('div', { className: 's-att-author-name' },
                     React.createElement('h6', null, instructorName),
-                    React.createElement('div', { style: { fontSize: '0.7rem', color: 'rgba(241,245,249,0.4)' } }, 'Instructor')
+                    React.createElement('div', { style: { fontSize: '0.7rem', color: 'var(--text3)' } }, 'Instructor')
                   )
                 )
               )
-            : React.createElement('div', { style: { color: 'rgba(241,245,249,0.4)', fontSize: '0.85rem' } }, 'No instructor feedback available.')
+            : React.createElement('div', { style: { color: 'var(--text3)', fontSize: '0.85rem' } }, 'No instructor feedback available.')
         ),
         // AI Insights Card (Only shown if Present/Late)
         showAI && React.createElement('div', { className: 's-att-ai-card' },
@@ -42385,7 +42723,7 @@ YOUR ROLE:
       // Component is portaled to <body> so no ancestor can clip it.
     },
       React.createElement('span',{className:'s-pulse'}),
-      open ? '✕' : '🤖'
+      open ? '✕' : React.createElement('img', {src:'/vyom_logo.png', style:{width:'26px', height:'26px', objectFit:'contain', filter:'drop-shadow(0 2px 6px rgba(0,0,0,0.15))'}})
     ),
 
     // Panel
@@ -42393,7 +42731,7 @@ YOUR ROLE:
       // Header
       React.createElement('div', {className:'student-copilot-header'},
         React.createElement('div', {className:'sc-avatar'},
-          '🤖',
+          React.createElement('img', {src:'/vyom_logo.png', style:{width:'24px', height:'24px', objectFit:'contain'}}),
           React.createElement('div',{className:'sc-avatar-dot'})
         ),
         React.createElement('div', null,

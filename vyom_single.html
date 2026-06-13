@@ -4004,8 +4004,8 @@ select option{background:var(--surface2)}
 .comm-v2-msg-av{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.77rem;font-weight:700;flex-shrink:0;box-shadow:0 2px 10px rgba(0,0,0,.3);color:#fff;overflow:hidden;}
 .comm-v2-msg-av.teacher-av{background:linear-gradient(135deg,#f97316,#eab308)!important;}
 /* Bubble column */
-.comm-v2-bubble-col{display:flex;flex-direction:column;gap:4px;flex:1;min-width:0;}
-.comm-v2-bubble-header{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;}
+.comm-v2-bubble-col{display:flex;flex-direction:column;gap:4px;flex:0 1 auto;min-width:0;max-width:100%;align-items:flex-start;}
+.comm-v2-bubble-header{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;width:100%;}
 .comm-v2-sender{font-size:.78rem;font-weight:700;color:#a5b4fc;}
 .comm-v2-teacher-badge{font-size:.62rem;font-weight:800;color:#f97316;background:rgba(249,115,22,.12);border:1px solid rgba(249,115,22,.25);padding:1px 6px;border-radius:10px;text-transform:uppercase;letter-spacing:.5px;}
 .comm-v2-time{font-size:.67rem;color:#3d4f6e;margin-left:auto;}
@@ -4248,27 +4248,98 @@ hr{border:none;border-top:1px solid var(--border);margin:16px 0}
 .section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
 .section-title{font-size:1.1rem;font-weight:700;display:flex;align-items:center;gap:8px}
 
-/* ── Toast ── */
-.toasts{position:fixed;top:70px;right:16px;z-index:9999;display:flex;flex-direction:column;gap:8px}
-.toast{
-  display:flex;align-items:center;justify-content:space-between;gap:10px;
-  padding:12px 14px;border-radius:var(--radius-sm);background:var(--surface2);
-  border:1px solid var(--border);font-size:0.875rem;
-  animation:slideIn 0.3s ease;min-width:240px;max-width:360px;
-  box-shadow:0 4px 16px rgba(0,0,0,0.3);
+/* ── Toast — Premium Floating Notification System ── */
+.toasts{
+  position:fixed;top:78px;right:18px;z-index:9999;
+  display:flex;flex-direction:column;gap:12px;
+  max-width:380px;width:100%;pointer-events:none;
 }
-.toast.success{border-color:var(--green);color:var(--green)}
-.toast.error{border-color:var(--red);color:var(--red)}
-.toast.info{border-color:var(--blue);color:var(--blue)}
-.toast-msg{flex:1;line-height:1.4}
+.toast{
+  pointer-events:auto;
+  position:relative;display:flex;align-items:flex-start;gap:12px;
+  padding:14px 16px 12px 14px;border-radius:16px;
+  min-width:280px;max-width:380px;overflow:hidden;
+  background:linear-gradient(145deg,rgba(30,32,58,.92),rgba(20,22,42,.92));
+  border:1px solid rgba(255,255,255,0.08);
+  box-shadow:0 12px 32px rgba(0,0,0,0.35),0 0 0 1px rgba(255,255,255,0.03) inset;
+  backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
+  color:#e7e9f5;font-size:0.85rem;line-height:1.45;
+  animation:toastSlideIn .45s cubic-bezier(.34,1.56,.64,1) both;
+}
+.toast.dismissing{animation:toastSlideOut .32s cubic-bezier(.4,0,.6,1) forwards;}
+.toast::before{
+  content:'';position:absolute;inset:0;border-radius:16px;padding:1px;
+  background:linear-gradient(135deg,var(--toast-glow,rgba(124,92,255,.55)),transparent 60%);
+  -webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);
+  -webkit-mask-composite:xor;mask-composite:exclude;
+  opacity:.55;pointer-events:none;
+}
+.toast::after{
+  content:'';position:absolute;top:-30%;right:-20%;width:120px;height:120px;
+  background:var(--toast-glow,rgba(124,92,255,.45));filter:blur(40px);
+  border-radius:50%;opacity:.35;pointer-events:none;
+  animation:toastGlowPulse 2.6s ease-in-out infinite;
+}
+@keyframes toastGlowPulse{0%,100%{opacity:.25;transform:scale(1)}50%{opacity:.5;transform:scale(1.15)}}
+
+.toast-icon{
+  flex-shrink:0;width:36px;height:36px;border-radius:11px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:1.15rem;background:var(--toast-icon-bg,rgba(124,92,255,.18));
+  border:1px solid var(--toast-glow,rgba(124,92,255,.35));
+  box-shadow:0 0 16px var(--toast-glow,rgba(124,92,255,.3));
+  position:relative;z-index:1;
+}
+.toast-body{flex:1;min-width:0;position:relative;z-index:1;}
+.toast-label{font-size:.78rem;font-weight:800;letter-spacing:.2px;color:var(--toast-accent,#a5b4fc);margin-bottom:2px;text-transform:uppercase;}
+.toast-msg{flex:1;line-height:1.4;color:#e7e9f5;word-break:break-word;}
 .toast-close{
   flex-shrink:0;background:none;border:none;cursor:pointer;
-  color:currentColor;opacity:0.6;font-size:1rem;line-height:1;
-  padding:2px 4px;border-radius:4px;transition:opacity 0.15s;
+  color:rgba(255,255,255,0.45);opacity:0.85;font-size:.95rem;line-height:1;
+  padding:3px 5px;border-radius:6px;transition:all 0.15s;position:relative;z-index:1;
 }
-.toast-close:hover{opacity:1}
-@keyframes slideIn{from{transform:translateX(40px);opacity:0}to{transform:translateX(0);opacity:1}}
-@keyframes slideOut{from{transform:translateX(0);opacity:1}to{transform:translateX(40px);opacity:0}}
+.toast-close:hover{opacity:1;color:#fff;background:rgba(255,255,255,0.08)}
+
+/* Progress / auto-close timer bar */
+.toast-progress{position:absolute;left:0;right:0;bottom:0;height:3px;background:rgba(255,255,255,0.06);overflow:hidden;border-radius:0 0 16px 16px;}
+.toast-progress-fill{height:100%;background:var(--toast-glow,#7c5cff);box-shadow:0 0 8px var(--toast-glow,#7c5cff);width:100%;transform-origin:left;animation:toastTimer var(--toast-duration,5s) linear forwards;}
+.toast:hover .toast-progress-fill{animation-play-state:paused;}
+@keyframes toastTimer{from{transform:scaleX(1)}to{transform:scaleX(0)}}
+
+@keyframes toastSlideIn{from{transform:translateX(60px) scale(.95);opacity:0}to{transform:translateX(0) scale(1);opacity:1}}
+@keyframes toastSlideOut{from{transform:translateX(0) scale(1);opacity:1;max-height:200px}to{transform:translateX(60px) scale(.92);opacity:0;max-height:0}}
+
+/* Category accents */
+.toast.success{--toast-glow:rgba(34,197,94,.55);--toast-icon-bg:rgba(34,197,94,.16);--toast-accent:#4ade80;}
+.toast.error{--toast-glow:rgba(239,68,68,.55);--toast-icon-bg:rgba(239,68,68,.16);--toast-accent:#f87171;}
+.toast.info{--toast-glow:rgba(59,130,246,.55);--toast-icon-bg:rgba(59,130,246,.16);--toast-accent:#60a5fa;}
+.toast.warn,.toast.warning{--toast-glow:rgba(234,179,8,.55);--toast-icon-bg:rgba(234,179,8,.16);--toast-accent:#facc15;}
+.toast.achievement{--toast-glow:rgba(249,115,22,.55);--toast-icon-bg:rgba(249,115,22,.16);--toast-accent:#fb923c;}
+.toast.message{--toast-glow:rgba(168,85,247,.55);--toast-icon-bg:rgba(168,85,247,.16);--toast-accent:#c084fc;}
+.toast.session{--toast-glow:rgba(244,63,94,.55);--toast-icon-bg:rgba(244,63,94,.16);--toast-accent:#fb7185;}
+.toast.ai{--toast-glow:rgba(139,92,246,.6);--toast-icon-bg:rgba(139,92,246,.18);--toast-accent:#a78bfa;
+  background:linear-gradient(145deg,rgba(60,40,120,.55),rgba(30,25,60,.92));}
+.toast.s{--toast-glow:rgba(34,197,94,.55);--toast-icon-bg:rgba(34,197,94,.16);--toast-accent:#4ade80;}
+
+/* ── Light theme ── */
+.light .toast{
+  background:linear-gradient(145deg,rgba(255,255,255,.96),rgba(248,248,252,.94));
+  border:1px solid rgba(20,20,30,0.08);
+  box-shadow:0 10px 28px rgba(20,20,30,0.12),0 0 0 1px rgba(255,255,255,0.6) inset;
+  color:#1f2333;
+}
+.light .toast-msg{color:#2B2B36}
+.light .toast-label{color:var(--toast-accent,#6366f1)}
+.light .toast-close{color:rgba(31,35,51,0.4)}
+.light .toast-close:hover{color:rgba(31,35,51,0.85);background:rgba(31,35,51,0.06)}
+.light .toast-progress{background:rgba(20,20,30,0.06)}
+.light .toast.ai{background:linear-gradient(145deg,rgba(245,243,255,.97),rgba(255,255,255,.95));}
+
+/* ── Mobile ── */
+@media(max-width:600px){
+  .toasts{ right:8px; left:8px; top:64px; max-width:unset; }
+  .toast{ min-width:unset; max-width:100%; width:100%; }
+}
 
 /* ── Mobile ── */
 @media(max-width:600px){
@@ -5388,14 +5459,7 @@ body.s-ui-active .toasts {
   right: 16px;
 }
 
-/* ── Better toast spring animation (from student.html) ── */
-.toast {
-  animation: s-toastIn 0.35s cubic-bezier(0.34,1.56,0.64,1) both !important;
-}
-@keyframes s-toastIn {
-  from { opacity: 0; transform: translateX(40px) scale(0.9); }
-  to   { opacity: 1; transform: translateX(0) scale(1); }
-}
+/* ── Better toast spring animation handled by .toast / .toast.dismissing in core styles ── */
 
 /* ── Student mobile nav safe area ── */
 @media (max-width: 768px) {
@@ -21906,22 +21970,44 @@ function PencilLoader({ text, inline, size }) {
 
 // ── GLOBAL: Toast System ────────────────────────────────
 
+const TOAST_META = {
+  success:     { icon: '✅', label: 'Success' },
+  s:           { icon: '✅', label: 'Success' },
+  error:       { icon: '⚠️', label: 'Error' },
+  info:        { icon: '🔔', label: 'Announcement' },
+  warn:        { icon: '⏰', label: 'Reminder' },
+  warning:     { icon: '⏰', label: 'Reminder' },
+  achievement: { icon: '🏆', label: 'Achievement' },
+  message:     { icon: '💬', label: 'Message' },
+  session:     { icon: '🎓', label: 'Session' },
+  ai:          { icon: '✨', label: 'AI Insight' },
+};
+
 function useToasts() {
   const [toasts, setToasts] = useState([]);
   const timers = useRef({});
   const removeToast = useCallback(id => {
-    setToasts(t => t.filter(x => x.id !== id));
+    // Trigger exit animation, then remove from state
+    setToasts(t => t.map(x => x.id === id ? { ...x, dismissing: true } : x));
     clearTimeout(timers.current[id]);
     delete timers.current[id];
+    setTimeout(() => {
+      setToasts(t => t.filter(x => x.id !== id));
+    }, 320);
   }, []);
-  const add = useCallback((msg, type = 'info') => {
+  const add = useCallback((msg, type = 'info', opts = {}) => {
     const id = Date.now() + Math.random();
+    const duration = opts.duration || 5000;
     setToasts(t => [...t, {
       id,
       msg,
-      type
+      type,
+      duration,
+      label: opts.label,
+      progress: opts.progress, // optional 0-100 for progress-bar style toasts
     }]);
-    timers.current[id] = setTimeout(() => removeToast(id), 5000);
+    timers.current[id] = setTimeout(() => removeToast(id), duration);
+    return id;
   }, [removeToast]);
   return {
     toasts,
@@ -21933,21 +22019,62 @@ function ToastItem({
   toast,
   onRemove
 }) {
+  const timerRef = useRef(null);
+  const remainingRef = useRef(toast.duration || 5000);
+  const startRef = useRef(Date.now());
+
+  const startTimer = useCallback(() => {
+    startRef.current = Date.now();
+    timerRef.current = setTimeout(() => onRemove(toast.id), remainingRef.current);
+  }, [toast.id, onRemove]);
+
   useEffect(() => {
-    const timer = setTimeout(() => {
-      onRemove(toast.id);
-    }, 5000);
-    return () => clearTimeout(timer);
+    startTimer();
+    return () => clearTimeout(timerRef.current);
   }, [toast.id]);
+
+  const handlePause = () => {
+    clearTimeout(timerRef.current);
+    remainingRef.current -= (Date.now() - startRef.current);
+    if (remainingRef.current < 0) remainingRef.current = 0;
+  };
+  const handleResume = () => {
+    startTimer();
+  };
+
+  const meta = TOAST_META[toast.type] || TOAST_META.info;
+  const label = toast.label || meta.label;
+
   return /*#__PURE__*/React.createElement("div", {
-    className: `toast ${toast.type}`
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "toast-msg"
-  }, toast.msg), /*#__PURE__*/React.createElement("button", {
-    className: "toast-close",
-    onClick: () => onRemove(toast.id),
-    title: "Dismiss"
-  }, "\u2715"));
+    className: `toast ${toast.type}${toast.dismissing ? ' dismissing' : ''}`,
+    onMouseEnter: handlePause,
+    onMouseLeave: handleResume,
+    style: { '--toast-duration': `${toast.duration || 5000}ms` }
+  },
+    React.createElement("div", { className: "toast-icon" }, meta.icon),
+    React.createElement("div", { className: "toast-body" },
+      label && React.createElement("div", { className: "toast-label" }, label),
+      React.createElement("div", { className: "toast-msg" }, toast.msg),
+      typeof toast.progress === 'number' && React.createElement("div", {
+        style: { marginTop: 6, height: 5, borderRadius: 3, background: 'rgba(255,255,255,0.08)', overflow: 'hidden' }
+      },
+        React.createElement("div", {
+          style: {
+            height: '100%', width: `${Math.max(0, Math.min(100, toast.progress))}%`,
+            background: 'var(--toast-accent, #7c5cff)', borderRadius: 3, transition: 'width .4s ease'
+          }
+        })
+      )
+    ),
+    React.createElement("button", {
+      className: "toast-close",
+      onClick: () => onRemove(toast.id),
+      title: "Dismiss"
+    }, "\u2715"),
+    React.createElement("div", { className: "toast-progress" },
+      React.createElement("div", { className: "toast-progress-fill" })
+    )
+  );
 }
 function Toasts({
   toasts,
@@ -37961,7 +38088,7 @@ function StudentTaskView({
                   ? (result.score > 0 ? '✅' : '❌')
                   : (result.correct ? '✅' : '❌'),
                 currentTask.type === 'short'
-                  ? `Evaluated: +${result.score}/${result.max_marks} pts`
+                  ? `Evaluated: +${result.score}/${result.max_marks ?? currentTask.max_marks ?? 10} pts`
                   : (result.correct ? `Correct! +${result.score||score_for_display(currentTask)} pts` : 'Incorrect')
               ),
               currentTask.type === 'short' && result.teacher_feedback && React.createElement('div', {

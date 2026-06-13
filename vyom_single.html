@@ -11420,6 +11420,218 @@ body.s-ui-active .toasts {
 .light .ch-badge-ai { background: rgba(110,44,18,0.09); color: var(--accent); }
 .light .ch-badge-pinned { background: rgba(234,179,8,0.1); color: var(--orange); }
 
+/* ── Student Content Hub Light Mode (sch- components) ── */
+.light .sch-page {
+  --sch-bg: #F8F5EF;
+  --sch-surface: #FFFFFF;
+  --sch-surface2: #F3EDE2;
+  --sch-border: rgba(11, 45, 99, 0.08);
+  --sch-text: #1A1A1A;
+  --sch-text2: #5B6475;
+  --sch-accent: #7C3AED;
+  --sch-accent2: #D4A017;
+  --sch-shadow: 0 4px 24px rgba(11, 45, 99, 0.04);
+  background: var(--sch-bg);
+  color: var(--sch-text);
+}
+
+.light .sch-hero {
+  background: linear-gradient(135deg, var(--sch-surface) 0%, var(--sch-surface2) 100%);
+  border-bottom: 1px solid var(--sch-border);
+}
+.light .sch-hero::before {
+  background: radial-gradient(ellipse at 10% 60%, rgba(124, 58, 237, 0.04) 0%, transparent 55%);
+}
+.light .sch-hero-title {
+  color: var(--sch-text);
+}
+.light .sch-hero-sub {
+  color: var(--sch-text2);
+}
+.light .sch-hero-stat-card {
+  background: var(--sch-surface);
+  border-color: var(--sch-border);
+}
+.light .sch-hero-stat-card:hover {
+  border-color: var(--sch-accent);
+}
+.light .sch-hero-stat-num {
+  color: var(--sch-text);
+}
+.light .sch-hero-stat-label {
+  color: var(--sch-text2);
+}
+
+.light .sch-toolbar {
+  border-bottom-color: var(--sch-border);
+}
+.light .sch-search-wrap {
+  background: var(--sch-surface);
+  border-color: var(--sch-border);
+}
+.light .sch-search-wrap:focus-within {
+  border-color: var(--sch-accent);
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
+}
+.light .sch-search-icon {
+  color: var(--sch-text2);
+}
+.light .sch-search {
+  color: var(--sch-text);
+}
+.light .sch-search::placeholder {
+  color: var(--sch-text2);
+}
+
+.light .sch-sort-wrap {
+  background: var(--sch-surface);
+  border-color: var(--sch-border);
+  color: var(--sch-text2);
+}
+.light .sch-sort-select {
+  color: var(--sch-text2);
+}
+.light .sch-filter-btn {
+  background: var(--sch-surface);
+  border-color: var(--sch-border);
+  color: var(--sch-text2);
+}
+.light .sch-filter-btn:hover {
+  border-color: var(--sch-accent);
+  color: var(--sch-text);
+}
+
+.light .sch-cats {
+  border-bottom-color: var(--sch-border);
+}
+.light .sch-cat-chip {
+  background: var(--sch-surface);
+  border-color: var(--sch-border);
+  color: var(--sch-text2);
+}
+.light .sch-cat-chip:hover {
+  color: var(--sch-text);
+  border-color: var(--sch-accent);
+}
+.light .sch-cat-chip.active {
+  background: linear-gradient(135deg, rgba(124, 58, 237, 0.12), rgba(14, 165, 233, 0.06));
+  border-color: var(--sch-accent);
+  color: var(--sch-accent);
+  box-shadow: 0 2px 12px rgba(124, 58, 237, 0.08);
+}
+.light .sch-cat-chip-count {
+  background: var(--sch-surface2);
+  color: var(--sch-text2);
+}
+.light .sch-cat-chip.active .sch-cat-chip-count {
+  background: var(--sch-accent);
+  color: #ffffff;
+}
+
+.light .sch-featured-col {
+  border-left-color: var(--sch-border);
+}
+
+.light .sch-row {
+  background: var(--sch-surface);
+  border-color: var(--sch-border);
+  box-shadow: var(--sch-shadow);
+}
+.light .sch-row:hover {
+  border-color: var(--sch-accent);
+  background: var(--sch-surface2);
+  box-shadow: 0 6px 20px rgba(11, 45, 99, 0.05);
+}
+.light .sch-row.sch-row-featured {
+  border-color: var(--sch-accent);
+  box-shadow: 0 0 0 1px rgba(124, 58, 237, 0.15);
+}
+.light .sch-row-thumb {
+  background: var(--sch-surface2);
+  border-color: var(--sch-border);
+}
+.light .sch-row-title {
+  color: var(--sch-text);
+}
+.light .sch-row-desc {
+  color: var(--sch-text2);
+}
+.light .sch-row-meta {
+  color: var(--sch-text2);
+}
+.light .sch-row-meta span {
+  color: var(--sch-text2);
+}
+.light .sch-row-icon-btn {
+  border-color: var(--sch-border);
+  background: var(--sch-surface);
+  color: var(--sch-text2);
+}
+.light .sch-row-icon-btn:hover,
+.light .sch-row-icon-btn.active {
+  border-color: var(--sch-accent);
+  color: var(--sch-accent);
+  background: var(--sch-surface2);
+}
+
+.light .sch-empty-card {
+  border-color: rgba(124, 58, 237, 0.2);
+  background: rgba(124, 58, 237, 0.02);
+}
+
+.light .sch-featured-panel {
+  background: var(--sch-surface);
+}
+.light .sch-featured-header-left {
+  color: var(--sch-text);
+}
+.light .sch-featured-label {
+  color: var(--sch-text);
+}
+.light .sch-nav-btn {
+  border-color: var(--sch-border);
+  background: var(--sch-surface2);
+  color: var(--sch-text2);
+}
+.light .sch-nav-btn:hover:not(:disabled) {
+  border-color: var(--sch-accent);
+  color: var(--sch-accent);
+  background: var(--sch-surface);
+}
+.light .sch-featured-img-wrap {
+  background: var(--sch-surface2);
+  border-color: var(--sch-border);
+}
+.light .sch-featured-title {
+  color: var(--sch-text);
+}
+.light .sch-featured-desc {
+  color: var(--sch-text2);
+}
+.light .sch-featured-open-btn {
+  background: linear-gradient(135deg, var(--sch-accent), #8b5cf6);
+  color: #ffffff;
+  box-shadow: 0 4px 14px rgba(124, 58, 237, 0.2);
+}
+.light .sch-featured-open-btn:hover {
+  box-shadow: 0 6px 20px rgba(124, 58, 237, 0.35);
+}
+.light .sch-featured-save-btn {
+  border-color: var(--sch-border);
+  background: var(--sch-surface);
+  color: var(--sch-text2);
+}
+.light .sch-featured-save-btn:hover {
+  border-color: var(--sch-accent);
+  color: var(--sch-accent);
+}
+.light .sch-featured-save-btn.saved {
+  color: var(--sch-accent);
+  border-color: var(--sch-accent);
+  background: rgba(124, 58, 237, 0.06);
+}
+
+
 /* ═══════════════════════════════════════════════════════════════
    SMART ATTENDANCE SYSTEM — Full Design System
    ═══════════════════════════════════════════════════════════════ */
@@ -29021,11 +29233,11 @@ function StudentContentHub({ sessionCode, studentId, studentName, teacherName })
         React.createElement('div', { className: 'sch-row-desc' }, item.description || 'No description available.'),
         React.createElement('div', { className: 'sch-row-meta' },
           React.createElement('span', null, 'Added on'),
-          React.createElement('span', { style: { fontWeight: 600, color: '#f1f5f9' } }, chFmtDate(item.uploaded_at) || 'Recently'),
+          React.createElement('span', { style: { fontWeight: 600, color: 'var(--sch-text, #f1f5f9)' } }, chFmtDate(item.uploaded_at) || 'Recently'),
           item.size && React.createElement(React.Fragment, null,
-            React.createElement('span', { style: { color: '#334155' } }, '|'),
+            React.createElement('span', { style: { color: 'var(--sch-border, #334155)' } }, '|'),
             React.createElement('span', null, 'Size'),
-            React.createElement('span', { style: { fontWeight: 600, color: '#f1f5f9' } }, item.size)
+            React.createElement('span', { style: { fontWeight: 600, color: 'var(--sch-text, #f1f5f9)' } }, item.size)
           )
         )
       ),
@@ -29050,7 +29262,7 @@ function StudentContentHub({ sessionCode, studentId, studentName, teacherName })
       return React.createElement('div', { className: 'sch-featured-panel sch-featured-empty' },
         React.createElement('div', { style: { textAlign: 'center', padding: '40px 20px' } },
           React.createElement('div', { style: { fontSize: '3rem', marginBottom: 12 } }, '📚'),
-          React.createElement('div', { style: { color: '#94a3b8', fontSize: '0.85rem' } }, 'No content yet')
+          React.createElement('div', { style: { color: 'var(--sch-text2, #94a3b8)', fontSize: '0.85rem' } }, 'No content yet')
         )
       );
     }
@@ -29121,8 +29333,8 @@ function StudentContentHub({ sessionCode, studentId, studentName, teacherName })
   function EmptyCard() {
     return React.createElement('div', { className: 'sch-empty-card' },
       React.createElement('div', { style: { fontSize: '2.2rem', marginBottom: 12 } }, '📁'),
-      React.createElement('div', { style: { fontWeight: 700, fontSize: '1rem', color: '#f1f5f9', marginBottom: 6 } }, 'More content coming soon!'),
-      React.createElement('div', { style: { fontSize: '0.82rem', color: '#64748b' } }, 'Your teacher will upload more resources here.')
+      React.createElement('div', { style: { fontWeight: 700, fontSize: '1rem', color: 'var(--sch-text, #f1f5f9)', marginBottom: 6 } }, 'More content coming soon!'),
+      React.createElement('div', { style: { fontSize: '0.82rem', color: 'var(--sch-text2, #64748b)' } }, 'Your teacher will upload more resources here.')
     );
   }
 
@@ -29133,7 +29345,7 @@ function StudentContentHub({ sessionCode, studentId, studentName, teacherName })
       React.createElement('div', { className: 'sch-hero-left' },
         React.createElement('div', { className: 'sch-hero-title-row' },
           React.createElement('div', { className: 'sch-hero-title' }, 'Content Hub'),
-          React.createElement('span', { style: { color: '#a78bfa', fontSize: '1.3rem', marginLeft: 8 } }, '✦')
+          React.createElement('span', { style: { color: 'var(--sch-accent, #a78bfa)', fontSize: '1.3rem', marginLeft: 8 } }, '✦')
         ),
         React.createElement('div', { className: 'sch-hero-sub' }, 'All your learning materials, beautifully organized.'),
         // Stats row

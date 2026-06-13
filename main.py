@@ -3993,6 +3993,98 @@ async def upload_file_to_chat(
     }
 
 
+@app.post("/api/chat/upload")
+async def student_chat_upload(
+    session_code: str = Form(...),
+    sender_id: str = Form(...),
+    chat_type: str = Form("global"),
+    file: UploadFile = File(...),
+    reply_to_message_id: Optional[str] = Form(None),
+    reply_preview: Optional[str] = Form(None),
+):
+    s = _S(session_code)
+    ct = _guess_ct(file.filename or "", file.content_type or "")
+    if ct not in CHAT_ALLOWED_CT and not ct.startswith("image/"):
+        raise HTTPException(415, "Unsupported file type for chat. Allowed: PDF, DOCX, PPTX, TXT, Images.")
+
+    raw = await file.read()
+    is_image = ct.startswith("image/")
+
+    if is_image and len(raw) > CHAT_IMG_MAX:
+        raise HTTPException(413, "Image too large (max 8 MB)")
+    if not is_image and len(raw) > CHAT_DOC_MAX:
+        raise HTTPException(413, "Document too large (max 20 MB)")
+
+    fname = file.filename or f"chat_file_{int(now())}"
+    file_id = gen_id("cf")
+    encoded = base64.b64encode(raw).decode()
+    entry = {
+        "id":           file_id,
+        "name":         fname,
+        "data":         encoded,
+        "content_type": ct,
+        "size":         len(raw),
+        "uploaded_at":  now(),
+        "chat_file":    True,
+    }
+    s["content_files"][fname] = entry
+    save_session(session_code)
+
+    st = s["students"].get(sender_id)
+    if st:
+        name = st["name"]
+    elif sender_id == "teacher":
+        name = s.get("teacher_name", "Teacher")
+    else:
+        name = "Student"
+
+    msg_type = "image" if is_image else "file"
+    msg = {
+        "id":          gen_id("m"),
+        "sender_id":   sender_id,
+        "sender_name": name,
+        "content":     fname,
+        "chat_type":   chat_type,
+        "target_id":   None,
+        "timestamp":   now(),
+        "msg_type":    msg_type,
+        "reactions":   {},
+        "reply_to_message_id": reply_to_message_id or None,
+        "reply_preview":       reply_preview or None,
+        "file_info":   {
+            "id":           file_id,
+            "name":         fname,
+            "content_type": ct,
+            "size":         len(raw),
+        },
+    }
+    s["chat_messages"].append(msg)
+
+    sys_event_msg = {
+        "id":          gen_id("m"),
+        "sender_id":   "system",
+        "sender_name": "System",
+        "content":     f"📎 {name} uploaded a file: {fname}",
+        "chat_type":   chat_type,
+        "target_id":   None,
+        "timestamp":   now(),
+        "msg_type":    "system",
+        "reactions":   {},
+        "reply_to_message_id": None,
+        "reply_preview":       None,
+        "file_info":   None,
+    }
+    s["chat_messages"].append(sys_event_msg)
+
+    payload = {"type": "chat_message", "message": msg}
+    sys_payload = {"type": "chat_message", "message": sys_event_msg}
+    await ws_broadcast(s, payload)
+    await ws_broadcast(s, sys_payload)
+
+    log.info("[CHAT FILE] Student %s uploaded %s in session %s", sender_id, fname, session_code)
+    return msg
+
+
 @app.post("/api/doubts/submit")
 async def submit_doubt(req: SubmitDoubtReq):
     s  = _S(req.session_code)
@@ -4013,6 +4105,63 @@ async def submit_doubt(req: SubmitDoubtReq):
         "created_at":   now(),
     }
     s["doubts"].append(d)
+    await ws_teacher(s, {"type": "new_doubt", "doubt": d})
+    return d
+
+
+@app.post("/api/doubts/submit_with_image")
+async def submit_doubt_with_image(
+    session_code: str = Form(...),
+    student_id: str = Form(...),
+    doubt_text: str = Form(...),
+    image: UploadFile = File(...),
+):
+    s = _S(session_code)
+    s.setdefault("doubts", [])
+    st = s["students"].get(student_id, {})
+    name = st.get("name", "Student")
+
+    ct = _guess_ct(image.filename or "", image.content_type or "")
+    if not ct.startswith("image/"):
+        raise HTTPException(415, "Only images allowed in doubts")
+
+    raw = await image.read()
+    if len(raw) > 5 * 1024 * 1024:
+        raise HTTPException(413, "Image too large (max 5 MB)")
+
+    fname = f"doubt_{gen_id('dimg')}_{image.filename}"
+    file_id = gen_id("cf")
+    encoded = base64.b64encode(raw).decode()
+    entry = {
+        "id":           file_id,
+        "name":         fname,
+        "data":         encoded,
+        "content_type": ct,
+        "size":         len(raw),
+        "uploaded_at":  now(),
+        "doubt_file":   True,
+    }
+    s["content_files"][fname] = entry
+    save_session(session_code)
+
+    d = {
+        "id":           gen_id("d"),
+        "student_id":   student_id,
+        "student_name": name,
+        "doubt_text":   doubt_text,
+        "text":         doubt_text,
+        "answer":       None,
+        "reply":        None,
+        "status":       "pending",
+        "resolved":     False,
+        "resolved_at":  None,
+        "resolved_by":  None,
+        "created_at":   now(),
+        "image_url":    f"/api/content/file/{session_code}/{fname}",
+    }
+    s["doubts"].append(d)
+    save_session(session_code)
+
     await ws_teacher(s, {"type": "new_doubt", "doubt": d})
     return d
 

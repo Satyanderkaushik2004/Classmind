@@ -1980,6 +1980,9 @@ select option{background:var(--surface2)}
   font-size: 0.8rem;
   display: flex; align-items: center; justify-content: center;
   flex-shrink: 0;
+  overflow: hidden;
+  border: 1.5px solid rgba(99,102,241,0.35);
+  box-shadow: 0 0 6px rgba(99,102,241,0.18);
 }
 .db-student-name {
   flex: 1;
@@ -3998,7 +4001,7 @@ select option{background:var(--surface2)}
 @keyframes cv2SlideIn{from{opacity:0;transform:translateY(8px) scale(.98);}to{opacity:1;transform:translateY(0) scale(1);}}
 .comm-v2-msg-row.teacher-row{max-width:92%;}
 /* Avatars */
-.comm-v2-msg-av{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.77rem;font-weight:700;flex-shrink:0;box-shadow:0 2px 10px rgba(0,0,0,.3);color:#fff;}
+.comm-v2-msg-av{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.77rem;font-weight:700;flex-shrink:0;box-shadow:0 2px 10px rgba(0,0,0,.3);color:#fff;overflow:hidden;}
 .comm-v2-msg-av.teacher-av{background:linear-gradient(135deg,#f97316,#eab308)!important;}
 /* Bubble column */
 .comm-v2-bubble-col{display:flex;flex-direction:column;gap:4px;flex:1;min-width:0;}
@@ -14902,8 +14905,11 @@ body.s-ui-active .toasts {
 .sidebar-brand img,
 .brand-logo,
 .sidebar-logo,
-.logo {
-  border-radius: 14px;
+.logo,
+img[src="/vyom_logo.png"] {
+  border-radius: 50% !important;
+  aspect-ratio: 1/1 !important;
+  object-fit: cover !important;
   overflow: hidden;
 }
 
@@ -21086,6 +21092,114 @@ body.s-ui-active .toasts {
   .wt3-clapper-grid { grid-template-columns: 1fr 1fr; }
   .comm-v2-student-kick-btn { display: flex !important; opacity: 0.5; }
 }
+
+/* ── Chatbot FAB animated loader icon (from pract.html) ── */
+.cb-loader {
+  --color-one: #ffbf48;
+  --color-two: #be4a1d;
+  --color-three: #ffbf4780;
+  --color-four: #bf4a1d80;
+  --color-five: #ffbf4740;
+  --time-animation: 2s;
+  position: relative;
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  transform: scale(0.62);
+  box-shadow: none;
+  animation: cb-colorize calc(var(--time-animation) * 3) ease-in-out infinite;
+  pointer-events: none;
+}
+.cb-loader::before {
+  content: none;
+}
+.cb-loader .cb-box {
+  width: 100px;
+  height: 100px;
+  background: linear-gradient(180deg, var(--color-one) 30%, var(--color-two) 70%);
+  mask: url(#cb-clipping);
+  -webkit-mask: url(#cb-clipping);
+}
+.cb-loader svg {
+  position: absolute;
+}
+.cb-loader svg #cb-clipping {
+  filter: contrast(15);
+  animation: cb-roundness calc(var(--time-animation) / 2) linear infinite;
+}
+.cb-loader svg #cb-clipping polygon {
+  filter: blur(7px);
+}
+.cb-loader svg #cb-clipping polygon:nth-child(1) {
+  transform-origin: 75% 25%;
+  transform: rotate(90deg);
+}
+.cb-loader svg #cb-clipping polygon:nth-child(2) {
+  transform-origin: 50% 50%;
+  animation: cb-rotation var(--time-animation) linear infinite reverse;
+}
+.cb-loader svg #cb-clipping polygon:nth-child(3) {
+  transform-origin: 50% 60%;
+  animation: cb-rotation var(--time-animation) linear infinite;
+  animation-delay: calc(var(--time-animation) / -3);
+}
+.cb-loader svg #cb-clipping polygon:nth-child(4) {
+  transform-origin: 40% 40%;
+  animation: cb-rotation var(--time-animation) linear infinite reverse;
+}
+.cb-loader svg #cb-clipping polygon:nth-child(5) {
+  transform-origin: 40% 40%;
+  animation: cb-rotation var(--time-animation) linear infinite reverse;
+  animation-delay: calc(var(--time-animation) / -2);
+}
+.cb-loader svg #cb-clipping polygon:nth-child(6) {
+  transform-origin: 60% 40%;
+  animation: cb-rotation var(--time-animation) linear infinite;
+}
+.cb-loader svg #cb-clipping polygon:nth-child(7) {
+  transform-origin: 60% 40%;
+  animation: cb-rotation var(--time-animation) linear infinite;
+  animation-delay: calc(var(--time-animation) / -1.5);
+}
+@keyframes cb-rotation {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+@keyframes cb-roundness {
+  0% { filter: contrast(15); }
+  20% { filter: contrast(3); }
+  40% { filter: contrast(3); }
+  60% { filter: contrast(15); }
+  100% { filter: contrast(15); }
+}
+@keyframes cb-colorize {
+  0% { filter: hue-rotate(0deg); }
+  20% { filter: hue-rotate(-30deg); }
+  40% { filter: hue-rotate(-60deg); }
+  60% { filter: hue-rotate(-90deg); }
+  80% { filter: hue-rotate(-45deg); }
+  100% { filter: hue-rotate(0deg); }
+}
+
+/* Strip default FAB chrome so the loader is the only visible icon */
+.copilot-fab,
+.student-copilot-fab {
+  background: transparent !important;
+  box-shadow: none !important;
+}
+.copilot-fab::after,
+.copilot-fab::before,
+.student-copilot-fab::after,
+.student-copilot-fab::before,
+.copilot-fab .copilot-pulse,
+.copilot-fab .copilot-pulse2,
+.student-copilot-fab .s-pulse {
+  display: none !important;
+}
+.copilot-fab:hover,
+.student-copilot-fab:hover {
+  box-shadow: none !important;
+}
 </style>
 </head>
 <body>
@@ -21130,6 +21244,26 @@ const {
   createContext,
   useContext
 } = React;
+
+// ===== Chatbot FAB animated loader icon (from pract.html) =====
+function ChatbotLoaderIcon() {
+  return React.createElement('div', {className:'cb-loader'},
+    React.createElement('svg', {width:100, height:100, viewBox:'0 0 100 100'},
+      React.createElement('defs', null,
+        React.createElement('mask', {id:'cb-clipping'},
+          React.createElement('polygon', {points:'0,0 100,0 100,100 0,100', fill:'black'}),
+          React.createElement('polygon', {points:'25,25 75,25 50,75', fill:'white'}),
+          React.createElement('polygon', {points:'50,25 75,75 25,75', fill:'white'}),
+          React.createElement('polygon', {points:'35,35 65,35 50,65', fill:'white'}),
+          React.createElement('polygon', {points:'35,35 65,35 50,65', fill:'white'}),
+          React.createElement('polygon', {points:'35,35 65,35 50,65', fill:'white'}),
+          React.createElement('polygon', {points:'35,35 65,35 50,65', fill:'white'})
+        )
+      )
+    ),
+    React.createElement('div', {className:'cb-box'})
+  );
+}
 
 // ===== GLOBAL SETUP — CONFIG =====
 // All API calls use the same origin as the page.
@@ -22176,7 +22310,7 @@ function LoginModal({defaultRole, onComplete, onClose}) {
   return /*#__PURE__*/React.createElement("div", {className:"login-page-bg"},
     /*#__PURE__*/React.createElement("div", {className:"login-card", role:"dialog", "aria-modal":"true", "aria-label":"Sign in to VYOM"},
       /*#__PURE__*/React.createElement("div", {className:"login-card-head"},
-        /*#__PURE__*/React.createElement("img", { src: "/vyom_logo.png", style: { height: "64px", width: "auto", objectFit: "contain", marginBottom: "12px" }, alt: "VYOM Logo" }),
+        /*#__PURE__*/React.createElement("img", { src: "/vyom_logo.png", style: { height: "64px", width: "64px", borderRadius: "50%", objectFit: "cover", marginBottom: "12px" }, alt: "VYOM Logo" }),
         /*#__PURE__*/React.createElement("div", {className:"login-card-title"}, "Continue to VYOM"),
         /*#__PURE__*/React.createElement("div", {className:"login-card-sub"}, "Real-Time Classroom Intelligence System")
       ),
@@ -22582,7 +22716,7 @@ function LandingPage({
       style: { position: 'sticky', top: 0, zIndex: 100 }
     }, 
       /*#__PURE__*/React.createElement("span", { className: "nav-brand", style: { display: "flex", alignItems: "center", gap: "8px" } },
-        /*#__PURE__*/React.createElement("img", { src: "/vyom_logo.png", style: { height: "28px", width: "auto", objectFit: "contain" }, alt: "VYOM" }),
+        /*#__PURE__*/React.createElement("img", { src: "/vyom_logo.png", style: { height: "28px", width: "28px", borderRadius: "50%", objectFit: "cover" }, alt: "VYOM" }),
         "VYOM"
       ),
       /*#__PURE__*/React.createElement("div", { className: "nav-right" }, 
@@ -22689,7 +22823,7 @@ function LandingPage({
 
       /* ── FOREGROUND CONTENT (existing) ── */
       /*#__PURE__*/React.createElement("div", { className: "lp-animate" }, 
-        /*#__PURE__*/React.createElement("img", { src: "/vyom_logo.png", style: { height: "140px", width: "auto", objectFit: "contain", marginBottom: "20px" }, alt: "VYOM Logo" }),
+        /*#__PURE__*/React.createElement("img", { src: "/vyom_logo.png", style: { height: "140px", width: "140px", borderRadius: "50%", objectFit: "cover", marginBottom: "20px" }, alt: "VYOM Logo" }),
         /*#__PURE__*/React.createElement("div", { className: "landing-eyebrow" }, "🚀 Virtualized Youth Optimization & Mentorship"), 
         /*#__PURE__*/React.createElement("h1", { className: "landing-logo" }, "VYOM"), 
         /*#__PURE__*/React.createElement("p", { className: "landing-sub" }, "Empowering students and educators through intelligent learning, collaboration and mentorship."), 
@@ -23052,7 +23186,7 @@ function LandingPage({
       className: "lp-footer"
     }, 
       /*#__PURE__*/React.createElement("div", { style: { display: "flex", flexDirection: "column", alignItems: "center", gap: "10px", padding: "20px 0" } },
-        /*#__PURE__*/React.createElement("img", { src: "/vyom_logo.png", style: { height: "40px", width: "auto", objectFit: "contain" }, alt: "VYOM" }),
+        /*#__PURE__*/React.createElement("img", { src: "/vyom_logo.png", style: { height: "40px", width: "40px", borderRadius: "50%", objectFit: "cover" }, alt: "VYOM" }),
         /*#__PURE__*/React.createElement("span", { style: { fontWeight: "700", letterSpacing: "1px", color: "var(--accent2)" } }, "VYOM"),
         /*#__PURE__*/React.createElement("div", { style: { fontSize: "0.85rem", opacity: 0.8 } }, "Virtualized Youth Optimization & Mentorship"),
         /*#__PURE__*/React.createElement("div", { style: { fontSize: "0.75rem", opacity: 0.5 } }, "© 2026 VYOM. All rights reserved.")
@@ -24162,6 +24296,12 @@ function TeacherShell({
           active: msg.active || [],
           waiting: msg.waiting || []
         });
+        // Cache student profile photos from roster into localStorage for chat avatars
+        for (const st of (msg.active || [])) {
+          if (st.profile_photo && st.id) {
+            try { localStorage.setItem(`cm_photo_${st.id}`, st.profile_photo); } catch {}
+          }
+        }
         // Sync raised_hands from roster update
         if (Array.isArray(msg.raised_hands)) {
           window.dispatchEvent(new CustomEvent('vyom:hand_update', { detail: { raised_hands: msg.raised_hands, count: msg.raised_hands.length } }));
@@ -24732,7 +24872,7 @@ function TeacherShell({
   },
     /* Brand */
     /*#__PURE__*/React.createElement("div", { className: "sidebar-brand", style: { display: "flex", alignItems: "center", gap: "10px" } },
-      /*#__PURE__*/React.createElement("img", { src: "/vyom_logo.png", style: { height: "42px", width: "auto", objectFit: "contain" }, alt: "VYOM" }),
+      /*#__PURE__*/React.createElement("img", { src: "/vyom_logo.png", style: { height: "42px", width: "42px", borderRadius: "50%", objectFit: "cover" }, alt: "VYOM" }),
       /*#__PURE__*/React.createElement("span", { className: "sidebar-brand-name" }, "VYOM")
     ),
     /* Nav items */
@@ -26258,6 +26398,13 @@ function TeacherDashboard({
   const {
     add
   } = useContext(AppCtx);
+  // Read teacher profile photo from localStorage (same key used by ProfileDrawer / TeacherShell)
+  const profilePhoto = (() => {
+    try {
+      const u = JSON.parse(localStorage.getItem('cm_user') || '{}');
+      return localStorage.getItem('cm_avatar_' + (u.email || u.id || 'teacher')) || null;
+    } catch { return null; }
+  })();
   async function sendTask(taskId, targetType, targetId = null) {
     if (!taskId) return;
     try {
@@ -26632,11 +26779,13 @@ function TeacherDashboard({
       React.createElement("div", { className: "db-hero-overlay" }),
       /* Teacher Avatar (replaces old status icon) */
       React.createElement("div", { className: "hs2-avatar-ring" },
-        React.createElement("div", { className: "hs2-initials" },
-          teacherName
-            ? teacherName.split(' ').slice(0, 2).map(w => w[0]).join('').toUpperCase()
-            : 'T'
-        )
+        profilePhoto
+          ? React.createElement("img", { src: profilePhoto, alt: teacherName || 'Teacher', style: { width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' } })
+          : React.createElement("div", { className: "hs2-initials" },
+              teacherName
+                ? teacherName.split(' ').slice(0, 2).map(w => w[0]).join('').toUpperCase()
+                : 'T'
+            )
       ),
       /* Info */
       React.createElement("div", { className: "db-hero-info" },
@@ -26823,7 +26972,14 @@ function TeacherDashboard({
         React.createElement("div", { style: { flex: 1, overflowY: 'auto', maxHeight: 240 } },
           filteredStudents.length > 0
             ? filteredStudents.map(st => React.createElement("div", { key: st.id, className: "db-student-row" },
-                React.createElement("div", { className: "db-student-avatar" }, (st.name || '?')[0].toUpperCase()),
+                React.createElement("div", {
+                  className: "db-student-avatar",
+                  style: st.profile_photo ? { background: 'transparent', padding: 0, overflow: 'hidden' } : {}
+                },
+                  st.profile_photo
+                    ? React.createElement("img", { src: st.profile_photo, alt: st.name || '?', style: { width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%', display: 'block' } })
+                    : (st.name || '?')[0].toUpperCase()
+                ),
                 React.createElement("span", { className: "db-student-name" }, st.name),
                 React.createElement("span", { className: "db-student-online-badge" }, "Online"),
                 React.createElement("div", { className: "db-student-progress" },
@@ -26853,7 +27009,14 @@ function TeacherDashboard({
         roster.waiting?.length > 0
           ? React.createElement("div", { style: { flex: 1 } },
               (roster.waiting || []).map(st => React.createElement("div", { key: st.id || Math.random(), className: "db-waiting-row" },
-                React.createElement("div", { className: "db-student-avatar" }, (String(st.name || st.id || 'S'))[0].toUpperCase()),
+                React.createElement("div", {
+                  className: "db-student-avatar",
+                  style: st.profile_photo ? { background: 'transparent', padding: 0, overflow: 'hidden' } : {}
+                },
+                  st.profile_photo
+                    ? React.createElement("img", { src: st.profile_photo, alt: st.name || '?', style: { width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%', display: 'block' } })
+                    : (String(st.name || st.id || 'S'))[0].toUpperCase()
+                ),
                 React.createElement("span", { className: "db-student-name", style: { flex: 1 } }, String(st.name || st.id || 'Student')),
                 React.createElement("div", { className: "db-waiting-btns" },
                   React.createElement("button", { className: "db-approve-btn", onClick: (e) => approveStudent(st.id, e) }, "\u2713 Approve"),
@@ -26897,7 +27060,6 @@ function TeacherDashboard({
                 style: { width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--surface)', color: 'inherit' }
               },
                 React.createElement("option", { value: "open" }, "Open"),
-                React.createElement("option", { value: "closed" }, "Closed (Student List)"),
                 React.createElement("option", { value: "close" }, "Close Access (Geo-fence)")
               )
             ),
@@ -32140,6 +32302,22 @@ function CommunicationPage({
   const TEACHER_ID = 'teacher';
   const EMOJI_LIST = ['👍','❤️','😂','😮','🔥','👏'];
 
+  // ── Chat avatar helpers ───────────────────────────────────────────
+  // Teacher's own profile photo from localStorage (same key as ProfileDrawer)
+  const teacherChatPhoto = (() => {
+    try {
+      const u = JSON.parse(localStorage.getItem('cm_user') || '{}');
+      return localStorage.getItem('cm_avatar_' + (u.email || u.id || 'teacher')) || null;
+    } catch { return null; }
+  })();
+  // Get student photo: check roster prop first, then localStorage cache
+  const getStudentChatPhoto = (senderId) => {
+    if (!senderId || senderId === TEACHER_ID) return null;
+    const rosterStudent = (roster && roster.active || []).find(s => s.id === senderId);
+    if (rosterStudent && rosterStudent.profile_photo) return rosterStudent.profile_photo;
+    try { return localStorage.getItem('cm_photo_' + senderId) || null; } catch { return null; }
+  };
+
   // ── Subscribe to WS events dispatched from TeacherShell ──────────
   useEffect(() => {
     function onHandUpdate(e) {
@@ -32484,6 +32662,10 @@ function CommunicationPage({
       const isImg = m.msg_type === 'image' || (fileInfo && fileInfo.content_type && fileInfo.content_type.startsWith('image/'));
       const replyId = m.reply_to_message_id;
       const replyPreview = m.reply_preview;
+      // ── Avatar photo resolution (teacher photo or cached student photo) ──
+      const _msgAvPhoto = isTeacher
+        ? teacherChatPhoto
+        : (!isSystem ? getStudentChatPhoto(m.sender_id) : null);
 
       // System message — compact centered pill
       if (isSystem) {
@@ -32536,8 +32718,14 @@ function CommunicationPage({
         React.createElement('div', { className: 'comm-v2-msg-row' + (isTeacher ? ' teacher-row' : '') },
           React.createElement('div', {
             className: 'comm-v2-msg-av' + (isTeacher ? ' teacher-av' : ''),
-            style: !isTeacher ? { background: hashColor(m.sender_id || m.sender_name) } : {}
-          }, isTeacher ? '👨‍🏫' : initials(senderName)),
+            style: _msgAvPhoto
+              ? { background: 'transparent', padding: 0, overflow: 'hidden', border: '2px solid rgba(99,102,241,0.45)', boxShadow: '0 0 8px rgba(99,102,241,0.25)' }
+              : !isTeacher ? { background: hashColor(m.sender_id || m.sender_name) } : {}
+          },
+            _msgAvPhoto
+              ? React.createElement('img', { src: _msgAvPhoto, alt: senderName, style: { width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%', display: 'block' } })
+              : isTeacher ? '👨‍🏫' : initials(senderName)
+          ),
           React.createElement('div', { className: 'comm-v2-bubble-col' },
             React.createElement('div', { className: 'comm-v2-bubble-header' },
               React.createElement('span', { className: 'comm-v2-sender' }, senderName),
@@ -37250,25 +37438,15 @@ function StudentTaskView({
 
       // ══ Premium top bar ══
       React.createElement('div', {className:'sv3-top-header'},
-        React.createElement('div', {className:'sv3-top-greeting'},
-          React.createElement('div', {className:'sv3-top-title'}, `Hello, ${studentName||'Student'} 👋`),
-          React.createElement('div', {className:'sv3-top-sub'}, "Let's keep learning and growing together.")
-        ),
-        React.createElement('div', {className:'sv3-top-actions'},
-          React.createElement('button', {
-            className:'sv3-raise-btn'+(handRaised?' raised':''),
-            onClick: toggleHand, title: handRaised?'Lower hand':'Raise hand'
-          }, '✋ ', handRaised?'Hand Raised':'Raise Hand'),
-          React.createElement('button', {className:'sv3-bell-btn', title:'Notifications'},
-            '🔔', chatUnread>0 && React.createElement('span', {className:'sv3-bell-dot'}, chatUnread>9?'9+':chatUnread)
+        React.createElement('div', {className:'sv3-top-greeting', style:{display:'flex', alignItems:'center', gap:'16px'}},
+          React.createElement('div', {className:'sv3-top-profile-av', style:{width:'40px', height:'40px', fontSize:'1rem', flexShrink:0}},
+            studentPhoto
+              ? React.createElement('img', {src:studentPhoto, alt:studentName, style:{width:'100%',height:'100%',objectFit:'cover',borderRadius:'50%'}})
+              : getStudentInitials(studentName)
           ),
-          React.createElement('div', {className:'sv3-top-profile'},
-            React.createElement('div', {className:'sv3-top-profile-av'},
-              studentPhoto
-                ? React.createElement('img', {src:studentPhoto, alt:studentName, style:{width:'100%',height:'100%',objectFit:'cover',borderRadius:'50%'}})
-                : getStudentInitials(studentName)
-            ),
-            React.createElement('span', {className:'sv3-top-profile-name'}, studentName||'Student')
+          React.createElement('div', null,
+            React.createElement('div', {className:'sv3-top-title'}, `Hello, ${studentName||'Student'} 👋`),
+            React.createElement('div', {className:'sv3-top-sub'}, "Let's keep learning and growing together.")
           )
         )
       ),
@@ -38648,7 +38826,7 @@ function StudentTaskView({
 
       // Logo
       React.createElement('div', {className:'sd-logo', style: {display: 'flex', alignItems: 'center', gap: '10px'}},
-        React.createElement('img', {src:'/vyom_logo.png', style:{height:'42px', width:'auto', objectFit:'contain'}, alt:'VYOM'}),
+        React.createElement('img', {src:'/vyom_logo.png', style:{height:'42px', width:'42px', borderRadius:'50%', objectFit:'cover'}, alt:'VYOM'}),
         React.createElement('span', {className:'sd-logo-text'}, 'VYOM')
       ),
 
@@ -39505,7 +39683,7 @@ body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--t
   <div class="rp2-hero">
     <div class="rp2-hero-top">
       <div class="rp2-brand">
-        <img src="/vyom_logo.png" alt="VYOM Logo" style="height:44px; width:auto; object-fit:contain; filter:drop-shadow(0 4px 12px rgba(99,102,241,0.35));" />
+        <img src="/vyom_logo.png" alt="VYOM Logo" style="height:44px; width:44px; border-radius:50%; object-fit:cover; filter:drop-shadow(0 4px 12px rgba(99,102,241,0.35));" />
         <div>
           <div class="rp2-brand-name">VYOM</div>
           <div class="rp2-brand-sub">AI-Powered Learning</div>
@@ -40811,7 +40989,7 @@ RESPONSE STYLE:
     },
       /*#__PURE__*/React.createElement('span', {className:'copilot-pulse'}),
       /*#__PURE__*/React.createElement('span', {className:'copilot-pulse2'}),
-      open ? '✕' : React.createElement('img', {src:'/vyom_logo.png', style:{width:'30px', height:'30px', objectFit:'contain', filter:'drop-shadow(0 2px 6px rgba(0,0,0,0.15))'}}),
+      open ? '✕' : React.createElement(ChatbotLoaderIcon),
       !open && unread>0 && /*#__PURE__*/React.createElement('span', {className:'copilot-badge'}, unread>9?'9+':unread),
       /*#__PURE__*/React.createElement('span', {className:'copilot-kb-hint'},
         /*#__PURE__*/React.createElement('kbd', null, 'Ctrl'),
@@ -40829,7 +41007,7 @@ RESPONSE STYLE:
       /*#__PURE__*/React.createElement('div', {className:'copilot-header'},
         /*#__PURE__*/React.createElement('div', {className:'copilot-header-info'},
           /*#__PURE__*/React.createElement('div', {className:'copilot-avatar'},
-            React.createElement('img', {src:'/vyom_logo.png', style:{width:'24px', height:'24px', objectFit:'contain'}}),
+            React.createElement('img', {src:'/vyom_logo.png', style:{width:'24px', height:'24px', borderRadius:'50%', objectFit:'cover'}}),
             /*#__PURE__*/React.createElement('div', {className:'copilot-avatar-dot'})
           ),
           /*#__PURE__*/React.createElement('div', null,
@@ -42849,7 +43027,7 @@ YOUR ROLE:
       // Component is portaled to <body> so no ancestor can clip it.
     },
       React.createElement('span',{className:'s-pulse'}),
-      open ? '✕' : React.createElement('img', {src:'/vyom_logo.png', style:{width:'26px', height:'26px', objectFit:'contain', filter:'drop-shadow(0 2px 6px rgba(0,0,0,0.15))'}})
+      open ? '✕' : React.createElement(ChatbotLoaderIcon)
     ),
 
     // Panel
@@ -42857,7 +43035,7 @@ YOUR ROLE:
       // Header
       React.createElement('div', {className:'student-copilot-header'},
         React.createElement('div', {className:'sc-avatar'},
-          React.createElement('img', {src:'/vyom_logo.png', style:{width:'24px', height:'24px', objectFit:'contain'}}),
+          React.createElement('img', {src:'/vyom_logo.png', style:{width:'24px', height:'24px', borderRadius:'50%', objectFit:'cover'}}),
           React.createElement('div',{className:'sc-avatar-dot'})
         ),
         React.createElement('div', null,

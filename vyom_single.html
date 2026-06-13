@@ -37,12 +37,14 @@
 /* ── Reset & Variables ── */
 *{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --bg:#061329;--surface:#0b1d3a;--surface2:#12284c;--surface3:#1b3562;
-  --accent:#D4A017;--accent2:#E7C46A;--green:#22c55e;--red:#ef4444;
-  --yellow:#eab308;--blue:#3b82f6;--orange:#f97316;
-  --text:#f8f9fc;--text2:#c4ccd9;--text3:#8e9cae;
-  --border:rgba(212, 160, 23, 0.2);--radius:24px;--radius-sm:12px;
-  --shadow:0 8px 32px rgba(0,0,0,0.5);
+  --bg:#0B1020;--surface:#12182D;--surface2:#1A203C;--surface3:#232A4E;
+  --accent:#7C3AED;--accent2:#9D60FF;--accent-rgb:124, 58, 237;
+  --accent-glow:rgba(var(--accent-rgb), 0.25);
+  --border:rgba(var(--accent-rgb), 0.18);
+  --text:#F8FAFC;--text2:#B6C2D1;--text3:#7F8E9F;
+  --green:#10B981;--red:#EF4444;--yellow:#F59E0B;--blue:#3b82f6;--orange:#f97316;
+  --radius:24px;--radius-sm:12px;
+  --shadow:0 8px 32px rgba(0,0,0,0.4);
   --font:'Inter',system-ui,sans-serif;
 }
 @keyframes blink {
@@ -68,6 +70,8 @@
   /* ── Brand Accent — Navy & Gold ── */
   --accent:#0B2D63;
   --accent2:#D4A017;
+  --accent-rgb:11, 45, 99;
+  --accent-glow:rgba(var(--accent-rgb), 0.15);
 
   /* ── Status ── */
   --green:#2e7d32;
@@ -799,10 +803,10 @@ select option{background:var(--surface2)}
 
 :root {
   --sidebar-w: 240px;
-  --sidebar-bg: #0e1029;
-  --sidebar-hover: rgba(99,102,241,0.12);
-  --sidebar-active: rgba(99,102,241,0.2);
-  --sidebar-text: rgba(226,232,240,0.75);
+  --sidebar-bg: #0D1020;
+  --sidebar-hover: rgba(var(--accent-rgb), 0.12);
+  --sidebar-active: rgba(var(--accent-rgb), 0.2);
+  --sidebar-text: rgba(182, 194, 209, 0.75);
   --sidebar-text-active: #fff;
   --header-h: 72px;
   --card-radius: 16px;
@@ -2833,7 +2837,7 @@ select option{background:var(--surface2)}
   --sidebar-w: 220px;
   --header-h: 60px;
   --card-radius: 18px;
-  --card-shadow: 0 8px 28px rgba(110,44,18,0.08);
+  --card-shadow: var(--shadow);
 }
 
 /* ══════════════════════════════════════════════════════════════════
@@ -2845,22 +2849,22 @@ select option{background:var(--surface2)}
 
 /* ── CM2 CSS VARIABLE OVERRIDES (Content Management) ── */
 .light {
-  --cm2-bg0: #F8F3ED;
-  --cm2-bg1: #FFFDF9;
-  --cm2-bg2: #F3E9DD;
-  --cm2-bg3: #EAD9C8;
-  --cm2-border: rgba(110,44,18,0.10);
-  --cm2-border2: rgba(110,44,18,0.20);
-  --cm2-purple: #6E2C12;
-  --cm2-purple2: #8B451E;
-  --cm2-green: #5E8B55;
-  --cm2-orange: #C65A3D;
-  --cm2-cyan: #0288d1;
-  --cm2-text1: #2B1B12;
-  --cm2-text2: #6B5648;
-  --cm2-text3: #9C8778;
-  --cm2-glass: rgba(255,253,249,0.80);
-  --cm2-glass2: rgba(255,253,249,0.95);
+  --cm2-bg0: var(--bg);
+  --cm2-bg1: var(--surface);
+  --cm2-bg2: var(--surface2);
+  --cm2-bg3: var(--surface3);
+  --cm2-border: var(--border);
+  --cm2-border2: rgba(var(--accent-rgb), 0.25);
+  --cm2-purple: var(--accent);
+  --cm2-purple2: var(--accent2);
+  --cm2-green: var(--green);
+  --cm2-orange: var(--orange);
+  --cm2-cyan: var(--accent2);
+  --cm2-text1: var(--text);
+  --cm2-text2: var(--text2);
+  --cm2-text3: var(--text3);
+  --cm2-glass: rgba(var(--accent-rgb), 0.035);
+  --cm2-glass2: rgba(var(--accent-rgb), 0.055);
 }
 
 /* ── CM2 CORE COMPONENTS ── */
@@ -7702,24 +7706,24 @@ body.s-ui-active .toasts {
 
 /* ── Design Tokens ── */
 :root {
-  --sv2-bg:          #0D0F1A;
-  --sv2-surface:     rgba(255,255,255,0.04);
-  --sv2-surface2:    rgba(255,255,255,0.07);
-  --sv2-surface3:    rgba(255,255,255,0.10);
-  --sv2-border:      rgba(255,255,255,0.08);
-  --sv2-border2:     rgba(255,255,255,0.12);
-  --sv2-text:        #F1F5F9;
-  --sv2-text2:       rgba(241,245,249,0.65);
-  --sv2-text3:       rgba(241,245,249,0.35);
-  --sv2-purple:      #7C3AED;
-  --sv2-purple-dim:  rgba(124,58,237,0.15);
-  --sv2-purple-glow: rgba(124,58,237,0.35);
-  --sv2-blue:        #0EA5E9;
-  --sv2-blue-dim:    rgba(14,165,233,0.12);
-  --sv2-blue-glow:   rgba(14,165,233,0.3);
-  --sv2-green:       #10B981;
-  --sv2-gold:        #F59E0B;
-  --sv2-red:         #EF4444;
+  --sv2-bg:          var(--bg);
+  --sv2-surface:     var(--surface);
+  --sv2-surface2:    var(--surface2);
+  --sv2-surface3:    var(--surface3);
+  --sv2-border:      var(--border);
+  --sv2-border2:     rgba(var(--accent-rgb), 0.25);
+  --sv2-text:        var(--text);
+  --sv2-text2:       var(--text2);
+  --sv2-text3:       var(--text3);
+  --sv2-purple:      var(--accent);
+  --sv2-purple-dim:  var(--accent-glow);
+  --sv2-purple-glow: rgba(var(--accent-rgb), 0.35);
+  --sv2-blue:        var(--accent2);
+  --sv2-blue-dim:    rgba(var(--accent-rgb), 0.12);
+  --sv2-blue-glow:   var(--accent-glow);
+  --sv2-green:       var(--green);
+  --sv2-gold:        var(--yellow);
+  --sv2-red:         var(--red);
   --sv2-sidebar-w:   242px;
   --sv2-right-w:     260px;
   --sv2-nav-h:       58px;
@@ -7751,29 +7755,29 @@ body.s-ui-active .toasts {
    All classes prefixed sd- / sv2- / s- to fully isolate from teacher
 ═══════════════════════════════════════════════════════════════════ */
 :root {
-  --sd-bg: #080a14;
-  --sd-bg2: #0d0f1e;
-  --sd-surface: #101323;
-  --sd-surface2: #161929;
-  --sd-surface3: #1d2138;
-  --sd-purple: #7c3aed;
-  --sd-purple2: #6d28d9;
-  --sd-purple-light: #a78bfa;
-  --sd-purple-glow: rgba(124,58,237,0.45);
-  --sd-purple-dim: rgba(124,58,237,0.14);
-  --sd-violet: #8b5cf6;
-  --sd-pink: #ec4899;
-  --sd-sky: #0ea5e9;
-  --sd-sky2: #38bdf8;
-  --sd-green: #22c55e;
-  --sd-teal: #14b8a6;
-  --sd-orange: #f97316;
-  --sd-text: #f1f5f9;
-  --sd-text2: #94a3b8;
-  --sd-text3: #475569;
-  --sd-border: rgba(255,255,255,0.07);
-  --sd-border2: rgba(255,255,255,0.12);
-  --sd-border3: rgba(124,58,237,0.2);
+  --sd-bg: var(--bg);
+  --sd-bg2: var(--surface);
+  --sd-surface: var(--surface2);
+  --sd-surface2: var(--surface2);
+  --sd-surface3: var(--surface3);
+  --sd-purple: var(--accent);
+  --sd-purple2: var(--accent);
+  --sd-purple-light: var(--accent2);
+  --sd-purple-glow: rgba(var(--accent-rgb), 0.35);
+  --sd-purple-dim: var(--accent-glow);
+  --sd-violet: var(--accent);
+  --sd-pink: var(--accent2);
+  --sd-sky: var(--accent2);
+  --sd-sky2: var(--accent2);
+  --sd-green: var(--green);
+  --sd-teal: var(--green);
+  --sd-orange: var(--orange);
+  --sd-text: var(--text);
+  --sd-text2: var(--text2);
+  --sd-text3: var(--text3);
+  --sd-border: var(--border);
+  --sd-border2: rgba(var(--accent-rgb), 0.25);
+  --sd-border3: var(--border);
   --sd-sidebar-w: 220px;
   --sd-header-h: 66px;
   --sd-radius: 16px;
@@ -11991,14 +11995,14 @@ body.s-ui-active .toasts {
 /* ── Premium CSS Variables (mobile-specific neon palette) ── */
 @media(max-width:768px){
   :root{
-    --neon-sky:#0EA5E9;
-    --neon-violet:#7C3AED;
-    --neon-green:#10B981;
-    --neon-pink:#EC4899;
-    --neon-gold:#F59E0B;
-    --glass-bg:rgba(15,18,32,0.82);
-    --glass-border:rgba(99,102,241,0.25);
-    --glass-glow:0 0 24px rgba(99,102,241,0.18);
+    --neon-sky:var(--accent2);
+    --neon-violet:var(--accent);
+    --neon-green:var(--green);
+    --neon-pink:var(--accent2);
+    --neon-gold:var(--yellow);
+    --glass-bg:var(--surface2);
+    --glass-border:var(--border);
+    --glass-glow:0 0 24px var(--accent-glow);
     --spring:cubic-bezier(0.34,1.56,0.64,1);
     --smooth:cubic-bezier(0.4,0,0.2,1);
     --bounce:cubic-bezier(0.68,-0.55,0.265,1.55);
@@ -12972,45 +12976,45 @@ body.s-ui-active .toasts {
 
 /* ── 1. Override ALL student CSS variables in light mode ── */
 .light {
-  --sd-bg: #F8F5EF;
-  --sd-bg2: #F3EDE2;
-  --sd-surface: #FFFDF9;
-  --sd-surface2: #F3EDE2;
-  --sd-surface3: #EAD9C8;
-  --sd-purple: #0B2D63;
-  --sd-purple2: #0a2554;
-  --sd-purple-light: #0B2D63;
-  --sd-purple-glow: rgba(11,45,99,0.25);
-  --sd-purple-dim: rgba(11,45,99,0.08);
-  --sd-pink: #9d174d;
-  --sd-sky: #0288d1;
-  --sd-sky2: #38bdf8;
-  --sd-green: #2e7d32;
-  --sd-teal: #0d7a6e;
-  --sd-orange: #e65100;
-  --sd-text: #1A1A1A;
-  --sd-text2: #444444;
-  --sd-text3: #666666;
-  --sd-border: rgba(11,45,99,0.1);
-  --sd-border2: rgba(11,45,99,0.15);
-  --sd-border3: rgba(212,160,23,0.25);
-  --sv2-bg: #F8F5EF;
-  --sv2-surface: rgba(255,255,255,0.95);
-  --sv2-surface2: #F3EDE2;
-  --sv2-surface3: #EAD9C8;
-  --sv2-border: rgba(11,45,99,0.1);
-  --sv2-border2: rgba(11,45,99,0.15);
-  --sv2-text: #1A1A1A;
-  --sv2-text2: #444444;
-  --sv2-text3: #666666;
-  --sv2-purple: #0B2D63;
-  --sv2-purple-dim: rgba(11,45,99,0.08);
-  --sv2-purple-glow: rgba(11,45,99,0.22);
-  --sv2-blue: #0288d1;
-  --sv2-blue-dim: rgba(2,136,209,0.1);
-  --sv2-blue-glow: rgba(2,136,209,0.25);
-  --sv2-green: #2e7d32;
-  --sv2-gold: #D4A017;
+  --sd-bg: var(--bg);
+  --sd-bg2: var(--surface);
+  --sd-surface: var(--surface2);
+  --sd-surface2: var(--surface2);
+  --sd-surface3: var(--surface3);
+  --sd-purple: var(--accent);
+  --sd-purple2: var(--accent);
+  --sd-purple-light: var(--accent2);
+  --sd-purple-glow: var(--accent-glow);
+  --sd-purple-dim: var(--accent-glow);
+  --sd-pink: var(--accent2);
+  --sd-sky: var(--accent2);
+  --sd-sky2: var(--accent2);
+  --sd-green: var(--green);
+  --sd-teal: var(--green);
+  --sd-orange: var(--orange);
+  --sd-text: var(--text);
+  --sd-text2: var(--text2);
+  --sd-text3: var(--text3);
+  --sd-border: var(--border);
+  --sd-border2: rgba(var(--accent-rgb), 0.25);
+  --sd-border3: var(--border);
+  --sv2-bg: var(--bg);
+  --sv2-surface: var(--surface);
+  --sv2-surface2: var(--surface2);
+  --sv2-surface3: var(--surface3);
+  --sv2-border: var(--border);
+  --sv2-border2: rgba(var(--accent-rgb), 0.25);
+  --sv2-text: var(--text);
+  --sv2-text2: var(--text2);
+  --sv2-text3: var(--text3);
+  --sv2-purple: var(--accent);
+  --sv2-purple-dim: var(--accent-glow);
+  --sv2-purple-glow: rgba(var(--accent-rgb), 0.35);
+  --sv2-blue: var(--accent2);
+  --sv2-blue-dim: rgba(var(--accent-rgb), 0.12);
+  --sv2-blue-glow: var(--accent-glow);
+  --sv2-green: var(--green);
+  --sv2-gold: var(--yellow);
 }
 
 /* ── 2. Student App — tone down ambient mesh in light mode ── */
@@ -16822,25 +16826,25 @@ body.s-ui-active .toasts {
 
 /* ── Mobile Design Tokens ── */
 :root {
-  --mob-bg: #0D0F1A;
-  --mob-surface: #13162A;
-  --mob-surface2: #1C2040;
-  --mob-surface3: #252A4A;
-  --mob-accent: #6366F1;
-  --mob-accent2: #8B5CF6;
-  --mob-accent-glow: rgba(99,102,241,0.35);
-  --mob-green: #22C55E;
-  --mob-red: #EF4444;
-  --mob-yellow: #EAB308;
-  --mob-blue: #3B82F6;
-  --mob-text: #E8ECF5;
-  --mob-text2: #8892B0;
-  --mob-text3: #4A5280;
-  --mob-border: rgba(99,102,241,0.15);
+  --mob-bg: var(--bg);
+  --mob-surface: var(--surface);
+  --mob-surface2: var(--surface2);
+  --mob-surface3: var(--surface3);
+  --mob-accent: var(--accent);
+  --mob-accent2: var(--accent2);
+  --mob-accent-glow: var(--accent-glow);
+  --mob-green: var(--green);
+  --mob-red: var(--red);
+  --mob-yellow: var(--yellow);
+  --mob-blue: var(--blue);
+  --mob-text: var(--text);
+  --mob-text2: var(--text2);
+  --mob-text3: var(--text3);
+  --mob-border: var(--border);
   --mob-radius: 16px;
   --mob-radius-sm: 12px;
-  --mob-shadow: 0 4px 24px rgba(0,0,0,0.5);
-  --mob-shadow-accent: 0 4px 24px rgba(99,102,241,0.25);
+  --mob-shadow: var(--shadow);
+  --mob-shadow-accent: var(--accent-glow);
   --mob-font: 'Plus Jakarta Sans', system-ui, sans-serif;
 }
 
@@ -17866,22 +17870,22 @@ body.s-ui-active .toasts {
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
 
 :root {
-  --cm2-bg0: #070B1A;
-  --cm2-bg1: #0B1023;
-  --cm2-bg2: #11182D;
-  --cm2-bg3: #161D35;
-  --cm2-border: rgba(255,255,255,0.07);
-  --cm2-border2: rgba(99,102,241,0.25);
-  --cm2-purple: #6366f1;
-  --cm2-purple2: #8b5cf6;
-  --cm2-green: #22c55e;
-  --cm2-orange: #f97316;
-  --cm2-cyan: #06b6d4;
-  --cm2-text1: #f0f4ff;
-  --cm2-text2: #94a3b8;
-  --cm2-text3: #4a5568;
-  --cm2-glass: rgba(255,255,255,0.035);
-  --cm2-glass2: rgba(255,255,255,0.055);
+  --cm2-bg0: var(--bg);
+  --cm2-bg1: var(--surface);
+  --cm2-bg2: var(--surface2);
+  --cm2-bg3: var(--surface3);
+  --cm2-border: var(--border);
+  --cm2-border2: rgba(var(--accent-rgb), 0.25);
+  --cm2-purple: var(--accent);
+  --cm2-purple2: var(--accent2);
+  --cm2-green: var(--green);
+  --cm2-orange: var(--orange);
+  --cm2-cyan: var(--accent2);
+  --cm2-text1: var(--text);
+  --cm2-text2: var(--text2);
+  --cm2-text3: var(--text3);
+  --cm2-glass: rgba(var(--accent-rgb), 0.035);
+  --cm2-glass2: rgba(var(--accent-rgb), 0.055);
 }
 
 /* Wrap */
@@ -20271,6 +20275,15 @@ body.s-ui-active .toasts {
 </style>
 </head>
 <body>
+<script>
+  (function() {
+    try {
+      if (localStorage.getItem('cm_theme') === 'light') {
+        document.body.classList.add('light');
+      }
+    } catch(e) {}
+  })();
+</script>
 <div id="root"></div>
 
 <!--

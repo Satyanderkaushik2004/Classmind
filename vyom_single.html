@@ -2831,6 +2831,158 @@ select option{background:var(--surface2)}
 .light .copilot-header { background: #F3E9DD; border-bottom-color: #E6D5C3; }
 .light .copilot-title { color: #2B1B12; }
 
+/* ── PREMIUM LIGHT-THEME CHATBOT (Black + Gold + Silver) ── */
+.light .copilot-window,
+.light .student-copilot-panel {
+  background: linear-gradient(165deg, #1c1c1f 0%, #121214 100%) !important;
+  border: 1px solid rgba(212,175,55,0.35);
+  box-shadow:
+    0 20px 60px rgba(0,0,0,0.35),
+    0 0 0 1px rgba(192,192,192,0.08),
+    inset 0 1px 0 rgba(255,255,255,0.05);
+}
+.light .copilot-header,
+.light .student-copilot-header {
+  background: linear-gradient(135deg, #1a1a1d 0%, #2b2b30 55%, #3a2f12 100%) !important;
+  border-bottom: 1px solid rgba(212,175,55,0.3);
+}
+.light .copilot-header::before,
+.light .student-copilot-header::before {
+  background: linear-gradient(90deg, rgba(212,175,55,0.08), transparent, rgba(192,192,192,0.06));
+}
+.light .copilot-title,
+.light .student-copilot-title { color: #F5E6C8 !important; }
+.light .copilot-subtitle,
+.light .student-copilot-sub { color: rgba(245,230,200,0.6) !important; }
+.light .copilot-avatar,
+.light .sc-avatar {
+  background: linear-gradient(135deg, rgba(212,175,55,0.25), rgba(192,192,192,0.15));
+  border: 2px solid rgba(212,175,55,0.45);
+}
+.light .copilot-hbtn, .light .copilot-close,
+.light .student-copilot-close {
+  background: rgba(192,192,192,0.1);
+  border: 1px solid rgba(212,175,55,0.25);
+  color: rgba(245,230,200,0.85);
+}
+.light .copilot-hbtn:hover, .light .copilot-close:hover,
+.light .student-copilot-close:hover {
+  background: rgba(212,175,55,0.18);
+  border-color: rgba(212,175,55,0.5);
+  color: #F5E6C8;
+}
+
+/* Mode bar / chips */
+.light .copilot-modebar { background: rgba(255,255,255,0.03); border-bottom-color: rgba(192,192,192,0.12); }
+.light .copilot-mode-btn { color: rgba(245,230,200,0.55); }
+.light .copilot-mode-btn:hover { color: #F5E6C8; background: rgba(212,175,55,0.08); }
+.light .copilot-mode-btn.active { color: #D4AF37; border-bottom-color: #D4AF37; }
+.light .copilot-chips { border-bottom-color: rgba(192,192,192,0.12); }
+.light .copilot-chip,
+.light .sc-quick-btn {
+  background: rgba(255,255,255,0.04);
+  border-color: rgba(192,192,192,0.2);
+  color: rgba(245,230,200,0.75);
+}
+.light .copilot-chip:hover,
+.light .sc-quick-btn:hover {
+  border-color: #D4AF37;
+  color: #F5E6C8;
+  background: rgba(212,175,55,0.1);
+}
+
+/* Messages area */
+.light .copilot-messages,
+.light .sc-messages { background: transparent; }
+.light .copilot-messages::-webkit-scrollbar-thumb,
+.light .sc-messages::-webkit-scrollbar-thumb { background: rgba(212,175,55,0.25); }
+
+/* Bot bubble — dark metallic glass with silver border */
+.light .copilot-msg.bot .copilot-bubble,
+.light .sc-msg.bot .sc-bubble {
+  background: linear-gradient(145deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02)) !important;
+  border: 1px solid rgba(192,192,192,0.25) !important;
+  color: #F1ECE2 !important;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.06);
+  backdrop-filter: blur(6px);
+}
+.light .copilot-bubble a { color: #D4AF37; }
+
+/* User bubble — gold gradient */
+.light .copilot-msg.user .copilot-bubble,
+.light .sc-msg.user .sc-bubble {
+  background: linear-gradient(135deg, #D4AF37, #B8860B) !important;
+  color: #1A1A1A !important;
+  box-shadow: 0 4px 16px rgba(212,175,55,0.35);
+}
+.light .copilot-msg.system .copilot-bubble {
+  background: rgba(212,175,55,0.1) !important;
+  border: 1px solid rgba(212,175,55,0.25) !important;
+  color: rgba(245,230,200,0.85) !important;
+}
+.light .copilot-ts, .light .sc-ts { color: rgba(245,230,200,0.4) !important; }
+
+/* Typing / thinking indicators */
+.light .copilot-typing, .light .copilot-thinking,
+.light .sc-typing {
+  background: rgba(255,255,255,0.05) !important;
+  border: 1px solid rgba(192,192,192,0.2) !important;
+  color: rgba(245,230,200,0.6);
+}
+.light .copilot-dot, .light .sc-dot { background: #D4AF37 !important; }
+
+/* Input row & input */
+.light .copilot-input-row,
+.light .sc-input-row {
+  background: rgba(0,0,0,0.2) !important;
+  border-top: 1px solid rgba(212,175,55,0.2) !important;
+}
+.light .copilot-input,
+.light .sc-input {
+  background: rgba(255,255,255,0.04) !important;
+  border: 1px solid rgba(192,192,192,0.25) !important;
+  color: #F1ECE2 !important;
+}
+.light .copilot-input:focus,
+.light .sc-input:focus {
+  border-color: #D4AF37 !important;
+  box-shadow: 0 0 0 3px rgba(212,175,55,0.15) !important;
+}
+.light .copilot-input::placeholder,
+.light .sc-input::placeholder { color: rgba(245,230,200,0.35) !important; }
+
+/* Send / mic buttons — gold accent */
+.light .copilot-send, .light .sc-send {
+  background: linear-gradient(135deg, #D4AF37, #B8860B) !important;
+  color: #1A1A1A !important;
+  box-shadow: 0 2px 10px rgba(212,175,55,0.45) !important;
+}
+.light .copilot-send:hover:not(:disabled), .light .sc-send:hover:not(:disabled) {
+  box-shadow: 0 4px 16px rgba(212,175,55,0.6) !important;
+}
+.light .copilot-mic {
+  background: rgba(255,255,255,0.05);
+  border-color: rgba(192,192,192,0.25);
+  color: rgba(245,230,200,0.7);
+}
+.light .copilot-mic:hover { border-color: #D4AF37; color: #D4AF37; }
+
+/* Action chips inside messages */
+.light .copilot-action-btn {
+  border-color: rgba(212,175,55,0.35);
+  background: rgba(212,175,55,0.08);
+  color: #D4AF37;
+}
+.light .copilot-action-btn:hover { background: rgba(212,175,55,0.18); border-color: #D4AF37; }
+
+/* AI badge */
+.light .copilot-ai-badge {
+  background: linear-gradient(135deg, rgba(212,175,55,0.18), rgba(192,192,192,0.1)) !important;
+  border: 1px solid rgba(212,175,55,0.35) !important;
+  color: #D4AF37 !important;
+}
+.light .sc-empty, .light .student-copilot-no-task { color: rgba(245,230,200,0.35) !important; }
+
 /* ── TEACHER DB CSS VARIABLES override (premium dashboard) ── */
 .light {
   --db-font: 'Inter', system-ui, sans-serif;
@@ -5822,6 +5974,62 @@ body.s-ui-active .toasts {
   transform: scale(1.14);
 }
 .chat-msg-action-btn.danger:hover { background: rgba(239,68,68,0.15); color: #f87171; }
+/* ── Sticky Submit Test bar ── */
+.s-test-submit-bar {
+  position: sticky; bottom: 0; left: 0; right: 0;
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  margin-top: 18px; padding: 12px 16px;
+  background: rgba(15,17,26,0.92);
+  backdrop-filter: blur(14px);
+  border: 1px solid rgba(212,175,55,0.25);
+  border-radius: 16px;
+  box-shadow: 0 -6px 24px rgba(0,0,0,0.35), 0 0 0 1px rgba(255,255,255,0.03);
+  z-index: 50;
+}
+.s-test-submit-btn {
+  padding: 12px 26px; border-radius: 12px; border: none; cursor: pointer;
+  font-family: inherit; font-weight: 800; font-size: 0.92rem; letter-spacing: 0.02em;
+  background: linear-gradient(135deg, #D4AF37, #B8860B);
+  color: #1A1A1A;
+  box-shadow: 0 4px 18px rgba(212,175,55,0.4);
+  transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s;
+}
+.s-test-submit-btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 6px 24px rgba(212,175,55,0.55); }
+.s-test-submit-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+@media (max-width: 600px) {
+  .s-test-submit-bar { flex-direction: column; align-items: stretch; gap: 8px; }
+  .s-test-submit-btn { width: 100%; }
+}
+
+/* ── Submit Test confirmation modal ── */
+.s-test-submit-overlay {
+  position: fixed; inset: 0; z-index: 9999999;
+  background: rgba(0,0,0,0.7); backdrop-filter: blur(4px);
+  display: flex; align-items: center; justify-content: center; padding: 16px;
+}
+.s-test-submit-modal {
+  width: 100%; max-width: 420px; padding: 22px;
+  background: linear-gradient(165deg, #1c1c1f 0%, #121214 100%);
+  border: 1px solid rgba(212,175,55,0.35);
+  border-radius: 18px; color: #F1ECE2;
+  box-shadow: 0 24px 70px rgba(0,0,0,0.5);
+}
+.s-test-submit-cancel, .s-test-submit-confirm {
+  flex: 1; padding: 11px 16px; border-radius: 12px; border: none; cursor: pointer;
+  font-family: inherit; font-weight: 700; font-size: 0.85rem; transition: all 0.15s;
+}
+.s-test-submit-cancel {
+  background: rgba(255,255,255,0.06); color: rgba(245,230,200,0.8);
+  border: 1px solid rgba(192,192,192,0.2);
+}
+.s-test-submit-cancel:hover:not(:disabled) { background: rgba(255,255,255,0.1); }
+.s-test-submit-confirm {
+  background: linear-gradient(135deg, #D4AF37, #B8860B); color: #1A1A1A;
+  box-shadow: 0 4px 16px rgba(212,175,55,0.4);
+}
+.s-test-submit-confirm:hover:not(:disabled) { box-shadow: 0 6px 22px rgba(212,175,55,0.55); }
+.s-test-submit-cancel:disabled, .s-test-submit-confirm:disabled { opacity: 0.6; cursor: not-allowed; }
+
 .chat-moderation-menu {
   position: absolute; right: 4px; top: 24px; z-index: 200;
   min-width: 182px;
@@ -19356,6 +19564,25 @@ body.s-ui-active .toasts {
 .sc2-share-btn.copylink { border-color: rgba(99,102,241,0.3); }
 .sc2-share-btn.copylink::before { background: rgba(99,102,241,0.12); }
 .sc2-share-btn.copylink:hover { box-shadow: 0 0 16px rgba(99,102,241,0.3); border-color: rgba(99,102,241,0.6); }
+.sc2-share-btn.twitter { border-color: rgba(29,155,240,0.3); }
+.sc2-share-btn.twitter::before { background: rgba(29,155,240,0.12); }
+.sc2-share-btn.twitter:hover { box-shadow: 0 0 16px rgba(29,155,240,0.3); border-color: rgba(29,155,240,0.6); }
+.sc2-share-btn.facebook { border-color: rgba(24,119,242,0.3); }
+.sc2-share-btn.facebook::before { background: rgba(24,119,242,0.12); }
+.sc2-share-btn.facebook:hover { box-shadow: 0 0 16px rgba(24,119,242,0.3); border-color: rgba(24,119,242,0.6); }
+.sc2-btn-icon svg {
+  width: 22px;
+  height: 22px;
+  display: block;
+  transition: transform 0.25s ease, filter 0.25s ease;
+}
+.sc2-share-btn:hover .sc2-btn-icon svg {
+  transform: scale(1.12) translateY(-1px);
+  filter: drop-shadow(0 0 6px currentColor);
+}
+@media (max-width: 600px) {
+  .sc2-btn-icon svg { width: 19px; height: 19px; }
+}
 .sc2-btn-icon {
   font-size: 1.3rem;
   line-height: 1;
@@ -25536,6 +25763,10 @@ function ShareCodePanel({ sessionCode, add }) {
       window.open(`https://wa.me/?text=${encodedMsg}`, '_blank');
     } else if (platform === 'telegram') {
       window.open(`https://t.me/share/url?url=${encodeURIComponent('https://vyom.app')}&text=${encodedMsg}`, '_blank');
+    } else if (platform === 'twitter') {
+      window.open(`https://twitter.com/intent/tweet?text=${encodedMsg}`, '_blank');
+    } else if (platform === 'facebook') {
+      window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent('https://vyom.app')}&quote=${encodedMsg}`, '_blank');
     } else if (platform === 'instagram') {
       navigator.clipboard.writeText(inviteMsg).catch(() => {});
       setCopiedBtn('instagram');
@@ -25549,10 +25780,41 @@ function ShareCodePanel({ sessionCode, add }) {
     }
   }
 
+  // ── Official brand icons (inline SVG, current brand marks) ──────
+  const IconWhatsApp = () => React.createElement('svg', { viewBox: '0 0 24 24', fill: '#25D366' },
+    React.createElement('path', { d: 'M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.149-.15.347-.39.521-.585.174-.197.232-.337.347-.562.115-.225.057-.422-.04-.57-.099-.15-.669-1.612-.916-2.207-.247-.595-.495-.515-.669-.515-.16 0-.487.06-.711.291-.225.232-.86.84-.86 2.034 0 1.193.86 2.345.98 2.51.12.165 1.65 2.524 4.001 3.439 2.349.916 2.349.611 2.77.572.422-.04 1.358-.555 1.55-1.09.193-.535.193-.992.137-1.09-.057-.099-.198-.16-.396-.31zM12.043 21.785h-.004a9.84 9.84 0 01-5.013-1.371l-.36-.214-3.722.977.993-3.626-.235-.372a9.84 9.84 0 01-1.51-5.243c.001-5.443 4.43-9.872 9.876-9.872 2.638 0 5.115 1.029 6.978 2.893a9.806 9.806 0 012.892 6.984c-.003 5.444-4.432 9.844-9.895 9.844zM20.474 3.488A11.875 11.875 0 0012.05 0C5.503 0 .166 5.336.163 11.892c0 2.096.546 4.142 1.583 5.945L0 24l6.305-1.654a11.85 11.85 0 005.741 1.464h.005c6.546 0 11.882-5.336 11.885-11.892a11.84 11.84 0 00-3.462-8.43z' })
+  );
+  const IconTelegram = () => React.createElement('svg', { viewBox: '0 0 24 24', fill: '#229ED9' },
+    React.createElement('path', { d: 'M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.568 8.16c-.169 1.858-.896 6.728-1.272 8.928-.157.93-.466 1.241-.764 1.272-.65.06-1.143-.43-1.773-.846-.985-.646-1.541-1.05-2.498-1.682-.96-.633-.337-.98.21-1.55.144-.15 2.638-2.418 2.687-2.625.006-.026.012-.121-.045-.171-.057-.05-.142-.033-.203-.02-.087.02-1.474.937-4.16 2.751-.394.27-.75.402-1.068.395-.351-.008-1.028-.198-1.531-.36-.617-.198-1.107-.303-1.064-.64.022-.176.265-.355.728-.539 2.853-1.243 4.756-2.06 5.71-2.453 2.717-1.117 3.282-1.31 3.654-1.316.081-.001.262.018.379.112.099.08.126.187.14.262.013.075.029.246.013.379z' })
+  );
+  const IconInstagram = () => React.createElement('svg', { viewBox: '0 0 24 24' },
+    React.createElement('defs', null,
+      React.createElement('radialGradient', { id: 'igGrad', cx: '30%', cy: '107%', r: '150%' },
+        React.createElement('stop', { offset: '0%', stopColor: '#fdf497' }),
+        React.createElement('stop', { offset: '5%', stopColor: '#fdf497' }),
+        React.createElement('stop', { offset: '45%', stopColor: '#fd5949' }),
+        React.createElement('stop', { offset: '60%', stopColor: '#d6249f' }),
+        React.createElement('stop', { offset: '90%', stopColor: '#285AEB' })
+      )
+    ),
+    React.createElement('rect', { x: 1.5, y: 1.5, width: 21, height: 21, rx: 6, fill: 'url(#igGrad)' }),
+    React.createElement('rect', { x: 1.5, y: 1.5, width: 21, height: 21, rx: 6, fill: 'none', stroke: '#fff', strokeWidth: 1.6 }),
+    React.createElement('circle', { cx: 12, cy: 12, r: 4.4, fill: 'none', stroke: '#fff', strokeWidth: 1.6 }),
+    React.createElement('circle', { cx: 17.4, cy: 6.6, r: 1.15, fill: '#fff' })
+  );
+  const IconTwitterX = () => React.createElement('svg', { viewBox: '0 0 24 24', fill: 'currentColor', style: { color: '#000' } },
+    React.createElement('path', { d: 'M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z' })
+  );
+  const IconFacebook = () => React.createElement('svg', { viewBox: '0 0 24 24', fill: '#1877F2' },
+    React.createElement('path', { d: 'M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z' })
+  );
+
   const platforms = [
-    { id: 'whatsapp', label: 'WhatsApp', icon: '📲' },
-    { id: 'telegram', label: 'Telegram', icon: '✈️' },
-    { id: 'instagram', label: 'Instagram', icon: '📸' },
+    { id: 'whatsapp',  label: 'WhatsApp',  icon: React.createElement(IconWhatsApp) },
+    { id: 'telegram',  label: 'Telegram',  icon: React.createElement(IconTelegram) },
+    { id: 'instagram', label: 'Instagram', icon: React.createElement(IconInstagram) },
+    { id: 'twitter',   label: 'X / Twitter', icon: React.createElement(IconTwitterX) },
+    { id: 'facebook',  label: 'Facebook',  icon: React.createElement(IconFacebook) },
     { id: 'copy', label: 'Copy Link', icon: '🔗' },
   ];
 
@@ -35349,6 +35611,8 @@ function StudentTaskView({
   const [testSubmitted, setTestSubmitted] = useState(() => {
     try { return !!_loadTestState(sessionCode, studentId)?.submitted; } catch { return false; }
   });
+  const [showTestSubmitConfirm, setShowTestSubmitConfirm] = useState(false);
+  const [testSubmitting, setTestSubmitting] = useState(false);
   // Restore answers from sessionStorage
   const [testAnswers, setTestAnswers] = useState(() => {
     try { return _loadTestState(sessionCode, studentId)?.answers || {}; } catch { return {}; }
@@ -36037,7 +36301,8 @@ function StudentTaskView({
 
   // Save answer into state only — NO API call. Works for MCQ, short, long, coding.  // Open review modal (replaces direct finish)  // Final submit: send all answers via WS, reset quiz state
   async function handleTestSubmit() {
-    if (!testState) return;
+    if (!testState || testSubmitting || testSubmitted) return;
+    setTestSubmitting(true);
     // Submit all answers
     for (const [taskId, ans] of Object.entries(testAnswers)) {
       try {
@@ -36060,6 +36325,8 @@ function StudentTaskView({
     clearInterval(testTimerRef.current);
     testTimerRef.current = null;
     setTestSubmitted(true); // track submission for test page UI
+    setTestSubmitting(false);
+    setShowTestSubmitConfirm(false);
     // Clear test sessionStorage — test is done, no need to restore it
     _clearTestState(sessionCode, studentId);
     setSPage('result');     // navigate to result page (has PDF export)
@@ -37269,8 +37536,9 @@ function StudentTaskView({
           React.createElement('div', {style:{fontSize:'0.65rem',color:'rgba(241,245,249,0.4)',marginTop:2}}, 'remaining')
         ),
         React.createElement('button', {
-          onClick:handleTestSubmit,
-          style:{padding:'10px 18px',borderRadius:12,border:'none',background:'linear-gradient(135deg,#EF4444,#F97316)',color:'#fff',cursor:'pointer',fontFamily:'inherit',fontWeight:700,fontSize:'0.85rem'}
+          onClick:()=>setShowTestSubmitConfirm(true),
+          disabled: testSubmitting,
+          style:{padding:'10px 18px',borderRadius:12,border:'none',background:'linear-gradient(135deg,#EF4444,#F97316)',color:'#fff',cursor: testSubmitting?'not-allowed':'pointer',opacity: testSubmitting?0.6:1,fontFamily:'inherit',fontWeight:700,fontSize:'0.85rem'}
         }, '🏁 Submit Test')
       ),
 
@@ -37327,7 +37595,45 @@ function StudentTaskView({
           studentId,
           add
         })
-      ))
+      )),
+
+      // ── Sticky Submit Test bar ──────────────────────────────────
+      React.createElement('div', {className:'s-test-submit-bar'},
+        React.createElement('div', {style:{fontSize:'0.78rem',color:'rgba(241,245,249,0.6)'}},
+          `${Object.keys(testAnswers).length} / ${tasks.length} answered`
+        ),
+        React.createElement('button', {
+          className:'s-test-submit-btn',
+          disabled: testSubmitting,
+          onClick:()=>setShowTestSubmitConfirm(true)
+        }, testSubmitting ? '⏳ Submitting…' : '✅ Submit Test')
+      ),
+
+      // ── Submit confirmation modal ───────────────────────────────
+      showTestSubmitConfirm && React.createElement('div', {className:'s-test-submit-overlay'},
+        React.createElement('div', {className:'s-test-submit-modal'},
+          React.createElement('div', {style:{fontSize:'1.2rem',fontWeight:800,marginBottom:8}}, '📤 Submit Test?'),
+          React.createElement('div', {style:{fontSize:'0.85rem',color:'rgba(241,245,249,0.65)',marginBottom:14,lineHeight:1.6}},
+            `You've answered ${Object.keys(testAnswers).length} of ${tasks.length} questions. `,
+            Object.keys(testAnswers).length < tasks.length
+              ? React.createElement('span', {style:{color:'#F97316',fontWeight:700}}, 'Unanswered questions will be marked incorrect. ')
+              : null,
+            'Once submitted, your answers will be locked and cannot be changed.'
+          ),
+          React.createElement('div', {style:{display:'flex',gap:10}},
+            React.createElement('button', {
+              className:'s-test-submit-cancel',
+              disabled: testSubmitting,
+              onClick:()=>setShowTestSubmitConfirm(false)
+            }, '← Go Back'),
+            React.createElement('button', {
+              className:'s-test-submit-confirm',
+              disabled: testSubmitting,
+              onClick: handleTestSubmit
+            }, testSubmitting ? '⏳ Submitting…' : '✅ Confirm & Submit')
+          )
+        )
+      )
     );
   }
 

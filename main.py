@@ -2063,6 +2063,23 @@ async def session_control(code: str, action: str = Query(...), background_tasks:
     if action == "start":
         if not s.get("started_at"):
             s["started_at"] = now()
+        # ── Auto-start attendance when session starts ─────────────────
+        att = _att(s)
+        if att.get("state") == "inactive":
+            att["state"]      = "active"
+            att["started_at"] = att.get("started_at") or now()
+            att.setdefault("min_duration", 60)
+            # Retroactively mark any already-active students as present
+            for sid, st in s.get("students", {}).items():
+                if st.get("status") == "active" and sid not in att.get("records", {}):
+                    att.setdefault("records", {})[sid] = {
+                        "student_id": sid,
+                        "join_at":    now(),
+                        "leave_at":   None,
+                        "duration":   0,
+                        "status":     "present",
+                        "interactions": 0,
+                    }
     touch_session(s)
 
     # Compute session_end_timestamp for countdown
@@ -2097,6 +2114,9 @@ async def session_control(code: str, action: str = Query(...), background_tasks:
         if background_tasks is not None:
             background_tasks.add_task(_send_class_start_notifications, s)
             log.info("[AUTO-EMAIL] Class-start notification task queued for %s", code)
+        # ── Broadcast attendance state after auto-start ───────────────
+        asyncio.create_task(broadcast_attendance(s))
+    save_session(code)
     return {"status": s["status"], "session_end_timestamp": session_end_timestamp}
 
 

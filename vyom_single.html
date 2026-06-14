@@ -8922,6 +8922,21 @@ body.s-ui-active .toasts {
 
 /* Ensure card children sit above pseudo-elements */
 .sd-stat-card > * { position: relative; z-index: 1; }
+.sd-stat-card .sd-card-canvas {
+  position: absolute !important;
+  left: 0 !important;
+  top: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  z-index: 0 !important;
+  pointer-events: none !important;
+  opacity: 0.55;
+  transition: opacity 0.3s ease, transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.sd-stat-card:hover .sd-card-canvas {
+  opacity: 0.85;
+  transform: scale(1.03);
+}
 .sd-stat-icon {
   width: 46px; height: 46px; border-radius: 13px;
   display: flex; align-items: center; justify-content: center;
@@ -39228,6 +39243,7 @@ function StudentTaskView({
       React.createElement('div', {className:'sd-stat-row'},
         // Today's Agenda — purple card with particles
         React.createElement('div', {className:'sd-stat-card purple-card', onClick:()=>setSPage('task')},
+          React.createElement(AnimatedLineChart, { isLightTheme: isLightTheme }),
           // Floating particles layer
           React.createElement('div', {className:'sd-card-particles sd-particles-purple', 'aria-hidden':'true'},
             ...[...Array(6)].map((_,i)=>React.createElement('div',{key:i,className:'sd-particle sd-p-purple',style:{left:`${10+i*15}%`,animationDelay:`${i*0.7}s`,animationDuration:`${2.5+i*0.4}s`}}))
@@ -39249,6 +39265,7 @@ function StudentTaskView({
         ),
         // My Tasks — teal card with waveform dots
         React.createElement('div', {className:'sd-stat-card teal-card', onClick:()=>setSPage('task')},
+          React.createElement(AnimatedBarChart, { isLightTheme: isLightTheme }),
           React.createElement('div', {className:'sd-card-particles sd-particles-teal', 'aria-hidden':'true'},
             ...[...Array(5)].map((_,i)=>React.createElement('div',{key:i,className:'sd-particle sd-p-teal',style:{left:`${8+i*18}%`,animationDelay:`${i*0.55}s`,animationDuration:`${2+i*0.5}s`}}))
           ),
@@ -39265,6 +39282,7 @@ function StudentTaskView({
         ),
         // My Progress — magenta card with arc pulses
         React.createElement('div', {className:'sd-stat-card red-card', onClick:()=>setSPage('reports')},
+          React.createElement(AnimatedAreaGraph, { isLightTheme: isLightTheme }),
           React.createElement('div', {className:'sd-card-particles sd-particles-pink', 'aria-hidden':'true'},
             ...[...Array(5)].map((_,i)=>React.createElement('div',{key:i,className:'sd-particle sd-p-pink',style:{left:`${12+i*16}%`,animationDelay:`${i*0.65}s`,animationDuration:`${2.2+i*0.4}s`}}))
           ),
@@ -44915,6 +44933,719 @@ function ReportCenter({ sessionCode, studentId, studentName, studentPhoto: propS
 }
 
 
+
+// ── AnimatedLineChart (Canvas-based glowing line wave with scrolling grid for Today's Agenda) ──
+function AnimatedLineChart({ isLightTheme }) {
+  const canvasRef = React.useRef(null);
+
+  React.useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    let animationFrameId;
+    let width = 0;
+    let height = 0;
+
+    const resizeObserver = new ResizeObserver((entries) => {
+      for (let entry of entries) {
+        const { width: w, height: h } = entry.contentRect;
+        const dpr = window.devicePixelRatio || 1;
+        canvas.width = w * dpr;
+        canvas.height = h * dpr;
+        ctx.scale(dpr, dpr);
+        width = w;
+        height = h;
+      }
+    });
+
+    const parent = canvas.parentElement;
+    let targetSpeed = 1.0;
+    let currentSpeed = 1.0;
+    let targetGlow = 0.55;
+    let currentGlow = 0.55;
+
+    const onMouseEnter = () => { targetSpeed = 1.8; targetGlow = 0.95; };
+    const onMouseLeave = () => { targetSpeed = 1.0; targetGlow = 0.55; };
+
+    if (parent) {
+      resizeObserver.observe(parent);
+      parent.addEventListener('mouseenter', onMouseEnter);
+      parent.addEventListener('mouseleave', onMouseLeave);
+      const rect = parent.getBoundingClientRect();
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = rect.width * dpr;
+      canvas.height = rect.height * dpr;
+      ctx.scale(dpr, dpr);
+      width = rect.width;
+      height = rect.height;
+    }
+
+    let offset = 0;
+
+    const render = () => {
+      if (width === 0 || height === 0) {
+        animationFrameId = requestAnimationFrame(render);
+        return;
+      }
+
+      ctx.clearRect(0, 0, width, height);
+
+      currentSpeed += (targetSpeed - currentSpeed) * 0.1;
+      currentGlow += (targetGlow - currentGlow) * 0.1;
+      offset += 0.002 * currentSpeed;
+
+      // 1. Grid Background
+      ctx.save();
+      ctx.strokeStyle = isLightTheme ? 'rgba(79, 70, 229, 0.015)' : 'rgba(255, 255, 255, 0.02)';
+      ctx.lineWidth = 0.5;
+      const gridSize = 14;
+      ctx.beginPath();
+      const gridOffset = (offset * 12) % gridSize;
+      for (let x = gridOffset; x < width; x += gridSize) {
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, height);
+      }
+      for (let y = gridOffset; y < height; y += gridSize) {
+        ctx.moveTo(0, y);
+        ctx.lineTo(width, y);
+      }
+      ctx.stroke();
+      ctx.restore();
+
+      // 2. Ambient glowing orb behind chart
+      const orbX = width * 0.78;
+      const orbY = height * 0.45;
+      const orbRadius = Math.min(width, height) * 0.6;
+      let orbGrad = ctx.createRadialGradient(orbX, orbY, 0, orbX, orbY, orbRadius);
+      if (isLightTheme) {
+        orbGrad.addColorStop(0, `rgba(79, 70, 229, ${0.06 * currentGlow})`);
+        orbGrad.addColorStop(0.5, 'rgba(79, 70, 229, 0.01)');
+        orbGrad.addColorStop(1, 'rgba(0,0,0,0)');
+      } else {
+        orbGrad.addColorStop(0, `rgba(124, 58, 237, ${0.16 * currentGlow})`);
+        orbGrad.addColorStop(0.6, 'rgba(0,0,0,0)');
+      }
+      ctx.fillStyle = orbGrad;
+      ctx.beginPath();
+      ctx.arc(orbX, orbY, orbRadius, 0, Math.PI * 2);
+      ctx.fill();
+
+      // 3. Line coordinates evaluation
+      const startX = 4;
+      const endX = width * 0.96;
+      const getY = (x) => {
+        const pct = (x - startX) / (endX - startX);
+        let y = height * (0.85 - pct * 0.48);
+        y += Math.sin(offset * 2.2 + pct * 9.5) * (height * 0.11);
+        y += Math.cos(offset * 1.1 + pct * 4.0) * (height * 0.04);
+        return Math.max(height * 0.35, Math.min(height * 0.90, y));
+      };
+
+      // 4. Vertical projection wicks
+      ctx.save();
+      ctx.lineWidth = 1;
+      const lineSpacing = 7;
+      for (let x = startX; x <= endX; x += lineSpacing) {
+        const yVal = getY(x);
+        let dropGrad = ctx.createLinearGradient(x, yVal, x, height);
+        if (isLightTheme) {
+          dropGrad.addColorStop(0, `rgba(79, 70, 229, ${0.12 * currentGlow})`);
+          dropGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+        } else {
+          dropGrad.addColorStop(0, `rgba(167, 139, 250, ${0.14 * currentGlow})`);
+          dropGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+        }
+        ctx.strokeStyle = dropGrad;
+        ctx.beginPath();
+        ctx.moveTo(x, yVal);
+        ctx.lineTo(x, height);
+        ctx.stroke();
+      }
+      ctx.restore();
+
+      // 5. Gradient Area Fill
+      ctx.save();
+      ctx.beginPath();
+      ctx.moveTo(startX, height);
+      for (let x = startX; x <= endX; x += 3) {
+        ctx.lineTo(x, getY(x));
+      }
+      ctx.lineTo(endX, height);
+      ctx.closePath();
+      let fillGrad = ctx.createLinearGradient(0, 0, 0, height);
+      if (isLightTheme) {
+        fillGrad.addColorStop(0, 'rgba(79, 70, 229, 0.05)');
+        fillGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+      } else {
+        fillGrad.addColorStop(0, 'rgba(124, 58, 237, 0.05)');
+        fillGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+      }
+      ctx.fillStyle = fillGrad;
+      ctx.fill();
+      ctx.restore();
+
+      // 6. Draw Glow Stroke
+      ctx.save();
+      ctx.beginPath();
+      ctx.moveTo(startX, getY(startX));
+      for (let x = startX + 1; x <= endX; x += 2) {
+        ctx.lineTo(x, getY(x));
+      }
+      let lineGrad = ctx.createLinearGradient(0, 0, width, 0);
+      if (isLightTheme) {
+        lineGrad.addColorStop(0, 'rgba(79, 70, 229, 0.45)');
+        lineGrad.addColorStop(0.5, 'rgba(79, 70, 229, 0.85)');
+        lineGrad.addColorStop(1, 'rgba(59, 130, 246, 0.95)');
+      } else {
+        lineGrad.addColorStop(0, 'rgba(139, 92, 246, 0.3)');
+        lineGrad.addColorStop(0.5, 'rgba(167, 139, 250, 0.85)');
+        lineGrad.addColorStop(1, 'rgba(99, 102, 241, 1)');
+      }
+      ctx.strokeStyle = lineGrad;
+      ctx.lineWidth = 2.4;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+
+      if (!isLightTheme) {
+        ctx.shadowBlur = 8 + 8 * currentGlow;
+        ctx.shadowColor = 'rgba(167, 139, 250, 0.55)';
+      } else {
+        ctx.shadowBlur = 3 + 3 * currentGlow;
+        ctx.shadowColor = 'rgba(79, 70, 229, 0.35)';
+      }
+      ctx.stroke();
+      ctx.restore();
+
+      // 7. Pulse Points
+      const nodeRatios = [0.12, 0.48, 0.78, 1.0];
+      nodeRatios.forEach(ratio => {
+        const xVal = startX + ratio * (endX - startX);
+        const yVal = getY(xVal);
+        ctx.save();
+        ctx.beginPath();
+        const isEndNode = ratio === 1.0;
+        const radius = isEndNode ? 5.0 : 3.5;
+        ctx.arc(xVal, yVal, radius, 0, Math.PI * 2);
+
+        if (isLightTheme) {
+          ctx.fillStyle = '#ffffff';
+          ctx.strokeStyle = '#4f46e5';
+          ctx.lineWidth = isEndNode ? 3.0 : 2.0;
+          ctx.shadowBlur = isEndNode ? 8 : 4;
+          ctx.shadowColor = 'rgba(79, 70, 229, 0.4)';
+          ctx.fill();
+          ctx.stroke();
+        } else {
+          ctx.fillStyle = '#ffffff';
+          ctx.lineWidth = isEndNode ? 3.0 : 2.0;
+          ctx.shadowBlur = isEndNode ? 14 : 8;
+          ctx.strokeStyle = '#a78bfa';
+          ctx.shadowColor = '#a78bfa';
+          ctx.fill();
+          ctx.stroke();
+        }
+        ctx.restore();
+      });
+
+      // 8. Floating Glow Particle
+      ctx.save();
+      const particleOffset = offset * 2.5;
+      const pt1X = width * 0.4 + Math.sin(particleOffset * 0.5) * (width * 0.2);
+      const pt1Y = getY(pt1X) - 12 - Math.sin(particleOffset) * 4;
+      ctx.beginPath();
+      ctx.arc(pt1X, pt1Y, 1.8, 0, Math.PI * 2);
+      if (isLightTheme) {
+        ctx.fillStyle = 'rgba(79, 70, 229, 0.8)';
+      } else {
+        ctx.fillStyle = 'rgba(167, 139, 250, 0.85)';
+      }
+      ctx.fill();
+      ctx.restore();
+
+      animationFrameId = requestAnimationFrame(render);
+    };
+
+    render();
+
+    return () => {
+      cancelAnimationFrame(animationFrameId);
+      if (parent) {
+        resizeObserver.unobserve(parent);
+        parent.removeEventListener('mouseenter', onMouseEnter);
+        parent.removeEventListener('mouseleave', onMouseLeave);
+      }
+    };
+  }, [isLightTheme]);
+
+  return React.createElement('canvas', {
+    ref: canvasRef,
+    className: 'sd-card-canvas'
+  });
+}
+
+// ── AnimatedBarChart (Canvas-based staggered bar histogram for My Tasks) ──
+function AnimatedBarChart({ isLightTheme }) {
+  const canvasRef = React.useRef(null);
+
+  React.useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    let animationFrameId;
+    let width = 0;
+    let height = 0;
+
+    const resizeObserver = new ResizeObserver((entries) => {
+      for (let entry of entries) {
+        const { width: w, height: h } = entry.contentRect;
+        const dpr = window.devicePixelRatio || 1;
+        canvas.width = w * dpr;
+        canvas.height = h * dpr;
+        ctx.scale(dpr, dpr);
+        width = w;
+        height = h;
+      }
+    });
+
+    const parent = canvas.parentElement;
+    let targetSpeed = 1.0;
+    let currentSpeed = 1.0;
+    let targetGlow = 0.55;
+    let currentGlow = 0.55;
+
+    const onMouseEnter = () => { targetSpeed = 1.8; targetGlow = 0.95; };
+    const onMouseLeave = () => { targetSpeed = 1.0; targetGlow = 0.55; };
+
+    if (parent) {
+      resizeObserver.observe(parent);
+      parent.addEventListener('mouseenter', onMouseEnter);
+      parent.addEventListener('mouseleave', onMouseLeave);
+      const rect = parent.getBoundingClientRect();
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = rect.width * dpr;
+      canvas.height = rect.height * dpr;
+      ctx.scale(dpr, dpr);
+      width = rect.width;
+      height = rect.height;
+    }
+
+    let offset = 0;
+
+    const render = () => {
+      if (width === 0 || height === 0) {
+        animationFrameId = requestAnimationFrame(render);
+        return;
+      }
+
+      ctx.clearRect(0, 0, width, height);
+
+      currentSpeed += (targetSpeed - currentSpeed) * 0.1;
+      currentGlow += (targetGlow - currentGlow) * 0.1;
+      offset += 0.0022 * currentSpeed;
+
+      // 1. Grid Background
+      ctx.save();
+      ctx.strokeStyle = isLightTheme ? 'rgba(13, 148, 136, 0.015)' : 'rgba(255, 255, 255, 0.02)';
+      ctx.lineWidth = 0.5;
+      const gridSize = 14;
+      ctx.beginPath();
+      const gridOffset = (offset * 12) % gridSize;
+      for (let x = gridOffset; x < width; x += gridSize) {
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, height);
+      }
+      for (let y = gridOffset; y < height; y += gridSize) {
+        ctx.moveTo(0, y);
+        ctx.lineTo(width, y);
+      }
+      ctx.stroke();
+      ctx.restore();
+
+      // 2. Ambient glowing orb behind chart
+      const orbX = width * 0.78;
+      const orbY = height * 0.45;
+      const orbRadius = Math.min(width, height) * 0.6;
+      let orbGrad = ctx.createRadialGradient(orbX, orbY, 0, orbX, orbY, orbRadius);
+      if (isLightTheme) {
+        orbGrad.addColorStop(0, `rgba(13, 148, 136, ${0.06 * currentGlow})`);
+        orbGrad.addColorStop(0.5, 'rgba(13, 148, 136, 0.01)');
+        orbGrad.addColorStop(1, 'rgba(0,0,0,0)');
+      } else {
+        orbGrad.addColorStop(0, `rgba(20, 184, 166, ${0.16 * currentGlow})`);
+        orbGrad.addColorStop(0.6, 'rgba(0,0,0,0)');
+      }
+      ctx.fillStyle = orbGrad;
+      ctx.beginPath();
+      ctx.arc(orbX, orbY, orbRadius, 0, Math.PI * 2);
+      ctx.fill();
+
+      // 3. Draw Staggered rounded bars
+      const numBars = 16;
+      const barWidth = 4.5;
+      const startX = 14;
+      const endX = width - 14;
+      const spacing = (endX - startX - barWidth) / (numBars - 1);
+
+      ctx.save();
+      for (let i = 0; i < numBars; i++) {
+        const x = startX + i * spacing;
+        const seed = i * 0.55;
+        const speedFactor = 1.3;
+        let scale = 0.5 + 0.35 * (Math.sin(offset * speedFactor + seed) * 0.7 + Math.cos(offset * speedFactor * 0.6 + seed * 1.5) * 0.3);
+        scale = Math.max(0.12, Math.min(0.85, scale));
+        
+        const barHeight = height * 0.55 * scale;
+        const y = height - barHeight - 6;
+
+        ctx.beginPath();
+        ctx.moveTo(x + barWidth / 2, y);
+        ctx.arcTo(x + barWidth, y, x + barWidth, y + barHeight, barWidth / 2);
+        ctx.lineTo(x + barWidth, y + barHeight);
+        ctx.lineTo(x, y + barHeight);
+        ctx.lineTo(x, y + barWidth / 2);
+        ctx.arcTo(x, y, x + barWidth / 2, y, barWidth / 2);
+        ctx.closePath();
+
+        let barGrad = ctx.createLinearGradient(0, y, 0, height);
+        if (isLightTheme) {
+          barGrad.addColorStop(0, 'rgba(13, 148, 136, 0.85)');
+          barGrad.addColorStop(1, 'rgba(13, 148, 136, 0.05)');
+        } else {
+          barGrad.addColorStop(0, `rgba(94, 234, 212, ${0.85 + 0.15 * currentGlow})`);
+          barGrad.addColorStop(1, 'rgba(20, 184, 166, 0.03)');
+        }
+
+        ctx.fillStyle = barGrad;
+        if (!isLightTheme && currentGlow > 0.6) {
+          ctx.shadowBlur = 10;
+          ctx.shadowColor = 'rgba(94, 234, 212, 0.4)';
+        } else {
+          ctx.shadowBlur = 0;
+        }
+
+        ctx.fill();
+        ctx.shadowBlur = 0;
+      }
+      ctx.restore();
+
+      // 4. Dot overlay tracking path peaks
+      ctx.save();
+      ctx.beginPath();
+      for (let i = 0; i < numBars; i++) {
+        const x = startX + i * spacing + barWidth / 2;
+        const seed = i * 0.55;
+        const speedFactor = 1.3;
+        let scale = 0.5 + 0.35 * (Math.sin(offset * speedFactor + seed) * 0.7 + Math.cos(offset * speedFactor * 0.6 + seed * 1.5) * 0.3);
+        scale = Math.max(0.12, Math.min(0.85, scale));
+        const barHeight = height * 0.55 * scale;
+        const y = height - barHeight - 6;
+
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.strokeStyle = isLightTheme ? 'rgba(13, 148, 136, 0.22)' : 'rgba(94, 234, 212, 0.22)';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+      ctx.restore();
+
+      animationFrameId = requestAnimationFrame(render);
+    };
+
+    render();
+
+    return () => {
+      cancelAnimationFrame(animationFrameId);
+      if (parent) {
+        resizeObserver.unobserve(parent);
+        parent.removeEventListener('mouseenter', onMouseEnter);
+        parent.removeEventListener('mouseleave', onMouseLeave);
+      }
+    };
+  }, [isLightTheme]);
+
+  return React.createElement('canvas', {
+    ref: canvasRef,
+    className: 'sd-card-canvas'
+  });
+}
+
+// ── AnimatedAreaGraph (Canvas-based layered gradient mountain graph for My Progress) ──
+function AnimatedAreaGraph({ isLightTheme }) {
+  const canvasRef = React.useRef(null);
+
+  React.useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    let animationFrameId;
+    let width = 0;
+    let height = 0;
+
+    const resizeObserver = new ResizeObserver((entries) => {
+      for (let entry of entries) {
+        const { width: w, height: h } = entry.contentRect;
+        const dpr = window.devicePixelRatio || 1;
+        canvas.width = w * dpr;
+        canvas.height = h * dpr;
+        ctx.scale(dpr, dpr);
+        width = w;
+        height = h;
+      }
+    });
+
+    const parent = canvas.parentElement;
+    let targetSpeed = 1.0;
+    let currentSpeed = 1.0;
+    let targetGlow = 0.55;
+    let currentGlow = 0.55;
+
+    const onMouseEnter = () => { targetSpeed = 1.8; targetGlow = 0.95; };
+    const onMouseLeave = () => { targetSpeed = 1.0; targetGlow = 0.55; };
+
+    if (parent) {
+      resizeObserver.observe(parent);
+      parent.addEventListener('mouseenter', onMouseEnter);
+      parent.addEventListener('mouseleave', onMouseLeave);
+      const rect = parent.getBoundingClientRect();
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = rect.width * dpr;
+      canvas.height = rect.height * dpr;
+      ctx.scale(dpr, dpr);
+      width = rect.width;
+      height = rect.height;
+    }
+
+    let offset = 0;
+
+    const render = () => {
+      if (width === 0 || height === 0) {
+        animationFrameId = requestAnimationFrame(render);
+        return;
+      }
+
+      ctx.clearRect(0, 0, width, height);
+
+      currentSpeed += (targetSpeed - currentSpeed) * 0.1;
+      currentGlow += (targetGlow - currentGlow) * 0.1;
+      offset += 0.002 * currentSpeed;
+
+      // 1. Grid Background
+      ctx.save();
+      ctx.strokeStyle = isLightTheme ? 'rgba(219, 39, 119, 0.015)' : 'rgba(255, 255, 255, 0.02)';
+      ctx.lineWidth = 0.5;
+      const gridSize = 14;
+      ctx.beginPath();
+      const gridOffset = (offset * 12) % gridSize;
+      for (let x = gridOffset; x < width; x += gridSize) {
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, height);
+      }
+      for (let y = gridOffset; y < height; y += gridSize) {
+        ctx.moveTo(0, y);
+        ctx.lineTo(width, y);
+      }
+      ctx.stroke();
+      ctx.restore();
+
+      // 2. Ambient glowing orb behind chart
+      const orbX = width * 0.78;
+      const orbY = height * 0.45;
+      const orbRadius = Math.min(width, height) * 0.6;
+      let orbGrad = ctx.createRadialGradient(orbX, orbY, 0, orbX, orbY, orbRadius);
+      if (isLightTheme) {
+        orbGrad.addColorStop(0, `rgba(219, 39, 119, ${0.06 * currentGlow})`);
+        orbGrad.addColorStop(0.5, 'rgba(219, 39, 119, 0.01)');
+        orbGrad.addColorStop(1, 'rgba(0,0,0,0)');
+      } else {
+        orbGrad.addColorStop(0, `rgba(236, 72, 153, ${0.14 * currentGlow})`);
+        orbGrad.addColorStop(0.6, 'rgba(0,0,0,0)');
+      }
+      ctx.fillStyle = orbGrad;
+      ctx.beginPath();
+      ctx.arc(orbX, orbY, orbRadius, 0, Math.PI * 2);
+      ctx.fill();
+
+      const startX = 4;
+      const endX = width * 0.96;
+
+      const getY1 = (x) => {
+        const pct = (x - startX) / (endX - startX);
+        let y = height * (0.8 - pct * 0.18);
+        y += Math.sin(offset * 1.2 + pct * 6.0) * (height * 0.09);
+        y += Math.cos(offset * 0.6 - pct * 3.0) * (height * 0.03);
+        return Math.max(height * 0.45, Math.min(height * 0.90, y));
+      };
+
+      const getY2 = (x) => {
+        const pct = (x - startX) / (endX - startX);
+        let y = height * (0.76 - pct * 0.22);
+        y += Math.sin(offset * 2.0 + pct * 12.0) * (height * 0.13);
+        y += Math.cos(offset * 1.0 - pct * 6.0) * (height * 0.04);
+        return Math.max(height * 0.35, Math.min(height * 0.90, y));
+      };
+
+      // 3. Draw Layer 1 Fill (Background Area)
+      ctx.save();
+      ctx.beginPath();
+      ctx.moveTo(startX, height);
+      for (let x = startX; x <= endX; x += 4) {
+        ctx.lineTo(x, getY1(x));
+      }
+      ctx.lineTo(endX, height);
+      ctx.closePath();
+      let fillGrad1 = ctx.createLinearGradient(0, 0, 0, height);
+      if (isLightTheme) {
+        fillGrad1.addColorStop(0, 'rgba(219, 39, 119, 0.025)');
+        fillGrad1.addColorStop(1, 'rgba(0,0,0,0)');
+      } else {
+        fillGrad1.addColorStop(0, 'rgba(236, 72, 153, 0.025)');
+        fillGrad1.addColorStop(1, 'rgba(0,0,0,0)');
+      }
+      ctx.fillStyle = fillGrad1;
+      ctx.fill();
+      ctx.restore();
+
+      // 4. Draw Vertical projection drop lines
+      ctx.save();
+      ctx.lineWidth = 1;
+      const lineSpacing = 7;
+      for (let x = startX; x <= endX; x += lineSpacing) {
+        const yVal = getY2(x);
+        let dropGrad = ctx.createLinearGradient(x, yVal, x, height);
+        if (isLightTheme) {
+          dropGrad.addColorStop(0, `rgba(219, 39, 119, ${0.12 * currentGlow})`);
+          dropGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+        } else {
+          dropGrad.addColorStop(0, `rgba(244, 114, 182, ${0.12 * currentGlow})`);
+          dropGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+        }
+        ctx.strokeStyle = dropGrad;
+        ctx.beginPath();
+        ctx.moveTo(x, yVal);
+        ctx.lineTo(x, height);
+        ctx.stroke();
+      }
+      ctx.restore();
+
+      // 5. Draw Layer 2 Fill (Foreground Area)
+      ctx.save();
+      ctx.beginPath();
+      ctx.moveTo(startX, height);
+      for (let x = startX; x <= endX; x += 3) {
+        ctx.lineTo(x, getY2(x));
+      }
+      ctx.lineTo(endX, height);
+      ctx.closePath();
+      let fillGrad2 = ctx.createLinearGradient(0, 0, 0, height);
+      if (isLightTheme) {
+        fillGrad2.addColorStop(0, 'rgba(219, 39, 119, 0.05)');
+        fillGrad2.addColorStop(1, 'rgba(0, 0, 0, 0)');
+      } else {
+        fillGrad2.addColorStop(0, 'rgba(236, 72, 153, 0.06)');
+        fillGrad2.addColorStop(1, 'rgba(0, 0, 0, 0)');
+      }
+      ctx.fillStyle = fillGrad2;
+      ctx.fill();
+      ctx.restore();
+
+      // 6. Draw Layer 2 Line Stroke
+      ctx.save();
+      ctx.beginPath();
+      ctx.moveTo(startX, getY2(startX));
+      for (let x = startX + 1; x <= endX; x += 2) {
+        ctx.lineTo(x, getY2(x));
+      }
+      let lineGrad = ctx.createLinearGradient(0, 0, width, 0);
+      if (isLightTheme) {
+        lineGrad.addColorStop(0, 'rgba(219, 39, 119, 0.45)');
+        lineGrad.addColorStop(0.5, 'rgba(219, 39, 119, 0.85)');
+        lineGrad.addColorStop(1, 'rgba(236, 72, 153, 0.95)');
+      } else {
+        lineGrad.addColorStop(0, 'rgba(236, 72, 153, 0.3)');
+        lineGrad.addColorStop(0.5, 'rgba(244, 114, 182, 0.85)');
+        lineGrad.addColorStop(1, 'rgba(251, 113, 133, 1)');
+      }
+      ctx.strokeStyle = lineGrad;
+      ctx.lineWidth = 2.4;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+
+      if (!isLightTheme) {
+        ctx.shadowBlur = 8 + 8 * currentGlow;
+        ctx.shadowColor = 'rgba(244, 114, 182, 0.55)';
+      } else {
+        ctx.shadowBlur = 3 + 3 * currentGlow;
+        ctx.shadowColor = 'rgba(219, 39, 119, 0.35)';
+      }
+      ctx.stroke();
+      ctx.restore();
+
+      // 7. Pulse points for Layer 2
+      const nodeRatios = [0.15, 0.48, 0.72, 1.0];
+      nodeRatios.forEach(ratio => {
+        const xVal = startX + ratio * (endX - startX);
+        const yVal = getY2(xVal);
+        ctx.save();
+        ctx.beginPath();
+        const isEndNode = ratio === 1.0;
+        const radius = isEndNode ? 5.0 : 3.5;
+        ctx.arc(xVal, yVal, radius, 0, Math.PI * 2);
+
+        if (isLightTheme) {
+          ctx.fillStyle = '#ffffff';
+          ctx.strokeStyle = '#db2777';
+          ctx.lineWidth = isEndNode ? 3.0 : 2.0;
+          ctx.shadowBlur = isEndNode ? 8 : 4;
+          ctx.shadowColor = 'rgba(219, 39, 119, 0.4)';
+          ctx.fill();
+          ctx.stroke();
+        } else {
+          ctx.fillStyle = '#ffffff';
+          ctx.lineWidth = isEndNode ? 3.0 : 2.0;
+          ctx.shadowBlur = isEndNode ? 14 : 8;
+          ctx.strokeStyle = '#f472b6';
+          ctx.shadowColor = '#f472b6';
+          ctx.fill();
+          ctx.stroke();
+        }
+        ctx.restore();
+      });
+
+      // 8. Floating particle
+      ctx.save();
+      const particleOffset = offset * 2.5;
+      const pt1X = width * 0.4 + Math.sin(particleOffset * 0.5) * (width * 0.2);
+      const pt1Y = getY2(pt1X) - 12 - Math.sin(particleOffset) * 4;
+      ctx.beginPath();
+      ctx.arc(pt1X, pt1Y, 1.8, 0, Math.PI * 2);
+      if (isLightTheme) {
+        ctx.fillStyle = 'rgba(219, 39, 119, 0.8)';
+      } else {
+        ctx.fillStyle = 'rgba(244, 114, 182, 0.85)';
+      }
+      ctx.fill();
+      ctx.restore();
+
+      animationFrameId = requestAnimationFrame(render);
+    };
+
+    render();
+
+    return () => {
+      cancelAnimationFrame(animationFrameId);
+      if (parent) {
+        resizeObserver.unobserve(parent);
+        parent.removeEventListener('mouseenter', onMouseEnter);
+        parent.removeEventListener('mouseleave', onMouseLeave);
+      }
+    };
+  }, [isLightTheme]);
+
+  return React.createElement('canvas', {
+    ref: canvasRef,
+    className: 'sd-card-canvas'
+  });
+}
 
 // ── Trend mini-bars ─────────────────────────────────────────
 function TrendBars({ log }) {

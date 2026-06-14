@@ -103,11 +103,36 @@ def _deserialize_session(d: dict) -> dict:
     for t in s.get("tasks", []):
         if isinstance(t, dict) and "starter_code" not in t:
             t["starter_code"] = t.get("correct_answer", "")
-    # ── Migrate old content_files entries that lack an 'id' ──────────
+    # ── Migrate old content_files entries that lack an 'id' or other new fields ──
     for fname, cf in s.get("content_files", {}).items():
         if "id" not in cf:
             import uuid as _uuid
             cf["id"] = "cf" + _uuid.uuid4().hex[:8]
+        cf.setdefault("title", cf.get("title", fname))
+        if "type" not in cf:
+            name_lower = fname.lower()
+            ct = (cf.get("content_type") or "").lower()
+            if ct.startswith("image/") or any(name_lower.endswith(ext) for ext in [".png", ".jpg", ".jpeg", ".gif", ".webp", ".svg"]):
+                cf["type"] = "image"
+            elif ct == "application/pdf" or name_lower.endswith(".pdf"):
+                cf["type"] = "pdf"
+            elif ct.startswith("video/") or any(name_lower.endswith(ext) for ext in [".mp4", ".webm", ".mov", ".avi"]):
+                cf["type"] = "video"
+            elif any(name_lower.endswith(ext) for ext in [".ppt", ".pptx"]):
+                cf["type"] = "presentation"
+            elif any(name_lower.endswith(ext) for ext in [".doc", ".docx", ".txt"]):
+                cf["type"] = "note"
+            else:
+                cf["type"] = "note"
+        cf.setdefault("uploadedBy", cf.get("uploadedBy", s.get("teacher_name", "Teacher")))
+        cf.setdefault("uploaderRole", cf.get("uploaderRole", "teacher"))
+        cf.setdefault("source", cf.get("source", "Content Upload"))
+        cf.setdefault("sourceChannel", cf.get("sourceChannel", "Library"))
+        cf.setdefault("timestamp", cf.get("timestamp", cf.get("uploaded_at", now())))
+        cf.setdefault("visibility", cf.get("visibility", "Class Visible"))
+        cf.setdefault("previewUrl", cf.get("previewUrl", f"/api/content/file/{s.get('code', '')}/{fname}"))
+        cf.setdefault("tags", cf.get("tags", ["TEACHER"]))
+        cf.setdefault("linkedChatMessageId", cf.get("linkedChatMessageId", None))
     # ── Migrate: add suspended_chat_students if missing ───────────────
     if "suspended_chat_students" not in s:
         s["suspended_chat_students"] = set()

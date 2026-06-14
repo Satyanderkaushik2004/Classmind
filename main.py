@@ -3455,6 +3455,22 @@ def _guess_ct(filename: str, declared: str) -> str:
     }.get(ext, "application/octet-stream")
 
 
+def _guess_type_from_name_ct(name: str, ct: str) -> str:
+    ct = (ct or "").lower()
+    name = (name or "").lower()
+    if ct.startswith("image/") or any(name.endswith(ext) for ext in [".png", ".jpg", ".jpeg", ".gif", ".webp", ".svg"]):
+        return "image"
+    if ct == "application/pdf" or name.endswith(".pdf"):
+        return "pdf"
+    if ct.startswith("video/") or any(name.endswith(ext) for ext in [".mp4", ".webm", ".mov", ".avi"]):
+        return "video"
+    if any(name.endswith(ext) for ext in [".ppt", ".pptx"]):
+        return "presentation"
+    if any(name.endswith(ext) for ext in [".doc", ".docx", ".txt"]):
+        return "note"
+    return "note"
+
+
 @app.post("/api/content/upload")
 async def upload_content(session_code: str = Form(...), file: UploadFile = File(...)):
     s    = _S(session_code)
@@ -3473,6 +3489,18 @@ async def upload_content(session_code: str = Form(...), file: UploadFile = File(
         "content_type": ct,
         "size":         len(raw),
         "uploaded_at":  now(),
+        # Extended schema fields:
+        "title":        fname,
+        "type":         _guess_type_from_name_ct(fname, ct),
+        "uploadedBy":   s.get("teacher_name", "Teacher"),
+        "uploaderRole": "teacher",
+        "source":       "Content Upload",
+        "sourceChannel": "Library",
+        "timestamp":    now(),
+        "visibility":   "Class Visible",
+        "previewUrl":   f"/api/content/file/{session_code}/{fname}",
+        "tags":         ["TEACHER"],
+        "linkedChatMessageId": None,
     }
     s["content_files"][fname] = entry
     log.info("Content uploaded: %s (%s, %d bytes) in session %s", fname, ct, len(raw), session_code)
@@ -3483,6 +3511,9 @@ async def upload_content(session_code: str = Form(...), file: UploadFile = File(
         "content_type": ct,
         "size":         len(raw),
         "uploaded_at":  now(),
+        "uploadedBy":   entry["uploadedBy"],
+        "uploaderRole": entry["uploaderRole"],
+        "source":       entry["source"],
     })
     return {"id": file_id, "filename": fname, "size": len(raw), "content_type": ct}
 
@@ -3490,17 +3521,90 @@ async def upload_content(session_code: str = Form(...), file: UploadFile = File(
 @app.get("/api/session/{code}/content")
 def list_content(code: str):
     s     = _S(code)
-    files = [
-        {
+    files = []
+    for v in s.get("content_files", {}).values():
+        files.append({
             "id":           v.get("id", v["name"]),
             "name":         v["name"],
             "content_type": v["content_type"],
             "size":         v["size"],
             "uploaded_at":  v["uploaded_at"],
-        }
-        for v in s["content_files"].values()
-    ]
+            "title":        v.get("title", v.get("name", "Untitled")),
+            "description":  v.get("description", ""),
+            "subject":      v.get("subject", ""),
+            "objective":    v.get("objective", ""),
+            "pinned":       v.get("pinned", False),
+            "ai_generated": v.get("ai_generated", False),
+            "views":        v.get("views", 0),
+            "comments":     v.get("comments", 0),
+            "type":         v.get("type", _guess_type_from_name_ct(v["name"], v["content_type"])),
+            "uploadedBy":   v.get("uploadedBy", "Teacher"),
+            "uploaderRole": v.get("uploaderRole", "teacher"),
+            "source":       v.get("source", "Content Upload"),
+            "sourceChannel": v.get("sourceChannel", "Library"),
+            "timestamp":    v.get("timestamp", v["uploaded_at"]),
+            "visibility":   v.get("visibility", "Class Visible"),
+            "previewUrl":   v.get("previewUrl", f"/api/content/file/{code}/{v['name']}"),
+            "tags":         v.get("tags", []),
+            "linkedChatMessageId": v.get("linkedChatMessageId", None),
+        })
     return {"files": files}
+
+
+class UpdateMetadataReq(BaseModel):
+    filename: str
+    title: Optional[str] = None
+    subject: Optional[str] = None
+    description: Optional[str] = None
+    objective: Optional[str] = None
+    pinned: Optional[bool] = None
+    uploadedBy: Optional[str] = None
+    uploaderRole: Optional[str] = None
+    source: Optional[str] = None
+    sourceChannel: Optional[str] = None
+    tags: Optional[list] = None
+    visibility: Optional[str] = None
+    linkedChatMessageId: Optional[str] = None
+
+
+@app.post("/api/session/{code}/content/metadata")
+async def update_content_metadata(code: str, req: UpdateMetadataReq):
+    s = _S(code)
+    fname = req.filename
+    if fname not in s.get("content_files", {}):
+        entry = next((v for v in s.get("content_files", {}).values() if v.get("id") == fname), None)
+        if entry:
+            fname = entry["name"]
+        else:
+            raise HTTPException(404, "File not found")
+    
+    entry = s["content_files"][fname]
+    if req.title is not None: entry["title"] = req.title
+    if req.subject is not None: entry["subject"] = req.subject
+    if req.description is not None: entry["description"] = req.description
+    if req.objective is not None: entry["objective"] = req.objective
+    if req.pinned is not None: entry["pinned"] = req.pinned
+    if req.uploadedBy is not None: entry["uploadedBy"] = req.uploadedBy
+    if req.uploaderRole is not None: entry["uploaderRole"] = req.uploaderRole
+    if req.source is not None: entry["source"] = req.source
+    if req.sourceChannel is not None: entry["sourceChannel"] = req.sourceChannel
+    if req.tags is not None: entry["tags"] = req.tags
+    if req.visibility is not None: entry["visibility"] = req.visibility
+    if req.linkedChatMessageId is not None: entry["linkedChatMessageId"] = req.linkedChatMessageId
+    
+    save_session(code)
+    await ws_broadcast(s, {
+        "type":         "content_shared",
+        "id":           entry.get("id"),
+        "filename":     fname,
+        "content_type": entry.get("content_type"),
+        "size":         entry.get("size"),
+        "uploaded_at":  entry.get("uploaded_at"),
+        "uploadedBy":   entry.get("uploadedBy"),
+        "uploaderRole": entry.get("uploaderRole"),
+        "source":       entry.get("source"),
+    })
+    return {"success": True}
 
 
 @app.get("/api/content/file/{code}/{filename:path}")
@@ -3954,6 +4058,7 @@ async def upload_file_to_chat(
     fname   = file.filename or f"chat_file_{int(now())}"
     file_id = gen_id("cf")
     encoded = base64.b64encode(raw).decode()
+    msg_id  = gen_id("m")
     entry = {
         "id":           file_id,
         "name":         fname,
@@ -3962,6 +4067,18 @@ async def upload_file_to_chat(
         "size":         len(raw),
         "uploaded_at":  now(),
         "chat_file":    True,   # mark as chat file
+        # Extended schema fields:
+        "title":        fname,
+        "type":         _guess_type_from_name_ct(fname, ct),
+        "uploadedBy":   s.get("teacher_name", "Teacher"),
+        "uploaderRole": "teacher",
+        "source":       "Chat Upload",
+        "sourceChannel": "Global Chat",
+        "timestamp":    now(),
+        "visibility":   "Class Visible",
+        "previewUrl":   f"/api/content/file/{code}/{fname}",
+        "tags":         ["CHAT", "TEACHER"],
+        "linkedChatMessageId": msg_id,
     }
     s["content_files"][fname] = entry
     save_session(code)
@@ -3969,7 +4086,7 @@ async def upload_file_to_chat(
     # Create chat message with file attachment
     msg_type = "image" if is_image else "file"
     sys_file_msg = {
-        "id":          gen_id("m"),
+        "id":          msg_id,
         "sender_id":   "teacher",
         "sender_name": "Teacher",
         "content":     fname,
@@ -4045,17 +4162,6 @@ async def student_chat_upload(
     fname = file.filename or f"chat_file_{int(now())}"
     file_id = gen_id("cf")
     encoded = base64.b64encode(raw).decode()
-    entry = {
-        "id":           file_id,
-        "name":         fname,
-        "data":         encoded,
-        "content_type": ct,
-        "size":         len(raw),
-        "uploaded_at":  now(),
-        "chat_file":    True,
-    }
-    s["content_files"][fname] = entry
-    save_session(session_code)
 
     st = s["students"].get(sender_id)
     if st:
@@ -4065,9 +4171,34 @@ async def student_chat_upload(
     else:
         name = "Student"
 
+    msg_id = gen_id("m")
+    entry = {
+        "id":           file_id,
+        "name":         fname,
+        "data":         encoded,
+        "content_type": ct,
+        "size":         len(raw),
+        "uploaded_at":  now(),
+        "chat_file":    True,
+        # Extended schema fields:
+        "title":        fname,
+        "type":         _guess_type_from_name_ct(fname, ct),
+        "uploadedBy":   name,
+        "uploaderRole": "student" if sender_id != "teacher" else "teacher",
+        "source":       "Chat Upload",
+        "sourceChannel": chat_type.capitalize() + " Chat",
+        "timestamp":    now(),
+        "visibility":   "Class Visible",
+        "previewUrl":   f"/api/content/file/{session_code}/{fname}",
+        "tags":         ["CHAT", "STUDENT"] if sender_id != "teacher" else ["CHAT", "TEACHER"],
+        "linkedChatMessageId": msg_id,
+    }
+    s["content_files"][fname] = entry
+    save_session(session_code)
+
     msg_type = "image" if is_image else "file"
     msg = {
-        "id":          gen_id("m"),
+        "id":          msg_id,
         "sender_id":   sender_id,
         "sender_name": name,
         "content":     fname,
@@ -4169,9 +4300,32 @@ async def submit_doubt_with_image(
         "size":         len(raw),
         "uploaded_at":  now(),
         "doubt_file":   True,
+        # Extended schema fields:
+        "title":        f"Doubt Image - {subject}",
+        "type":         "image",
+        "uploadedBy":   name,
+        "uploaderRole": "student",
+        "source":       "Doubt Center",
+        "sourceChannel": "Doubt Channel",
+        "timestamp":    now(),
+        "visibility":   "Class Visible",
+        "previewUrl":   f"/api/content/file/{session_code}/{fname}",
+        "tags":         ["DOUBT", "STUDENT"],
+        "linkedChatMessageId": None,
     }
     s["content_files"][fname] = entry
     save_session(session_code)
+    await ws_broadcast(s, {
+        "type":         "content_shared",
+        "id":           file_id,
+        "filename":     fname,
+        "content_type": ct,
+        "size":         len(raw),
+        "uploaded_at":  now(),
+        "uploadedBy":   name,
+        "uploaderRole": "student",
+        "source":       "Doubt Center",
+    })
 
     d = {
         "id":           gen_id("d"),

@@ -46,6 +46,7 @@
   --radius:24px;--radius-sm:12px;
   --shadow:0 8px 32px rgba(0,0,0,0.4);
   --font:'Inter',system-ui,sans-serif;
+  --hud-answered:#0EA5E9;--hud-rank:#FFD166;
 }
 @keyframes blink {
   0%,100% { opacity:1; }
@@ -76,8 +77,9 @@
   /* ── Status ── */
   --green:#2e7d32;
   --red:#d32f2f;
-  --yellow:#fbc02d;
+  --yellow:#B45309;
   --blue:#0288d1;
+  --hud-answered:#0288d1;--hud-rank:#B45309;
   --orange:#f57c00;
 
   /* ── Sidebar (Navy & Gold) ── */
@@ -14966,7 +14968,133 @@ body.s-ui-active .toasts {
   box-shadow: 0 4px 15px rgba(11, 45, 99, 0.04) !important;
 }
 .light .s-task-meta { color: var(--text3) !important; }
+
+/* Leaderboard */
 .light .s-lb-name { color: var(--text) !important; }
+.light .s-lb-row {
+  background: var(--surface) !important;
+  border-color: var(--border) !important;
+}
+.light .s-lb-row.me {
+  background: var(--surface2) !important;
+  border-color: var(--accent) !important;
+}
+.light .s-lb-rank {
+  background: var(--surface2) !important;
+  border-color: var(--border) !important;
+  color: var(--text2) !important;
+}
+.light .s-lb-rank.gold { background: rgba(212,160,23,0.1) !important; border-color: rgba(212,160,23,0.3) !important; color: #B45309 !important; }
+.light .s-lb-rank.silver { background: rgba(100,116,139,0.1) !important; border-color: rgba(100,116,139,0.3) !important; color: #475569 !important; }
+.light .s-lb-rank.bronze { background: rgba(217,119,6,0.1) !important; border-color: rgba(217,119,6,0.3) !important; color: #B45309 !important; }
+.light .s-lb-track { background: rgba(11, 45, 99, 0.08) !important; }
+
+/* Explain Container */
+.light .s-explain {
+  background: var(--surface2) !important;
+  border-color: var(--border) !important;
+}
+.light .s-explain-badge {
+  background: rgba(11, 45, 99, 0.08) !important;
+  color: var(--accent) !important;
+}
+.light .s-explain-content {
+  color: var(--text2) !important;
+}
+
+/* Status / Result boxes */
+.light .s-awaiting-evaluation {
+  padding: 16px;
+  border-radius: 12px;
+  background: rgba(217,119,6,0.08) !important;
+  border: 1px solid rgba(217,119,6,0.25) !important;
+  color: #B45309 !important;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.light .s-result.correct .s-result-headline { color: var(--green) !important; }
+.light .s-result.wrong .s-result-headline { color: var(--red) !important; }
+
+/* Performance HUD Chips */
+.light .s-perf-chip {
+  background: var(--surface2) !important;
+  border-color: var(--border) !important;
+  color: var(--text) !important;
+}
+.light .s-perf-chip span {
+  color: var(--text2) !important;
+}
+.light .s-perf-chip .val {
+  color: inherit;
+}
+.light .s-streak-bar {
+  background: rgba(217,119,6,0.08) !important;
+  border-color: rgba(217,119,6,0.25) !important;
+  color: #B45309 !important;
+}
+
+/* Badges and Chips */
+.light .s-chip-mcq {
+  background: rgba(11, 45, 99, 0.08) !important;
+  color: var(--accent) !important;
+  border-color: rgba(11, 45, 99, 0.18) !important;
+}
+.light .s-chip-coding {
+  background: rgba(110, 44, 18, 0.08) !important;
+  color: #6E2C12 !important;
+  border-color: rgba(110, 44, 18, 0.18) !important;
+}
+.light .s-chip-short {
+  background: rgba(46, 125, 50, 0.08) !important;
+  color: #2e7d32 !important;
+  border-color: rgba(46, 125, 50, 0.18) !important;
+}
+.light .s-badge-diff-easy {
+  background: rgba(46, 125, 50, 0.08) !important;
+  color: #2e7d32 !important;
+}
+.light .s-badge-diff-medium {
+  background: rgba(217, 119, 6, 0.08) !important;
+  color: #B45309 !important;
+}
+.light .s-badge-diff-hard {
+  background: rgba(211, 47, 47, 0.08) !important;
+  color: #d32f2f !important;
+}
+.light .s-badge-topic {
+  background: rgba(11, 45, 99, 0.08) !important;
+  color: var(--accent) !important;
+  border-color: rgba(11, 45, 99, 0.2) !important;
+}
+
+/* Code Editor */
+.light .s-code-editor {
+  background: #FFFDF9 !important;
+  border-color: var(--border) !important;
+}
+.light .s-code-editor-header {
+  background: rgba(11, 45, 99, 0.04) !important;
+  border-bottom-color: var(--border) !important;
+}
+.light .s-code-textarea {
+  color: var(--text) !important;
+  caret-color: var(--accent) !important;
+}
+.light .s-code-textarea::placeholder {
+  color: rgba(11, 45, 99, 0.25) !important;
+}
+.light .s-code-output {
+  background: rgba(46, 125, 50, 0.04) !important;
+  color: #2e7d32 !important;
+  border-top-color: var(--border) !important;
+}
+.light .s-code-output.err {
+  background: rgba(211, 47, 47, 0.04) !important;
+  color: #d32f2f !important;
+}
+
 .light .s-lb-item {
   background: var(--surface) !important;
   border-color: var(--border) !important;
@@ -38024,8 +38152,8 @@ function StudentTaskView({
       style:{textAlign:'center',padding:'48px 32px',borderStyle:'dashed',marginTop:8}
     },
       React.createElement('div', {className:'s-float-bob', style:{fontSize:'3.5rem',marginBottom:16}}, '⏳'),
-      React.createElement('div', {style:{fontFamily:"'Syne',sans-serif",fontSize:'1.2rem',fontWeight:700,marginBottom:8,color:'rgba(241,245,249,0.9)'}}, 'Waiting for Next Task'),
-      React.createElement('div', {style:{fontSize:'0.88rem',color:'rgba(241,245,249,0.4)',lineHeight:1.6,maxWidth:280,margin:'0 auto'}},
+      React.createElement('div', {style:{fontFamily:"'Syne',sans-serif",fontSize:'1.2rem',fontWeight:700,marginBottom:8,color:'var(--text)'}}, 'Waiting for Next Task'),
+      React.createElement('div', {style:{fontSize:'0.88rem',color:'var(--text3)',lineHeight:1.6,maxWidth:280,margin:'0 auto'}},
         'Your teacher will send the next task soon. Stay sharp and ready!'
       ),
       contentShared && React.createElement('div', {
@@ -38033,8 +38161,8 @@ function StudentTaskView({
         onClick: () => setPage && setPage('content')
       },
         React.createElement('div', {style:{fontWeight:600,marginBottom:4,fontSize:'0.85rem'}}, '📎 New Content Shared'),
-        React.createElement('div', {style:{fontSize:'0.82rem',color:'rgba(241,245,249,0.65)'}}, contentShared.name),
-        React.createElement('div', {style:{fontSize:'0.75rem',color:'rgba(14,165,233,0.8)',marginTop:4}}, '→ Tap to view in Content tab')
+        React.createElement('div', {style:{fontSize:'0.82rem',color:'var(--text2)'}}, contentShared.name),
+        React.createElement('div', {style:{fontSize:'0.75rem',color:'var(--accent)',marginTop:4}}, '→ Tap to view in Content tab')
       )
     );
     return React.createElement('div', {className:'s-ui'},
@@ -38120,7 +38248,7 @@ function StudentTaskView({
           })
         ),
         currentTask.type === 'short' && submitted && React.createElement('div', {
-          style:{padding:'12px 16px',borderRadius:12,background:'rgba(16,185,129,0.07)',border:'1px solid rgba(16,185,129,0.2)',marginBottom:16,fontSize:'0.875rem',color:'rgba(241,245,249,0.7)'}
+          style:{padding:'12px 16px',borderRadius:12,background:'rgba(16,185,129,0.07)',border:'1px solid rgba(16,185,129,0.2)',marginBottom:16,fontSize:'0.875rem',color:'var(--text2)'}
         },
           React.createElement('div', {style:{fontWeight:700,color:'#10B981',marginBottom:6}}, '✅ Submitted'),
           shortAnswer
@@ -38137,17 +38265,7 @@ function StudentTaskView({
         currentTask.type !== 'coding' && submitted && result && (
           currentTask.type === 'short' && result.evaluation_status !== 'approved' ? (
             React.createElement('div', {
-              style: {
-                padding: '16px',
-                borderRadius: 12,
-                background: 'rgba(234,179,8,0.1)',
-                border: '1px solid rgba(234,179,8,0.3)',
-                color: 'var(--yellow)',
-                marginBottom: 16,
-                display: 'flex',
-                alignItems: 'center',
-                gap: 10
-              }
+              className: 's-awaiting-evaluation'
             },
               React.createElement('span', { style: { fontSize: '1.2rem' } }, '⏳'),
               React.createElement('div', null,
@@ -38174,10 +38292,10 @@ function StudentTaskView({
               currentTask.type === 'short' && result.teacher_feedback && React.createElement('div', {
                 style: {
                   fontSize: '0.85rem',
-                  color: 'rgba(241,245,249,0.7)',
+                  color: 'var(--text2)',
                   marginTop: 8,
                   paddingTop: 8,
-                  borderTop: '1px solid rgba(255,255,255,0.08)'
+                  borderTop: '1px solid var(--border)'
                 }
               },
                 React.createElement('strong', null, 'Teacher Feedback: '),
@@ -38195,7 +38313,7 @@ function StudentTaskView({
           React.createElement('div', {className:'s-explain-header'},
             React.createElement('span', {style:{fontSize:'1rem'}}, '💡'),
             React.createElement('div', {className:'s-explain-badge'}, taskExplanation.mode || 'Explanation'),
-            React.createElement('span', {style:{fontSize:'0.72rem',color:'rgba(241,245,249,0.3)',marginLeft:'auto'}}, 'From teacher')
+            React.createElement('span', {style:{fontSize:'0.72rem',color:'var(--text3)',marginLeft:'auto'}}, 'From teacher')
           ),
           React.createElement('div', {className:'s-explain-content'}, taskExplanation.explanation)
         ),
@@ -40167,7 +40285,10 @@ function generateStudentReportPDF(studentName, tasks, testAnswers, opts = {}) {
   const gradeLabel = scoreVal >= 90 ? 'Outstanding!' : scoreVal >= 75 ? 'Excellent!' : scoreVal >= 60 ? 'Good Work!' : scoreVal >= 40 ? 'Keep Going!' : 'Needs Improvement';
   const circumference = 2 * Math.PI * 54;
   const strokeDash = (scoreVal / 100) * circumference;
-  const scoreColor = scoreVal >= 75 ? '#22c55e' : scoreVal >= 50 ? '#eab308' : '#ef4444';
+  const isLight = opts.theme === 'light' || localStorage.getItem('cm_theme') === 'light';
+  const scoreColor = isLight
+    ? (scoreVal >= 75 ? '#2e7d32' : scoreVal >= 50 ? '#B45309' : '#d32f2f')
+    : (scoreVal >= 75 ? '#22c55e' : scoreVal >= 50 ? '#eab308' : '#ef4444');
 
   // ── Fetch student photo — robust multi-source lookup ─────────────
   const reportStudentId = opts.studentId || (report && (report.student_id || report.studentId)) || null;
@@ -40220,6 +40341,8 @@ function generateStudentReportPDF(studentName, tasks, testAnswers, opts = {}) {
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>Premium Report Card — ${studentName}</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+\x3cscript src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"\x3e\x3c/script\x3e
+\x3cscript src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"\x3e\x3c/script\x3e
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -40274,9 +40397,13 @@ body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--t
 .rp2-brand-sub{font-size:0.6rem;color:rgba(139,92,246,0.8);letter-spacing:.1em;text-transform:uppercase;margin-top:1px}
 .rp2-badge-wrap{display:flex;align-items:center;gap:10px}
 .rp2-grade-chip{
-  padding:6px 16px;border-radius:20px;font-size:0.78rem;font-weight:800;
-  background:linear-gradient(135deg,${scoreColor}22,${scoreColor}11);
-  border:1.5px solid ${scoreColor}55;color:${scoreColor};
+  padding:6px 16px;
+  border-radius:20px;
+  font-size:0.78rem;
+  font-weight:800;
+  background:linear-gradient(135deg, var(--scoreColor)22, var(--scoreColor)11);
+  border:1.5px solid var(--scoreColor)55;
+  color:var(--scoreColor);
   letter-spacing:.05em;
 }
 .rp2-hero-center{text-align:center;position:relative;z-index:1}
@@ -40364,14 +40491,58 @@ body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--t
   display:grid;grid-template-columns:auto 1fr auto;gap:24px;align-items:center;
 }
 .rp2-ring-outer{display:flex;flex-direction:column;align-items:center;gap:8px}
-.rp2-ring-svg{filter:drop-shadow(0 0 16px ${scoreColor}55)}
-.rp2-ring-lbl{font-size:0.72rem;font-weight:800;color:${scoreColor};text-transform:uppercase;letter-spacing:.08em}
-.rp2-score-mid{display:grid;grid-template-columns:1fr 1fr;gap:10px 24px}
-.rp2-score-stat{display:flex;flex-direction:column;gap:3px}
-.rp2-score-stat-label{font-size:0.58rem;color:#4B5563;font-weight:700;text-transform:uppercase;letter-spacing:.08em}
-.rp2-score-stat-val{font-size:1rem;font-weight:800;color:#E2E8F0}
-.rp2-acc-bar{height:6px;border-radius:4px;background:rgba(255,255,255,0.06);overflow:hidden;margin-top:4px}
-.rp2-acc-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,${scoreColor},${scoreColor}88);transition:width 1s ease}
+.rp2-ring-svg {
+  filter: drop-shadow(0 0 16px var(--scoreColor)55);
+}
+
+.rp2-ring-lbl {
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: var(--scoreColor);
+  text-transform: uppercase;
+  letter-spacing: .08em;
+}
+
+.rp2-score-mid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px 24px;
+}
+
+.rp2-score-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.rp2-score-stat-label {
+  font-size: 0.58rem;
+  color: #4B5563;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+}
+
+.rp2-score-stat-val {
+  font-size: 1rem;
+  font-weight: 800;
+  color: #E2E8F0;
+}
+
+.rp2-acc-bar {
+  height: 6px;
+  border-radius: 4px;
+  background: rgba(255,255,255,0.06);
+  overflow: hidden;
+  margin-top: 4px;
+}
+
+.rp2-acc-fill {
+  height: 100%;
+  border-radius: 4px;
+  background: linear-gradient(90deg, var(--scoreColor), var(--scoreColor)88);
+  transition: width 1s ease;
+}
 .rp2-timing-grid{display:flex;flex-direction:column;gap:10px}
 .rp2-timing-chip{
   background:var(--surface3);border:1px solid rgba(255,255,255,0.05);
@@ -40564,9 +40735,137 @@ body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--t
 .dl-btn{background:linear-gradient(135deg,#0EA5E9,#6366F1)}
 .print-btn:hover,.dl-btn:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(99,102,241,0.55)}
 .dl-btn:disabled{opacity:0.6;cursor:not-allowed;transform:none}
+
+/* ── LIGHT MODE OVERRIDES ── */
+.light {
+  --bg: #F8F5EF;
+  --surface: rgba(255, 255, 255, 0.95);
+  --surface2: #F3EDE2;
+  --surface3: #EAD9C8;
+  --border: rgba(11, 45, 99, 0.12);
+  --border2: rgba(212, 160, 23, 0.2);
+  --text: #1A1A1A;
+  --text2: #444444;
+  --text3: #666666;
+  --accent: #0B2D63;
+  --accent2: #D4A017;
+  --accent3: #A3471B;
+  --green: #2e7d32;
+  --red: #d32f2f;
+  --yellow: #B45309;
+  --blue: #0288d1;
+  --grad1: linear-gradient(135deg, var(--accent), var(--accent2));
+}
+
+.light body {
+  background: var(--bg) !important;
+  color: var(--text) !important;
+}
+.light .page {
+  background: var(--bg) !important;
+}
+
+.light .rp2-hero {
+  background: linear-gradient(145deg, #FFFDF9 0%, #F5EFE6 100%) !important;
+  border-color: var(--border) !important;
+}
+.light .rp2-hero::before {
+  background: radial-gradient(circle, rgba(11, 45, 99, 0.05) 0%, transparent 65%) !important;
+}
+.light .rp2-hero::after {
+  background: radial-gradient(circle, rgba(212, 160, 23, 0.05) 0%, transparent 65%) !important;
+}
+.light .rp2-title {
+  background: linear-gradient(135deg, var(--accent) 0%, #1A3E7A 50%, var(--accent) 100%) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+}
+.light .rp2-brand-name { color: var(--text) !important; }
+.light .rp2-brand-sub { color: var(--accent2) !important; }
+.light .rp2-eyebrow { color: var(--accent) !important; }
+.light .rp2-subtitle { color: var(--text3) !important; }
+.light .rp2-divider { background: linear-gradient(90deg, transparent, var(--border), transparent) !important; }
+
+.light .rp2-avatar-ring {
+  background: conic-gradient(from 0deg, var(--accent), var(--accent2), var(--accent), var(--accent2), var(--accent)) !important;
+  opacity: 0.8 !important;
+}
+.light .rp2-info-val { color: var(--text) !important; }
+.light .rp2-info-val.accent { color: var(--accent) !important; }
+
+.light .rp2-kpi-card {
+  background: var(--surface) !important;
+  border-color: var(--border) !important;
+}
+.light .rp2-kpi-label { color: var(--text3) !important; }
+.light .rp2-kpi-card.ok .rp2-kpi-num { color: var(--green) !important; }
+.light .rp2-kpi-card.err .rp2-kpi-num { color: var(--red) !important; }
+.light .rp2-kpi-card.skip .rp2-kpi-num { color: var(--yellow) !important; }
+.light .rp2-kpi-card.blue .rp2-kpi-num { color: var(--blue) !important; }
+.light .rp2-kpi-card.purple .rp2-kpi-num { color: var(--accent) !important; }
+
+.light .rp2-score-stat-val { color: var(--text) !important; }
+.light .rp2-score-stat-lbl { color: var(--text3) !important; }
+.light .rp2-acc-bar { background: rgba(11, 45, 99, 0.08) !important; }
+.light .rp2-timing-chip { border-color: var(--border) !important; background: var(--surface2) !important; }
+.light .rp2-timing-chip-val { color: var(--text) !important; }
+
+.light .rp2-table thead tr { border-bottom-color: var(--border) !important; }
+.light .rp2-table tbody tr { border-bottom-color: rgba(11, 45, 99, 0.05) !important; }
+.light .rp2-table td { color: var(--text2) !important; }
+.light .rp2-table td:nth-child(2) { color: var(--text) !important; }
+.light .rp2-table td:nth-child(4) { color: var(--text2) !important; }
+.light .rp2-qno { border-color: var(--border) !important; color: var(--accent) !important; background: var(--surface2) !important; }
+
+.light .rp2-status-ok { background: rgba(46,125,50,0.08) !important; border-color: rgba(46,125,50,0.25) !important; color: var(--green) !important; }
+.light .rp2-status-err { background: rgba(211,47,47,0.08) !important; border-color: rgba(211,47,47,0.25) !important; color: var(--red) !important; }
+.light .rp2-status-skip { background: rgba(11,45,99,0.06) !important; border-color: rgba(11,45,99,0.15) !important; color: var(--text3) !important; }
+
+.light .rp2-marks-ok { color: var(--green) !important; }
+.light .rp2-total-marks { color: var(--accent) !important; }
+
+.light .rp2-panel { background: var(--surface) !important; border-color: var(--border) !important; }
+.light .rp2-panel-hdr-label { color: var(--text) !important; }
+.light .rp2-bar { background: rgba(11, 45, 99, 0.08) !important; }
+.light .rp2-bar-val { color: var(--text) !important; }
+.light .rp2-stat-row { border-color: rgba(11, 45, 99, 0.06) !important; }
+.light .rp2-stat-lbl { color: var(--text3) !important; }
+.light .rp2-stat-val { color: var(--text2) !important; }
+.light .rp2-strength-name { color: var(--text2) !important; }
+
+.light .rp2-remarks-box { background: var(--surface2) !important; border-color: var(--border) !important; color: var(--text2) !important; }
+.light .rp2-remarks-title { color: var(--accent) !important; }
+.light .rp2-ai-box { background: linear-gradient(135deg, rgba(11,45,99,0.05), rgba(212,160,23,0.05)) !important; border-color: var(--border) !important; }
+.light .rp2-ai-text { color: var(--text2) !important; }
+.light .rp2-sig-line { background: var(--border) !important; }
+
+.light .rp2-footer {
+  background: linear-gradient(145deg, #FFFDF9, #F5EFE6) !important;
+  border-color: var(--border) !important;
+}
+.light .rp2-footer-msg {
+  background: linear-gradient(90deg, var(--accent), var(--accent2)) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+}
+
+@media print {
+  .light, .light html, .light body {
+    background: var(--bg) !important;
+  }
+  .light .page {
+    background: var(--bg) !important;
+  }
+  .light .rp2-hero {
+    background: linear-gradient(145deg, #FFFDF9 0%, #F5EFE6 100%) !important;
+  }
+  .light .rp2-footer {
+    background: linear-gradient(145deg, #FFFDF9, #F5EFE6) !important;
+  }
+}
 </style>
 </head>
-<body>
+<body class="${isLight ? 'light' : 'dark'}">
 <div class="page">
 
   <!-- HERO HEADER -->
@@ -40871,7 +41170,6 @@ body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--t
 </div>
 <div class="btn-strip no-print">
   <button class="print-btn" onclick="window.print()">🖨 Print / Save PDF</button>
-  <button class="dl-btn" id="dlBtn" onclick="downloadReportPDF()">⬇ Download Report</button>
 </div>
 \x3cscript\x3e
 async function downloadReportPDF() {
@@ -40879,23 +41177,9 @@ async function downloadReportPDF() {
   btn.disabled = true;
   btn.textContent = '⏳ Generating…';
   try {
-    // Load html2canvas if not already present
-    if (!window.html2canvas) {
-      await new Promise((res, rej) => {
-        const s = document.createElement('script');
-        s.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
-        s.onload = res; s.onerror = rej;
-        document.head.appendChild(s);
-      });
-    }
-    // Load jsPDF if not present
-    if (!window.jspdf) {
-      await new Promise((res, rej) => {
-        const s = document.createElement('script');
-        s.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
-        s.onload = res; s.onerror = rej;
-        document.head.appendChild(s);
-      });
+    // Ensure all custom fonts (like Inter) are loaded before rendering
+    if (document.fonts && document.fonts.ready) {
+      await document.fonts.ready;
     }
     const { jsPDF } = window.jspdf;
     const pageEl = document.querySelector('.page');
@@ -40907,9 +41191,15 @@ async function downloadReportPDF() {
       scale: scale,
       useCORS: true,
       allowTaint: true,
-      backgroundColor: '#07090F',
+      backgroundColor: window.getComputedStyle(document.body).backgroundColor || '#07090F',
       logging: false,
       imageTimeout: 8000,
+      width: pageEl.scrollWidth,
+      height: pageEl.scrollHeight,
+      windowWidth: pageEl.scrollWidth,
+      windowHeight: pageEl.scrollHeight,
+      scrollX: 0,
+      scrollY: 0
     });
     // Convert canvas to image
     const imgData = canvas.toDataURL('image/jpeg', 0.95);
@@ -43058,24 +43348,24 @@ function StudentPerfPanel({answered, correct, rank, codingScore, codingSubmitted
         React.createElement('span', null, '🎯'),
         React.createElement('span', {
           className: `val ${scoreAnim ? 's-hud-score-bump' : ''}`,
-          style:{color: accClass === 'green' ? '#10B981' : accClass === 'yellow' ? '#EAB308' : accClass === 'red' ? '#EF4444' : 'rgba(241,245,249,0.7)'}
+          style:{color: accClass === 'green' ? 'var(--green)' : accClass === 'yellow' ? 'var(--yellow)' : accClass === 'red' ? 'var(--red)' : 'var(--text2)'}
         }, answered > 0 ? `${accuracy}%` : '—'),
-        React.createElement('span', {style:{color:'rgba(241,245,249,0.4)'}}, 'accuracy')
+        React.createElement('span', {style:{color:'var(--text3)'}}, 'accuracy')
       ),
       React.createElement('div', {className: 's-perf-chip'},
         React.createElement('span', null, '✅'),
-        React.createElement('span', {className: 'val', style:{color:'#0EA5E9'}}, answered || 0),
-        React.createElement('span', {style:{color:'rgba(241,245,249,0.4)'}}, 'answered')
+        React.createElement('span', {className: 'val', style:{color:'var(--hud-answered)'}}, answered || 0),
+        React.createElement('span', {style:{color:'var(--text3)'}}, 'answered')
       ),
       React.createElement('div', {className: 's-perf-chip'},
         React.createElement('span', null, '🏆'),
-        React.createElement('span', {className: 'val', style:{color:'#FFD166'}}, rank > 0 ? `#${rank}` : '—'),
-        React.createElement('span', {style:{color:'rgba(241,245,249,0.4)'}}, 'rank')
+        React.createElement('span', {className: 'val', style:{color:'var(--hud-rank)'}}, rank > 0 ? `#${rank}` : '—'),
+        React.createElement('span', {style:{color:'var(--text3)'}}, 'rank')
       ),
       codingSubmitted && React.createElement('div', {className: 's-perf-chip'},
         React.createElement('span', null, '💻'),
-        React.createElement('span', {className: 'val', style:{color:'#10B981'}}, `${codingScore}%`),
-        React.createElement('span', {style:{color:'rgba(241,245,249,0.4)'}}, 'code score')
+        React.createElement('span', {className: 'val', style:{color:'var(--green)'}}, `${codingScore}%`),
+        React.createElement('span', {style:{color:'var(--text3)'}}, 'code score')
       )
     )
   );
@@ -43234,17 +43524,17 @@ function StudentLeaderboard({sessionCode, studentId, codingLeaderboard, studentN
           key:t, onClick:()=>setTab(t),
           style:{padding:'3px 10px',borderRadius:100,border:'none',cursor:'pointer',
             fontSize:'0.7rem',fontWeight:700,fontFamily:'inherit',
-            background: tab===t ? 'rgba(14,165,233,0.2)' : 'rgba(255,255,255,0.05)',
-            color: tab===t ? '#0EA5E9' : 'rgba(241,245,249,0.4)',
+            background: tab===t ? 'var(--accent-glow)' : 'var(--surface2)',
+            color: tab===t ? 'var(--accent)' : 'var(--text3)',
             borderWidth:1,borderStyle:'solid',
-            borderColor: tab===t ? 'rgba(14,165,233,0.3)' : 'transparent'}
+            borderColor: tab===t ? 'var(--accent)' : 'var(--border)'}
         }, t==='mcq' ? '📝 MCQ' : '💻 Code'))
       )
     ),
     displayBoard.length === 0
       ? React.createElement('div', {style:{textAlign:'center',padding:'28px 0'}},
           React.createElement('div', {className:'s-float-bob', style:{fontSize:'2rem',marginBottom:8}}, '⏳'),
-          React.createElement('div', {style:{color:'rgba(241,245,249,0.3)',fontSize:'0.85rem'}}, 'Scores update every 8 seconds…')
+          React.createElement('div', {style:{color:'var(--text3)',fontSize:'0.85rem'}}, 'Scores update every 8 seconds…')
         )
       : React.createElement('div', {className: 's-lb'},
           shown.map((row,i) => {
@@ -43277,8 +43567,8 @@ function StudentLeaderboard({sessionCode, studentId, codingLeaderboard, studentN
           }),
           displayBoard.length > 5 && React.createElement('button', {
             onClick:()=>setExpanded(e=>!e),
-            style:{width:'100%',padding:'8px',borderRadius:10,border:'1px solid rgba(255,255,255,0.08)',
-              background:'rgba(255,255,255,0.03)',color:'rgba(241,245,249,0.4)',cursor:'pointer',
+            style:{width:'100%',padding:'8px',borderRadius:10,border:'1px solid var(--border)',
+              background:'var(--surface2)',color:'var(--text2)',cursor:'pointer',
               fontFamily:'inherit',fontSize:'0.78rem',marginTop:4,transition:'all 0.2s'}
           }, expanded ? '▲ Show less' : `▼ Show all ${displayBoard.length} students`)
         )

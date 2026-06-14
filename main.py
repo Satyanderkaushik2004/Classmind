@@ -1098,6 +1098,7 @@ class SubmitDoubtReq(BaseModel):
     session_code: str
     student_id:   str
     doubt_text:   str
+    subject:      Optional[str] = "General"
 
 # ── Chat moderation / reaction models (Features 1-3, 7) ─────────────
 class ChatReactionReq(BaseModel):
@@ -4122,6 +4123,7 @@ async def submit_doubt(req: SubmitDoubtReq):
         "student_name": st.get("name", "?"),
         "doubt_text":   req.doubt_text,
         "text":         req.doubt_text,
+        "subject":      req.subject or "General",
         "answer":       None,
         "reply":        None,
         "status":       "pending",
@@ -4140,6 +4142,7 @@ async def submit_doubt_with_image(
     session_code: str = Form(...),
     student_id: str = Form(...),
     doubt_text: str = Form(...),
+    subject: str = Form("General"),
     image: UploadFile = File(...),
 ):
     s = _S(session_code)
@@ -4176,6 +4179,7 @@ async def submit_doubt_with_image(
         "student_name": name,
         "doubt_text":   doubt_text,
         "text":         doubt_text,
+        "subject":      subject,
         "answer":       None,
         "reply":        None,
         "status":       "pending",
@@ -4233,6 +4237,13 @@ async def reopen_doubt(req: ReopenDoubtReq):
 @app.get("/api/session/{code}/doubts")
 def get_doubts(code: str):
     return {"doubts": _S(code)["doubts"]}
+
+
+@app.get("/api/session/{code}/student/{student_id}/doubts")
+def get_student_doubts(code: str, student_id: str):
+    s = _S(code)
+    student_doubts = [d for d in s.get("doubts", []) if d.get("student_id") == student_id]
+    return {"doubts": student_doubts}
 
 
 @app.post("/api/session/{code}/raise_hand/{student_id}")

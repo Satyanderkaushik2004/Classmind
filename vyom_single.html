@@ -36995,22 +36995,21 @@ function StudentTaskView({
   const [contentShared, setContentShared] = useState(null);
   const [messages, setMessages] = useState([]);
   const [chatInput, setChatInput] = useState('');
-  const [doubts, setDoubts] = useState([]);
-  const [doubtText, setDoubtText] = useState('');
-  const [clearedDoubtIds, setClearedDoubtIds] = useState([]);
-  const [animatingOutIds, setAnimatingOutIds] = useState([]);
-  const [resolvedExpanded, setResolvedExpanded] = useState(false);
+  const [doubts, setDoubts] = useState(() => {
+    try {
+      const LS_KEY = `cm_doubts_${sessionCode}_${studentId}`;
+      return JSON.parse(localStorage.getItem(LS_KEY) || '[]');
+    } catch {
+      return [];
+    }
+  });
 
-  const handleCloseDoubt = (id) => {
-    setAnimatingOutIds(prev => [...prev, id]);
-    setTimeout(() => {
-      setClearedDoubtIds(prev => {
-        if (prev.includes(id)) return prev;
-        return [...prev, id];
-      });
-      setAnimatingOutIds(prev => prev.filter(x => x !== id));
-    }, 400);
-  };
+  useEffect(() => {
+    try {
+      const LS_KEY = `cm_doubts_${sessionCode}_${studentId}`;
+      localStorage.setItem(LS_KEY, JSON.stringify(doubts));
+    } catch {}
+  }, [doubts, sessionCode, studentId]);
   const [handRaised, setHandRaised] = useState(false);
   const [groups, setGroups] = useState([]);
   const [announcement, setAnnouncement] = useState('');
@@ -38403,78 +38402,7 @@ function StudentTaskView({
         )
       ),
 
-      // ── Doubts panel (if any) ──
-      (() => {
-        const activeDoubts = (Array.isArray(doubts) ? doubts : []).filter(d => !clearedDoubtIds.includes(d.id) || animatingOutIds.includes(d.id));
-        const clearedResolved = (Array.isArray(doubts) ? doubts : []).filter(d => clearedDoubtIds.includes(d.id) && (d.resolved || d.status === 'resolved' || d.status === 'answered'));
-        if (activeDoubts.length === 0 && clearedResolved.length === 0) return null;
-        return React.createElement('div', {
-          className: 's-doubts-panel-container',
-          style: {
-            padding: '12px 16px',
-            borderBottom: '1px solid var(--border)',
-            background: 'var(--surface2)',
-            transition: 'all 0.4s ease'
-          }
-        },
-          activeDoubts.length > 0 && React.createElement(React.Fragment, null,
-            React.createElement('div', {className:'sv2-doubt-label', style:{marginBottom:10}}, '❓ Your Doubts'),
-            React.createElement('div', {className:'s-active-doubts-list'},
-              activeDoubts.map((d, i) => {
-                const isResolved = !!(d.resolved || d.status==='resolved' || d.status==='answered');
-                const isAnimating = animatingOutIds.includes(d.id);
-                return React.createElement('div', {
-                  key: d.id || i,
-                  className: `s-doubt-card ${isResolved ? 's-doubt-resolved' : ''} ${isAnimating ? 'cleared-anim' : ''}`
-                },
-                  React.createElement('div', {style:{display:'flex', justifyContent:'space-between', alignItems:'flex-start', gap:12}},
-                    React.createElement('div', {className:'s-doubt-text', style:{flex:1, marginBottom:0}}, d.doubt_text || d.text || ''),
-                    isResolved && React.createElement('button', {
-                      className: 's-clear-doubt-btn',
-                      onClick: () => handleCloseDoubt(d.id),
-                      title: 'Close Doubt / Mark as Cleared'
-                    }, '✕')
-                  ),
-                  d.image_url && React.createElement('img', {
-                    src: d.image_url,
-                    alt: 'Doubt image',
-                    className: 'chat-img-preview',
-                    style: { marginTop: 8, maxHeight: 150, borderRadius: 8, cursor: 'pointer', objectFit: 'contain', display: 'block' },
-                    onClick: () => setChatLightboxImg(d.image_url)
-                  }),
-                  isResolved && React.createElement('div', {className:'s-doubt-answer'}, '✅ ', d.answer || d.reply || '')
-                );
-              })
-            )
-          ),
-          clearedResolved.length > 0 && React.createElement(React.Fragment, null,
-            React.createElement('button', {
-              onClick: () => setResolvedExpanded(prev => !prev),
-              className: 's-resolved-toggle-btn'
-            },
-              React.createElement('span', {style:{marginRight:6, display:'inline-block', transform: resolvedExpanded ? 'rotate(90deg)' : 'none', transition: 'transform 0.2s'}}, '▶'),
-              `Resolved Doubts (${clearedResolved.length})`
-            ),
-            resolvedExpanded && React.createElement('div', {
-              className: 's-resolved-doubts-list',
-              style: {
-                marginTop: 8,
-                maxHeight: 180,
-                overflowY: 'auto'
-              }
-            },
-              clearedResolved.map((d, i) => React.createElement('div', {
-                key: d.id || i,
-                className: 's-doubt-card s-doubt-resolved',
-                style: { opacity: 0.8, fontSize: '0.82rem', padding: '10px 12px', marginBottom: 8 }
-              },
-                React.createElement('div', {className:'s-doubt-text', style:{fontSize:'0.82rem', marginBottom:4}}, d.doubt_text || d.text || ''),
-                React.createElement('div', {className:'s-doubt-answer', style:{fontSize:'0.78rem', marginTop:4, paddingTop:4}}, '✅ ', d.answer || d.reply || '')
-              ))
-            )
-          )
-        );
-      })(),
+
 
       chatSuspended && React.createElement('div', {className:'chat-suspended-banner'},
         React.createElement('span', null, '🔇'),
@@ -38655,54 +38583,7 @@ function StudentTaskView({
         React.createElement('div', {ref:messagesEnd})
       ),
 
-      // ── Doubt input (with image upload) ──
-      React.createElement('div', {className:'sv2-doubt-section'},
-        React.createElement('div', {style:{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:9}},
-          React.createElement('div', {className:'sv2-doubt-label'},
-            React.createElement('span', null, '🔍'),
-            'Ask a Doubt'
-          ),
-          React.createElement('label', {
-            className:'sv2-doubt-attach-btn',
-            title:'Attach image to doubt (max 5 MB)'
-          },
-            React.createElement('span', null, '📎'),
-            'Attach Image',
-            React.createElement('input', {
-              type:'file', accept:'image/*', style:{display:'none'}, ref:doubtFileInputRef,
-              onChange: e => {
-                const f = e.target.files[0]; if (!f) return;
-                if (f.size > 5*1024*1024) { add('Image too large. Max 5 MB.','error'); return; }
-                const reader = new FileReader();
-                reader.onload = ev => setDoubtImageFile({file:f, preview:ev.target.result});
-                reader.readAsDataURL(f);
-                e.target.value = '';
-              }
-            })
-          )
-        ),
-        doubtImageFile && React.createElement('div', {style:{marginBottom:9,display:'flex',alignItems:'center',gap:8,padding:'6px 10px',background:'rgba(99,102,241,0.07)',borderRadius:10,border:'1px solid rgba(99,102,241,0.18)'}},
-          React.createElement('img', {src:doubtImageFile.preview, alt:'Doubt attachment',
-            style:{height:46,borderRadius:8,objectFit:'cover',border:'1px solid rgba(99,102,241,0.3)'}}),
-          React.createElement('span', {style:{flex:1,fontSize:'0.72rem',color:'rgba(165,180,252,0.7)',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}, 'Image attached'),
-          React.createElement('button', {
-            onClick:()=>setDoubtImageFile(null),
-            style:{width:20,height:20,borderRadius:'50%',background:'rgba(239,68,68,0.8)',border:'none',color:'#fff',cursor:'pointer',fontSize:'0.65rem',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}
-          }, '✕')
-        ),
-        React.createElement('div', {className:'sv2-doubt-row'},
-          React.createElement('input', {
-            value:doubtText, onChange:e=>setDoubtText(e.target.value),
-            placeholder: doubtImageFile ? 'Describe your doubt (image attached)…' : 'Ask anything about this topic…',
-            className:'sv2-doubt-input',
-            onKeyDown:e=>e.key==='Enter'&&submitDoubt()
-          }),
-          React.createElement('button', {
-            className:'sv2-doubt-btn',
-            onClick:submitDoubt, disabled:!doubtText.trim()
-          }, '✦ Ask')
-        )
-      ),
+
 
       // ── Chat Composer ──
       React.createElement('div', {className:'sv2-composer'},
@@ -38841,8 +38722,6 @@ function StudentTaskView({
           React.createElement('div', {className:'sv3-qa-grid'},
             React.createElement('button', {className:'sv3-qa-btn'+(handRaised?' active':''), onClick: toggleHand},
               React.createElement('span', {className:'sv3-qa-icon'}, '✋'), 'Raise Hand'),
-            React.createElement('button', {className:'sv3-qa-btn', onClick: () => { const el = document.querySelector('.sv2-doubt-input'); if (el) el.focus(); }},
-              React.createElement('span', {className:'sv3-qa-icon'}, '❓'), 'Ask Question'),
             React.createElement('button', {className:'sv3-qa-btn', onClick: () => chatFileInputRef.current && chatFileInputRef.current.click()},
               React.createElement('span', {className:'sv3-qa-icon'}, '📤'), 'Share Resource'),
             React.createElement('button', {className:'sv3-qa-btn', onClick: () => add('Polls are coming soon!', 'info')},
@@ -40053,7 +39932,7 @@ function StudentTaskView({
 
           // ASK DOUBT
           sPage==='doubt' && React.createElement(AskDoubtSystem, {
-            sessionCode, studentId, studentName, studentPhoto
+            sessionCode, studentId, studentName, studentPhoto, doubts, setDoubts
           }),
 
           // ATTENDANCE
@@ -43579,7 +43458,7 @@ function StudentLeaderboard({sessionCode, studentId, codingLeaderboard, studentN
 // ═════════════════════════════════════════════════════════════════
 //  ASK DOUBT SYSTEM — Premium Discord-style Support
 // ═════════════════════════════════════════════════════════════════
-function AskDoubtSystem({ sessionCode, studentId, studentName, studentPhoto }) {
+function AskDoubtSystem({ sessionCode, studentId, studentName, studentPhoto, doubts, setDoubts }) {
   const { add } = React.useContext(AppCtx);
 
   const SUBJECTS = ['General', 'Mathematics', 'Physics', 'Chemistry', 'Biology', 'English', 'History', 'Computer Science', 'Other'];
@@ -43604,8 +43483,6 @@ function AskDoubtSystem({ sessionCode, studentId, studentName, studentPhoto }) {
   function saveDoubts(arr) {
     try { localStorage.setItem(LS_KEY, JSON.stringify(arr)); } catch {}
   }
-
-  const [doubts, setDoubts] = React.useState(() => loadDoubts());
   const [activeCategory, setActiveCategory] = React.useState('all');
   const [activeDoubtId, setActiveDoubtId] = React.useState(null);
   const [showNewModal, setShowNewModal] = React.useState(false);
@@ -44001,23 +43878,48 @@ function NewDoubtModal({ sessionCode, studentId, studentName, studentPhoto, onCl
     if (!text.trim()) { add('Please describe your doubt', 'error'); return; }
     setSubmitting(true);
     try {
-      // Prepare attachments (store images as base64 for local persistence)
-      const uploadedAtts = attachments.map(att => att.type === 'image'
-        ? { type: 'image', url: att.preview, name: att.name, size: att.size }
-        : { type: att.type, name: att.name, size: att.size, url: null }
-      );
-
       // Try backend submit
       let serverId = null;
+      let serverImgUrl = null;
       try {
-        const fd = new FormData();
-        fd.append('student_id', studentId);
-        fd.append('doubt_text', text.trim());
-        fd.append('subject', subject);
-        if (attachments[0]?.file) fd.append('image', attachments[0].file);
-        const res = await fetch(`/api/session/${sessionCode}/submit_doubt`, { method: 'POST', body: fd });
-        if (res.ok) { const d = await res.json(); serverId = d.doubt_id || d.id || null; }
-      } catch {}
+        if (attachments[0]?.file) {
+          const fd = new FormData();
+          fd.append('session_code', sessionCode);
+          fd.append('student_id', studentId);
+          fd.append('doubt_text', text.trim());
+          fd.append('subject', subject);
+          fd.append('image', attachments[0].file);
+          const res = await fetch('/api/doubts/submit_with_image', { method: 'POST', body: fd });
+          if (res.ok) {
+            const d = await res.json();
+            serverId = d.doubt_id || d.id || null;
+            serverImgUrl = d.image_url || null;
+          }
+        } else {
+          const res = await fetch('/api/doubts/submit', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              session_code: sessionCode,
+              student_id: studentId,
+              doubt_text: text.trim(),
+              subject: subject
+            })
+          });
+          if (res.ok) {
+            const d = await res.json();
+            serverId = d.doubt_id || d.id || null;
+          }
+        }
+      } catch (err) {
+        console.error('Error submitting doubt:', err);
+      }
+
+      // Prepare attachments (store images as base64 for local persistence)
+      const uploadedAtts = attachments.map(att => att.type === 'image'
+        ? { type: 'image', url: serverImgUrl || att.preview, name: att.name, size: att.size }
+        : { type: att.type, name: att.name, size: att.size, url: null }
+      );
 
       const newDoubt = {
         id: serverId || ('local_' + Date.now()),

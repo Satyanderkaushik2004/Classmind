@@ -19618,6 +19618,86 @@ img[src="/vyom_logo.png"] {
   border-color: var(--cm2-purple);
   box-shadow: 0 0 0 1px rgba(99,102,241,0.3);
 }
+.cm2-content-row.uploaded-by-teacher {
+  border-left: 4px solid var(--accent);
+  border-color: rgba(var(--accent-rgb), 0.25);
+}
+.cm2-content-row.uploaded-by-student {
+  border-left: 4px solid #10b981;
+  border-color: rgba(16, 185, 129, 0.25);
+}
+.light .cm2-content-row.uploaded-by-teacher {
+  border-left: 4px solid var(--accent);
+  border-color: rgba(11, 45, 99, 0.2);
+}
+.light .cm2-content-row.uploaded-by-student {
+  border-left: 4px solid #059669;
+  border-color: rgba(16, 185, 129, 0.2);
+}
+
+.sch-row.uploaded-by-teacher {
+  border-left: 4px solid var(--accent);
+  border-color: rgba(var(--accent-rgb), 0.25);
+}
+.sch-row.uploaded-by-student {
+  border-left: 4px solid #10b981;
+  border-color: rgba(16, 185, 129, 0.25);
+}
+.light .sch-row.uploaded-by-teacher {
+  border-left: 4px solid var(--accent);
+  border-color: rgba(11, 45, 99, 0.2);
+}
+.light .sch-row.uploaded-by-student {
+  border-left: 4px solid #059669;
+  border-color: rgba(16, 185, 129, 0.2);
+}
+
+.resource-origin-indicator {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  font-size: 0.85rem;
+  opacity: 0.85;
+  z-index: 2;
+  transition: transform 0.2s;
+}
+.resource-origin-indicator:hover {
+  transform: scale(1.15);
+}
+
+.cm2-tag-teacher, .ch-badge-teacher {
+  background: rgba(212, 160, 23, 0.15) !important;
+  color: #fbbf24 !important;
+  border: 1px solid rgba(212, 160, 23, 0.3) !important;
+}
+.light .cm2-tag-teacher, .light .ch-badge-teacher {
+  background: rgba(11, 45, 99, 0.08) !important;
+  color: #0b2d63 !important;
+  border: 1px solid rgba(11, 45, 99, 0.2) !important;
+}
+.cm2-tag-student, .ch-badge-student {
+  background: rgba(59, 130, 246, 0.15) !important;
+  color: #60a5fa !important;
+  border: 1px solid rgba(59, 130, 246, 0.3) !important;
+}
+.light .cm2-tag-student, .light .ch-badge-student {
+  background: rgba(59, 130, 246, 0.08) !important;
+  color: #1d4ed8 !important;
+  border: 1px solid rgba(59, 130, 246, 0.2) !important;
+}
+.cm2-tag:hover, .ch-type-badge:hover {
+  box-shadow: 0 0 8px rgba(124, 58, 237, 0.35);
+  transform: translateY(-1px);
+}
+@keyframes uploadPulse {
+  0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); }
+  70% { box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+}
+.new-resource-pulse {
+  animation: uploadPulse 2s infinite;
+}
+
 .cm2-row-thumb {
   width: 72px;
   height: 72px;
@@ -21776,6 +21856,17 @@ img[src="/vyom_logo.png"] {
 .copilot-fab:hover,
 .student-copilot-fab:hover {
   box-shadow: none !important;
+}
+
+/* Jump Highlight style */
+@keyframes jump-flash {
+  0% { background-color: rgba(99, 102, 241, 0.4); box-shadow: 0 0 15px rgba(99, 102, 241, 0.6); }
+  50% { background-color: rgba(99, 102, 241, 0.2); box-shadow: 0 0 5px rgba(99, 102, 241, 0.3); }
+  100% { background-color: transparent; box-shadow: none; }
+}
+.jump-highlight {
+  animation: jump-flash 2s ease-out;
+  border-radius: 8px;
 }
 </style>
 </head>
@@ -25006,6 +25097,24 @@ function TeacherShell({
     return () => window.removeEventListener('vyom:class_end_warning', onClassEndWarn);
   }, []);
 
+  useEffect(() => {
+    const handleJump = (e) => {
+      const { messageId } = e.detail;
+      if (!messageId) return;
+      setPage('communication');
+      setTimeout(() => {
+        const el = document.getElementById(`chat-msg-${messageId}`);
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          el.classList.add('jump-highlight');
+          setTimeout(() => el.classList.remove('jump-highlight'), 2000);
+        }
+      }, 150);
+    };
+    window.addEventListener('vyom:jump_to_chat', handleJump);
+    return () => window.removeEventListener('vyom:jump_to_chat', handleJump);
+  }, []);
+
   // ── Signal when dashboard page is fully rendered in DOM ──────────
   // Must reset to false first so the effect fires on EVERY dashboard visit.
   useEffect(() => {
@@ -25127,6 +25236,10 @@ function TeacherShell({
           },
           ...prev
         ]);
+        const incoming = msg.message || msg;
+        if (incoming && (incoming.msg_type === 'file' || incoming.msg_type === 'image')) {
+          window.dispatchEvent(new CustomEvent('vyom:content_refresh', { detail: { sessionCode } }));
+        }
         window.dispatchEvent(new CustomEvent('vyom:chat_message', { detail: msg.message || msg }));
       } else if (msg.type === 'student_waiting') {
         add(`${msg.display_name || 'Someone'} wants to join`, 'info');
@@ -29722,14 +29835,15 @@ function TaskManagementPage({
 // ═════════════════════════════════════════════════════════════════
 
 const CH_CATEGORIES = [
-  { id: 'all', label: 'All Content', icon: '📚' },
-  { id: 'pdf', label: 'PDFs', icon: '📕' },
+  { id: 'all', label: 'All Resources', icon: '📚' },
+  { id: 'teacher', label: 'Teacher Shared', icon: '👨‍🏫' },
+  { id: 'student', label: 'Student Shared', icon: '👨‍🎓' },
+  { id: 'chat', label: 'Chat Uploads', icon: '💬' },
+  { id: 'doubt', label: 'Doubt Uploads', icon: '❓' },
   { id: 'image', label: 'Images', icon: '🖼️' },
+  { id: 'pdf', label: 'PDFs', icon: '📕' },
   { id: 'video', label: 'Videos', icon: '🎬' },
   { id: 'assignment', label: 'Assignments', icon: '📋' },
-  { id: 'note', label: 'Notes', icon: '📝' },
-  { id: 'link', label: 'Links', icon: '🔗' },
-  { id: 'presentation', label: 'Slides', icon: '📊' },
 ];
 
 function chGetType(file) {
@@ -29979,6 +30093,18 @@ function ChPreviewModal({ item, teacherName, onClose }) {
       !fullscreen && React.createElement('div', { className: 'ch-modal-body' },
         React.createElement('div', { style: { display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 10 } },
           item.subject && React.createElement('span', { className: 'ch-type-badge ch-badge-subject' }, '📂 ', item.subject),
+          React.createElement('span', {
+            className: (item.uploaderRole || 'teacher') === 'teacher' ? 'ch-type-badge ch-badge-official' : 'ch-type-badge ch-badge-community',
+            style: (item.uploaderRole || 'teacher') === 'teacher'
+              ? { background: 'rgba(212,160,23,0.15)', color: '#fbbf24', border: '1px solid rgba(212,160,23,0.3)' }
+              : { background: 'rgba(16,185,129,0.15)', color: '#34d399', border: '1px solid rgba(16,185,129,0.3)' }
+          }, (item.uploaderRole || 'teacher') === 'teacher' ? '⭐ Official Teacher Resource' : '👥 Community Shared'),
+          React.createElement('span', {
+            className: 'ch-type-badge',
+            style: (item.uploaderRole || 'teacher') === 'teacher'
+              ? { background: 'rgba(212,160,23,0.15)', color: '#fbbf24', border: '1px solid rgba(212,160,23,0.3)' }
+              : { background: 'rgba(59,130,246,0.15)', color: '#60a5fa', border: '1px solid rgba(59,130,246,0.3)' }
+          }, (item.uploaderRole || 'teacher') === 'teacher' ? '👨‍🏫 Teacher Shared' : '👨‍🎓 Student Shared'),
           item.ai_generated && React.createElement('span', { className: 'ch-type-badge ch-badge-ai' }, '✨ AI Generated'),
           item.pinned && React.createElement('span', { className: 'ch-type-badge ch-badge-pinned' }, '📌 Pinned')
         ),
@@ -29987,8 +30113,9 @@ function ChPreviewModal({ item, teacherName, onClose }) {
           React.createElement('div', { className: 'ch-ai-label' }, '🎯 Learning Objective'),
           React.createElement('div', { className: 'ch-ai-text' }, item.objective)
         ),
-        React.createElement('div', { style: { display: 'flex', gap: 14, flexWrap: 'wrap', fontSize: '0.78rem', color: 'var(--text3)' } },
-          React.createElement('span', null, '👨‍🏫 ', teacherName || 'Teacher'),
+        React.createElement('div', { style: { display: 'flex', gap: 14, flexWrap: 'wrap', fontSize: '0.78rem', color: 'var(--text3)', alignItems: 'center' } },
+          React.createElement('span', null, (item.uploaderRole || 'teacher') === 'student' ? '👨‍🎓 ' : '👨‍🏫 ', item.uploadedBy || teacherName || 'Teacher'),
+          React.createElement('span', null, 'ℹ️ ' + (item.source || 'Content Upload') + (item.sourceChannel ? ` (${item.sourceChannel})` : '')),
           item.uploaded_at && React.createElement('span', null, '📅 ', chFmtDate(item.uploaded_at)),
           item.size && React.createElement('span', null, '💾 ', chFmtSize(item.size))
         )
@@ -29997,6 +30124,13 @@ function ChPreviewModal({ item, teacherName, onClose }) {
       React.createElement('div', { className: 'ch-modal-footer' },
         React.createElement('button', { className: 'btn btn-ghost', onClick: onClose }, '✕ Close'),
         React.createElement('div', { style: { display: 'flex', gap: 8 } },
+          item.linkedChatMessageId && React.createElement('button', {
+            className: 'btn btn-ghost',
+            onClick: () => {
+              onClose();
+              window.dispatchEvent(new CustomEvent('vyom:jump_to_chat', { detail: { messageId: item.linkedChatMessageId } }));
+            }
+          }, '💬 View in Chat'),
           type !== 'link' && fileUrl && React.createElement('a', {
             href: fileUrl, target: '_blank', rel: 'noreferrer',
             className: 'btn btn-ghost', style: { textDecoration: 'none' }
@@ -30023,7 +30157,23 @@ function ChManagerRow({ item, onPin, onDelete, onPreview, onEdit, teacherName })
   const fileUrl     = item.url || (item.name ? `${API}/api/content/file/${encodeURIComponent(sc)}/${enc}` : null);
   const downloadUrl = item.url || (item.name ? `${API}/api/content/download/${encodeURIComponent(sc)}/${enc}` : null);
 
-  return React.createElement('div', { className: 'ch-mgr-row' },
+  const senderRole = item.uploaderRole || 'teacher';
+  const uploaderName = item.uploadedBy || teacherName || 'Teacher';
+  const isTeacherRole = senderRole === 'teacher';
+  const borderLeftColor = isTeacherRole ? 'var(--accent, #6366f1)' : '#10b981';
+
+  return React.createElement('div', { 
+    className: 'ch-mgr-row',
+    style: { 
+      position: 'relative', 
+      borderLeft: `4px solid ${borderLeftColor}`,
+      borderRadius: '8px'
+    }
+  },
+    // Origin indicators
+    item.source === 'Chat Upload' && React.createElement('span', { className: 'resource-origin-indicator', style: { position: 'absolute', top: 4, right: 4, fontSize: '0.8rem', opacity: 0.8 }, title: 'Shared via Chat' }, '💬'),
+    item.source === 'Doubt Center' && React.createElement('span', { className: 'resource-origin-indicator', style: { position: 'absolute', top: 4, right: 4, fontSize: '0.8rem', opacity: 0.8 }, title: 'Shared via Doubt' }, '❓'),
+
     React.createElement('div', {
       className: 'ch-mgr-thumb',
       style: { cursor: 'pointer' },
@@ -30036,16 +30186,28 @@ function ChManagerRow({ item, onPin, onDelete, onPreview, onEdit, teacherName })
     ),
     React.createElement('div', { className: 'ch-mgr-info', style: { cursor: 'pointer' }, onClick: () => onPreview(item) },
       React.createElement('div', { className: 'ch-mgr-name' }, item.title || item.name || 'Untitled'),
-      React.createElement('div', { className: 'ch-mgr-meta' },
-        React.createElement('span', { className: chTypeBadgeClass(type), style: { marginRight: 5 } }, type.toUpperCase()),
-        item.subject && React.createElement('span', { style: { marginRight: 5 } }, '📂 ', item.subject, ' ·'),
-        item.size && React.createElement('span', null, chFmtSize(item.size), ' · '),
-        React.createElement('span', null, chFmtDate(item.uploaded_at)),
-        item.ai_generated && React.createElement('span', { style: { color: 'var(--accent)', marginLeft: 5 } }, '✨ AI')
+      React.createElement('div', { className: 'ch-mgr-meta', style: { display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center', marginTop: 4 } },
+        React.createElement('span', { className: chTypeBadgeClass(type) }, type.toUpperCase()),
+        React.createElement('span', { 
+          className: isTeacherRole ? 'ch-type-badge ch-badge-official' : 'ch-type-badge ch-badge-community',
+          style: isTeacherRole
+            ? { background: 'rgba(212,160,23,0.12)', color: '#fbbf24', border: '1px solid rgba(212,160,23,0.25)', fontSize: '0.7rem' }
+            : { background: 'rgba(16,185,129,0.12)', color: '#34d399', border: '1px solid rgba(16,185,129,0.25)', fontSize: '0.7rem' }
+        }, isTeacherRole ? '⭐ Teacher Shared' : `👥 Shared by ${uploaderName}`),
+        item.source && React.createElement('span', { style: { color: 'var(--text3)', fontSize: '0.75rem' } }, 'via ' + item.source),
+        item.subject && React.createElement('span', { style: { color: 'var(--text3)', fontSize: '0.75rem' } }, '📂 ' + item.subject),
+        item.size && React.createElement('span', { style: { color: 'var(--text3)', fontSize: '0.75rem' } }, chFmtSize(item.size)),
+        React.createElement('span', { style: { color: 'var(--text3)', fontSize: '0.75rem' } }, chFmtDate(item.uploaded_at)),
+        item.ai_generated && React.createElement('span', { style: { color: 'var(--accent)', fontWeight: 'bold', fontSize: '0.75rem' } }, '✨ AI')
       )
     ),
     item.pinned && React.createElement('span', { className: 'ch-type-badge ch-badge-pinned', style: { marginRight: 4 } }, '📌'),
     React.createElement('div', { className: 'ch-mgr-actions' },
+      item.linkedChatMessageId && React.createElement('button', {
+        className: 'ch-mgr-btn',
+        title: 'View in Chat',
+        onClick: () => window.dispatchEvent(new CustomEvent('vyom:jump_to_chat', { detail: { messageId: item.linkedChatMessageId } }))
+      }, '💬'),
       React.createElement('button', { className: 'ch-mgr-btn', onClick: () => onPreview(item), title: 'Preview' }, '👁'),
       downloadUrl && type !== 'link' && React.createElement('a', {
         href: downloadUrl, download: item.name,
@@ -30059,7 +30221,7 @@ function ChManagerRow({ item, onPin, onDelete, onPreview, onEdit, teacherName })
 }
 
 // ── TEACHER CONTENT MANAGEMENT PAGE ──
-function ContentManagementPage({ sessionCode, tasks, teacherName }) {
+function ContentManagementPage({ sessionCode, tasks, teacherName, roster }) {
   const { add } = useContext(AppCtx);
   const [files, setFiles] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -30095,6 +30257,14 @@ function ContentManagementPage({ sessionCode, tasks, teacherName }) {
 
   useEffect(() => { loadFiles(); }, []);
 
+  useEffect(() => {
+    function onRefresh(e) {
+      if (e.detail?.sessionCode === sessionCode) loadFiles();
+    }
+    window.addEventListener('vyom:content_refresh', onRefresh);
+    return () => window.removeEventListener('vyom:content_refresh', onRefresh);
+  }, [sessionCode]);
+
   // ── Cinematic hero slideshow — same images as db-hero ───────────
   const CH_HERO_SLIDES = [
     'url(https://images.unsplash.com/photo-1743834147172-37c12011b321?fm=jpg&q=80&w=1600&fit=crop)',
@@ -30106,12 +30276,24 @@ function ContentManagementPage({ sessionCode, tasks, teacherName }) {
     return () => clearInterval(interval);
   }, []);
 
-  function saveLocalMeta(fileName, patch) {
+  async function saveLocalMeta(fileName, patch) {
     try {
       const stored = JSON.parse(localStorage.getItem(`ch_meta_${sessionCode}`) || '{}');
       stored[fileName] = { ...stored[fileName], ...patch };
       localStorage.setItem(`ch_meta_${sessionCode}`, JSON.stringify(stored));
-    } catch {}
+      
+      // Sync to server backend
+      await fetch(`${API}/api/session/${sessionCode}/content/metadata`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          file_name: fileName,
+          meta: stored[fileName]
+        })
+      });
+    } catch (e) {
+      console.error('Failed to sync metadata to server:', e);
+    }
   }
 
   async function uploadFile(file) {
@@ -30218,7 +30400,18 @@ function ContentManagementPage({ sessionCode, tasks, teacherName }) {
   // Filter/search
   const filtered = files.filter(f => {
     const type = chGetType(f);
-    if (filterType !== 'all' && type !== filterType) return false;
+    const role = f.uploaderRole || 'teacher';
+    const source = f.source || '';
+    
+    if (filterType === 'teacher' && role !== 'teacher') return false;
+    if (filterType === 'student' && role !== 'student') return false;
+    if (filterType === 'chat' && source !== 'Chat Upload') return false;
+    if (filterType === 'doubt' && source !== 'Doubt Center') return false;
+    
+    if (filterType !== 'all' && filterType !== 'teacher' && filterType !== 'student' && filterType !== 'chat' && filterType !== 'doubt') {
+      if (type !== filterType) return false;
+    }
+    
     if (searchQ) {
       const q = searchQ.toLowerCase();
       return (f.title || f.name || '').toLowerCase().includes(q) || (f.subject || '').toLowerCase().includes(q);
@@ -30382,11 +30575,20 @@ function ContentManagementPage({ sessionCode, tasks, teacherName }) {
     const isSelected = previewItem?.name === f.name;
     const isMenuOpen = openMenuIdx === i;
 
+    const senderRole = f.uploaderRole || 'teacher';
+    const sourceClass = senderRole === 'teacher' ? 'uploaded-by-teacher' : 'uploaded-by-student';
+    const isRecent = f.uploaded_at && (Date.now() / 1000 - f.uploaded_at) < 300;
+    const pulseClass = isRecent ? 'new-resource-pulse' : '';
+
     return React.createElement('div', {
       key: i,
-      className: `cm2-content-row ${isSelected ? 'selected' : ''}`,
+      className: `cm2-content-row ${isSelected ? 'selected' : ''} ${sourceClass} ${pulseClass}`,
       onClick: () => { setPreviewItem(f); setShowFullDesc(false); }
     },
+      // Origin indicator (chat/doubt)
+      f.source === 'Chat Upload' && React.createElement('span', { className: 'resource-origin-indicator', title: 'Shared via Chat' }, '💬'),
+      f.source === 'Doubt Center' && React.createElement('span', { className: 'resource-origin-indicator', title: 'Shared via Doubt' }, '❓'),
+
       // Thumbnail
       React.createElement('div', { className: 'cm2-row-thumb' },
         type === 'image' && fileUrl
@@ -30400,8 +30602,19 @@ function ContentManagementPage({ sessionCode, tasks, teacherName }) {
           f.ai_generated && React.createElement('span', { className: 'cm2-ai-badge' }, '✨ AI Enhanced')
         ),
         React.createElement('div', { className: 'cm2-row-desc' }, f.description || 'No description available.'),
-        React.createElement('div', { className: 'cm2-row-tags' },
+        React.createElement('div', { className: 'cm2-row-tags', style: { display: 'flex', gap: 5, flexWrap: 'wrap', marginTop: 6 } },
           React.createElement('span', { className: cm2TagClass(type) }, type.charAt(0).toUpperCase() + type.slice(1)),
+          
+          React.createElement('span', { 
+            className: senderRole === 'teacher' ? 'cm2-tag cm2-tag-teacher' : 'cm2-tag cm2-tag-student',
+            style: senderRole === 'teacher' 
+              ? { background: 'rgba(212,160,23,0.12)', color: 'var(--accent2)', borderColor: 'rgba(212,160,23,0.2)' }
+              : { background: 'rgba(16,185,129,0.12)', color: '#10b981', borderColor: 'rgba(16,185,129,0.2)' }
+          }, senderRole === 'teacher' ? '👨‍🏫 Teacher Shared' : '👨‍🎓 Student Shared'),
+          
+          f.source && React.createElement('span', { className: 'cm2-tag cm2-tag-source', style: { background: 'rgba(255,255,255,0.06)', color: 'var(--cm2-text2)', borderColor: 'rgba(255,255,255,0.1)' } }, f.source),
+          isRecent && React.createElement('span', { className: 'cm2-tag', style: { background: 'rgba(239,68,68,0.12)', color: '#ef4444', borderColor: 'rgba(239,68,68,0.2)', fontWeight: 'bold' } }, 'NEW'),
+          
           f.subject && React.createElement('span', { className: 'cm2-tag cm2-tag-subject' }, f.subject),
           f.pinned && React.createElement('span', { className: 'cm2-tag', style: { background: 'rgba(234,179,8,0.12)', color: '#fbbf24', borderColor: 'rgba(234,179,8,0.2)' } }, '📌 Pinned')
         )
@@ -30491,6 +30704,18 @@ function ContentManagementPage({ sessionCode, tasks, teacherName }) {
     const isLong = desc.length > 130;
     const descDisplay = isLong && !showFullDesc ? desc.slice(0, 130) + '…' : desc;
 
+    const senderRole = f.uploaderRole || 'teacher';
+    const senderName = f.uploadedBy || displayName || 'Teacher';
+    const isTeacherRole = senderRole === 'teacher';
+    
+    let isOnline = false;
+    if (isTeacherRole) {
+      isOnline = true;
+    } else {
+      const activeList = roster?.active || [];
+      isOnline = activeList.some(st => st.name === senderName || st.real_name === senderName);
+    }
+
     return React.createElement('div', null,
       // Preview image area
       React.createElement('div', { className: 'cm2-preview-img-wrap', style: { background: bgColor } },
@@ -30506,8 +30731,18 @@ function ContentManagementPage({ sessionCode, tasks, teacherName }) {
           React.createElement('div', { className: 'cm2-preview-title' }, f.title || f.name || 'Untitled'),
           f.ai_generated && React.createElement('span', { className: 'cm2-ai-badge' }, '✨ AI Enhanced')
         ),
-        React.createElement('div', { className: 'cm2-preview-tags' },
+        React.createElement('div', { className: 'cm2-preview-tags', style: { display: 'flex', gap: 5, flexWrap: 'wrap' } },
           React.createElement('span', { className: cm2TagClass(type) }, type.charAt(0).toUpperCase() + type.slice(1)),
+          
+          React.createElement('span', { 
+            className: senderRole === 'teacher' ? 'cm2-tag cm2-tag-teacher' : 'cm2-tag cm2-tag-student',
+            style: senderRole === 'teacher' 
+              ? { background: 'rgba(212,160,23,0.12)', color: 'var(--accent2)', borderColor: 'rgba(212,160,23,0.2)' }
+              : { background: 'rgba(16,185,129,0.12)', color: '#10b981', borderColor: 'rgba(16,185,129,0.2)' }
+          }, senderRole === 'teacher' ? '👨‍🏫 Teacher Shared' : '👨‍🎓 Student Shared'),
+
+          f.source && React.createElement('span', { className: 'cm2-tag cm2-tag-source', style: { background: 'rgba(255,255,255,0.06)', color: 'var(--cm2-text2)', borderColor: 'rgba(255,255,255,0.1)' } }, f.source),
+
           f.subject && React.createElement('span', { className: 'cm2-tag cm2-tag-subject' }, f.subject),
           React.createElement('button', { className: 'cm2-add-tag-btn' }, '+ Add Tag')
         ),
@@ -30525,9 +30760,10 @@ function ContentManagementPage({ sessionCode, tasks, teacherName }) {
         React.createElement('div', { className: 'cm2-details-title' }, 'Details'),
         [
           { label: 'Created', val: chFmtDate(f.uploaded_at) || '–' },
-          { label: 'Updated', val: chFmtDate(f.uploaded_at) || '–' },
+          { label: 'File Type', val: type.toUpperCase() },
           { label: 'File Size', val: chFmtSize(f.size) || '–' },
-          { label: 'Format', val: (f.content_type || type).toUpperCase() }
+          { label: 'Shared Through', val: f.source || 'Content Upload' + (f.sourceChannel ? ` (${f.sourceChannel})` : '') },
+          { label: 'Visibility', val: f.visibility || 'Class Visible' }
         ].map((row, ri) => React.createElement('div', { key: ri, className: 'cm2-detail-row' },
           React.createElement('div', { className: 'cm2-detail-label' },
             React.createElement('div', { className: 'cm2-detail-label-icon' }),
@@ -30540,9 +30776,40 @@ function ContentManagementPage({ sessionCode, tasks, teacherName }) {
             React.createElement('div', { className: 'cm2-detail-label-icon' }),
             'Uploaded by'
           ),
-          React.createElement('div', { className: 'cm2-detail-uploader' },
-            React.createElement('div', { className: 'cm2-uploader-av' }, (displayName || 'T')[0].toUpperCase()),
-            React.createElement('span', null, displayName || 'Teacher')
+          React.createElement('div', { className: 'cm2-detail-uploader', style: { display: 'flex', alignItems: 'center', gap: 8 } },
+            React.createElement('div', { 
+              className: 'cm2-uploader-av', 
+              style: { 
+                position: 'relative', 
+                width: 24, 
+                height: 24, 
+                borderRadius: '50%', 
+                background: isTeacherRole ? 'linear-gradient(135deg,#F59E0B,#EF4444)' : 'linear-gradient(135deg,#10B981,#3B82F6)',
+                color: '#fff',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '0.75rem',
+                fontWeight: 'bold'
+              } 
+            }, 
+              senderName[0].toUpperCase(),
+              isOnline && React.createElement('span', { 
+                style: { 
+                  position: 'absolute', 
+                  bottom: -1, 
+                  right: -1, 
+                  width: 8, 
+                  height: 8, 
+                  borderRadius: '50%', 
+                  background: '#10B981', 
+                  border: '1.5px solid var(--surface1)',
+                  boxShadow: '0 0 4px #10B981'
+                } 
+              })
+            ),
+            React.createElement('span', null, senderName),
+            React.createElement('span', { style: { fontSize: '0.72rem', opacity: 0.6 } }, isTeacherRole ? '👨‍🏫' : '👨‍🎓')
           )
         )
       ),
@@ -30551,6 +30818,11 @@ function ContentManagementPage({ sessionCode, tasks, teacherName }) {
         React.createElement('button', { className: 'cm2-edit-btn', onClick: () => setTab('upload') },
           '✏️ Edit Content'
         ),
+        f.linkedChatMessageId && React.createElement('button', {
+          className: 'cm2-action-icon-btn',
+          title: 'View in Chat',
+          onClick: () => window.dispatchEvent(new CustomEvent('vyom:jump_to_chat', { detail: { messageId: f.linkedChatMessageId } }))
+        }, '💬'),
         React.createElement('button', { className: 'cm2-action-icon-btn', title: 'Duplicate', onClick: () => add('Duplicate coming soon', 'info') }, '⧉'),
         downloadUrl && type !== 'link' && React.createElement('a', {
           href: downloadUrl, download: f.name,
@@ -30724,6 +30996,7 @@ function StudentContentHub({ sessionCode, studentId, studentName, teacherName })
   const [bookmarks, setBookmarks] = useState(() => {
     try { return JSON.parse(localStorage.getItem(`ch_bm_${studentId}`) || '[]'); } catch { return []; }
   });
+  const bookmarkCount = bookmarks.length;
   const [viewCount, setViewCount] = useState({});
 
   async function loadFiles() {
@@ -30765,7 +31038,18 @@ function StudentContentHub({ sessionCode, studentId, studentName, teacherName })
   // Filter + sort
   const filtered = files.filter(f => {
     const type = chGetType(f);
-    if (activeCategory !== 'all' && activeCategory !== 'bookmarked' && type !== activeCategory) return false;
+    const role = f.uploaderRole || 'teacher';
+    const source = f.source || '';
+    
+    if (activeCategory === 'teacher' && role !== 'teacher') return false;
+    if (activeCategory === 'student' && role !== 'student') return false;
+    if (activeCategory === 'chat' && source !== 'Chat Upload') return false;
+    if (activeCategory === 'doubt' && source !== 'Doubt Center') return false;
+    
+    if (activeCategory !== 'all' && activeCategory !== 'bookmarked' && activeCategory !== 'teacher' && activeCategory !== 'student' && activeCategory !== 'chat' && activeCategory !== 'doubt') {
+      if (type !== activeCategory) return false;
+    }
+    
     if (activeCategory === 'bookmarked' && !bookmarks.includes(f.name)) return false;
     if (searchQ) {
       const q = searchQ.toLowerCase();
@@ -30783,14 +31067,27 @@ function StudentContentHub({ sessionCode, studentId, studentName, teacherName })
     return 0;
   });
 
+  const studentCats = [...CH_CATEGORIES, { id: 'bookmarked', label: 'Saved', icon: '🔖' }];
+
   // Category counts
   const catCounts = {};
-  CH_CATEGORIES.forEach(c => {
-    catCounts[c.id] = c.id === 'all' ? files.length : files.filter(f => chGetType(f) === c.id).length;
+  studentCats.forEach(c => {
+    if (c.id === 'all') {
+      catCounts[c.id] = files.length;
+    } else if (c.id === 'teacher') {
+      catCounts[c.id] = files.filter(f => (f.uploaderRole || 'teacher') === 'teacher').length;
+    } else if (c.id === 'student') {
+      catCounts[c.id] = files.filter(f => f.uploaderRole === 'student').length;
+    } else if (c.id === 'chat') {
+      catCounts[c.id] = files.filter(f => f.source === 'Chat Upload').length;
+    } else if (c.id === 'doubt') {
+      catCounts[c.id] = files.filter(f => f.source === 'Doubt Center').length;
+    } else if (c.id === 'bookmarked') {
+      catCounts[c.id] = bookmarks.filter(b => files.some(f => f.name === b)).length;
+    } else {
+      catCounts[c.id] = files.filter(f => chGetType(f) === c.id).length;
+    }
   });
-  const bookmarkCount = bookmarks.filter(b => files.some(f => f.name === b)).length;
-
-  const studentCats = [...CH_CATEGORIES, { id: 'bookmarked', label: 'Saved', icon: '🔖' }];
 
   // Featured resource — cycles through filtered list
   const featuredList = filtered.length ? filtered : [];
@@ -30808,10 +31105,19 @@ function StudentContentHub({ sessionCode, studentId, studentName, teacherName })
     const isBookmarked = bookmarks.includes(item.name);
     const isFeatured = currentFeatured && currentFeatured.name === item.name;
 
+    const senderRole = item.uploaderRole || 'teacher';
+    const sourceClass = senderRole === 'teacher' ? 'uploaded-by-teacher' : 'uploaded-by-student';
+    const isRecent = item.uploaded_at && (Date.now() / 1000 - item.uploaded_at) < 300;
+    const pulseClass = isRecent ? 'new-resource-pulse' : '';
+
     return React.createElement('div', {
-      className: 'sch-row' + (isFeatured ? ' sch-row-featured' : ''),
+      className: 'sch-row' + (isFeatured ? ' sch-row-featured' : '') + ' ' + sourceClass + ' ' + pulseClass,
       onClick: () => { openItem(item); setFeaturedIdx(filtered.indexOf(item)); }
     },
+      // Origin indicator (chat/doubt)
+      item.source === 'Chat Upload' && React.createElement('span', { className: 'resource-origin-indicator', title: 'Shared via Chat' }, '💬'),
+      item.source === 'Doubt Center' && React.createElement('span', { className: 'resource-origin-indicator', title: 'Shared via Doubt' }, '❓'),
+
       // Thumbnail
       React.createElement('div', { className: 'sch-row-thumb' },
         type === 'image' && fileUrl
@@ -30823,8 +31129,19 @@ function StudentContentHub({ sessionCode, studentId, studentName, teacherName })
       ),
       // Body
       React.createElement('div', { className: 'sch-row-body' },
-        React.createElement('div', { className: 'sch-row-badges' },
+        React.createElement('div', { className: 'sch-row-badges', style: { display: 'flex', gap: 5, flexWrap: 'wrap' } },
           React.createElement('span', { className: chTypeBadgeClass(type) }, chTypeIcon(type), ' ', type.toUpperCase()),
+          
+          React.createElement('span', { 
+            className: senderRole === 'teacher' ? 'ch-type-badge ch-badge-official' : 'ch-type-badge ch-badge-community',
+            style: senderRole === 'teacher' 
+              ? { background: 'rgba(212,160,23,0.15)', color: '#fbbf24', border: '1px solid rgba(212,160,23,0.3)' }
+              : { background: 'rgba(16,185,129,0.15)', color: '#34d399', border: '1px solid rgba(16,185,129,0.3)' }
+          }, senderRole === 'teacher' ? '⭐ Teacher Shared' : '👥 Student Shared'),
+          
+          item.source && React.createElement('span', { className: 'ch-type-badge', style: { background: 'rgba(255,255,255,0.06)', color: 'var(--sch-text2)', border: '1px solid rgba(255,255,255,0.1)' } }, item.source),
+          isRecent && React.createElement('span', { className: 'ch-type-badge', style: { background: 'rgba(239,68,68,0.15)', color: '#ef4444', border: '1px solid rgba(239,68,68,0.3)', fontWeight: 'bold' } }, 'NEW'),
+          
           item.ai_generated && React.createElement('span', { className: 'ch-type-badge ch-badge-ai' }, '✨ AI GENERATED')
         ),
         React.createElement('div', { className: 'sch-row-title' }, item.title || item.name),
@@ -30835,21 +31152,22 @@ function StudentContentHub({ sessionCode, studentId, studentName, teacherName })
           item.size && React.createElement(React.Fragment, null,
             React.createElement('span', { style: { color: 'var(--sch-border, #334155)' } }, '|'),
             React.createElement('span', null, 'Size'),
-            React.createElement('span', { style: { fontWeight: 600, color: 'var(--sch-text, #f1f5f9)' } }, item.size)
+            React.createElement('span', { style: { fontWeight: 600, color: 'var(--sch-text, #f1f5f9)' } }, chFmtSize(item.size))
           )
         )
       ),
       // Actions
       React.createElement('div', { className: 'sch-row-actions', onClick: e => e.stopPropagation() },
+        item.linkedChatMessageId && React.createElement('button', {
+          className: 'sch-row-icon-btn',
+          title: 'View in Chat',
+          onClick: () => window.dispatchEvent(new CustomEvent('vyom:jump_to_chat', { detail: { messageId: item.linkedChatMessageId } }))
+        }, '💬'),
         React.createElement('button', {
           className: 'sch-row-icon-btn' + (isBookmarked ? ' active' : ''),
           title: isBookmarked ? 'Remove bookmark' : 'Save',
           onClick: () => toggleBookmark(item)
-        }, isBookmarked ? '🔖' : '🔖'),
-        React.createElement('button', {
-          className: 'sch-row-icon-btn',
-          title: 'More options'
-        }, '⋯')
+        }, '🔖')
       )
     );
   }
@@ -30868,6 +31186,10 @@ function StudentContentHub({ sessionCode, studentId, studentName, teacherName })
     const enc = encodeURIComponent(currentFeatured.name || '');
     const fileUrl = currentFeatured.url || (currentFeatured.name ? `${API}/api/content/file/${encodeURIComponent(sessionCode)}/${enc}` : null);
     const isBookmarked = bookmarks.includes(currentFeatured.name);
+    const senderRole = currentFeatured.uploaderRole || 'teacher';
+    const isTeacherRole = senderRole === 'teacher';
+    const senderName = currentFeatured.uploadedBy || (isTeacherRole ? (teacherName || 'Teacher') : 'Student');
+    const isOnline = isTeacherRole;
 
     return React.createElement('div', { className: 'sch-featured-panel' },
       // Panel Header
@@ -30904,8 +31226,16 @@ function StudentContentHub({ sessionCode, studentId, studentName, teacherName })
         }, '⛶')
       ),
       // Badges
-      React.createElement('div', { className: 'sch-featured-badges' },
+      React.createElement('div', { className: 'sch-featured-badges', style: { display: 'flex', gap: 5, flexWrap: 'wrap', marginBottom: 10 } },
         React.createElement('span', { className: chTypeBadgeClass(type) }, chTypeIcon(type), ' ', type.toUpperCase()),
+        
+        React.createElement('span', { 
+          className: senderRole === 'teacher' ? 'ch-type-badge ch-badge-official' : 'ch-type-badge ch-badge-community',
+          style: senderRole === 'teacher' 
+            ? { background: 'rgba(212,160,23,0.15)', color: '#fbbf24', border: '1px solid rgba(212,160,23,0.3)' }
+            : { background: 'rgba(16,185,129,0.15)', color: '#34d399', border: '1px solid rgba(16,185,129,0.3)' }
+        }, senderRole === 'teacher' ? '⭐ Teacher Shared' : '👥 Student Shared'),
+        
         currentFeatured.ai_generated && React.createElement('span', { className: 'ch-type-badge ch-badge-ai' }, '✨ AI GENERATED')
       ),
       // Title + desc
@@ -30913,16 +31243,84 @@ function StudentContentHub({ sessionCode, studentId, studentName, teacherName })
       React.createElement('div', { className: 'sch-featured-desc' },
         currentFeatured.description || 'Explore this resource to deepen your understanding of the topic.'
       ),
+      
+      // Metadata Details Card
+      React.createElement('div', { 
+        style: { 
+          display: 'flex', 
+          flexDirection: 'column', 
+          gap: 8, 
+          padding: '12px', 
+          background: 'rgba(255,255,255,0.03)', 
+          borderRadius: 8, 
+          border: '1px solid rgba(255,255,255,0.05)',
+          marginBottom: 14,
+          fontSize: '0.8rem',
+          color: 'var(--sch-text2)'
+        } 
+      },
+        React.createElement('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center' } },
+          React.createElement('span', null, 'Uploaded by'),
+          React.createElement('div', { style: { display: 'flex', alignItems: 'center', gap: 6 } },
+            React.createElement('div', { 
+              style: { 
+                position: 'relative', 
+                width: 18, 
+                height: 18, 
+                borderRadius: '50%', 
+                background: isTeacherRole ? 'linear-gradient(135deg,#F59E0B,#EF4444)' : 'linear-gradient(135deg,#10B981,#3B82F6)',
+                color: '#fff',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '0.6rem',
+                fontWeight: 'bold'
+              } 
+            }, 
+              senderName[0].toUpperCase(),
+              isOnline && React.createElement('span', { 
+                style: { 
+                  position: 'absolute', 
+                  bottom: -1, 
+                  right: -1, 
+                  width: 6, 
+                  height: 6, 
+                  borderRadius: '50%', 
+                  background: '#10B981', 
+                  border: '1px solid rgba(15,12,40,0.8)'
+                } 
+              })
+            ),
+            React.createElement('span', { style: { fontWeight: 600, color: 'var(--sch-text)' } }, senderName)
+          )
+        ),
+        React.createElement('div', { style: { display: 'flex', justifyContent: 'space-between' } },
+          React.createElement('span', null, 'Shared Through'),
+          React.createElement('span', { style: { fontWeight: 600, color: 'var(--sch-text)' } }, currentFeatured.source || 'Content Upload')
+        ),
+        currentFeatured.size && React.createElement('div', { style: { display: 'flex', justifyContent: 'space-between' } },
+          React.createElement('span', null, 'Size'),
+          React.createElement('span', { style: { fontWeight: 600, color: 'var(--sch-text)' } }, chFmtSize(currentFeatured.size))
+        )
+      ),
+
       // Action buttons
-      React.createElement('div', { className: 'sch-featured-btns' },
+      React.createElement('div', { className: 'sch-featured-btns', style: { display: 'flex', gap: 6 } },
         React.createElement('button', {
           className: 'sch-featured-open-btn',
+          style: { flex: 1 },
           onClick: () => openItem(currentFeatured)
         }, 'View Full Resource'),
+        currentFeatured.linkedChatMessageId && React.createElement('button', {
+          className: 'sch-featured-save-btn',
+          style: { padding: '0 12px' },
+          title: 'View in Chat',
+          onClick: () => window.dispatchEvent(new CustomEvent('vyom:jump_to_chat', { detail: { messageId: currentFeatured.linkedChatMessageId } }))
+        }, '💬'),
         React.createElement('button', {
           className: 'sch-featured-save-btn' + (isBookmarked ? ' saved' : ''),
           onClick: () => toggleBookmark(currentFeatured)
-        }, isBookmarked ? '🔖 Saved' : '🔖 Save')
+        }, isBookmarked ? '🔖' : '🔖')
       )
     );
   }
@@ -33552,6 +33950,7 @@ function CommunicationPage({
             // Message body — file, image, or text
             isImg && fileInfo
               ? React.createElement('img', {
+                  id: `chat-msg-${m.id}`,
                   src: `${typeof API !== 'undefined' ? API : ''}/api/content/file/${sessionCode}/${encodeURIComponent(fileInfo.name || fileInfo.id)}`,
                   className: 'chat-img-preview',
                   alt: fileInfo.name,
@@ -33560,6 +33959,7 @@ function CommunicationPage({
                 })
               : m.msg_type === 'file' && fileInfo
                 ? React.createElement('a', {
+                    id: `chat-msg-${m.id}`,
                     href: `${typeof API !== 'undefined' ? API : ''}/api/content/download/${sessionCode}/${encodeURIComponent(fileInfo.name || fileInfo.id)}`,
                     target: '_blank', rel: 'noopener noreferrer',
                     className: 'chat-file-card',
@@ -37092,6 +37492,24 @@ function StudentTaskView({
       setNotifList(prev => prev.map(n => n.type === 'task' ? { ...n, read: true } : n));
     }
   }, [sPage]);
+
+  useEffect(() => {
+    const handleJump = (e) => {
+      const { messageId } = e.detail;
+      if (!messageId) return;
+      setSPage('chat');
+      setTimeout(() => {
+        const el = document.getElementById(`s-chat-msg-${messageId}`);
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          el.classList.add('jump-highlight');
+          setTimeout(() => el.classList.remove('jump-highlight'), 2000);
+        }
+      }, 150);
+    };
+    window.addEventListener('vyom:jump_to_chat', handleJump);
+    return () => window.removeEventListener('vyom:jump_to_chat', handleJump);
+  }, []);
   const [taskStartTime, setTaskStartTime] = useState(null);
   const [timeSpent, setTimeSpent] = useState(0);
   // ── coding stats (Feature 7) ──────────────────────────────────────
@@ -37439,6 +37857,9 @@ function StudentTaskView({
         if (incomingMsg && incomingMsg.id) {
           setMessages(m => m.some(x => x.id === incomingMsg.id) ? m : [...m, incomingMsg]);
           setTimeout(() => messagesEnd.current?.scrollIntoView({ behavior: 'smooth' }), 100);
+          if (incomingMsg.msg_type === 'file' || incomingMsg.msg_type === 'image') {
+            window.dispatchEvent(new CustomEvent('vyom:content_refresh', { detail: { sessionCode } }));
+          }
           if (incomingMsg.sender_id !== studentId) {
             playStudentBeep('chat');
             setChatUnread(n => n + 1);
@@ -38878,6 +39299,7 @@ function StudentTaskView({
                 })
               : msg.msg_type === 'file' && fileInfo
                 ? React.createElement('a', {
+                    id: `s-chat-msg-${msg.id}`,
                     href: fileInfo._local_url || `/api/content/download/${sessionCode}/${encodeURIComponent(fileInfo.name || fileInfo.id || '')}`,
                     target:'_blank', rel:'noopener noreferrer',
                     className:'chat-file-card',
@@ -40306,12 +40728,12 @@ body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--t
 .rp2-hero-center{text-align:center;position:relative;z-index:1}
 .rp2-eyebrow{font-size:0.62rem;font-weight:700;color:rgba(139,92,246,0.7);letter-spacing:.15em;text-transform:uppercase;margin-bottom:8px}
 .rp2-title{
-  font-size:2.0rem;font-weight:900;letter-spacing:-.03em;
+  font-size:1.85rem;font-weight:900;letter-spacing:-.02em;
   background:linear-gradient(135deg,#E0E7FF 0%,#A5B4FC 40%,#C4B5FD 80%);
   -webkit-background-clip:text;-webkit-text-fill-color:transparent;
-  line-height:1.1;margin-bottom:4px;
+  line-height:1.15;margin-bottom:6px;max-width:100%;
 }
-.rp2-subtitle{font-size:0.82rem;color:#64748B;letter-spacing:.04em}
+.rp2-subtitle{font-size:0.8rem;color:#64748B;letter-spacing:.07em;font-weight:500}
 .rp2-divider{height:1px;background:linear-gradient(90deg,transparent,rgba(99,102,241,0.3),transparent);margin:16px 0;position:relative;z-index:1}
 
 /* ── STUDENT PROFILE CARD ── */
@@ -40564,7 +40986,7 @@ body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--t
 /* ── RESPONSIVE (screen only) ── */
 @media screen and (max-width:320mm){
   .rp2-hero{padding:18px 14px 14px}
-  .rp2-title{font-size:1.5rem}
+  .rp2-title{font-size:1.25rem;letter-spacing:-.01em}
   .rp2-profile{grid-template-columns:1fr;gap:14px;padding:16px 14px;justify-items:center;text-align:center}
   .rp2-avatar-wrap{width:80px;height:80px}
   .rp2-avatar{width:80px;height:80px}
@@ -40680,7 +41102,7 @@ body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--t
 .light .rp2-brand-name { color: var(--text) !important; }
 .light .rp2-brand-sub { color: var(--accent2) !important; }
 .light .rp2-eyebrow { color: var(--accent) !important; }
-.light .rp2-subtitle { color: var(--text3) !important; }
+.light .rp2-subtitle { color: var(--text3) !important; letter-spacing:.07em !important; }
 .light .rp2-divider { background: linear-gradient(90deg, transparent, var(--border), transparent) !important; }
 
 .light .rp2-avatar-ring {
@@ -40781,8 +41203,8 @@ body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--t
     </div>
     <div class="rp2-hero-center">
       <div class="rp2-eyebrow">✦ Official Academic Report ✦</div>
-      <div class="rp2-title">PREMIUM REPORT CARD</div>
-      <div class="rp2-subtitle">Detailed Performance Analytics &amp; Insights</div>
+      <div class="rp2-title">INTELLIGENT PERFORMANCE REPORT</div>
+      <div class="rp2-subtitle">Advanced Learning Metrics &amp; Progress Insights</div>
     </div>
     <div class="rp2-divider"></div>
   </div>

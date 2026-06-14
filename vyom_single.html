@@ -3469,6 +3469,11 @@ select option{background:var(--surface2)}
   border-color: rgba(110,44,18,0.25);
   box-shadow: 0 4px 14px rgba(110,44,18,0.08);
 }
+.light .comm-v2-bubble.student-bubble {
+  background: linear-gradient(135deg, rgba(216,155,91,0.16) 0%, rgba(11,45,99,0.06) 100%);
+  border-color: rgba(110,44,18,0.18);
+  color: #2B1B12;
+}
 .light .comm-v2-sender { color: #6E2C12; }
 .light .comm-v2-time { color: #B8A090; }
 .light .comm-v2-teacher-badge {
@@ -3559,17 +3564,19 @@ select option{background:var(--surface2)}
 /* Reaction picker */
 .light .comm-v2-reaction-picker,
 .light .chat-reaction-picker {
-  background: #FFFDF9;
+  background: rgba(255,253,249,0.92);
   border-color: #E6D5C3;
-  box-shadow: 0 12px 36px rgba(110,44,18,0.12);
+  box-shadow: 0 12px 36px rgba(110,44,18,0.14);
+  backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
 }
 .light .chat-reaction-picker button:hover { background: rgba(110,44,18,0.08); }
 
 /* Chat message actions menu */
 .light .chat-msg-actions {
-  background: #FFFDF9;
+  background: rgba(255,253,249,0.92);
   border-color: #E6D5C3;
-  box-shadow: 0 6px 20px rgba(110,44,18,0.10);
+  box-shadow: 0 6px 20px rgba(110,44,18,0.12);
+  backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
 }
 .light .chat-msg-action-btn { color: #6B5648; }
 .light .chat-msg-action-btn:hover { background: rgba(110,44,18,0.08); color: #2B1B12; }
@@ -3991,28 +3998,39 @@ select option{background:var(--surface2)}
 .comm-v2-menu-btn{width:32px;height:32px;border-radius:8px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);color:#a5b4fc;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:1.2rem;transition:all .2s ease;line-height:1;padding:0;}
 .comm-v2-menu-btn:hover{background:rgba(124,92,255,.15);border-color:rgba(124,92,255,.3);}
 /* Messages */
-.comm-v2-messages{flex:1;min-height:0;overflow-y:auto;padding:16px 18px;display:flex;flex-direction:column;gap:6px;position:relative;z-index:1;scroll-behavior:smooth;}
+.comm-v2-messages{flex:1;min-height:0;overflow-y:auto;padding:16px 18px;display:flex;flex-direction:column;gap:10px;position:relative;z-index:1;scroll-behavior:smooth;}
 .comm-v2-messages::-webkit-scrollbar{width:4px;}
 .comm-v2-messages::-webkit-scrollbar-track{background:transparent;}
 .comm-v2-messages::-webkit-scrollbar-thumb{background:rgba(124,92,255,.25);border-radius:4px;}
 .comm-v2-messages::-webkit-scrollbar-thumb:hover{background:rgba(124,92,255,.45);}
 /* Message row */
-.comm-v2-msg-row{display:flex;align-items:flex-start;gap:10px;max-width:88%;align-self:flex-start;animation:cv2SlideIn .26s cubic-bezier(.34,1.26,.64,1) both;}
+.comm-v2-msg-row{display:flex;align-items:flex-start;gap:10px;max-width:78%;animation:cv2SlideIn .26s cubic-bezier(.34,1.26,.64,1) both;}
 @keyframes cv2SlideIn{from{opacity:0;transform:translateY(8px) scale(.98);}to{opacity:1;transform:translateY(0) scale(1);}}
-.comm-v2-msg-row.teacher-row{max-width:92%;}
+.chat-msg-wrapper{display:flex;flex-direction:column;}
+.chat-msg-wrapper.teacher-msg{align-items:flex-start;align-self:flex-start;}
+.chat-msg-wrapper.student-msg{align-items:flex-end;align-self:flex-end;}
+.comm-v2-msg-row.teacher-row{max-width:80%;}
+.comm-v2-msg-row.student-row{max-width:78%;flex-direction:row-reverse;}
+.comm-v2-msg-row.student-row .comm-v2-bubble-col{align-items:flex-end;}
+.comm-v2-msg-row.student-row .comm-v2-bubble-header{flex-direction:row-reverse;}
+.comm-v2-msg-row.student-row .comm-v2-time{margin-left:0;margin-right:auto;}
+.chat-msg-wrapper{transition:background .15s ease;border-radius:14px;padding:4px 2px;}
+.chat-msg-wrapper:hover{background:rgba(124,92,255,.04);}
+.light .chat-msg-wrapper:hover{background:rgba(110,44,18,.03);}
 /* Avatars */
-.comm-v2-msg-av{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.77rem;font-weight:700;flex-shrink:0;box-shadow:0 2px 10px rgba(0,0,0,.3);color:#fff;overflow:hidden;}
+.comm-v2-msg-av{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.77rem;font-weight:700;flex-shrink:0;box-shadow:0 2px 10px rgba(0,0,0,.3);color:#fff;overflow:hidden;margin-top:2px;}
 .comm-v2-msg-av.teacher-av{background:linear-gradient(135deg,#f97316,#eab308)!important;}
 /* Bubble column */
 .comm-v2-bubble-col{display:flex;flex-direction:column;gap:4px;flex:0 1 auto;min-width:0;max-width:100%;align-items:flex-start;}
-.comm-v2-bubble-header{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;width:100%;}
-.comm-v2-sender{font-size:.78rem;font-weight:700;color:#a5b4fc;}
+.comm-v2-bubble-header{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;width:100%;padding:0 2px;}
+.comm-v2-sender{font-size:.8rem;font-weight:700;color:#a5b4fc;letter-spacing:.01em;}
 .comm-v2-teacher-badge{font-size:.62rem;font-weight:800;color:#f97316;background:rgba(249,115,22,.12);border:1px solid rgba(249,115,22,.25);padding:1px 6px;border-radius:10px;text-transform:uppercase;letter-spacing:.5px;}
-.comm-v2-time{font-size:.67rem;color:#3d4f6e;margin-left:auto;}
+.comm-v2-time{font-size:.66rem;color:#3d4f6e;margin-left:auto;opacity:.85;font-weight:500;}
 /* Bubbles */
-.comm-v2-bubble{padding:10px 14px;border-radius:4px 14px 14px 14px;font-size:.875rem;line-height:1.55;word-break:break-word;background:rgba(28,30,58,.85);color:#dde4f5;border:1px solid rgba(99,102,241,.12);transition:transform .15s ease,border-color .15s ease;box-shadow:0 2px 8px rgba(0,0,0,.2);}
-.comm-v2-bubble:hover{transform:translateY(-1px);border-color:rgba(124,92,255,.22);}
-.comm-v2-bubble.teacher-bubble{background:linear-gradient(135deg,rgba(80,50,180,.55) 0%,rgba(55,80,185,.55) 100%);border:1px solid rgba(124,92,255,.35);box-shadow:0 4px 20px rgba(99,102,241,.18);}
+.comm-v2-bubble{padding:9px 14px;border-radius:4px 16px 16px 16px;font-size:.875rem;line-height:1.6;word-break:break-word;background:rgba(28,30,58,.85);color:#dde4f5;border:1px solid rgba(99,102,241,.12);transition:transform .15s ease,border-color .15s ease,box-shadow .15s ease;box-shadow:0 2px 8px rgba(0,0,0,.2);position:relative;}
+.comm-v2-bubble:hover{transform:translateY(-1px);border-color:rgba(124,92,255,.22);box-shadow:0 4px 14px rgba(0,0,0,.28);}
+.comm-v2-bubble.teacher-bubble{background:linear-gradient(135deg,rgba(40,32,72,.92) 0%,rgba(30,40,80,.92) 100%);border:1px solid rgba(124,92,255,.3);box-shadow:0 4px 16px rgba(40,30,90,.28);border-radius:16px 16px 16px 4px;}
+.comm-v2-bubble.student-bubble{background:linear-gradient(135deg,rgba(99,102,241,.22) 0%,rgba(56,189,248,.16) 100%);border:1px solid rgba(99,102,241,.28);border-radius:16px 4px 16px 16px;color:#eef2ff;}
 /* Reactions */
 .comm-v2-reactions{display:flex;align-items:center;gap:4px;margin-top:3px;}
 .comm-v2-reaction-pill{display:flex;align-items:center;gap:4px;background:rgba(20,20,45,.8);border:1px solid rgba(99,102,241,.2);border-radius:20px;padding:2px 8px;font-size:.73rem;cursor:pointer;transition:all .15s ease;}
@@ -5994,53 +6012,57 @@ body.s-ui-active .toasts {
 .chat-reaction-pill .r-count { font-size: 0.72rem; opacity: 0.8; }
 .chat-reaction-picker {
   position: absolute; z-index: 200;
-  display: flex; gap: 6px; flex-wrap: wrap;
-  padding: 10px 12px; border-radius: 16px;
-  background: rgba(12,10,30,0.97);
+  display: flex; gap: 4px; flex-wrap: nowrap;
+  padding: 8px 10px; border-radius: 100px;
+  background: rgba(18,16,38,0.85);
   border: 1px solid rgba(124,58,237,0.28);
-  box-shadow: 0 12px 40px rgba(0,0,0,0.6), 0 0 20px rgba(124,58,237,0.1);
-  backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-  animation: fadeInUp .14s ease;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.55), 0 0 20px rgba(124,58,237,0.12);
+  backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
+  animation: chatPopIn .18s cubic-bezier(.34,1.56,.64,1) both;
+  transform-origin: bottom center;
 }
 .chat-reaction-picker button {
-  font-size: 1.3rem; background: none; border: none; cursor: pointer;
-  padding: 5px 7px; border-radius: 10px; transition: transform .1s, background .1s;
+  font-size: 1.25rem; background: none; border: none; cursor: pointer;
+  padding: 4px 6px; border-radius: 50%; transition: transform .12s ease, background .12s ease;
+  line-height: 1;
 }
 .chat-reaction-picker button:hover {
-  transform: scale(1.25);
-  background: rgba(124,58,237,0.15);
+  transform: scale(1.35) translateY(-2px);
+  background: rgba(124,58,237,0.18);
 }
+@keyframes chatPopIn { from{opacity:0;transform:translateY(6px) scale(.9);} to{opacity:1;transform:translateY(0) scale(1);} }
 
-/* ── Chat Message Hover Actions (Feature 3) ── */
+/* ── Chat Message Hover Actions (Feature 3) — WhatsApp style ── */
 .chat-msg-wrapper { position: relative; }
 .chat-msg-actions {
-  position: absolute; right: 4px; top: -16px;
+  position: absolute; right: 0; top: -16px;
   display: none; gap: 2px; align-items: center;
-  background: rgba(10,8,26,0.97);
-  border: 1px solid rgba(124,58,237,0.28);
-  border-radius: 100px; padding: 4px 8px;
+  background: rgba(16,14,34,0.82);
+  border: 1px solid rgba(124,58,237,0.25);
+  border-radius: 100px; padding: 4px 6px;
   box-shadow:
-    0 6px 24px rgba(0,0,0,0.55),
-    0 0 14px rgba(124,58,237,0.15),
-    0 0 0 1px rgba(124,58,237,0.08);
-  backdrop-filter: blur(20px); z-index: 100;
-  animation: chatActFade 0.14s ease;
+    0 8px 28px rgba(0,0,0,0.5),
+    0 0 14px rgba(124,58,237,0.12),
+    0 0 0 1px rgba(124,58,237,0.06);
+  backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); z-index: 100;
+  animation: chatActFade 0.16s cubic-bezier(.34,1.4,.64,1) both;
 }
-@keyframes chatActFade { from{opacity:0;transform:translateY(4px)} to{opacity:1;transform:translateY(0)} }
+.chat-msg-wrapper.student-msg .chat-msg-actions { right: auto; left: 0; }
+@keyframes chatActFade { from{opacity:0;transform:translateY(6px) scale(.96)} to{opacity:1;transform:translateY(0) scale(1)} }
 .chat-msg-wrapper:hover .chat-msg-actions { display: flex; }
 /* Mobile tap-to-reveal */
 .chat-msg-wrapper.actions-open .chat-msg-actions { display: flex; }
 .chat-msg-action-btn {
-  background: none; border: none; cursor: pointer; padding: 4px 8px;
-  border-radius: 8px; font-size: 0.88rem; color: rgba(196,181,253,0.7);
-  transition: all .15s;
+  background: none; border: none; cursor: pointer; padding: 5px 8px;
+  border-radius: 50%; font-size: 0.92rem; color: rgba(196,181,253,0.75);
+  transition: all .15s ease; display: flex; align-items: center; justify-content: center;
 }
 .chat-msg-action-btn:hover {
-  background: rgba(124,58,237,0.18);
+  background: rgba(124,58,237,0.2);
   color: #e2e8f0;
-  transform: scale(1.14);
+  transform: scale(1.15);
 }
-.chat-msg-action-btn.danger:hover { background: rgba(239,68,68,0.15); color: #f87171; }
+.chat-msg-action-btn.danger:hover { background: rgba(239,68,68,0.16); color: #f87171; }
 /* ── Sticky Submit Test bar ── */
 .s-test-submit-bar {
   position: sticky; bottom: 0; left: 0; right: 0;
@@ -14280,10 +14302,13 @@ body.s-ui-active .toasts {
   box-shadow: 0 3px 12px rgba(11,45,99,0.25);
 }
 .light .tk2-action-btn {
-  background: #F3EDE2;
+  background: rgba(11,45,99,0.06);
   border-color: rgba(11,45,99,0.14);
-  color: #444444;
+  color: #0B2D63;
 }
+.light .tk2-action-btn:hover:not(:disabled) { box-shadow: 0 4px 14px rgba(11,45,99,0.12); }
+.light .tk2-action-btn.send { background: rgba(34,197,94,0.10); color: #166534; border-color: rgba(34,197,94,0.25); }
+.light .tk2-action-btn.del { background: rgba(198,90,61,0.08); color: #9A1515; border-color: rgba(198,90,61,0.2); }
 .light .tk2-save-task-btn {
   background: linear-gradient(135deg, #0B2D63, #1a3a6b);
   color: #fff;
@@ -14823,6 +14848,7 @@ body.s-ui-active .toasts {
 .light .comm-v2-time { color: var(--text3) !important; }
 .light .comm-v2-bubble { background: var(--surface2) !important; color: var(--text) !important; }
 .light .comm-v2-bubble.teacher-bubble { background: var(--accent) !important; color: #fff !important; }
+.light .comm-v2-bubble.student-bubble { background: var(--surface3) !important; color: var(--text) !important; border-color: var(--border) !important; }
 .light .chat-file-card { background: var(--surface3) !important; border-color: var(--border) !important; }
 .light .chat-file-info .fn { color: var(--text) !important; }
 .light .chat-file-info .fs { color: var(--text3) !important; }
@@ -21065,14 +21091,34 @@ img[src="/vyom_logo.png"] {
 .tk2-task-score { font-size: 1.15rem; font-weight: 800; color: #4ade80; }
 .tk2-task-score-label { font-size: 0.68rem; color: rgba(148,163,184,0.55); }
 .tk2-task-attempts { font-size: 0.75rem; color: rgba(148,163,184,0.6); }
-.tk2-task-actions { display: flex; gap: 5px; flex-shrink: 0; flex-wrap: wrap; justify-content: flex-end; max-width: 320px; }
-.tk2-action-btn { padding: 6px 10px; border-radius: 8px; font-size: 0.75rem; font-weight: 600; cursor: pointer; border: none; font-family: var(--db-font); transition: all 0.18s; white-space: nowrap; }
-.tk2-action-btn { padding: 7px 14px; border-radius: 8px; font-size: 0.78rem; font-weight: 600; cursor: pointer; border: none; font-family: var(--db-font); transition: all 0.18s; }
-.tk2-action-btn.send { background: rgba(34,197,94,0.15); color: #4ade80; border: 1px solid rgba(34,197,94,0.25); }
-.tk2-action-btn.send:hover { background: rgba(34,197,94,0.25); }
-.tk2-action-btn.del { background: rgba(239,68,68,0.1); color: #f87171; border: 1px solid rgba(239,68,68,0.2); }
-.tk2-action-btn.del:hover { background: rgba(239,68,68,0.2); }
-.tk2-action-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.tk2-task-row { flex-wrap: nowrap; }
+.tk2-task-actions {
+  display: flex; gap: 6px; flex-shrink: 0; flex-wrap: nowrap;
+  align-items: center; justify-content: flex-end;
+}
+.tk2-action-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 5px;
+  padding: 6px 12px; border-radius: 100px; height: 30px;
+  font-size: 0.74rem; font-weight: 600; cursor: pointer; border: none;
+  font-family: var(--db-font); white-space: nowrap; line-height: 1;
+  background: rgba(124,92,255,0.08); color: #c4b5fd; border: 1px solid rgba(124,92,255,0.16);
+  backdrop-filter: blur(8px);
+  transition: background .15s ease, border-color .15s ease, transform .15s ease, box-shadow .15s ease;
+}
+.tk2-action-btn:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 4px 14px rgba(124,92,255,0.18); }
+.tk2-action-btn.send { background: rgba(34,197,94,0.12); color: #4ade80; border: 1px solid rgba(34,197,94,0.22); }
+.tk2-action-btn.send:hover:not(:disabled) { background: rgba(34,197,94,0.22); box-shadow: 0 4px 14px rgba(34,197,94,0.18); }
+.tk2-action-btn.del { background: rgba(239,68,68,0.08); color: #f87171; border: 1px solid rgba(239,68,68,0.18); padding: 6px 10px; }
+.tk2-action-btn.del:hover:not(:disabled) { background: rgba(239,68,68,0.18); box-shadow: 0 4px 14px rgba(239,68,68,0.18); }
+.tk2-action-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+@media (max-width: 900px) {
+  .tk2-task-actions { gap: 4px; }
+  .tk2-action-btn { padding: 6px 9px; font-size: 0.7rem; }
+}
+@media (max-width: 700px) {
+  .tk2-task-row { flex-wrap: wrap; }
+  .tk2-task-actions { width: 100%; justify-content: flex-start; margin-top: 4px; }
+}
 .tk2-action-more { width: 32px; height: 32px; border-radius: 8px; background: rgba(255,255,255,0.04); border: 1px solid rgba(99,102,241,0.18); color: #94a3b8; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 1rem; transition: all 0.18s; }
 .tk2-action-more:hover { background: rgba(124,92,255,0.12); color: #a5b4fc; }
 /* Pagination */
@@ -29300,7 +29346,6 @@ function TaskManagementPage({
                   },sendingTaskId===t.id?'\u23F3':'\uD83C\uDF10 Send All'),
                   React.createElement('button',{
                     className:'tk2-action-btn',
-                    style:{background:'rgba(56,189,248,0.1)',color:'#7dd3fc',border:'1px solid rgba(56,189,248,0.2)'},
                     disabled:sessionStatus!=='active',
                     onClick:e=>{
                       e.stopPropagation();
@@ -29311,7 +29356,6 @@ function TaskManagementPage({
                   },'\uD83D\uDC64 Send To'),
                   React.createElement('button',{
                     className:'tk2-action-btn',
-                    style:{background:'rgba(168,85,247,0.1)',color:'#c4b5fd',border:'1px solid rgba(168,85,247,0.2)'},
                     onClick:e=>{e.stopPropagation();setExplainTask(t);},
                     title:'AI explain this task to students'
                   },'\uD83E\uDD16 Explain'),
@@ -33286,7 +33330,7 @@ function CommunicationPage({
         );
       }
 
-      return React.createElement('div', { key: m.id, className: 'chat-msg-wrapper' },
+      return React.createElement('div', { key: m.id, className: 'chat-msg-wrapper ' + (!isTeacher ? 'student-msg' : 'teacher-msg') },
         // Hover action bar
         React.createElement('div', { className: 'chat-msg-actions' },
           React.createElement('button', {
@@ -33297,6 +33341,10 @@ function CommunicationPage({
             className: 'chat-msg-action-btn', title: 'Reply',
             onClick: () => setReplyTo({ id: m.id, sender_name: senderName, content: m.content })
           }, '↩️'),
+          !isImg && m.msg_type !== 'file' && React.createElement('button', {
+            className: 'chat-msg-action-btn', title: 'Copy',
+            onClick: () => { if (navigator.clipboard) navigator.clipboard.writeText(m.content || ''); add('Copied!', 'success'); }
+          }, '📋'),
           !isTeacher && React.createElement('button', {
             className: 'chat-msg-action-btn', title: 'Moderate',
             onClick: () => setModerationMenuFor(isModeMenuOpen ? null : m.id)
@@ -33308,12 +33356,12 @@ function CommunicationPage({
         ),
 
         // Emoji reaction picker
-        isMyReactionOpen && React.createElement('div', { className: 'chat-reaction-picker', style: { bottom: '100%', right: 0, position: 'absolute' } },
+        isMyReactionOpen && React.createElement('div', { className: 'chat-reaction-picker', style: { bottom: '100%', [isTeacher ? 'left' : 'right']: 0, position: 'absolute', marginBottom: '6px' } },
           EMOJI_LIST.map(em => React.createElement('button', { key: em, onClick: () => toggleReaction(m.id, em) }, em))
         ),
 
         // Moderation menu (teacher only, student messages)
-        isModeMenuOpen && !isTeacher && !isSystem && React.createElement('div', { className: 'chat-moderation-menu', style: { top: 28, right: 4 } },
+        isModeMenuOpen && !isTeacher && !isSystem && React.createElement('div', { className: 'chat-moderation-menu', style: { top: 28, left: 4, right: 'auto' } },
           React.createElement('button', {
             onClick: () => isSuspended ? unsuspendStudentChat(m.sender_id) : suspendStudentChat(m.sender_id)
           }, isSuspended ? '🔓 Unsuspend Chat' : '🔇 Suspend Chat'),
@@ -33327,7 +33375,7 @@ function CommunicationPage({
           }, '🗑️ Delete Message')
         ),
 
-        React.createElement('div', { className: 'comm-v2-msg-row' + (isTeacher ? ' teacher-row' : '') },
+        React.createElement('div', { className: 'comm-v2-msg-row' + (isTeacher ? ' teacher-row' : ' student-row') },
           React.createElement('div', {
             className: 'comm-v2-msg-av' + (isTeacher ? ' teacher-av' : ''),
             style: _msgAvPhoto
@@ -33381,7 +33429,7 @@ function CommunicationPage({
                     ),
                     React.createElement('span', { style: { marginLeft: 'auto', fontSize: '0.75rem', opacity: 0.5 } }, '⬇')
                   )
-                : React.createElement('div', { id: `chat-msg-${m.id}`, className: 'comm-v2-bubble' + (isTeacher ? ' teacher-bubble' : '') }, m.content),
+                : React.createElement('div', { id: `chat-msg-${m.id}`, className: 'comm-v2-bubble' + (isTeacher ? ' teacher-bubble' : ' student-bubble') }, m.content),
 
             // Reaction pills
             Object.keys(reactions).filter(e => reactions[e].length > 0).length > 0 &&

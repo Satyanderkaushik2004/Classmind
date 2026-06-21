@@ -1817,8 +1817,126 @@ def create_session_report_pdf(report: dict) -> bytes:
     except Exception:
         pass
 
-    # Compile HTML to PDF using WeasyPrint
-    return weasyprint.HTML(string=html_content).write_pdf()
+    # Compile HTML to PDF using WeasyPrint with a 3.0s thread timeout
+    def run_weasyprint():
+        return weasyprint.HTML(string=html_content).write_pdf()
+
+    import threading
+    import queue
+    q = queue.Queue()
+
+    def worker():
+        try:
+            res = run_weasyprint()
+            q.put((True, res))
+        except Exception as err:
+            q.put((False, err))
+
+    t = threading.Thread(target=worker)
+    t.daemon = True
+    t.start()
+    t.join(timeout=3.0)
+
+    if not t.is_alive():
+        ok, res = q.get()
+        if ok:
+            log.info("[PDF_GENERATOR] WeasyPrint generated PDF successfully!")
+            return res
+        else:
+            log.warning("[PDF_GENERATOR] WeasyPrint failed: %s. Falling back to ReportLab...", res)
+    else:
+        log.warning("[PDF_GENERATOR] WeasyPrint timed out (took >3s). Falling back to ReportLab...")
+
+    # ReportLab Fallback PDF Generator (guaranteed to generate in milliseconds)
+    try:
+        from reportlab.lib.pagesizes import letter
+        from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
+        from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+        from reportlab.lib import colors
+        import io
+
+        buffer = io.BytesIO()
+        doc = SimpleDocTemplate(buffer, pagesize=letter, rightMargin=30, leftMargin=30, topMargin=30, bottomMargin=30)
+        story = []
+
+        styles = getSampleStyleSheet()
+
+        title_style = ParagraphStyle(
+            'DocTitle',
+            parent=styles['Heading1'],
+            fontName='Helvetica-Bold',
+            fontSize=22,
+            leading=26,
+            textColor=colors.HexColor('#1e3a8a'),
+            spaceAfter=15
+        )
+
+        h2_style = ParagraphStyle(
+            'Heading2',
+            parent=styles['Heading2'],
+            fontName='Helvetica-Bold',
+            fontSize=13,
+            leading=17,
+            textColor=colors.HexColor('#2563eb'),
+            spaceBefore=12,
+            spaceAfter=6
+        )
+
+        body_style = ParagraphStyle(
+            'BodyText',
+            parent=styles['Normal'],
+            fontName='Helvetica',
+            fontSize=9.5,
+            leading=13,
+            textColor=colors.HexColor('#334155')
+        )
+
+        story.append(Paragraph(f"VYOM Session Intelligence Report", title_style))
+        story.append(Spacer(1, 10))
+
+        story.append(Paragraph(f"<b>Session Code:</b> {session_code}", body_style))
+        story.append(Paragraph(f"<b>Teacher Name:</b> {teacher_name}", body_style))
+        story.append(Paragraph(f"<b>Session Name:</b> {session_name}", body_style))
+        story.append(Paragraph(f"<b>Date:</b> {date_str}", body_style))
+        story.append(Spacer(1, 12))
+
+        story.append(Paragraph("Classroom Performance Analytics", h2_style))
+        story.append(Paragraph(f"<b>Average Understanding:</b> {understanding}%", body_style))
+        story.append(Paragraph(f"<b>Student Participation:</b> {participation}%", body_style))
+        story.append(Paragraph(f"<b>Total Connected Students:</b> {total_students}", body_style))
+        story.append(Spacer(1, 12))
+
+        story.append(Paragraph("Student Performance Details", h2_style))
+        if students_list:
+            data = [["Student Name", "Score", "Correct Answers", "Total Answered"]]
+            for st in students_list:
+                data.append([
+                    st.get("name", "Student"),
+                    f"{st.get('score', 0)}",
+                    f"{st.get('correct', 0)}",
+                    f"{st.get('total_answered', 0)}"
+                ])
+            t_table = Table(data, colWidths=[200, 100, 100, 100])
+            t_table.setStyle(TableStyle([
+                ('BACKGROUND', (0,0), (-1,0), colors.HexColor('#f1f5f9')),
+                ('TEXTCOLOR', (0,0), (-1,0), colors.HexColor('#1e293b')),
+                ('ALIGN', (0,0), (-1,-1), 'LEFT'),
+                ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
+                ('FONTSIZE', (0,0), (-1,-1), 9),
+                ('BOTTOMPADDING', (0,0), (-1,-1), 4),
+                ('GRID', (0,0), (-1,-1), 0.5, colors.HexColor('#cbd5e1')),
+            ]))
+            story.append(t_table)
+        else:
+            story.append(Paragraph("No student data recorded in this session.", body_style))
+
+        doc.build(story)
+        buffer.seek(0)
+        log.info("[PDF_GENERATOR] Successfully generated ReportLab fallback PDF!")
+        return buffer.getvalue()
+    except Exception as fallback_err:
+        log.critical("[PDF_GENERATOR] CRITICAL ERROR: Both WeasyPrint and ReportLab failed: %s", fallback_err, exc_info=True)
+        raise fallback_err
 
 
 

@@ -851,7 +851,7 @@ def create_session_report_pdf(report: dict) -> bytes:
   <meta charset="UTF-8">
   <title>{brand_name} Session Intelligence Report</title>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
+    /* Fonts are loaded locally/fallback to prevent HTTP hangs during compilation */
     
     :root {{
       --bg-color: #05070f;

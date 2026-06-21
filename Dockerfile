@@ -10,6 +10,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     g++ \
     nodejs \
     weasyprint \
+    libcairo2 \
+    libpango-1.0-0 \
+    libpangocairo-1.0-0 \
+    libharfbuzz0b \
+    libpangoft2-1.0-0 \
+    shared-mime-info \
+    fonts-dejavu-core \
+    fontconfig \
     && rm -rf /var/lib/apt/lists/*
 
 

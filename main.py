@@ -2979,6 +2979,37 @@ def health():
     return {"status": "ok", "sessions": len(sessions)}
 
 
+@app.get("/debug-pdf")
+def debug_pdf():
+    from email_service import create_session_report_pdf
+    import traceback
+    dummy_report = {
+        'session_code': '704303',
+        'session_name': 'Test Session',
+        'teacher_name': 'Test Teacher',
+        'created_at': 1782071459.4522195,
+        'duration_mins': 60,
+        'analytics': {
+            'understanding': 85,
+            'participation': 90,
+            'total_students': 5,
+            'answered': 12
+        },
+        'students': [
+            {'name': 'Student A', 'score': 100, 'correct': 5, 'total_answered': 5, 'joined_at': 1782071465.0},
+            {'name': 'Student B', 'score': 80, 'correct': 4, 'total_answered': 5, 'joined_at': 1782071470.0}
+        ],
+        'group_stats': [
+            {'name': 'Group 1', 'accuracy': 90}
+        ]
+    }
+    try:
+        pdf_bytes = create_session_report_pdf(dummy_report)
+        return {"ok": True, "size": len(pdf_bytes)}
+    except Exception as e:
+        return {"ok": False, "error": str(e), "traceback": traceback.format_exc()}
+
+
 class AdminLoginReq(BaseModel):
     username: str
     password: str

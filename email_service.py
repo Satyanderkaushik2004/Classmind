@@ -66,7 +66,7 @@ async def verify_smtp_credentials() -> Tuple[bool, str]:
             use_ssl = (SMTP_PORT == 465)
 
             log.info("[EMAIL_SERVICE] Verifying SMTP credentials synchronously for: %s", email_address)
-            smtp = aiosmtplib.SMTP(hostname=SMTP_HOST, port=SMTP_PORT, use_tls=use_ssl)
+            smtp = aiosmtplib.SMTP(hostname=SMTP_HOST, port=SMTP_PORT, use_tls=use_ssl, timeout=5)
             await smtp.connect()
             if not use_ssl:
                 try:
@@ -217,7 +217,7 @@ async def send_mail_raw(
             SMTP_PORT = int(os.getenv("SMTP_PORT", "587").strip())
             use_ssl = (SMTP_PORT == 465)
 
-            smtp = aiosmtplib.SMTP(hostname=SMTP_HOST, port=SMTP_PORT, use_tls=use_ssl)
+            smtp = aiosmtplib.SMTP(hostname=SMTP_HOST, port=SMTP_PORT, use_tls=use_ssl, timeout=5)
             await smtp.connect()
             if not use_ssl:
                 try:

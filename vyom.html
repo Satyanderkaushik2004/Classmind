@@ -6813,6 +6813,12 @@ function TeacherDashboard({
   async function sendEmailAndEnd() {
     if (!emailInput.trim()) return;
     setEmailSending(true);
+    setShowEndModal(false);
+    
+    // Trigger end session on server immediately so UI updates instantly
+    sessionControl('end');
+    
+    // Send report request in the background
     try {
       const res = await apiFetch(`/api/session/${sessionCode}/send-report`, {
         method: 'POST',
@@ -6828,8 +6834,6 @@ function TeacherDashboard({
       add('\u274c Error: ' + e.message, 'error');
     } finally {
       setEmailSending(false);
-      setShowEndModal(false);
-      sessionControl('end');
     }
   }
   // ── Session countdown timer ────────────────────────────────────────

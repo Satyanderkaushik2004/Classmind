@@ -120,7 +120,7 @@ async def send_mail_raw(
         if SendGridAPIClient is None:
             log.warning("[EMAIL_SERVICE] SendGrid library not installed. Checking SMTP fallback...")
         else:
-            from_email = os.getenv("SENDGRID_FROM_EMAIL", DEFAULT_FROM_EMAIL)
+            from_email = os.getenv("SENDGRID_FROM_EMAIL") or os.getenv("SENDER_EMAIL") or DEFAULT_FROM_EMAIL
             if not text_content:
                 text_content = "Please view this email in an HTML-compatible client for the full report."
             try:
@@ -253,7 +253,7 @@ async def verify_email_system() -> Tuple[bool, str]:
     test_html = "<h2>Diagnostic Test</h2><p>Connection Successful. Verification completed.</p>"
     test_text = "Diagnostic Test: Connection Successful."
     
-    recipient = os.getenv("SENDGRID_FROM_EMAIL") or email_address or DEFAULT_FROM_EMAIL
+    recipient = os.getenv("SENDGRID_FROM_EMAIL") or os.getenv("SENDER_EMAIL") or email_address or DEFAULT_FROM_EMAIL
     return await send_mail_raw(recipient, "🔬 VYOM Diagnostic Test", test_html, test_text)
 
 # ── Content Generators ───────────────────────────────────────────

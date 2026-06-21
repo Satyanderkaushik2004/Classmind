@@ -1817,7 +1817,7 @@ def create_session_report_pdf(report: dict) -> bytes:
     except Exception:
         pass
 
-    # Compile HTML to PDF using WeasyPrint with a 3.0s thread timeout
+    # Compile HTML to PDF using WeasyPrint with a 45.0s thread timeout
     def run_weasyprint():
         return weasyprint.HTML(string=html_content).write_pdf()
 
@@ -1835,7 +1835,7 @@ def create_session_report_pdf(report: dict) -> bytes:
     t = threading.Thread(target=worker)
     t.daemon = True
     t.start()
-    t.join(timeout=3.0)
+    t.join(timeout=45.0)
 
     if not t.is_alive():
         ok, res = q.get()
@@ -1845,7 +1845,7 @@ def create_session_report_pdf(report: dict) -> bytes:
         else:
             log.warning("[PDF_GENERATOR] WeasyPrint failed: %s. Falling back to ReportLab...", res)
     else:
-        log.warning("[PDF_GENERATOR] WeasyPrint timed out (took >3s). Falling back to ReportLab...")
+        log.warning("[PDF_GENERATOR] WeasyPrint timed out (took >45s). Falling back to ReportLab...")
 
     # ReportLab Fallback PDF Generator (guaranteed to generate in milliseconds)
     try:

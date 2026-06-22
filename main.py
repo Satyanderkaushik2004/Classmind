@@ -2984,6 +2984,7 @@ def debug_pdf(full: bool = False):
     import traceback
     import time
     import sys
+    import os
     
     diagnostic = {}
     
@@ -2991,19 +2992,32 @@ def debug_pdf(full: bool = False):
     diagnostic["python_version"] = sys.version
     diagnostic["platform"] = sys.platform
     
-    # 2. Try importing weasyprint
+    # 2. Read requirements.txt from disk
     try:
-        start_import = time.time()
+        req_path = os.path.join(os.path.dirname(__file__), "requirements.txt")
+        if os.path.exists(req_path):
+            with open(req_path, "r", encoding="utf-8") as f:
+                diagnostic["requirements_txt"] = f.read().splitlines()
+        else:
+            diagnostic["requirements_txt"] = "Not found"
+    except Exception as e:
+        diagnostic["requirements_txt_error"] = str(e)
+
+    # 3. Try importing weasyprint and pydyf versions
+    try:
         import weasyprint
         diagnostic["weasyprint_imported"] = True
-        diagnostic["import_time"] = time.time() - start_import
+        diagnostic["weasyprint_version"] = getattr(weasyprint, "__version__", "unknown")
+        
+        import pydyf
+        diagnostic["pydyf_version"] = getattr(pydyf, "__version__", "unknown")
     except Exception as e:
         diagnostic["weasyprint_imported"] = False
         diagnostic["import_error"] = str(e)
         diagnostic["import_traceback"] = traceback.format_exc()
         return diagnostic
 
-    # 3. Try basic compilation
+    # 4. Try basic compilation
     try:
         start_basic = time.time()
         basic_pdf = weasyprint.HTML(string="<h1>Test PDF</h1>").write_pdf()

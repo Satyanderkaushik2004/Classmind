@@ -1876,7 +1876,7 @@ def create_session_report_pdf(report: dict) -> bytes:
             fontName='Helvetica-Bold',
             fontSize=22,
             leading=26,
-            textColor=colors.HexColor('#1e3a8a'),
+            textColor=colors.HexColor('#ffffff'),
             spaceAfter=15
         )
 
@@ -1886,7 +1886,7 @@ def create_session_report_pdf(report: dict) -> bytes:
             fontName='Helvetica-Bold',
             fontSize=13,
             leading=17,
-            textColor=colors.HexColor('#2563eb'),
+            textColor=colors.HexColor('#D4AF37'), # Gold
             spaceBefore=12,
             spaceAfter=6
         )
@@ -1897,7 +1897,7 @@ def create_session_report_pdf(report: dict) -> bytes:
             fontName='Helvetica',
             fontSize=9.5,
             leading=13,
-            textColor=colors.HexColor('#334155')
+            textColor=colors.HexColor('#f3f4f6') # Light white text
         )
 
         story.append(Paragraph(f"VYOM Session Intelligence Report", title_style))
@@ -1927,21 +1927,33 @@ def create_session_report_pdf(report: dict) -> bytes:
                 ])
             t_table = Table(data, colWidths=[200, 100, 100, 100])
             t_table.setStyle(TableStyle([
-                ('BACKGROUND', (0,0), (-1,0), colors.HexColor('#f1f5f9')),
-                ('TEXTCOLOR', (0,0), (-1,0), colors.HexColor('#1e293b')),
+                ('BACKGROUND', (0,0), (-1,0), colors.HexColor('#1f2937')), # Dark grey header
+                ('TEXTCOLOR', (0,0), (-1,0), colors.HexColor('#D4AF37')), # Gold text header
+                ('TEXTCOLOR', (0,1), (-1,-1), colors.HexColor('#f3f4f6')), # Light text rows
+                ('BACKGROUND', (0,1), (-1,-1), colors.HexColor('#111827')), # Dark cell background
                 ('ALIGN', (0,0), (-1,-1), 'LEFT'),
                 ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
                 ('FONTSIZE', (0,0), (-1,-1), 9),
                 ('BOTTOMPADDING', (0,0), (-1,-1), 4),
-                ('GRID', (0,0), (-1,-1), 0.5, colors.HexColor('#cbd5e1')),
+                ('GRID', (0,0), (-1,-1), 0.5, colors.HexColor('#374151')), # Subtle dark border
             ]))
             story.append(t_table)
         else:
             story.append(Paragraph("No student data recorded in this session.", body_style))
 
-        doc.build(story)
+        # Background callback to paint the entire page dark
+        def draw_background(canvas, doc):
+            canvas.saveState()
+            canvas.setFillColor(colors.HexColor('#05070f')) # Dark background
+            canvas.rect(0, 0, doc.pagesize[0], doc.pagesize[1], fill=True, stroke=False)
+            # Add a top gold bar
+            canvas.setFillColor(colors.HexColor('#D4AF37'))
+            canvas.rect(0, doc.pagesize[1] - 8, doc.pagesize[0], 8, fill=True, stroke=False)
+            canvas.restoreState()
+
+        doc.build(story, onFirstPage=draw_background, onLaterPages=draw_background)
         buffer.seek(0)
-        log.info("[PDF_GENERATOR] Successfully generated ReportLab fallback PDF!")
+        log.info("[PDF_GENERATOR] Successfully generated premium ReportLab fallback PDF!")
         return buffer.getvalue()
     except Exception as fallback_err:
         log.critical("[PDF_GENERATOR] CRITICAL ERROR: Both WeasyPrint and ReportLab failed: %s", fallback_err, exc_info=True)

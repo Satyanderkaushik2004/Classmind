@@ -6792,6 +6792,7 @@ function TeacherDashboard({
   const [emailInput, setEmailInput] = useState(teacherProfileEmail || '');
   const [emailSent, setEmailSent] = useState(false);
   const [emailSending, setEmailSending] = useState(false);
+  const [gdriveSaving, setGdriveSaving] = useState(false);
   async function handleEndSession() {
     setShowEndModal(true);
   }
@@ -6834,6 +6835,28 @@ function TeacherDashboard({
       add('\u274c Error: ' + e.message, 'error');
     } finally {
       setEmailSending(false);
+    }
+  }
+  async function saveToDriveAndEnd() {
+    setGdriveSaving(true);
+    setShowEndModal(false);
+    
+    // Trigger end session on server immediately so UI updates instantly
+    sessionControl('end');
+    
+    try {
+      const res = await apiFetch(`/api/session/${sessionCode}/save-report-gdrive`, {
+        method: 'POST'
+      });
+      if (res.success || res.status === 'success') {
+        add('\ud83d\udcbe Report successfully saved to Google Drive!', 'success');
+      } else {
+        add('\u26a0\ufe0f ' + (res.message || 'Drive save failed') + '. You can save it later from history.', 'warning');
+      }
+    } catch (e) {
+      add('\u274c Google Drive Error: ' + e.message, 'error');
+    } finally {
+      setGdriveSaving(false);
     }
   }
   // ── Session countdown timer ────────────────────────────────────────
@@ -7234,6 +7257,7 @@ function TeacherDashboard({
           React.createElement("input", { value: emailInput, onChange: e => setEmailInput(e.target.value), placeholder: "Teacher email address\u2026", style: { flex: 1 } }),
           React.createElement("button", { className: "btn btn-ghost", onClick: sendEmailAndEnd, disabled: !emailInput.trim() || emailSending }, emailSending ? '\u23F3 Sending\u2026' : '\uD83D\uDCE7 Send to Teacher')
         ),
+        React.createElement("button", { className: "btn btn-ghost", style: { justifyContent: 'center', gap: 8 }, onClick: saveToDriveAndEnd, disabled: gdriveSaving }, gdriveSaving ? '\u23F3 Saving\u2026' : '\uD83D\uDCE7\uD83D\uDCA1 Save to Drive'),
         React.createElement("button", { className: "btn btn-ghost", style: { justifyContent: 'center' }, onClick: () => { setShowEndModal(false); sessionControl('end'); } }, "Skip \u2192 End Session"),
         React.createElement("button", { className: "btn btn-ghost btn-sm", style: { justifyContent: 'center', color: 'var(--text3)' }, onClick: () => setShowEndModal(false) }, "\u2715 Cancel")
       )

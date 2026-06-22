@@ -838,6 +838,130 @@ def create_session_report_pdf(report: dict) -> bytes:
     task_accuracies = [t["accuracy"] for t in report.get("question_stats", [])]
     line_chart_svg_str = _make_line_chart_svg(task_accuracies)
 
+
+    # --- Start Premium Gradebook & AI Recs Computation ---
+    ai_recs_html = ""
+    for r in recs:
+        ai_recs_html += f'''
+        <div class="ai-rec-item">
+          <span class="ai-rec-check">✓</span>
+          <span class="ai-text">{r}</span>
+        </div>
+        '''
+
+    # Calculate overall attendance percentage
+    att = s.get("attendance", {}) if (s := (locals().get("s") or (globals().get("sessions", {}).get(session_code) if "sessions" in globals() else None))) else {}
+    records = att.get("records", {}) if att else {}
+    total_active_students = len([st for st in s.get("students", {}).values() if st.get("status") == "active"]) if s else 0
+    present_count = sum(1 for r in records.values() if r.get("status") in ("present", "exited"))
+    attendance_percentage = round((present_count / max(1, total_active_students)) * 100) if total_active_students > 0 else 0
+
+    # Calculate overall quality score
+    quality_score = round((understanding * 0.55) + (participation * 0.3) + (max(0, 100 - total_alerts * 2) * 0.15))
+    quality_score = max(0, min(100, quality_score))
+
+    # Calculate teacher initials
+    teacher_initials = "".join([w[0].upper() for w in teacher_name.split()[:2]]) if teacher_name else "T"
+
+    # Compute student gradebook rows for Page 3
+    gradebook_rows_html = ""
+    students_gradebook = []
+    
+    leaderboard = report.get("leaderboard", [])
+    total_tasks = report.get("total_tasks", 0)
+    
+    from store import sessions
+    raw_s = sessions.get(session_code)
+    
+    for idx, st in enumerate(students_list):
+        sid = st["student_id"]
+        student_obj = raw_s["students"].get(sid, {}) if raw_s and "students" in raw_s else {}
+        
+        roll_no = student_obj.get("roll_no") or student_obj.get("roll") or f"R-{idx+1:02d}"
+        class_name = student_obj.get("class_name") or student_obj.get("class") or session_name
+        
+        task_correct = st.get("correct", 0)
+        task_attempts = st.get("total_attempts", 0)
+        task_score = int((task_correct / max(task_attempts, 1)) * 100) if task_attempts > 0 else 0
+        
+        test_score = None
+        for entry in leaderboard:
+            if entry.get("student_id") == sid:
+                test_score = entry.get("score")
+                break
+        
+        coding_score = student_obj.get("coding_score") if student_obj.get("coding_submitted") else None
+        
+        scores = []
+        if total_tasks > 0:
+            scores.append(task_score)
+        if test_score is not None:
+            scores.append(test_score)
+        if coding_score is not None:
+            scores.append(coding_score)
+            
+        overall_percentage = int(sum(scores) / len(scores)) if scores else 0
+        
+        # Attendance calculation
+        att_rec = raw_s.get("attendance", {}).get("records", {}).get(sid, {}) if raw_s else {}
+        att_pct = 100
+        if att_rec:
+            status = att_rec.get("status", "not_marked")
+            duration = att_rec.get("duration", 0)
+            if status == "present":
+                if duration > 0 and duration_mins > 0:
+                    att_pct = min(100, max(0, round((duration / 60 / duration_mins) * 100)))
+                else:
+                    att_pct = 100
+            elif status == "exited" and duration > 0 and duration_mins > 0:
+                att_pct = min(100, max(0, round((duration / 60 / duration_mins) * 100)))
+            elif status in ("not_marked", "absent", "revoked"):
+                att_pct = 0
+        else:
+            joined_at = st.get("joined_at", 0)
+            created_at = report.get("created_at") or time.time()
+            started_at = report.get("started_at") or created_at
+            session_started_at = started_at
+            if joined_at > 0 and session_started_at > 0 and duration_mins > 0:
+                elapsed = (session_started_at + duration_mins * 60) - joined_at
+                if elapsed > 0:
+                    att_pct = min(100, max(0, round((elapsed / (duration_mins * 60)) * 100)))
+        
+        students_gradebook.append({
+            "name": st.get("name", "Student"),
+            "roll_no": roll_no,
+            "class_name": class_name,
+            "task_score": task_score,
+            "test_score": test_score,
+            "coding_score": coding_score,
+            "attendance": att_pct,
+            "overall_percentage": overall_percentage
+        })
+        
+    students_gradebook.sort(key=lambda x: x["overall_percentage"], reverse=True)
+    
+    for idx, row in enumerate(students_gradebook):
+        rank = idx + 1
+        test_score_str = f"{row['test_score']}%" if row['test_score'] is not None else "—"
+        coding_score_str = f"{row['coding_score']}%" if row['coding_score'] is not None else "—"
+        gradebook_rows_html += f'''
+        <tr>
+          <td style="text-align: center; font-weight: bold; color: #D4AF37;">#{rank}</td>
+          <td style="font-weight: bold; color: #FFFFFF;">{row['name']}</td>
+          <td style="font-family: monospace; color: #A0A0A0;">{row['roll_no']}</td>
+          <td>{row['class_name']}</td>
+          <td style="text-align: center;">{row['task_score']}%</td>
+          <td style="text-align: center;">{test_score_str}</td>
+          <td style="text-align: center;">{coding_score_str}</td>
+          <td style="text-align: center; font-weight: bold; color: #D4AF37;">{row['attendance']}%</td>
+          <td style="text-align: center; font-weight: 800; color: #22c55e;">{row['overall_percentage']}%</td>
+        </tr>
+        '''
+        
+    if not gradebook_rows_html:
+        gradebook_rows_html = '<tr><td colspan="9" style="text-align: center; padding: 24px; color: #A0A0A0;">No student marks records found.</td></tr>'
+    # --- End Premium Gradebook & AI Recs Computation ---
+
     engagement_badge_html = ""
     if total_assigned == 0:
         engagement_badge_html = '<span style="font-size: 6px; background: rgba(255, 255, 255, 0.05); color: var(--text-muted); padding: 1px 3px; border-radius: 2px; font-weight: bold; text-transform: uppercase;">N/A</span>'
@@ -860,21 +984,18 @@ def create_session_report_pdf(report: dict) -> bytes:
   <meta charset="UTF-8">
   <title>{brand_name} Session Intelligence Report</title>
   <style>
-    /* Fonts are loaded locally/fallback to prevent HTTP hangs during compilation */
-    
     :root {{
-      --bg-color: #05070f;
-      --card-bg: rgba(16, 22, 42, 0.65);
-      --card-border: rgba(255, 255, 255, 0.06);
-      --text-main: #f3f4f6;
-      --text-muted: #9ca3af;
-      --accent-blue: #3b82f6;
-      --accent-purple: #8b5cf6;
-      --accent-cyan: #06b6d4;
-      --accent-green: #10b981;
-      --accent-orange: #f59e0b;
+      --bg: #050505;
+      --card: #111111;
+      --card2: #151515;
+      --orange: #FF7A00;
+      --orange2: #FF9A1F;
+      --gold: #D4AF37;
+      --gold-border: rgba(212,175,55,0.22);
+      --text: #FFFFFF;
+      --text-muted: #A0A0A0;
+      --accent-green: #22c55e;
       --accent-red: #ef4444;
-      --accent-pink: #ec4899;
     }}
     
     @page {{
@@ -889,425 +1010,326 @@ def create_session_report_pdf(report: dict) -> bytes:
     }}
     
     body {{
-      background-color: var(--bg-color);
-      color: var(--text-main);
-      font-family: 'Outfit', sans-serif;
-      font-size: 11px;
-      line-height: 1.4;
-      -webkit-print-color-adjust: exact;
-      print-color-adjust: exact;
+      background-color: #050505;
+      color: #FFFFFF;
+      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+      font-size: 8.5pt;
+      line-height: 1.35;
     }}
     
     .page {{
       width: 100%;
-      height: 279mm;
+      height: 280mm;
       page-break-after: always;
-      break-after: always;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
       box-sizing: border-box;
-      padding: 4mm;
     }}
     
     .page:last-child {{
       page-break-after: avoid;
-      break-after: avoid;
     }}
     
-    /* Header */
-    header {{
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      border-bottom: 1px solid var(--card-border);
-      padding-bottom: 10px;
-      margin-bottom: 12px;
+    /* Layout Tables */
+    .table-layout {{
+      width: 100%;
+      border-collapse: collapse;
+      border: none;
     }}
     
-    .logo-container {{
-      display: flex;
-      align-items: center;
-      gap: 8px;
+    /* Header Table */
+    .header-table {{
+      width: 100%;
+      border-collapse: collapse;
+      border-bottom: 1px solid rgba(212,175,55,0.22);
+      margin-bottom: 8px;
     }}
-    
-    .logo-text h1 {{
-      font-size: 22px;
-      font-weight: 800;
-      margin: 0;
-      color: #FFF;
-      letter-spacing: -0.5px;
+    .logo-td {{
+      width: 30%;
+      padding-bottom: 6px;
     }}
-    
-    .logo-text p {{
-      font-size: 8px;
-      font-weight: 700;
-      margin: 0;
-      color: var(--accent-blue);
-      text-transform: uppercase;
-      letter-spacing: 1.5px;
-    }}
-    
-    .title-container {{
+    .title-td {{
+      width: 45%;
       text-align: center;
+      padding-bottom: 6px;
     }}
-    
-    .title-container h2 {{
-      font-size: 18px;
+    .title-text {{
+      font-size: 13pt;
       font-weight: 800;
-      margin: 0;
-      letter-spacing: 1px;
-      background: linear-gradient(135deg, #FFF, var(--accent-blue));
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
+      color: #FFFFFF;
+      letter-spacing: 0.5px;
     }}
-    
-    .title-container p {{
-      font-size: 9px;
-      color: var(--text-muted);
-      margin-top: 1px;
+    .title-sub {{
+      font-size: 6.5pt;
+      color: #D4AF37;
       text-transform: uppercase;
       letter-spacing: 1px;
     }}
-    
-    .report-id-box {{
-      background: rgba(255, 255, 255, 0.03);
-      border: 1px solid var(--card-border);
+    .id-td {{
+      width: 25%;
+      text-align: right;
+      padding-bottom: 6px;
+    }}
+    .id-box {{
+      background: #111111;
+      border: 1px solid rgba(212,175,55,0.22);
       border-radius: 6px;
-      padding: 4px 10px;
+      padding: 4px 8px;
+      display: inline-block;
       text-align: right;
     }}
-    
-    .report-id-box label {{
-      font-size: 7px;
-      color: var(--text-muted);
+    .id-lbl {{
+      font-size: 6pt;
+      color: #A0A0A0;
       text-transform: uppercase;
       display: block;
     }}
-    
-    .report-id-box span {{
-      font-size: 10px;
+    .id-val {{
+      font-size: 9pt;
       font-weight: 700;
-      color: var(--accent-blue);
+      color: #D4AF37;
     }}
     
     /* Verdict Card */
-    .verdict-card {{
-      padding: 12px 16px;
-      border-radius: 10px;
-      margin-bottom: 12px;
-      display: flex;
-      flex-direction: column;
-      gap: 3px;
-      position: relative;
-      overflow: hidden;
+    .verdict-table {{
+      width: 100%;
+      border-collapse: collapse;
+      border-radius: 6px;
+      margin-bottom: 8px;
     }}
-    
-    .verdict-card::before {{
-      content: '';
-      position: absolute;
-      left: 0;
-      top: 0;
-      bottom: 0;
-      width: 4px;
+    .verdict-td {{
+      padding: 8px 12px;
+      border-left: 4px solid #22c55e;
     }}
-    
     .verdict-excellent {{
-      background: rgba(16, 185, 129, 0.06);
-      border: 1px solid rgba(16, 185, 129, 0.15);
+      background: rgba(34, 197, 94, 0.06);
+      border: 1px solid rgba(34, 197, 94, 0.15);
     }}
-    .verdict-excellent::before {{ background: var(--accent-green); }}
-    .verdict-excellent h3 {{ color: var(--accent-green); font-size: 12px; font-weight: 800; }}
+    .verdict-excellent .verdict-td {{ border-left-color: #22c55e; }}
+    .verdict-excellent h3 {{ color: #22c55e; }}
     
     .verdict-good {{
-      background: rgba(59, 130, 246, 0.06);
-      border: 1px solid rgba(59, 130, 246, 0.15);
+      background: rgba(212, 175, 55, 0.06);
+      border: 1px solid rgba(212, 175, 55, 0.15);
     }}
-    .verdict-good::before {{ background: var(--accent-blue); }}
-    .verdict-good h3 {{ color: var(--accent-blue); font-size: 12px; font-weight: 800; }}
+    .verdict-good .verdict-td {{ border-left-color: #D4AF37; }}
+    .verdict-good h3 {{ color: #D4AF37; }}
     
     .verdict-review {{
       background: rgba(239, 68, 68, 0.06);
       border: 1px solid rgba(239, 68, 68, 0.15);
     }}
-    .verdict-review::before {{ background: var(--accent-red); }}
-    .verdict-review h3 {{ color: var(--accent-red); font-size: 12px; font-weight: 800; }}
+    .verdict-review .verdict-td {{ border-left-color: #ef4444; }}
+    .verdict-review h3 {{ color: #ef4444; }}
     
     .verdict-neutral {{
       background: rgba(255, 255, 255, 0.03);
-      border: 1px solid var(--card-border);
+      border: 1px solid rgba(212,175,55,0.22);
     }}
-    .verdict-neutral::before {{ background: var(--text-muted); }}
-    .verdict-neutral h3 {{ color: var(--text-muted); font-size: 12px; font-weight: 800; }}
+    .verdict-neutral .verdict-td {{ border-left-color: #A0A0A0; }}
+    .verdict-neutral h3 {{ color: #A0A0A0; }}
     
-    .verdict-card p {{ font-size: 10px; color: var(--text-main); }}
-    
-    /* Info Bar */
-    .session-info-bar {{
-      display: grid;
-      grid-template-columns: repeat(6, 1fr);
-      gap: 8px;
-      background: var(--card-bg);
-      border: 1px solid var(--card-border);
-      border-radius: 10px;
-      padding: 10px;
-      margin-bottom: 12px;
+    .verdict-title {{
+      font-size: 9.5pt;
+      font-weight: bold;
+      margin-bottom: 2px;
+    }}
+    .verdict-desc {{
+      font-size: 8pt;
+      color: #FFFFFF;
     }}
     
-    .info-item {{
-      display: flex;
-      align-items: center;
-      gap: 6px;
+    /* Info Bar Table */
+    .info-bar-table {{
+      width: 100%;
+      border-collapse: collapse;
+      background: #111111;
+      border: 1px solid rgba(212,175,55,0.22);
+      border-radius: 8px;
+      margin-bottom: 8px;
     }}
-    
-    .info-icon {{
-      font-size: 12px;
-      width: 22px;
-      height: 22px;
-      background: rgba(255, 255, 255, 0.03);
-      border-radius: 6px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: var(--accent-blue);
+    .info-item-td {{
+      width: 16.66%;
+      padding: 6px 8px;
+      border-right: 1px solid rgba(212,175,55,0.08);
     }}
-    
-    .info-details {{
-      display: flex;
-      flex-direction: column;
+    .info-item-td:last-child {{
+      border-right: none;
     }}
-    
-    .info-details span {{
-      font-size: 9.5px;
-      font-weight: 700;
-      color: #FFF;
+    .info-val {{
+      font-size: 8pt;
+      font-weight: bold;
+      color: #FFFFFF;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
-      max-width: 130px;
+      max-width: 90px;
     }}
-    
-    .info-details label {{
-      font-size: 7px;
-      color: var(--text-muted);
+    .info-lbl {{
+      font-size: 6.5pt;
+      color: #A0A0A0;
       text-transform: uppercase;
     }}
     
-    /* KPI Grid */
-    .kpi-grid {{
-      display: grid;
-      grid-template-columns: 1.8fr 1fr 1fr 1fr 1fr;
-      gap: 8px;
-      margin-bottom: 12px;
+    /* KPI Cards */
+    .kpi-table {{
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 6px 0;
+      margin-left: -6px;
+      margin-right: -6px;
+      margin-bottom: 8px;
     }}
-    
+    .kpi-td {{
+      width: 20%;
+      vertical-align: top;
+    }}
     .kpi-card {{
-      background: var(--card-bg);
-      border: 1px solid var(--card-border);
-      border-radius: 10px;
-      padding: 10px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      position: relative;
-    }}
-    
-    .kpi-icon-box {{
-      width: 26px;
-      height: 26px;
-      border-radius: 6px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 12px;
-    }}
-    
-    .kpi-content {{
-      display: flex;
-      flex-direction: column;
-    }}
-    
-    .kpi-val {{
-      font-size: 15px;
-      font-weight: 800;
-    }}
-    
-    .kpi-lbl {{
-      font-size: 8px;
-      font-weight: 600;
-      color: var(--text-muted);
-      text-transform: uppercase;
-    }}
-    
-    .kpi-pink {{ border-color: rgba(236, 72, 153, 0.15); }}
-    .kpi-pink .kpi-icon-box {{ background: rgba(236, 72, 153, 0.1); color: var(--accent-pink); }}
-    .kpi-pink .kpi-val {{ color: var(--accent-pink); }}
-    
-    .kpi-purple {{ border-color: rgba(139, 92, 246, 0.15); }}
-    .kpi-purple .kpi-icon-box {{ background: rgba(139, 92, 246, 0.1); color: var(--accent-purple); }}
-    .kpi-purple .kpi-val {{ color: var(--accent-purple); }}
-    
-    .kpi-blue {{ border-color: rgba(59, 130, 246, 0.15); }}
-    .kpi-blue .kpi-icon-box {{ background: rgba(59, 130, 246, 0.1); color: var(--accent-blue); }}
-    .kpi-blue .kpi-val {{ color: var(--accent-blue); }}
-    
-    .kpi-orange {{ border-color: rgba(245, 158, 11, 0.15); }}
-    .kpi-orange .kpi-icon-box {{ background: rgba(245, 158, 11, 0.1); color: var(--accent-orange); }}
-    .kpi-orange .kpi-val {{ color: var(--accent-orange); }}
-    
-    .kpi-green {{ border-color: rgba(16, 185, 129, 0.15); }}
-    .kpi-green .kpi-icon-box {{ background: rgba(16, 185, 129, 0.1); color: var(--accent-green); }}
-    .kpi-green .kpi-val {{ color: var(--accent-green); }}
-    
-    /* Grid Columns */
-    .two-col-grid {{
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-      margin-bottom: auto;
-    }}
-    
-    .section-card {{
-      background: var(--card-bg);
-      border: 1px solid var(--card-border);
-      border-radius: 12px;
-      padding: 12px;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }}
-    
-    .section-header {{
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
-      padding-bottom: 6px;
-    }}
-    
-    .section-header span {{
-      font-size: 13px;
-    }}
-    
-    .section-title {{
-      font-size: 10px;
-      font-weight: 800;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      color: #FFF;
-    }}
-    
-    .panel-grid {{
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 8px;
-    }}
-    
-    .inner-panel {{
-      background: rgba(255, 255, 255, 0.02);
-      border: 1px solid rgba(255, 255, 255, 0.04);
+      background: #111111;
+      border: 1px solid rgba(212,175,55,0.22);
       border-radius: 8px;
       padding: 8px;
     }}
-    
-    .panel-title {{
-      font-size: 8px;
-      font-weight: 700;
+    .kpi-val {{
+      font-size: 13pt;
+      font-weight: 800;
+      display: block;
+      color: #D4AF37;
+    }}
+    .kpi-lbl {{
+      font-size: 6.5pt;
+      color: #A0A0A0;
       text-transform: uppercase;
-      margin-bottom: 6px;
+      display: block;
+    }}
+    
+    /* Section Cards */
+    .section-td {{
+      width: 50%;
+      padding: 4px;
+      vertical-align: top;
+    }}
+    .section-card {{
+      background: #111111;
+      border: 1px solid rgba(212,175,55,0.22);
+      border-radius: 8px;
+      padding: 10px;
+      height: 175mm;
+    }}
+    .section-header {{
+      border-bottom: 1px solid rgba(212,175,55,0.08);
+      padding-bottom: 4px;
+      margin-bottom: 8px;
+    }}
+    .section-title {{
+      font-size: 8.5pt;
+      font-weight: bold;
+      color: #FFFFFF;
+      text-transform: uppercase;
       letter-spacing: 0.5px;
     }}
     
-    /* Join Analytics Styling */
+    /* Sub Panels inside Sections */
+    .panel-table {{
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 4px 0;
+      margin-bottom: 8px;
+    }}
+    .panel-td {{
+      width: 50%;
+      vertical-align: top;
+    }}
+    .inner-panel {{
+      background: #151515;
+      border: 1px solid rgba(212,175,55,0.08);
+      border-radius: 6px;
+      padding: 6px;
+    }}
+    .panel-title {{
+      font-size: 7.5pt;
+      font-weight: bold;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }}
+    
+    /* Lists and items */
+    .list-item {{
+      font-size: 8pt;
+      padding: 2.5px 0;
+      border-bottom: 1px solid rgba(212,175,55,0.06);
+    }}
+    .list-item:last-child {{
+      border-bottom: none;
+    }}
+    
+    /* Join List item styles */
     .join-item {{
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 3px 0;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+      padding: 4px 0;
+      border-bottom: 1px solid rgba(212,175,55,0.06);
+      font-size: 8pt;
     }}
-    .join-item:last-child {{ border-bottom: none; }}
-    
+    .join-item:last-child {{
+      border-bottom: none;
+    }}
     .join-student {{
       display: flex;
       align-items: center;
       gap: 4px;
-      font-size: 9px;
       font-weight: 600;
-      color: #FFF;
+      color: #FFFFFF;
+    }}
+    .rank-badge {{
+      display: inline-block;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      text-align: center;
+      line-height: 14px;
+      font-size: 7pt;
+      font-weight: 700;
+      margin-right: 4px;
+    }}
+    .rank-1 {{ background: rgba(212,175,55,0.2); color: #D4AF37; border: 1px solid #D4AF37; }}
+    .rank-2 {{ background: rgba(160,160,160,0.15); color: #bbb; border: 1px solid #888; }}
+    .rank-3 {{ background: rgba(180,100,20,0.2); color: #cd7f32; border: 1px solid #cd7f32; }}
+    .join-time {{
+      font-size: 7.5pt;
+      color: #A0A0A0;
+    }}
+    .late-badge {{
+      background: rgba(239,68,68,0.1);
+      color: #ef4444;
+      font-size: 6.5pt;
+      padding: 1px 4px;
+      border-radius: 3px;
+      border: 1px solid rgba(239,68,68,0.2);
     }}
     
-    .rank-badge {{
-      width: 12px;
-      height: 12px;
+    /* Conic Ring Teacher avatar */
+    .hero-photo-ring {{
+      width: 60px;
+      height: 60px;
       border-radius: 50%;
+      background: conic-gradient(#FF7A00 0deg, #D4AF37 90deg, #FF9A1F 180deg, #D4AF37 270deg, #FF7A00 360deg);
+      padding: 2.5px;
+      margin: auto;
+    }}
+    .hero-photo-ring-inner {{
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      background: #111111;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 7px;
-      font-weight: bold;
-    }}
-    .rank-1 {{ background: rgba(245, 158, 11, 0.15); color: var(--accent-orange); border: 1px solid var(--accent-orange); }}
-    .rank-2 {{ background: rgba(156, 163, 175, 0.15); color: #d1d5db; border: 1px solid #9ca3af; }}
-    .rank-3 {{ background: rgba(217, 119, 6, 0.15); color: #fbbf24; border: 1px solid #ca8a04; }}
-    
-    .join-time {{
-      font-size: 8px;
-      color: var(--text-muted);
-    }}
-    .late-badge {{
-      background: rgba(239, 68, 68, 0.1);
-      color: var(--accent-red);
-      padding: 1px 4px;
-      border-radius: 3px;
-      font-size: 7px;
-      font-weight: 600;
+      font-weight: 800;
+      color: #FFFFFF;
+      font-size: 14pt;
     }}
     
-    /* Security Styling */
-    .sec-item {{
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-size: 8.5px;
-      padding: 2px 0;
-    }}
-    .sec-item .count {{
-      font-weight: 700;
-      color: #FFF;
-    }}
-    
-    .risk-row {{
-      display: flex;
-      justify-content: space-between;
-      font-size: 8px;
-      margin-bottom: 4px;
-    }}
-    
-    .risk-dot {{
-      display: inline-block;
-      width: 5px;
-      height: 5px;
-      border-radius: 50%;
-      margin-right: 3px;
-    }}
-    .dot-low {{ background: var(--accent-green); }}
-    .dot-med {{ background: var(--accent-orange); }}
-    .dot-high {{ background: var(--accent-red); }}
-    
-    .risk-bar {{
-      height: 4px;
-      background: rgba(255, 255, 255, 0.03);
-      border-radius: 2px;
-      display: flex;
-      overflow: hidden;
-    }}
-    
-    .risk-seg {{
-      height: 100%;
-    }}
-    
-    /* Progress Ring */
+    /* Circular Progress */
     .circular-progress-wrapper {{
       display: flex;
       align-items: center;
@@ -1315,37 +1337,104 @@ def create_session_report_pdf(report: dict) -> bytes:
       position: relative;
     }}
     
-    .circular-progress-text {{
-      position: absolute;
-      text-align: center;
-      display: flex;
-      flex-direction: column;
+    /* AI Boxes */
+    .ai-summary-box {{
+      background: rgba(212, 175, 55, 0.03);
+      border: 1px solid rgba(212, 175, 55, 0.15);
+      border-left: 3px solid #D4AF37;
+      border-radius: 8px;
+      padding: 8px 10px;
+      margin-bottom: 8px;
     }}
-    
-    .circular-val {{
-      font-size: 13px;
+    .ai-title {{
+      font-size: 7.5pt;
       font-weight: 800;
-      color: #FFF;
-    }}
-    .circular-lbl {{
-      font-size: 6px;
-      color: var(--text-muted);
       text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 4px;
+    }}
+    .ai-title.summary {{ color: #D4AF37; }}
+    .ai-title.recs {{ color: #FF7A00; }}
+    
+    .ai-text {{
+      font-size: 8pt;
+      line-height: 1.35;
+      color: #FFFFFF;
+    }}
+    .ai-recs-box {{
+      background: rgba(255, 122, 0, 0.03);
+      border: 1px solid rgba(255, 122, 0, 0.15);
+      border-radius: 8px;
+      padding: 8px 10px;
+    }}
+    .ai-rec-item {{
+      display: flex;
+      align-items: flex-start;
+      gap: 5px;
+      font-size: 8pt;
+      margin-bottom: 4px;
+    }}
+    .ai-rec-item:last-child {{
+      margin-bottom: 0;
+    }}
+    .ai-rec-check {{
+      color: #D4AF37;
+      font-weight: bold;
+      font-size: 8pt;
     }}
     
-    /* Topic Bar */
+    /* Rank cards for top performers */
+    .rank-card {{
+      background: #151515;
+      border: 1px solid rgba(212,175,55,0.08);
+      border-radius: 6px;
+      padding: 4px 8px;
+      display: flex;
+      align-items: center;
+      margin-bottom: 4px;
+    }}
+    .rank-laurel {{
+      font-size: 11pt;
+      margin-right: 6px;
+    }}
+    .rank-avatar {{
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 7pt;
+      font-weight: 700;
+      margin-right: 8px;
+      border: 1px solid rgba(212,175,55,0.22);
+    }}
+    .rank-details {{
+      flex: 1;
+    }}
+    .rank-name {{
+      font-size: 8pt;
+      font-weight: bold;
+      color: #FFFFFF;
+      display: block;
+    }}
+    .rank-score {{
+      font-size: 7pt;
+      color: #FF7A00;
+      font-weight: 600;
+    }}
+    
+    /* Topic bars */
     .topic-progress-item {{
-      margin-bottom: 6px;
+      margin-bottom: 5px;
     }}
-    .topic-progress-item:last-child {{ margin-bottom: 0; }}
-    
     .topic-info {{
       display: flex;
       justify-content: space-between;
-      font-size: 8.5px;
+      font-size: 7.5pt;
       font-weight: 600;
+      color: #FFFFFF;
       margin-bottom: 2px;
-      color: #FFF;
     }}
     .topic-bar-bg {{
       height: 4px;
@@ -1357,122 +1446,84 @@ def create_session_report_pdf(report: dict) -> bytes:
       height: 100%;
       border-radius: 2px;
     }}
-    .t-fill-green {{ background: linear-gradient(90deg, #10b981, #34d399); }}
-    .t-fill-blue {{ background: linear-gradient(90deg, #3b82f6, #60a5fa); }}
-    .t-fill-orange {{ background: linear-gradient(90deg, #f59e0b, #fbbf24); }}
+    .t-fill-green {{ background: linear-gradient(90deg, #22c55e, #4ade80); }}
+    .t-fill-blue {{ background: linear-gradient(90deg, #D4AF37, #F2D16B); }}
+    .t-fill-orange {{ background: linear-gradient(90deg, #FF7A00, #FF9A1F); }}
     
-    /* AI Box Styling */
-    .ai-summary-box {{
-      background: rgba(6, 182, 212, 0.04);
-      border: 1px solid rgba(6, 182, 212, 0.15);
-      border-radius: 8px;
-      padding: 8px 10px;
+    /* Footer Box */
+    .gen-box-table {{
+      width: 100%;
+      border-collapse: collapse;
+      background: #111111;
+      border: 1px solid rgba(212,175,55,0.22);
+      border-radius: 6px;
+      margin-top: 6px;
+      margin-bottom: 4px;
     }}
-    .ai-title {{
-      font-size: 8px;
-      font-weight: 800;
+    .gen-box-td {{
+      padding: 6px 12px;
+      vertical-align: middle;
+    }}
+    .gen-logo-text {{
+      font-size: 9pt;
+      font-weight: bold;
+      color: #FFFFFF;
+    }}
+    .gen-engine {{
+      font-size: 7pt;
+      color: #A0A0A0;
       text-transform: uppercase;
       letter-spacing: 0.5px;
-      margin-bottom: 4px;
     }}
-    .ai-title.summary {{ color: var(--accent-cyan); }}
-    .ai-title.recs {{ color: var(--accent-purple); }}
-    
-    .ai-text {{
-      font-size: 9px;
-      line-height: 1.35;
-      color: var(--text-main);
+    .gen-time {{
+      font-size: 7.5pt;
+      color: #A0A0A0;
     }}
-    
-    .ai-recs-box {{
-      background: rgba(139, 92, 246, 0.04);
-      border: 1px solid rgba(139, 92, 246, 0.15);
-      border-radius: 8px;
-      padding: 8px 10px;
-    }}
-    
-    .ai-rec-item {{
-      display: flex;
-      align-items: flex-start;
-      gap: 5px;
-      font-size: 9px;
-      margin-bottom: 4.5px;
-    }}
-    .ai-rec-item:last-child {{ margin-bottom: 0; }}
-    
-    .ai-rec-check {{
-      color: var(--accent-green);
-      font-weight: bold;
-      font-size: 9px;
-    }}
-    
-    /* Rankings & Lists */
-    .rank-card {{
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      padding: 5px 8px;
-      background: rgba(255, 255, 255, 0.02);
-      border: 1px solid rgba(255, 255, 255, 0.03);
-      border-radius: 6px;
-      margin-bottom: 4px;
-    }}
-    .rank-card:last-child {{ margin-bottom: 0; }}
-    .rank-laurel {{ font-size: 11px; }}
-    .rank-avatar {{
-      width: 18px;
-      height: 18px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 8px;
-      font-weight: bold;
-      border: 1px solid rgba(255, 255, 255, 0.1);
-    }}
-    .rank-card-1 .rank-avatar {{ border-color: #f59e0b; background: rgba(245, 158, 11, 0.2); color: #fff; }}
-    .rank-card-2 .rank-avatar {{ border-color: #9ca3af; background: rgba(156, 163, 175, 0.2); color: #fff; }}
-    .rank-card-3 .rank-avatar {{ border-color: #ca8a04; background: rgba(217, 119, 6, 0.2); color: #fff; }}
-    .rank-details {{ display: flex; flex-direction: column; }}
-    .rank-name {{ font-size: 9px; font-weight: 700; color: #fff; }}
-    .rank-score {{ font-size: 8px; color: var(--accent-green); font-weight: 700; }}
-    
-    /* Footer box */
-    .gen-box {{
-      background: var(--card-bg);
-      border: 1px solid var(--card-border);
-      border-radius: 10px;
-      padding: 8px 16px;
-      display: flex;
-      flex-direction: row;
-      align-items: center;
-      justify-content: space-between;
-      margin-top: 10px;
-    }}
-    
-    .gen-logo-text {{
-      font-size: 12px;
-      font-weight: 800;
-      letter-spacing: -0.5px;
-      color: #fff;
-    }}
-    .gen-engine {{ font-size: 8px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; }}
-    .gen-time {{ font-size: 7.5px; color: var(--text-muted); }}
     
     footer {{
-      display: flex;
-      justify-content: center;
       border-top: 1px solid rgba(255, 255, 255, 0.04);
-      padding-top: 6px;
-      margin-top: 6px;
+      padding-top: 4px;
+      text-align: center;
+    }}
+    .footer-tagline {{
+      font-size: 7pt;
+      color: #D4AF37;
+      text-transform: uppercase;
+      font-weight: bold;
+      letter-spacing: 0.5px;
     }}
     
-    .footer-tagline {{
-      font-size: 7.5px;
-      color: var(--accent-purple);
-      font-weight: 700;
+    /* Gradebook Table Styling */
+    .gradebook-card {{
+      background: #111111;
+      border: 1px solid rgba(212,175,55,0.22);
+      border-radius: 8px;
+      padding: 12px;
+      min-height: 235mm;
+    }}
+    .gradebook-table {{
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 8px;
+      font-size: 7.5pt;
+    }}
+    .gradebook-table th {{
+      background: #151515;
+      border-bottom: 2px solid rgba(212,175,55,0.22);
+      color: #D4AF37;
       text-transform: uppercase;
+      font-weight: bold;
+      padding: 6px 4px;
+      font-size: 7pt;
       letter-spacing: 0.5px;
+    }}
+    .gradebook-table td {{
+      padding: 6px 4px;
+      border-bottom: 1px solid rgba(212,175,55,0.06);
+      color: #FFFFFF;
+    }}
+    .gradebook-table tr:nth-child(even) td {{
+      background: rgba(255, 255, 255, 0.01);
     }}
   </style>
 </head>
@@ -1480,339 +1531,510 @@ def create_session_report_pdf(report: dict) -> bytes:
   
   <!-- PAGE 1 -->
   <div class="page">
-    <header>
-      <div class="logo-container">
-        <div class="logo-text">
-          <h1 style="background: linear-gradient(135deg, #FFF 40%, var(--accent-blue)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">{brand_name}</h1>
-          <p>AI Classroom</p>
-        </div>
-      </div>
-      <div class="title-container">
-        <h2>SESSION INTELLIGENCE REPORT</h2>
-        <p>AI Powered Classroom Analytics</p>
-      </div>
-      <div class="report-id-box">
-        <label>Report ID</label>
-        <span>{session_code}</span>
-      </div>
-    </header>
+    <table class="header-table">
+      <tr>
+        <td class="logo-td" style="vertical-align: middle;">
+          <table style="border-collapse: collapse; border: none;">
+            <tr>
+              <td style="padding-right: 8px; vertical-align: middle;">
+                <svg width="24" height="24" viewBox="0 0 44 44" fill="none">
+                  <path d="M22 2C10.95 2 2 10.95 2 22s8.95 20 20 20 20-8.95 20-20S33.05 2 22 2zm0 36c-8.82 0-16-7.18-16-16S13.18 6 22 6s16 7.18 16 16-7.18 16-16 16z" fill="#FF7A00"/>
+                  <circle cx="22" cy="22" r="8" fill="#D4AF37"/>
+                </svg>
+              </td>
+              <td style="vertical-align: middle; line-height: 1;">
+                <div style="font-family: 'Poppins', sans-serif; font-size: 15pt; font-weight: 900; letter-spacing: 2px; color: #FFF; margin: 0; line-height: 1;">{brand_name.upper()}</div>
+                <div style="font-size: 5.5pt; font-weight: 700; letter-spacing: 1.5px; color: #D4AF37; text-transform: uppercase; margin-top: 1px;">AI Classroom</div>
+              </td>
+            </tr>
+          </table>
+        </td>
+        <td class="title-td" style="vertical-align: middle;">
+          <div class="title-text">SESSION INTELLIGENCE REPORT</div>
+          <div class="title-sub">AI Powered Classroom Analytics</div>
+        </td>
+        <td class="id-td" style="vertical-align: middle;">
+          <div class="id-box">
+            <span class="id-lbl">Report ID</span>
+            <span class="id-val">{session_code}</span>
+          </div>
+        </td>
+      </tr>
+    </table>
 
-    <div class="verdict-card {verdict_class}">
-      <h3>{verdict_title}</h3>
-      <p>{verdict_desc}</p>
-    </div>
-    
-    <div class="session-info-bar">
-      <div class="info-item">
-        <div class="info-icon">👤</div>
-        <div class="info-details">
-          <span>{teacher_name}</span>
-          <label>Teacher</label>
-        </div>
-      </div>
-      <div class="info-item">
-        <div class="info-icon">📖</div>
-        <div class="info-details">
-          <span>{session_name}</span>
-          <label>Session Name</label>
-        </div>
-      </div>
-      <div class="info-item">
-        <div class="info-icon">📇</div>
-        <div class="info-details">
-          <span>{session_code}</span>
-          <label>Session Code</label>
-        </div>
-      </div>
-      <div class="info-item">
-        <div class="info-icon">📅</div>
-        <div class="info-details">
-          <span>{date_str}</span>
-          <label>Date</label>
-        </div>
-      </div>
-      <div class="info-item">
-        <div class="info-icon">⏰</div>
-        <div class="info-details">
-          <span>{time_range}</span>
-          <label>Time</label>
-        </div>
-      </div>
-      <div class="info-item">
-        <div class="info-icon">⏳</div>
-        <div class="info-details">
-          <span>{duration_mins} min</span>
-          <label>Duration</label>
-        </div>
-      </div>
-    </div>
-    
-    <div class="kpi-grid">
-      <div class="kpi-card kpi-pink" style="background: rgba(236, 72, 153, 0.03);">
-        <div class="kpi-icon-box">✨</div>
-        <div class="kpi-content">
-          <span class="kpi-val">{quality_score}%</span>
-          <span class="kpi-lbl">Quality Index</span>
-        </div>
-      </div>
-      <div class="kpi-card kpi-purple" style="background: rgba(139, 92, 246, 0.02);">
-        <div class="kpi-icon-box">👥</div>
-        <div class="kpi-content">
-          <span class="kpi-val">{participation_score}%</span>
-          <span class="kpi-lbl">Participation</span>
-        </div>
-      </div>
-      <div class="kpi-card kpi-blue" style="background: rgba(59, 130, 246, 0.02);">
-        <div class="kpi-icon-box">⏱️</div>
-        <div class="kpi-content">
-          <span class="kpi-val">{engagement_score}%</span>
-          <span class="kpi-lbl">Engagement</span>
-        </div>
-      </div>
-      <div class="kpi-card kpi-orange" style="background: rgba(245, 158, 11, 0.02);">
-        <div class="kpi-icon-box">🛡️</div>
-        <div class="kpi-content">
-          <span class="kpi-val">{discipline_score}%</span>
-          <span class="kpi-lbl">Discipline</span>
-        </div>
-      </div>
-      <div class="kpi-card kpi-green" style="background: rgba(16, 185, 129, 0.02);">
-        <div class="kpi-icon-box">🧠</div>
-        <div class="kpi-content">
-          <span class="kpi-val">{understanding_score}%</span>
-          <span class="kpi-lbl">Understanding</span>
-        </div>
-      </div>
-    </div>
-    
-    <div class="two-col-grid">
-      <!-- 1. Join Analytics -->
-      <div class="section-card" style="border-top: 3px solid var(--accent-purple);">
-        <div class="section-header">
-          <span style="color: var(--accent-purple);">👥</span>
-          <span class="section-title">1. Join Analytics</span>
-        </div>
-        
-        <div class="panel-grid">
-          <div class="inner-panel">
-            <div class="panel-title" style="color: var(--accent-green);">First To Join</div>
-            {first_joiners_html}
+    <table class="verdict-table {verdict_class}">
+      <tr>
+        <td class="verdict-td">
+          <div class="verdict-title">{verdict_title}</div>
+          <div class="verdict-desc">{verdict_desc}</div>
+        </td>
+      </tr>
+    </table>
+
+    <table class="info-bar-table">
+      <tr>
+        <td class="info-item-td">
+          <div class="info-val">{teacher_name}</div>
+          <div class="info-lbl">Teacher</div>
+        </td>
+        <td class="info-item-td">
+          <div class="info-val">{session_name}</div>
+          <div class="info-lbl">Session Name</div>
+        </td>
+        <td class="info-item-td">
+          <div class="info-val">{session_code}</div>
+          <div class="info-lbl">Session Code</div>
+        </td>
+        <td class="info-item-td">
+          <div class="info-val">{date_str}</div>
+          <div class="info-lbl">Date</div>
+        </td>
+        <td class="info-item-td">
+          <div class="info-val">{time_range}</div>
+          <div class="info-lbl">Time</div>
+        </td>
+        <td class="info-item-td">
+          <div class="info-val">{duration_mins} min</div>
+          <div class="info-lbl">Duration</div>
+        </td>
+      </tr>
+    </table>
+
+    <table class="kpi-table">
+      <tr>
+        <td class="kpi-td">
+          <div class="kpi-card" style="border-top: 2px solid #FF7A00;">
+            <table style="width: 100%;">
+              <tr>
+                <td style="width: 20px; font-size: 11pt; vertical-align: middle; text-align: center; color: #FF7A00;">👥</td>
+                <td>
+                  <span class="kpi-val">{total_students}</span>
+                  <span class="kpi-lbl">Students</span>
+                </td>
+              </tr>
+            </table>
           </div>
-          <div class="inner-panel">
-            <div class="panel-title" style="color: var(--accent-orange);">Late Joiners</div>
-            {late_joiners_html}
+        </td>
+        <td class="kpi-td">
+          <div class="kpi-card" style="border-top: 2px solid #D4AF37;">
+            <table style="width: 100%;">
+              <tr>
+                <td style="width: 20px; font-size: 11pt; vertical-align: middle; text-align: center; color: #D4AF37;">⏱️</td>
+                <td>
+                  <span class="kpi-val">{duration_mins}m</span>
+                  <span class="kpi-lbl">Duration</span>
+                </td>
+              </tr>
+            </table>
           </div>
-        </div>
-        
-        <div class="inner-panel" style="margin-top: auto;">
-          <div class="panel-title" style="color: var(--accent-blue); margin-bottom: 6px;">Class Presence Duration</div>
-          {presence_html}
-        </div>
-      </div>
-      
-      <!-- 2. Security Analytics -->
-      <div class="section-card" style="border-top: 3px solid var(--accent-orange);">
-        <div class="section-header">
-          <span style="color: var(--accent-orange);">🛡️</span>
-          <span class="section-title">2. Security Analytics</span>
-        </div>
-        
-        <div class="panel-grid">
-          <div style="display: flex; align-items: center; justify-content: center; position: relative;">
-            {security_donut_svg_str}
-            <div style="position: absolute; text-align: center;">
-              <div style="font-size: 16px; font-weight: 800; color: #FFF; line-height: 1;">{total_alerts}</div>
-              <div style="font-size: 6px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-top: 1px;">Total Alerts</div>
+        </td>
+        <td class="kpi-td">
+          <div class="kpi-card" style="border-top: 2px solid #FF7A00;">
+            <table style="width: 100%;">
+              <tr>
+                <td style="width: 20px; font-size: 11pt; vertical-align: middle; text-align: center; color: #FF7A00;">📝</td>
+                <td>
+                  <span class="kpi-val">{tasks_assigned}</span>
+                  <span class="kpi-lbl">Tasks</span>
+                </td>
+              </tr>
+            </table>
+          </div>
+        </td>
+        <td class="kpi-td">
+          <div class="kpi-card" style="border-top: 2px solid #ef4444;">
+            <table style="width: 100%;">
+              <tr>
+                <td style="width: 20px; font-size: 11pt; vertical-align: middle; text-align: center; color: #ef4444;">🚨</td>
+                <td>
+                  <span class="kpi-val" style="color: #ef4444;">{total_alerts}</span>
+                  <span class="kpi-lbl">Alerts</span>
+                </td>
+              </tr>
+            </table>
+          </div>
+        </td>
+        <td class="kpi-td">
+          <div class="kpi-card" style="border-top: 2px solid #22c55e;">
+            <table style="width: 100%;">
+              <tr>
+                <td style="width: 20px; font-size: 11pt; vertical-align: middle; text-align: center; color: #22c55e;">📈</td>
+                <td>
+                  <span class="kpi-val" style="color: #22c55e;">{attendance_percentage}%</span>
+                  <span class="kpi-lbl">Attendance</span>
+                </td>
+              </tr>
+            </table>
+          </div>
+        </td>
+      </tr>
+    </table>
+
+    <table class="table-layout">
+      <tr>
+        <!-- 1. Join Analytics -->
+        <td class="section-td" style="padding-left: 0;">
+          <div class="section-card" style="border-top: 3px solid #D4AF37;">
+            <div class="section-header">
+              <span class="section-title">👥 1. Join Analytics</span>
+            </div>
+            
+            <table class="panel-table">
+              <tr>
+                <td class="panel-td" style="padding-left: 0;">
+                  <div class="inner-panel" style="height: 50mm;">
+                    <div class="panel-title" style="color: #22c55e;">First To Join</div>
+                    {first_joiners_html}
+                  </div>
+                </td>
+                <td class="panel-td" style="padding-right: 0;">
+                  <div class="inner-panel" style="height: 50mm;">
+                    <div class="panel-title" style="color: #FF7A00;">Late Joiners</div>
+                    {late_joiners_html}
+                  </div>
+                </td>
+              </tr>
+            </table>
+            
+            <div class="inner-panel" style="height: 80mm; margin-top: 10px;">
+              <div class="panel-title" style="color: #D4AF37; margin-bottom: 6px;">Class Presence Duration</div>
+              {presence_html}
             </div>
           </div>
-          
-          <div class="inner-panel" style="display: flex; flex-direction: column; justify-content: center; gap: 4px;">
-            <div class="sec-item"><span style="color: var(--accent-red);">● Tab Switches</span> <span class="count">{tab_switches}</span></div>
-            <div class="sec-item"><span style="color: var(--accent-orange);">● Face Missing</span> <span class="count">{face_missing}</span></div>
-            <div class="sec-item"><span style="color: var(--accent-blue);">● Multi-Face</span> <span class="count">{multi_face}</span></div>
-            <div class="sec-item"><span style="color: var(--accent-green);">● DevTools</span> <span class="count">{devtools}</span></div>
-          </div>
-        </div>
+        </td>
         
-        <div class="inner-panel" style="margin-top: auto;">
-          <div class="panel-title" style="color: var(--accent-blue); margin-bottom: 4px;">Risk Distribution</div>
-          <div class="risk-row">
-            <div class="risk-lbl"><span class="risk-dot dot-low"></span>Low Risk: {low_risk}</div>
-            <div class="risk-lbl"><span class="risk-dot dot-med"></span>Med Risk: {med_risk}</div>
-            <div class="risk-lbl"><span class="risk-dot dot-high"></span>High Risk: {high_risk}</div>
+        <!-- 2. Security Analytics -->
+        <td class="section-td" style="padding-right: 0;">
+          <div class="section-card" style="border-top: 3px solid #FF7A00;">
+            <div class="section-header">
+              <span class="section-title">🛡️ 2. Security Analytics</span>
+            </div>
+            
+            <table class="panel-table">
+              <tr>
+                <td class="panel-td" style="padding-left: 0; width: 45%; vertical-align: middle; text-align: center;">
+                  <div style="position: relative; display: inline-block; width: 70px; height: 70px;">
+                    {security_donut_svg_str}
+                    <div style="position: absolute; top: 20px; left: 0; right: 0; text-align: center;">
+                      <span style="font-size: 12pt; font-weight: bold; color: #FFF; line-height: 1;">{total_alerts}</span>
+                      <span style="font-size: 5pt; color: #A0A0A0; display: block; text-transform: uppercase; margin-top: -2px;">Alerts</span>
+                    </div>
+                  </div>
+                </td>
+                <td class="panel-td" style="padding-right: 0; width: 55%; vertical-align: middle;">
+                  <div class="inner-panel" style="height: 50mm; display: flex; flex-direction: column; justify-content: center; gap: 4px;">
+                    <div class="list-item" style="border: none;"><span style="color: #ef4444;">●</span> Tab Switches <span style="float: right; font-weight: bold;">{tab_switches}</span></div>
+                    <div class="list-item" style="border: none;"><span style="color: #FF7A00;">●</span> Face Missing <span style="float: right; font-weight: bold;">{face_missing}</span></div>
+                    <div class="list-item" style="border: none;"><span style="color: #D4AF37;">●</span> Multi-Face <span style="float: right; font-weight: bold;">{multi_face}</span></div>
+                    <div class="list-item" style="border: none;"><span style="color: #22c55e;">●</span> DevTools <span style="float: right; font-weight: bold;">{devtools}</span></div>
+                  </div>
+                </td>
+              </tr>
+            </table>
+            
+            <div class="inner-panel" style="height: 80mm; margin-top: 10px;">
+              <div class="panel-title" style="color: #D4AF37; margin-bottom: 4px;">Risk Distribution</div>
+              <div class="risk-row" style="margin-bottom: 8px;">
+                <div class="risk-lbl" style="font-size: 8pt;"><span class="risk-dot dot-low"></span>Low Risk: {low_risk}</div>
+                <div class="risk-lbl" style="font-size: 8pt;"><span class="risk-dot dot-med"></span>Med Risk: {med_risk}</div>
+                <div class="risk-lbl" style="font-size: 8pt;"><span class="risk-dot dot-high"></span>High Risk: {high_risk}</div>
+              </div>
+              <table style="width: 100%; height: 6px; background: rgba(255,255,255,0.03); border-radius: 3px; overflow: hidden; border-collapse: collapse;">
+                <tr>
+                  <td style="background: #22c55e; width: {round(low_risk/max(1,total_students)*100)}%;"></td>
+                  <td style="background: #D4AF37; width: {round(med_risk/max(1,total_students)*100)}%;"></td>
+                  <td style="background: #ef4444; width: {round(high_risk/max(1,total_students)*100)}%;"></td>
+                </tr>
+              </table>
+            </div>
           </div>
-          <div class="risk-bar">
-            <div class="risk-seg dot-low" style="width: {round(low_risk/max(1,total_students)*100)}%;"></div>
-            <div class="risk-seg dot-med" style="width: {round(med_risk/max(1,total_students)*100)}%;"></div>
-            <div class="risk-seg dot-high" style="width: {round(high_risk/max(1,total_students)*100)}%;"></div>
-          </div>
-        </div>
-      </div>
-    </div>
-    
-    <div class="gen-box">
-      <span class="gen-logo-text" style="background: linear-gradient(135deg, #FFF, var(--accent-blue)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">{brand_name}</span>
-      <span class="gen-engine">{brand_name} AI Analytics Engine</span>
-      <span class="gen-time">{datetime.now().strftime('%d %b %Y | %I:%M %p')}</span>
-    </div>
-    
+        </td>
+      </tr>
+    </table>
+
+    <table class="gen-box-table">
+      <tr>
+        <td class="gen-box-td" style="font-size: 9pt; font-weight: bold; color: #FFF; width: 30%;">{brand_name}</td>
+        <td class="gen-box-td" style="font-size: 7pt; color: #A0A0A0; text-transform: uppercase; width: 45%; text-align: center;">{brand_name} AI Analytics Engine</td>
+        <td class="gen-box-td" style="font-size: 7.5pt; color: #A0A0A0; width: 25%; text-align: right;">{datetime.now().strftime('%d %b %Y | %I:%M %p')}</td>
+      </tr>
+    </table>
+
     <footer>
-      <span class="footer-tagline">Empowering Educators with AI • Page 1 of 2</span>
+      <span class="footer-tagline">Empowering Educators with AI • Page 1 of 3</span>
     </footer>
   </div>
 
   <!-- PAGE 2 -->
   <div class="page">
-    <header>
-      <div class="logo-container">
-        <div class="logo-text">
-          <h1 style="background: linear-gradient(135deg, #FFF 40%, var(--accent-blue)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">{brand_name}</h1>
-          <p>AI Classroom</p>
-        </div>
-      </div>
-      <div class="title-container">
-        <h2>SESSION INTELLIGENCE REPORT</h2>
-        <p>AI Powered Classroom Analytics</p>
-      </div>
-      <div class="report-id-box">
-        <label>Report ID</label>
-        <span>{session_code}</span>
-      </div>
-    </header>
+    <table class="header-table">
+      <tr>
+        <td class="logo-td" style="vertical-align: middle;">
+          <table style="border-collapse: collapse; border: none;">
+            <tr>
+              <td style="padding-right: 8px; vertical-align: middle;">
+                <svg width="24" height="24" viewBox="0 0 44 44" fill="none">
+                  <path d="M22 2C10.95 2 2 10.95 2 22s8.95 20 20 20 20-8.95 20-20S33.05 2 22 2zm0 36c-8.82 0-16-7.18-16-16S13.18 6 22 6s16 7.18 16 16-7.18 16-16 16z" fill="#FF7A00"/>
+                  <circle cx="22" cy="22" r="8" fill="#D4AF37"/>
+                </svg>
+              </td>
+              <td style="vertical-align: middle; line-height: 1;">
+                <div style="font-family: 'Poppins', sans-serif; font-size: 15pt; font-weight: 900; letter-spacing: 2px; color: #FFF; margin: 0; line-height: 1;">{brand_name.upper()}</div>
+                <div style="font-size: 5.5pt; font-weight: 700; letter-spacing: 1.5px; color: #D4AF37; text-transform: uppercase; margin-top: 1px;">AI Classroom</div>
+              </td>
+            </tr>
+          </table>
+        </td>
+        <td class="title-td" style="vertical-align: middle;">
+          <div class="title-text">SESSION INTELLIGENCE REPORT</div>
+          <div class="title-sub">AI Powered Classroom Analytics</div>
+        </td>
+        <td class="id-td" style="vertical-align: middle;">
+          <div class="id-box">
+            <span class="id-lbl">Report ID</span>
+            <span class="id-val">{session_code}</span>
+          </div>
+        </td>
+      </tr>
+    </table>
 
-    <div class="two-col-grid" style="margin-bottom: 12px;">
-      <!-- 3. Task Analytics -->
-      <div class="section-card" style="border-top: 3px solid var(--accent-green);">
-        <div class="section-header">
-          <span style="color: var(--accent-green);">📝</span>
-          <span class="section-title">3. Task Analytics</span>
-        </div>
-        
-        <div class="panel-grid">
-          <div class="inner-panel circular-progress-wrapper">
-            {completion_svg_str}
-            <div class="circular-progress-text">
-              <span class="circular-val">{completion_pct}%</span>
-              <span class="circular-lbl">Done</span>
+    <table class="table-layout" style="margin-bottom: 8px;">
+      <tr>
+        <!-- 3. Task Analytics -->
+        <td class="section-td" style="padding-left: 0;">
+          <div class="section-card" style="border-top: 3px solid #22c55e;">
+            <div class="section-header">
+              <span class="section-title">📝 3. Task Analytics</span>
+            </div>
+            
+            <table class="panel-table">
+              <tr>
+                <td class="panel-td" style="padding-left: 0; width: 45%; vertical-align: middle; text-align: center;">
+                  <div style="position: relative; display: inline-block; width: 70px; height: 70px;">
+                    {completion_svg_str}
+                    <div style="position: absolute; top: 22px; left: 0; right: 0; text-align: center;">
+                      <span class="circular-val" style="font-size: 11pt; font-weight: 800; color: #FFF;">{completion_pct}%</span>
+                      <span class="circular-lbl" style="font-size: 5pt; color: #A0A0A0; text-transform: uppercase; display: block;">Done</span>
+                    </div>
+                  </div>
+                </td>
+                <td class="panel-td" style="padding-right: 0; width: 55%; vertical-align: middle;">
+                  <div class="inner-panel" style="height: 50mm; display: flex; flex-direction: column; justify-content: center; gap: 4px;">
+                    <div class="list-item" style="border: none;">Assigned: <span style="float: right; font-weight: bold;">{total_assigned}</span></div>
+                    <div class="list-item" style="border: none;">Completed: <span style="float: right; font-weight: bold;">{completed_cnt}</span></div>
+                    <div class="list-item" style="border: none;">Pending: <span style="float: right; font-weight: bold;">{pending_cnt}</span></div>
+                    <div class="list-item" style="border: none;">Not Sub: <span style="float: right; font-weight: bold;">{not_sub_cnt}</span></div>
+                  </div>
+                </td>
+              </tr>
+            </table>
+            
+            <div class="inner-panel" style="height: 80mm; margin-top: 10px;">
+              <div class="panel-title" style="color: #D4AF37;">Top Performers</div>
+              {top_perf_html}
             </div>
           </div>
-          
-          <div class="inner-panel" style="display: flex; flex-direction: column; justify-content: center; gap: 3.5px; font-size: 8.5px;">
-            <div style="display: flex; justify-content: space-between;"><span>Assigned:</span> <strong>{total_assigned}</strong></div>
-            <div style="display: flex; justify-content: space-between;"><span>Completed:</span> <strong>{completed_cnt}</strong></div>
-            <div style="display: flex; justify-content: space-between;"><span>Pending:</span> <strong>{pending_cnt}</strong></div>
-            <div style="display: flex; justify-content: space-between;"><span>Not Sub:</span> <strong>{not_sub_cnt}</strong></div>
-          </div>
-        </div>
+        </td>
         
-        <div class="inner-panel" style="margin-top: auto;">
-          <div class="panel-title" style="color: var(--accent-blue); margin-bottom: 4px;">Top Performers</div>
-          <div style="display: flex; gap: 4px; justify-content: space-around;">
-            {top_performers_cards_html}
-          </div>
-        </div>
-      </div>
-      
-      <!-- 4. Student Understanding -->
-      <div class="section-card" style="border-top: 3px solid var(--accent-purple);">
-        <div class="section-header">
-          <span style="color: var(--accent-purple);">🧠</span>
-          <span class="section-title">4. Student Understanding</span>
-        </div>
-        
-        <div class="panel-grid">
-          <div class="inner-panel" style="display: flex; flex-direction: column; gap: 4px; min-height: 80px;">
-            <div class="panel-title" style="color: var(--accent-green); margin-bottom: 2px;">Topic Accuracy</div>
-            {topics_html}
-          </div>
-          
-          <div class="inner-panel" style="display: flex; flex-direction: column; gap: 4px;">
-            <div class="panel-title" style="color: var(--accent-red); margin-bottom: 2px;">Struggling</div>
-            {attention_html}
-          </div>
-        </div>
-        
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: auto;">
-          <div class="inner-panel" style="border-left: 3px solid var(--accent-green); padding: 4px 6px; display: flex; align-items: center; gap: 5px;">
-            <span style="font-size: 12px;">🏆</span>
-            <div>
-              <div style="font-size: 6px; color: var(--text-muted); text-transform: uppercase;">Strongest</div>
-              <div style="font-size: 8.5px; font-weight: 700; color: #fff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 90px;">{strongest_topic}</div>
+        <!-- 4. Student Understanding -->
+        <td class="section-td" style="padding-right: 0;">
+          <div class="section-card" style="border-top: 3px solid #D4AF37;">
+            <div class="section-header">
+              <span class="section-title">🧠 4. Student Understanding</span>
             </div>
+            
+            <table class="panel-table">
+              <tr>
+                <td class="panel-td" style="padding-left: 0;">
+                  <div class="inner-panel" style="height: 50mm;">
+                    <div class="panel-title" style="color: #22c55e;">Topic Accuracy</div>
+                    {topics_html}
+                  </div>
+                </td>
+                <td class="panel-td" style="padding-right: 0;">
+                  <div class="inner-panel" style="height: 50mm;">
+                    <div class="panel-title" style="color: #ef4444;">Struggling</div>
+                    {attention_html}
+                  </div>
+                </td>
+              </tr>
+            </table>
+            
+            <table class="panel-table" style="margin-top: 10px;">
+              <tr>
+                <td class="panel-td" style="padding-left: 0;">
+                  <div class="inner-panel" style="border-left: 3px solid #D4AF37; height: 80mm;">
+                    <div style="font-size: 6pt; color: #A0A0A0; text-transform: uppercase;">Strongest Topic</div>
+                    <div style="font-size: 8.5pt; font-weight: bold; color: #FFF; margin-top: 2px;">{strongest_topic}</div>
+                  </div>
+                </td>
+                <td class="panel-td" style="padding-right: 0;">
+                  <div class="inner-panel" style="border-left: 3px solid #ef4444; height: 80mm;">
+                    <div style="font-size: 6pt; color: #A0A0A0; text-transform: uppercase;">Weakest Topic</div>
+                    <div style="font-size: 8.5pt; font-weight: bold; color: #FFF; margin-top: 2px;">{weakest_topic}</div>
+                  </div>
+                </td>
+              </tr>
+            </table>
           </div>
-          <div class="inner-panel" style="border-left: 3px solid var(--accent-red); padding: 4px 6px; display: flex; align-items: center; gap: 5px;">
-            <span style="font-size: 12px;">⚠️</span>
-            <div>
-              <div style="font-size: 6px; color: var(--text-muted); text-transform: uppercase;">Weakest</div>
-              <div style="font-size: 8.5px; font-weight: 700; color: #fff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 90px;">{weakest_topic}</div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+        </td>
+      </tr>
+    </table>
 
-    <div class="two-col-grid" style="margin-bottom: 12px;">
-      <!-- 5. Engagement Analytics -->
-      <div class="section-card" style="border-top: 3px solid var(--accent-blue);">
-        <div class="section-header">
-          <span style="color: var(--accent-blue);">📈</span>
-          <span class="section-title">5. Engagement Analytics</span>
-        </div>
-        
-        <div class="panel-grid">
-          <div class="inner-panel" style="display: flex; align-items: center; gap: 6px;">
-            {engagement_donut_svg_str}
-            <div style="display: flex; flex-direction: column; gap: 1px; font-size: 7.5px;">
-              <div><span style="color: var(--accent-green);">●</span> High: {eng_high}</div>
-              <div><span style="color: var(--accent-blue);">●</span> Med: {eng_med}</div>
-              <div><span style="color: var(--accent-red);">●</span> Low: {eng_low}</div>
-            </div>
-          </div>
-          
-          <div class="inner-panel" style="display: flex; flex-direction: column; justify-content: center; gap: 2px;">
-            <div class="panel-title" style="color: var(--accent-blue); margin-bottom: 2px;">Most Active</div>
-            {most_active_html}
-          </div>
-        </div>
-        
-        <div style="display: grid; grid-template-columns: 1fr 1.2fr; gap: 6px; align-items: center; margin-top: auto;">
-          <div>
-            <div style="font-size: 7.5px; font-weight: 700; color: var(--accent-green); text-transform: uppercase;">Response Rate</div>
-            <div style="display: flex; align-items: center; gap: 4px; margin-top: 2px;">
-              <span style="font-size: 14px; font-weight: 800; color: var(--accent-green);">{engagement_score}%</span>
-              {engagement_badge_html}
-            </div>
-          </div>
-          <div style="height: 36px; display: flex; align-items: center;">
-            {line_chart_svg_str}
-          </div>
-        </div>
-      </div>
-      
-      <!-- 6. AI Insights -->
-      <div class="section-card" style="border-top: 3px solid var(--accent-cyan);">
-        <div class="section-header">
-          <span style="color: var(--accent-cyan);">🤖</span>
-          <span class="section-title">6. AI Insights & Recommendations</span>
-        </div>
-        
-        <div class="ai-summary-box">
-          <div class="ai-title summary">AI Session Summary</div>
-          <p class="ai-text">{ai_summary_txt}</p>
-        </div>
-        
-        <div class="ai-recs-box" style="margin-top: auto;">
-          <div class="ai-title recs">Recommendations</div>
-        <span class="gen-time">{{datetime.now().strftime('%d %b %Y | %I:%M %p')}}</span>
-      </div>
-    </div>
-    
-    <!-- Footer -->
+    <table class="gen-box-table">
+      <tr>
+        <td class="gen-box-td" style="font-size: 9pt; font-weight: bold; color: #FFF; width: 30%;">{brand_name}</td>
+        <td class="gen-box-td" style="font-size: 7pt; color: #A0A0A0; text-transform: uppercase; width: 45%; text-align: center;">{brand_name} AI Analytics Engine</td>
+        <td class="gen-box-td" style="font-size: 7.5pt; color: #A0A0A0; width: 25%; text-align: right;">{datetime.now().strftime('%d %b %Y | %I:%M %p')}</td>
+      </tr>
+    </table>
+
     <footer>
-      <span class="footer-tagline">Empowering Educators with AI • Enhancing Learning with Intelligence</span>
+      <span class="footer-tagline">Empowering Educators with AI • Page 2 of 3</span>
     </footer>
-    
   </div>
+
+  <!-- PAGE 3 -->
+  <div class="page" style="height: auto; page-break-after: avoid;">
+    <table class="header-table">
+      <tr>
+        <td class="logo-td" style="vertical-align: middle;">
+          <table style="border-collapse: collapse; border: none;">
+            <tr>
+              <td style="padding-right: 8px; vertical-align: middle;">
+                <svg width="24" height="24" viewBox="0 0 44 44" fill="none">
+                  <path d="M22 2C10.95 2 2 10.95 2 22s8.95 20 20 20 20-8.95 20-20S33.05 2 22 2zm0 36c-8.82 0-16-7.18-16-16S13.18 6 22 6s16 7.18 16 16-7.18 16-16 16z" fill="#FF7A00"/>
+                  <circle cx="22" cy="22" r="8" fill="#D4AF37"/>
+                </svg>
+              </td>
+              <td style="vertical-align: middle; line-height: 1;">
+                <div style="font-family: 'Poppins', sans-serif; font-size: 15pt; font-weight: 900; letter-spacing: 2px; color: #FFF; margin: 0; line-height: 1;">{brand_name.upper()}</div>
+                <div style="font-size: 5.5pt; font-weight: 700; letter-spacing: 1.5px; color: #D4AF37; text-transform: uppercase; margin-top: 1px;">AI Classroom</div>
+              </td>
+            </tr>
+          </table>
+        </td>
+        <td class="title-td" style="vertical-align: middle;">
+          <div class="title-text">SESSION INTELLIGENCE REPORT</div>
+          <div class="title-sub">AI Powered Classroom Analytics</div>
+        </td>
+        <td class="id-td" style="vertical-align: middle;">
+          <div class="id-box">
+            <span class="id-lbl">Report ID</span>
+            <span class="id-val">{session_code}</span>
+          </div>
+        </td>
+      </tr>
+    </table>
+
+    <table class="table-layout" style="margin-bottom: 8px;">
+      <tr>
+        <!-- 5. Engagement Analytics -->
+        <td class="section-td" style="padding-left: 0;">
+          <div class="section-card" style="border-top: 3px solid #D4AF37; height: 75mm; margin-bottom: 8px;">
+            <div class="section-header">
+              <span class="section-title">📈 5. Engagement Analytics</span>
+            </div>
+            
+            <table class="panel-table">
+              <tr>
+                <td class="panel-td" style="padding-left: 0; width: 45%; vertical-align: middle; text-align: center;">
+                  <div style="position: relative; display: inline-block; width: 50px; height: 50px;">
+                    {engagement_donut_svg_str}
+                    <div style="position: absolute; top: 15px; left: 0; right: 0; text-align: center;">
+                      <span class="circular-val" style="font-size: 9pt; font-weight: 800; color: #FFF;">{engagement_score}%</span>
+                      <span class="circular-lbl" style="font-size: 4pt; color: #A0A0A0; text-transform: uppercase; display: block;">Engaged</span>
+                    </div>
+                  </div>
+                </td>
+                <td class="panel-td" style="padding-right: 0; width: 55%; vertical-align: middle;">
+                  <div class="inner-panel" style="height: 35mm; display: flex; flex-direction: column; justify-content: center; gap: 4px;">
+                    <div class="list-item" style="border: none;"><span style="color: #22c55e;">●</span> High: {eng_high}</div>
+                    <div class="list-item" style="border: none;"><span style="color: #D4AF37;">●</span> Med: {eng_med}</div>
+                    <div class="list-item" style="border: none;"><span style="color: #FF7A00;">●</span> Low: {eng_low}</div>
+                  </div>
+                </td>
+              </tr>
+            </table>
+            
+            <table class="panel-table" style="margin-top: 4px;">
+              <tr>
+                <td class="panel-td" style="padding-left: 0; width: 50%; vertical-align: middle;">
+                  <div style="font-size: 7pt; font-weight: bold; color: #22c55e; text-transform: uppercase;">Response Rate</div>
+                  <div style="display: flex; align-items: center; gap: 4px; margin-top: 2px;">
+                    <span style="font-size: 13pt; font-weight: 800; color: #22c55e; line-height: 1;">{engagement_score}%</span>
+                    {engagement_badge_html}
+                  </div>
+                </td>
+                <td class="panel-td" style="padding-right: 0; width: 50%; vertical-align: middle;">
+                  <div style="height: 25px; display: inline-block; width: 100%;">
+                    {line_chart_svg_str}
+                  </div>
+                </td>
+              </tr>
+            </table>
+          </div>
+        </td>
+        
+        <!-- 6. AI Insights & Recommendations -->
+        <td class="section-td" style="padding-right: 0;">
+          <div class="section-card" style="border-top: 3px solid #FF7A00; height: 75mm; margin-bottom: 8px;">
+            <div class="section-header">
+              <span class="section-title">🤖 6. AI Insights & Recommendations</span>
+            </div>
+            
+            <div class="inner-panel" style="background: rgba(212, 175, 55, 0.03); border: 1px solid rgba(212, 175, 55, 0.15); margin-bottom: 6px; padding: 6px;">
+              <div class="panel-title" style="color: #D4AF37; margin-bottom: 2px;">AI Session Summary</div>
+              <p class="ai-text" style="font-size: 7.5pt; line-height: 1.3; color: #FFFFFF;">{ai_summary_txt}</p>
+            </div>
+            
+            <div class="inner-panel" style="background: rgba(255, 122, 0, 0.03); border: 1px solid rgba(255, 122, 0, 0.15); padding: 6px;">
+              <div class="panel-title" style="color: #FF7A00; margin-bottom: 2px;">Recommendations</div>
+              {ai_recs_html}
+            </div>
+          </div>
+        </td>
+      </tr>
+    </table>
+
+    <!-- 7. Student Performance Gradebook -->
+    <div class="gradebook-card" style="border-top: 3px solid #D4AF37;">
+      <div class="section-header">
+        <span class="section-title">📊 7. Student Performance Marks Register</span>
+      </div>
+      <table class="gradebook-table">
+        <thead>
+          <tr>
+            <th style="width: 8%; text-align: center;">Rank</th>
+            <th style="width: 25%; text-align: left;">Student Name</th>
+            <th style="width: 15%; text-align: left;">Roll No</th>
+            <th style="width: 15%; text-align: left;">Class</th>
+            <th style="width: 10%; text-align: center;">Tasks</th>
+            <th style="width: 10%; text-align: center;">Tests</th>
+            <th style="width: 10%; text-align: center;">Coding</th>
+            <th style="width: 10%; text-align: center;">Att. %</th>
+            <th style="width: 12%; text-align: center;">Overall</th>
+          </tr>
+        </thead>
+        <tbody>
+          {gradebook_rows_html}
+        </tbody>
+      </table>
+    </div>
+
+    <table class="gen-box-table" style="margin-top: 10px;">
+      <tr>
+        <td class="gen-box-td" style="font-size: 9pt; font-weight: bold; color: #FFF; width: 30%;">{brand_name}</td>
+        <td class="gen-box-td" style="font-size: 7pt; color: #A0A0A0; text-transform: uppercase; width: 45%; text-align: center;">{brand_name} AI Analytics Engine</td>
+        <td class="gen-box-td" style="font-size: 7.5pt; color: #A0A0A0; width: 25%; text-align: right;">{datetime.now().strftime('%d %b %Y | %I:%M %p')}</td>
+      </tr>
+    </table>
+
+    <footer style="margin-top: 8px;">
+      <span class="footer-tagline">Empowering Educators with AI • Page 3 of 3</span>
+    </footer>
+  </div>
+  
 </body>
 </html>
 '''

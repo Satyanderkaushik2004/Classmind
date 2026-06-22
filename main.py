@@ -2981,8 +2981,42 @@ def health():
 
 @app.get("/debug-pdf")
 def debug_pdf():
-    from email_service import create_session_report_pdf
     import traceback
+    import time
+    import sys
+    
+    diagnostic = {}
+    
+    # 1. Check Python and platform
+    diagnostic["python_version"] = sys.version
+    diagnostic["platform"] = sys.platform
+    
+    # 2. Try importing weasyprint
+    try:
+        start_import = time.time()
+        import weasyprint
+        diagnostic["weasyprint_imported"] = True
+        diagnostic["import_time"] = time.time() - start_import
+    except Exception as e:
+        diagnostic["weasyprint_imported"] = False
+        diagnostic["import_error"] = str(e)
+        diagnostic["import_traceback"] = traceback.format_exc()
+        return diagnostic
+
+    # 3. Try basic compilation
+    try:
+        start_basic = time.time()
+        basic_pdf = weasyprint.HTML(string="<h1>Test PDF</h1>").write_pdf()
+        diagnostic["basic_compilation"] = "success"
+        diagnostic["basic_pdf_size"] = len(basic_pdf)
+        diagnostic["basic_time"] = time.time() - start_basic
+    except Exception as e:
+        diagnostic["basic_compilation"] = "failed"
+        diagnostic["basic_error"] = str(e)
+        diagnostic["basic_traceback"] = traceback.format_exc()
+
+    # 4. Try full compilation with a short timeout
+    from email_service import create_session_report_pdf
     dummy_report = {
         'session_code': '704303',
         'session_name': 'Test Session',
@@ -3003,11 +3037,19 @@ def debug_pdf():
             {'name': 'Group 1', 'accuracy': 90}
         ]
     }
+    
     try:
+        start_full = time.time()
         pdf_bytes = create_session_report_pdf(dummy_report)
-        return {"ok": True, "size": len(pdf_bytes)}
+        diagnostic["full_compilation"] = "success"
+        diagnostic["full_pdf_size"] = len(pdf_bytes)
+        diagnostic["full_time"] = time.time() - start_full
     except Exception as e:
-        return {"ok": False, "error": str(e), "traceback": traceback.format_exc()}
+        diagnostic["full_compilation"] = "failed"
+        diagnostic["full_error"] = str(e)
+        diagnostic["full_traceback"] = traceback.format_exc()
+        
+    return diagnostic
 
 
 class AdminLoginReq(BaseModel):

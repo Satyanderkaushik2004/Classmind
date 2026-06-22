@@ -2059,8 +2059,11 @@ from email_service import create_session_report_pdf
 async def get_google_auth_url(email: str, request: Request):
     if not google_drive_provider:
         raise HTTPException(400, "Google Drive OAuth client not configured on server. Please set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET in .env.")
-    # Dynamically build redirect_uri to match current origin
-    redirect_uri = f"{request.url.scheme}://{request.url.netloc}/api/auth/google/callback"
+    # Dynamically build redirect_uri to match current origin (handling SSL/https under reverse proxies like Render)
+    scheme = request.headers.get("x-forwarded-proto", request.url.scheme)
+    if "onrender.com" in request.url.netloc:
+        scheme = "https"
+    redirect_uri = f"{scheme}://{request.url.netloc}/api/auth/google/callback"
     url = google_drive_provider.get_auth_url(email, redirect_uri)
     return {"url": url}
 
@@ -2071,8 +2074,10 @@ async def google_oauth_callback(code: str, state: str, request: Request):
         raise HTTPException(400, "Google Drive provider not configured")
     
     teacher_email = state
-    redirect_uri = f"{request.url.netloc}".split(":")[0]  # simple helper for dynamic netloc
-    redirect_uri = f"{request.url.scheme}://{request.url.netloc}/api/auth/google/callback"
+    scheme = request.headers.get("x-forwarded-proto", request.url.scheme)
+    if "onrender.com" in request.url.netloc:
+        scheme = "https"
+    redirect_uri = f"{scheme}://{request.url.netloc}/api/auth/google/callback"
     try:
         creds = await google_drive_provider.exchange_code(code, redirect_uri)
         set_teacher_integration(teacher_email, creds, "google")
@@ -2228,14 +2233,31 @@ async def get_session_end_summary(code: str, request: Request):
 async def save_session_report_to_google_drive(code: str, request: Request):
     email = request.headers.get("X-User-Email")
     role = request.headers.get("X-User-Role")
+    
+    log.info("[GDRIVE_BACKUP] Save request by user: %s (role: %s) for session: %s", email, role, code)
+    
     if not email or role != "teacher":
+        log.warning("[GDRIVE_BACKUP] Rejection: Unauthorized user %s with role %s", email, role)
         raise HTTPException(401, "Unauthorized: Access restricted to teachers")
         
     if not google_drive_provider:
+        log.error("[GDRIVE_BACKUP] Rejection: google_drive_provider is not initialized")
         raise HTTPException(400, "Google Drive OAuth client not configured on server. Please set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET in .env.")
         
     creds = get_teacher_integration(email, "google")
+    log.info("[GDRIVE_BACKUP] Credentials lookup for %s. Found credentials: %s", email, bool(creds))
+    
+    if creds:
+        log.info(
+            "[GDRIVE_BACKUP] Credentials details: google_email=%s, access_token_exists=%s, refresh_token_exists=%s, expires_at=%s",
+            creds.get("google_email"),
+            bool(creds.get("access_token")),
+            bool(creds.get("refresh_token")),
+            creds.get("expires_at")
+        )
+        
     if not creds:
+        log.warning("[GDRIVE_BACKUP] Rejection: Google Drive credentials not connected for %s", email)
         raise HTTPException(400, "Google Drive not connected.")
         
     s = _S(code)

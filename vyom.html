@@ -6793,8 +6793,15 @@ function TeacherDashboard({
   const [emailSent, setEmailSent] = useState(false);
   const [emailSending, setEmailSending] = useState(false);
   const [gdriveSaving, setGdriveSaving] = useState(false);
+  const [gdriveConnected, setGdriveConnected] = useState(false);
   async function handleEndSession() {
     setShowEndModal(true);
+    try {
+      const res = await apiFetch(`/api/teacher/settings/google-drive`);
+      setGdriveConnected(res.connected);
+    } catch (_) {
+      setGdriveConnected(false);
+    }
   }
   async function downloadAndEnd() {
     try {
@@ -6857,6 +6864,41 @@ function TeacherDashboard({
       add('\u274c Google Drive Error: ' + e.message, 'error');
     } finally {
       setGdriveSaving(false);
+    }
+  }
+  async function connectGoogleDrive() {
+    try {
+      const user = JSON.parse(localStorage.getItem('cm_user') || '{}');
+      const email = user.email || '';
+      if (!email) {
+        add('Teacher email not found in profile', 'error');
+        return;
+      }
+      const res = await apiFetch(`/api/auth/google/url?email=${encodeURIComponent(email)}`);
+      if (res.url) {
+        const width = 600, height = 650;
+        const left = (window.innerWidth - width) / 2;
+        const top = (window.innerHeight - height) / 2;
+        const popup = window.open(res.url, 'Connect Google Drive', `width=${width},height=${height},top=${top},left=${left}`);
+        
+        const timer = setInterval(async () => {
+          if (popup.closed) {
+            clearInterval(timer);
+            // Verify connection status
+            try {
+              const status = await apiFetch('/api/teacher/settings/google-drive');
+              if (status.connected) {
+                setGdriveConnected(true);
+                add('\ud83c\udf89 Google Drive connected successfully!', 'success');
+              }
+            } catch (_) {}
+          }
+        }, 2000);
+      } else {
+        add('Failed to get connection URL', 'error');
+      }
+    } catch (e) {
+      add('\u274c Error connecting Google Drive: ' + e.message, 'error');
     }
   }
   // ── Session countdown timer ────────────────────────────────────────
@@ -7257,7 +7299,9 @@ function TeacherDashboard({
           React.createElement("input", { value: emailInput, onChange: e => setEmailInput(e.target.value), placeholder: "Teacher email address\u2026", style: { flex: 1 } }),
           React.createElement("button", { className: "btn btn-ghost", onClick: sendEmailAndEnd, disabled: !emailInput.trim() || emailSending }, emailSending ? '\u23F3 Sending\u2026' : '\uD83D\uDCE7 Send to Teacher')
         ),
-        React.createElement("button", { className: "btn btn-ghost", style: { justifyContent: 'center', gap: 8 }, onClick: saveToDriveAndEnd, disabled: gdriveSaving }, gdriveSaving ? '\u23F3 Saving\u2026' : '\uD83D\uDCE7\uD83D\uDCA1 Save to Drive'),
+        gdriveConnected ?
+          React.createElement("button", { className: "btn btn-ghost", style: { justifyContent: 'center', gap: 8 }, onClick: saveToDriveAndEnd, disabled: gdriveSaving }, gdriveSaving ? '\u23F3 Saving\u2026' : '\uD83D\uDCE7\uD83D\uDCA1 Save to Drive') :
+          React.createElement("button", { className: "btn btn-ghost", style: { justifyContent: 'center', gap: 8, color: '#D4AF37', borderColor: 'rgba(212,175,55,0.3)' }, onClick: connectGoogleDrive }, '🔗 Connect Google Drive'),
         React.createElement("button", { className: "btn btn-ghost", style: { justifyContent: 'center' }, onClick: () => { setShowEndModal(false); sessionControl('end'); } }, "Skip \u2192 End Session"),
         React.createElement("button", { className: "btn btn-ghost btn-sm", style: { justifyContent: 'center', color: 'var(--text3)' }, onClick: () => setShowEndModal(false) }, "\u2715 Cancel")
       )
@@ -27190,6 +27234,76 @@ function ProfileDrawer({ open, onClose, userName, role, sessionCode, updateUserP
   const [editName, setEditName] = React.useState(userName || '');
   const [editRole, setEditRole] = React.useState(role === 'both' ? 'teacher' : (role || 'teacher'));
   const { add } = React.useContext(AppCtx);
+  const [gdriveConnectedProfile, setGdriveConnectedProfile] = React.useState(false);
+  const [gdriveEmailProfile, setGdriveEmailProfile] = React.useState('');
+  const [gdriveLoading, setGdriveLoading] = React.useState(false);
+
+  async function fetchGDriveStatus() {
+    try {
+      const user = JSON.parse(localStorage.getItem('cm_user') || '{}');
+      const email = user.email;
+      if (!email || (role !== 'teacher' && role !== 'both')) return;
+      setGdriveLoading(true);
+      const data = await apiFetch(`/api/teacher/settings/google-drive`);
+      setGdriveConnectedProfile(data.connected);
+      setGdriveEmailProfile(data.google_email || '');
+    } catch (err) {
+      console.error("[Settings] Failed to fetch GDrive status:", err);
+    } finally {
+      setGdriveLoading(false);
+    }
+  }
+
+  React.useEffect(() => {
+    if (open && tab === 'settings') {
+      fetchGDriveStatus();
+    }
+  }, [open, tab]);
+
+  async function connectGoogleDriveProfile() {
+    try {
+      const user = JSON.parse(localStorage.getItem('cm_user') || '{}');
+      const email = user.email || '';
+      if (!email) {
+        add('Teacher email not found in profile', 'error');
+        return;
+      }
+      const res = await apiFetch(`/api/auth/google/url?email=${encodeURIComponent(email)}`);
+      if (res.url) {
+        const width = 600, height = 650;
+        const left = (window.innerWidth - width) / 2;
+        const top = (window.innerHeight - height) / 2;
+        const popup = window.open(res.url, 'Connect Google Drive', `width=${width},height=${height},top=${top},left=${left}`);
+        
+        const timer = setInterval(async () => {
+          if (popup.closed) {
+            clearInterval(timer);
+            fetchGDriveStatus();
+            add('Google Drive connection popup closed', 'info');
+          }
+        }, 2000);
+      } else {
+        add('Failed to get connection URL', 'error');
+      }
+    } catch (e) {
+      add('Error connecting Google Drive: ' + e.message, 'error');
+    }
+  }
+
+  async function disconnectGoogleDriveProfile() {
+    try {
+      setGdriveLoading(true);
+      await apiFetch(`/api/teacher/settings/google-drive`, { method: 'DELETE' });
+      setGdriveConnectedProfile(false);
+      setGdriveEmailProfile('');
+      add('Google Drive disconnected successfully!', 'success');
+    } catch (e) {
+      add('Error disconnecting Google Drive: ' + e.message, 'error');
+    } finally {
+      setGdriveLoading(false);
+    }
+  }
+
   // Expose tab setter so the guided tour can jump to the API tab
   React.useEffect(function() {
     window.__vyomSetProfileTab = setTab;
@@ -28230,6 +28344,17 @@ function ProfileDrawer({ open, onClose, userName, role, sessionCode, updateUserP
                   React.createElement("button", { className: "btn btn-primary btn-sm", style: { flex: 1, justifyContent: 'center' }, onClick: handleSaveApiKey }, "💾 Save API Key"),
                   hasSavedKey && React.createElement("button", { className: "btn btn-ghost btn-sm", style: { flex: 1, justifyContent: 'center' }, onClick: () => setIsEditingKey(false) }, "Cancel")
                 )
+              )
+            ),
+            (isTeacher || isBoth) && React.createElement("div", { className: "prof-settings-section", style: { borderTop: '1px solid var(--border)', paddingTop: 16 } },
+              React.createElement("div", { className: "prof-settings-label" }, "☁️ Google Drive Backup"),
+              gdriveLoading ? React.createElement("div", { style: { fontSize: '0.8rem', color: 'var(--text3)', padding: '4px 0' } }, "Loading settings...") :
+              gdriveConnectedProfile ? React.createElement(React.Fragment, null,
+                React.createElement("div", { style: { fontSize: '0.82rem', color: '#10b981', fontWeight: 600, marginBottom: 8 } }, `Connected: ${gdriveEmailProfile || 'Active'}`),
+                React.createElement("button", { className: "btn btn-ghost btn-sm w-full", style: { color: 'var(--red)', borderColor: 'rgba(239,68,68,0.2)', justifyContent: 'center' }, onClick: disconnectGoogleDriveProfile }, "🗑️ Disconnect Google Drive")
+              ) : React.createElement(React.Fragment, null,
+                React.createElement("p", { style: { fontSize: '0.72rem', color: 'var(--text3)', marginBottom: 8 } }, "Link Google Drive to save session reports automatically."),
+                React.createElement("button", { className: "btn btn-primary btn-sm w-full", style: { justifyContent: 'center' }, onClick: connectGoogleDriveProfile }, "🔗 Connect Google Drive")
               )
             )
           ),

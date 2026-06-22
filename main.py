@@ -2980,7 +2980,7 @@ def health():
 
 
 @app.get("/debug-pdf")
-def debug_pdf():
+def debug_pdf(full: bool = False):
     import traceback
     import time
     import sys
@@ -3015,7 +3015,11 @@ def debug_pdf():
         diagnostic["basic_error"] = str(e)
         diagnostic["basic_traceback"] = traceback.format_exc()
 
-    # 4. Try full compilation with a short timeout
+    # 4. Try full compilation if requested
+    if not full:
+        diagnostic["full_compilation"] = "skipped"
+        return diagnostic
+
     from email_service import create_session_report_pdf
     dummy_report = {
         'session_code': '704303',

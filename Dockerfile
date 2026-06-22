@@ -20,6 +20,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     fontconfig \
     && rm -rf /var/lib/apt/lists/*
 
+# Pre-generate font cache to prevent slow runtime Pango/Fontconfig scans
+RUN fc-cache -fv
+
 
 
 # Install python dependencies

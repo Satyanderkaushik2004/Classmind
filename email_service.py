@@ -355,8 +355,11 @@ def generate_email_html(session_data: dict, teacher_name: str) -> str:
 
 # ── PDF Generation Helper ──
 
+weasyprint_font_config = None
+
 def create_session_report_pdf(report: dict) -> bytes:
     """Generate a highly polished, professional PDF report matching the dashboard's layout using WeasyPrint."""
+    global weasyprint_font_config
     import os
     import sys
     import math
@@ -376,6 +379,12 @@ def create_session_report_pdf(report: dict) -> bytes:
                     os.environ["PATH"] = path + os.path.pathsep + os.environ["PATH"]
 
     import weasyprint
+    if weasyprint_font_config is None:
+        try:
+            from weasyprint.text.fonts import FontConfiguration
+            weasyprint_font_config = FontConfiguration()
+        except Exception:
+            pass
 
     brand_name = report.get("brand_name", "ClassMind")
     teacher_name = report.get("teacher_name", "Dr. Rajesh Kumar")
@@ -1819,7 +1828,7 @@ def create_session_report_pdf(report: dict) -> bytes:
 
     # Compile HTML to PDF using WeasyPrint with a 45.0s thread timeout
     def run_weasyprint():
-        return weasyprint.HTML(string=html_content).write_pdf()
+        return weasyprint.HTML(string=html_content).write_pdf(font_config=weasyprint_font_config)
 
     import threading
     import queue

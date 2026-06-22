@@ -1,0 +1,19 @@
+.venv/
+__pycache__/
+*.pyc
+.env
+data/
+.vscode/
+.idea/
+*.log
+node_modules/
+
+# Duplicate directories
+Classmind-main/
+
+# Large installers and binary/temp files
+msys2-base.tar.xz*
+msys2-installer.exe
+InstallationLog.txt
+test_report.pdf
+sample_report.pdf

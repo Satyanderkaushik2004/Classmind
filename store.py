@@ -525,3 +525,74 @@ def delete_teacher_integration(email: str, provider: str = "google") -> None:
             del _teacher_integrations[email_clean]
         save_teacher_integrations()
 
+
+# ── Teacher Notification Preferences storage helper ────────────────
+TEACHER_NOTIFICATIONS_FILE = Path("data/teacher_notification_prefs.json")
+_teacher_notification_prefs: Dict[str, dict] = {}
+
+
+def load_teacher_notification_prefs() -> None:
+    global _teacher_notification_prefs
+    try:
+        if TEACHER_NOTIFICATIONS_FILE.exists():
+            with open(TEACHER_NOTIFICATIONS_FILE, "r", encoding="utf-8") as f:
+                _teacher_notification_prefs = json.load(f)
+        else:
+            _teacher_notification_prefs = {}
+    except Exception as e:
+        log.warning("Failed to load teacher notification preferences: %s", e)
+        _teacher_notification_prefs = {}
+
+
+def save_teacher_notification_prefs() -> None:
+    try:
+        TEACHER_NOTIFICATIONS_FILE.parent.mkdir(parents=True, exist_ok=True)
+        with open(TEACHER_NOTIFICATIONS_FILE, "w", encoding="utf-8") as f:
+            json.dump(_teacher_notification_prefs, f, indent=2, ensure_ascii=False)
+    except Exception as e:
+        log.warning("Failed to save teacher notification preferences: %s", e)
+
+
+def get_teacher_notification_prefs(email: str) -> dict:
+    if not email:
+        return {}
+    email_clean = email.strip().lower()
+    return _teacher_notification_prefs.get(email_clean, {
+        "global_enabled": True,
+        "categories": {
+            "chat": {
+                "enabled": True,
+                "types": {
+                    "new_doubts": True,
+                    "student_messages": True,
+                    "chat_uploads": True
+                }
+            },
+            "classroom": {
+                "enabled": True,
+                "types": {
+                    "waiting_room": True,
+                    "attendance_updates": True,
+                    "session_events": True
+                }
+            },
+            "tasks": {
+                "enabled": True,
+                "types": {
+                    "deadlines": True,
+                    "evaluations": True,
+                    "task_created": True
+                }
+            }
+        }
+    })
+
+
+def set_teacher_notification_prefs(email: str, prefs: dict) -> None:
+    if not email:
+        return
+    email_clean = email.strip().lower()
+    _teacher_notification_prefs[email_clean] = prefs
+    save_teacher_notification_prefs()
+
+

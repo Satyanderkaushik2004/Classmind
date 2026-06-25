@@ -1,0 +1,4940 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>About Us — VYOM — Virtualized Youth Optimization &amp; Mentorship</title>
+  <meta name="description" content="Discover the story and technology behind VYOM, a next-generation real-time classroom optimization and student mentorship platform." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700;800;900&family=Playfair+Display:ital,wght@1,400&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ─── CSS RESET & BASE ─────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --purple-light:   #c084fc;
+      --purple-mid:     #a855f7;
+      --purple-deep:    #7c3aed;
+      --purple-glow:    rgba(168, 85, 247, 0.35);
+      --purple-glow-sm: rgba(168, 85, 247, 0.18);
+      --white:          #ffffff;
+      --off-white:      #e2d9f3;
+      --text-muted:     rgba(226,217,243,0.65);
+      --glass-bg:       rgba(10, 6, 22, 0.55);
+      --glass-border:   rgba(168, 85, 247, 0.22);
+      --card-bg:        rgba(15, 8, 35, 0.60);
+      --font-body:      'Inter', system-ui, sans-serif;
+      --font-display:   'Outfit', system-ui, sans-serif;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: var(--font-body);
+      background: #03010d;
+      color: var(--white);
+      overflow-x: hidden;
+    }
+
+    /* ─── FIXED MOON BACKGROUND ────────────────────────────────────────── */
+    #moon-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      overflow: hidden;
+    }
+
+    .about-bg-video {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      z-index: 0;
+      opacity: 0;
+      transition: opacity 1.2s ease;
+    }
+
+    .about-bg-video.ready {
+      opacity: 1;
+    }
+
+    .about-bg-overlay {
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      background: linear-gradient(
+        to bottom,
+        rgba(5, 5, 15, 0.45),
+        rgba(5, 5, 15, 0.65)
+      );
+      pointer-events: none;
+    }
+
+    /* ─── FLOATING PARTICLES ───────────────────────────────────────────── */
+    #particles-canvas {
+      position: fixed;
+      inset: 0;
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    /* ─── PAGE WRAPPER ─────────────────────────────────────────────────── */
+    .page-content {
+      position: relative;
+      z-index: 2;
+    }
+    .page-content::before {
+      display: none;
+    }
+
+    /* Volumetric Background Glow Orbs */
+    .bg-glow-orb {
+      position: absolute;
+      width: clamp(400px, 50vw, 800px);
+      height: clamp(400px, 50vw, 800px);
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 1;
+      filter: blur(120px);
+      opacity: 0.22;
+      mix-blend-mode: screen;
+    }
+    .orb-1 {
+      top: 5%;
+      left: -10%;
+      background: radial-gradient(circle, rgba(168, 85, 247, 0.45) 0%, transparent 70%);
+    }
+    .orb-2 {
+      top: 30%;
+      right: -10%;
+      background: radial-gradient(circle, rgba(96, 165, 250, 0.40) 0%, transparent 70%);
+    }
+    .orb-3 {
+      top: 55%;
+      left: -10%;
+      background: radial-gradient(circle, rgba(124, 58, 237, 0.40) 0%, transparent 70%);
+    }
+    .orb-4 {
+      top: 78%;
+      right: -5%;
+      background: radial-gradient(circle, rgba(168, 85, 247, 0.40) 0%, transparent 70%);
+    }
+
+    /* Subtle Neon Divider Lines */
+    .section-divider {
+      width: 100%;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(168, 85, 247, 0.16), transparent);
+      margin: 0;
+      position: relative;
+      z-index: 2;
+    }
+
+    /* ─── SHARED UTILITIES ─────────────────────────────────────────────── */
+    .section-container {
+      width: 100%;
+      padding: 0 60px;
+    }
+
+    .fade-up {
+      opacity: 0;
+      transform: translateY(50px) scale(0.96) rotateX(8deg);
+      transform-origin: top center;
+      perspective: 1000px;
+      transition: opacity 0.95s cubic-bezier(0.16, 1, 0.3, 1), transform 0.95s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .fade-up.visible {
+      opacity: 1;
+      transform: translateY(0) scale(1) rotateX(0deg);
+    }
+
+    .fade-up-delay-1 { transition-delay: 0.08s; }
+    .fade-up-delay-2 { transition-delay: 0.16s; }
+    .fade-up-delay-3 { transition-delay: 0.24s; }
+    .fade-up-delay-4 { transition-delay: 0.32s; }
+    .fade-up-delay-5 { transition-delay: 0.40s; }
+    .fade-up-delay-6 { transition-delay: 0.48s; }
+
+    .glass-card {
+      background: var(--card-bg);
+      border: 1px solid var(--glass-border);
+      border-radius: 20px;
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      transition: transform 0.35s ease, box-shadow 0.35s ease, border-color 0.35s ease;
+    }
+    .glass-card {
+      transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.6s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.6s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    }
+    .glass-card:hover {
+      transform: translateY(-8px) scale(1.015);
+      box-shadow: 0 32px 70px rgba(168, 85, 247, 0.28);
+      border-color: rgba(168, 85, 247, 0.55);
+    }
+
+    .purple-label {
+      display: inline-block;
+      font-family: var(--font-display);
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--purple-light);
+      background: rgba(168,85,247,0.12);
+      border: 1px solid rgba(168,85,247,0.30);
+      border-radius: 100px;
+      padding: 6px 18px;
+      margin-bottom: 20px;
+    }
+
+    .section-headline {
+      font-family: var(--font-display);
+      font-weight: 800;
+      line-height: 1.15;
+      color: var(--white);
+    }
+
+    .gradient-text {
+      background: linear-gradient(135deg, #e9d5ff 0%, #a855f7 25%, #c084fc 50%, #e9d5ff 75%, #a855f7 100%);
+      background-size: 200% auto;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      animation: textGradientShimmer 8s linear infinite;
+    }
+    @keyframes textGradientShimmer {
+      0% { background-position: 0% center; }
+      100% { background-position: -200% center; }
+    }
+
+    .divider {
+      width: 60px;
+      height: 3px;
+      background: linear-gradient(90deg, var(--purple-mid), transparent);
+      border-radius: 2px;
+      margin: 20px 0;
+    }
+
+    /* ─── NAV (minimal) ────────────────────────────────────────────────── */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      padding: 18px 40px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(3,1,13,0.65);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid rgba(168,85,247,0.10);
+    }
+    .nav-logo {
+      font-family: var(--font-display);
+      font-size: 1.55rem;
+      font-weight: 900;
+      letter-spacing: -0.02em;
+      background: linear-gradient(135deg, #fff 0%, var(--purple-light) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .nav-badge {
+      font-family: var(--font-body);
+      font-size: 0.72rem;
+      color: var(--purple-light);
+      opacity: 0.8;
+      letter-spacing: 0.1em;
+    }
+
+    /* ─── HERO SECTION ─────────────────────────────────────────────────── */
+    #hero {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: left;
+      padding: 120px 60px 80px;
+      position: relative;
+    }
+
+    #hero .hero-eyebrow {
+      font-family: var(--font-display);
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--purple-light);
+      margin-bottom: 28px;
+      opacity: 0.9;
+    }
+
+    #hero h1 {
+      font-family: var(--font-display);
+      font-size: clamp(2.0rem, 4.8vw, 3.8rem);
+      font-weight: 900;
+      line-height: 1.15;
+      letter-spacing: -0.03em;
+      max-width: 85vw;
+      margin-bottom: 30px;
+    }
+
+    #hero p {
+      font-size: clamp(1rem, 2.2vw, 1.22rem);
+      color: var(--text-muted);
+      max-width: 70vw;
+      line-height: 1.75;
+      margin-bottom: 60px;
+    }
+
+    .hero-metrics {
+      display: flex;
+      gap: 50px;
+      flex-wrap: wrap;
+      justify-content: flex-start;
+    }
+    .hero-metric {
+      text-align: center;
+    }
+    .hero-metric .value {
+      font-family: var(--font-display);
+      font-size: 2.4rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, #fff 0%, var(--purple-light) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .hero-metric .label {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-top: 4px;
+    }
+    .hero-metric-divider {
+      width: 1px;
+      background: rgba(168,85,247,0.3);
+      align-self: center;
+      height: 40px;
+    }
+
+    /* ─── STATS STRIP ────────────────────────────────────────────────── */
+    #stats-strip {
+      padding: 40px 0;
+    }
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 2px;
+      border: 1px solid var(--glass-border);
+      border-radius: 20px;
+      overflow: hidden;
+      backdrop-filter: blur(18px);
+      background: rgba(5,3,20,0.50);
+    }
+    .stat-cell {
+      padding: 36px 30px;
+      text-align: center;
+      border-right: 1px solid var(--glass-border);
+      position: relative;
+      transition: background 0.3s;
+    }
+    .stat-cell:last-child { border-right: none; }
+    .stat-cell:hover { background: rgba(168,85,247,0.07); }
+    .stat-cell .s-value {
+      font-family: var(--font-display);
+      font-size: 2.2rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, #fff 30%, var(--purple-light));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .stat-cell .s-label {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-top: 8px;
+    }
+
+    /* ─── FOUNDER SECTION (redesigned) ───────────────────────────────── */
+    #founder, #cofounder-section {
+      padding: 40px 24px 30px;
+    }
+
+    /* Slide-up keyframe for founder photo */
+    @keyframes founderSlideUp {
+      0%   { opacity: 0; transform: translateY(110px); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes founderGlow {
+      0%   { opacity: 0.55; transform: scale(0.96); }
+      100% { opacity: 0.90; transform: scale(1.05); }
+    }
+    /* Character-by-character name reveal */
+    @keyframes charReveal {
+      0%   { opacity: 0; transform: translateY(14px) blur(6px); filter: blur(6px); }
+      100% { opacity: 1; transform: translateY(0); filter: blur(0px); }
+    }
+    .fv2-name .char {
+      display: inline-block;
+      opacity: 0;
+      animation: charReveal 0.45s cubic-bezier(0.22,0.68,0,1.2) both;
+    }
+    .fv2-name .char-space { display: inline-block; width: 0.3em; }
+    /* Line break in name handled by keeping br tag */
+
+    /* ── Outer wrapper ── */
+    .fv2-section {
+      position: relative;
+    }
+    .fv2-eyebrow {
+      font-family: var(--font-display);
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--purple-light);
+      margin-bottom: 18px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .fv2-eyebrow::before {
+      content: '';
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--purple-mid);
+      box-shadow: 0 0 10px var(--purple-mid);
+    }
+
+    /* ════════════════════════════════════════════════════════
+       FOUNDER HERO — CINEMATIC SECTION
+    ════════════════════════════════════════════════════════ */
+
+    /* ── 3-col grid ── */
+    .fv2-layout {
+      display: grid;
+      grid-template-columns: 390px 1fr 480px;
+      gap: 0;
+      align-items: stretch;
+      min-height: 780px;
+      position: relative;
+    }
+
+    /* ── LEFT INFO PANEL ── */
+    .fv2-left {
+      padding: 40px 44px 40px 0;
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      z-index: 3;
+      align-self: center;
+    }
+    .fv2-name {
+      font-family: var(--font-display);
+      font-size: clamp(2.0rem, 3.8vw, 3.2rem);
+      font-weight: 900;
+      letter-spacing: -0.03em;
+      line-height: 1.1;
+      margin-bottom: 14px;
+      white-space: nowrap;
+    }
+    .fv2-subtitle {
+      font-family: var(--font-display);
+      font-size: 1.08rem;
+      font-weight: 500;
+      color: var(--purple-light);
+      letter-spacing: 0.03em;
+      margin-bottom: 18px;
+    }
+    .fv2-rule {
+      width: 52px; height: 2px;
+      background: linear-gradient(90deg, var(--purple-mid), transparent);
+      border-radius: 2px;
+      margin-bottom: 22px;
+    }
+    .fv2-desc {
+      font-size: 1.08rem;
+      color: rgba(226,217,243,0.82);
+      line-height: 1.85;
+      margin-bottom: 32px;
+      max-width: 340px;
+    }
+
+    /* ── PREMIUM ACHIEVEMENT CARDS ── */
+    @keyframes achievementIn {
+      0%   { opacity: 0; transform: translateY(28px) scale(0.94); }
+      100% { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    @keyframes cardBorderGlow {
+      0%,100% { border-color: rgba(168,85,247,0.28); box-shadow: 0 0 0 rgba(168,85,247,0); }
+      50%     { border-color: rgba(168,85,247,0.50); box-shadow: 0 0 20px rgba(168,85,247,0.12); }
+    }
+    .fv2-stats {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 28px;
+      flex-wrap: wrap;
+    }
+    .fv2-stat {
+      padding: 18px 20px;
+      border-radius: 18px;
+      background: rgba(12,6,32,0.75);
+      border: 1px solid rgba(168,85,247,0.28);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      text-align: center;
+      min-width: 96px;
+      position: relative;
+      overflow: hidden;
+      cursor: default;
+      animation: achievementIn 0.6s cubic-bezier(0.22,0.68,0,1.2) both;
+      transition: transform 0.35s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.35s ease, border-color 0.35s ease;
+    }
+    .fv2-stat:nth-child(1) { animation-delay: 0.6s; }
+    .fv2-stat:nth-child(2) { animation-delay: 0.75s; }
+    .fv2-stat:nth-child(3) { animation-delay: 0.9s; }
+    /* Gradient border shimmer */
+    .fv2-stat::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 18px;
+      padding: 1px;
+      background: linear-gradient(135deg, rgba(168,85,247,0.50) 0%, rgba(124,58,237,0.20) 50%, rgba(192,132,252,0.40) 100%);
+      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+      opacity: 0;
+      transition: opacity 0.35s ease;
+      pointer-events: none;
+    }
+    .fv2-stat::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 18px;
+      background: radial-gradient(ellipse at 50% 0%, rgba(168,85,247,0.18) 0%, transparent 70%);
+      opacity: 0;
+      transition: opacity 0.35s ease;
+      pointer-events: none;
+    }
+    .fv2-stat:hover {
+      transform: translateY(-8px) scale(1.04);
+      border-color: rgba(168,85,247,0.60);
+      box-shadow: 0 16px 40px rgba(168,85,247,0.28), 0 4px 16px rgba(0,0,0,0.4);
+    }
+    .fv2-stat:hover::before,
+    .fv2-stat:hover::after { opacity: 1; }
+    .fv2-stat .fvs-icon {
+      font-size: 1.3rem;
+      display: block;
+      margin-bottom: 6px;
+      transition: transform 0.35s cubic-bezier(0.34,1.56,0.64,1);
+    }
+    .fv2-stat:hover .fvs-icon { transform: scale(1.2); }
+    .fv2-stat .fvs-val {
+      font-family: var(--font-display);
+      font-size: 1.55rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, #fff, var(--purple-light));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      display: block;
+    }
+    .fv2-stat .fvs-label {
+      font-size: 0.68rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-top: 3px;
+      display: block;
+    }
+
+    /* quote block */
+    .fv2-quote-block {
+      padding: 20px 24px;
+      border-radius: 18px;
+      background: rgba(10,5,30,0.70);
+      border: 1px solid rgba(168,85,247,0.20);
+      backdrop-filter: blur(16px);
+      margin-bottom: 28px;
+      max-width: 340px;
+      transition: border-color 0.3s, box-shadow 0.3s;
+    }
+    .fv2-quote-block:hover {
+      border-color: rgba(168,85,247,0.38);
+      box-shadow: 0 8px 28px rgba(168,85,247,0.12);
+    }
+    .fv2-quote-block .fvq-mark {
+      font-size: 1.8rem;
+      line-height: 1;
+      color: var(--purple-mid);
+      margin-bottom: 10px;
+      display: block;
+    }
+    .fv2-quote-block p {
+      font-style: italic;
+      font-size: 0.96rem;
+      color: rgba(226,217,243,0.75);
+      line-height: 1.75;
+    }
+
+    /* social icons */
+    @keyframes socialPulse {
+      0%,100% { box-shadow: 0 0 0 0 rgba(168,85,247,0); }
+      50%      { box-shadow: 0 0 0 5px rgba(168,85,247,0.14); }
+    }
+    .fv2-socials { display: flex; gap: 14px; }
+    .fv2-social-btn {
+      width: 52px; height: 52px;
+      border-radius: 14px;
+      border: 1px solid rgba(168,85,247,0.32);
+      background: rgba(15,8,40,0.75);
+      backdrop-filter: blur(12px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.1rem;
+      color: var(--off-white);
+      text-decoration: none;
+      transition: all 0.32s cubic-bezier(0.34,1.56,0.64,1);
+    }
+    .fv2-social-btn:hover {
+      background: rgba(168,85,247,0.22);
+      border-color: rgba(168,85,247,0.70);
+      box-shadow: 0 8px 28px rgba(168,85,247,0.35);
+      transform: translateY(-5px) scale(1.10);
+      animation: socialPulse 1.4s ease-in-out infinite;
+    }
+
+    /* ════ SPEECH BUBBLE ════════════════════════════════════ */
+    @keyframes bubbleFloat {
+      0%,100% { transform: translateY(0px); }
+      50%      { transform: translateY(-10px); }
+    }
+    @keyframes typingDot {
+      0%,80%,100% { transform: scale(0.55); opacity: 0.25; }
+      40%          { transform: scale(1);    opacity: 1; }
+    }
+    @keyframes sbSparkle {
+      0%,100% { opacity: 0; transform: scale(0) rotate(0deg); }
+      50%     { opacity: 1; transform: scale(1) rotate(180deg); }
+    }
+    @keyframes bubbleCinematicIn {
+      0%   { opacity: 0; transform: translateX(55px) scale(0.88); filter: blur(6px); }
+      55%  { opacity: 0.95; filter: blur(0px); }
+      100% { opacity: 1; transform: translateX(0) scale(1); filter: blur(0px); }
+    }
+    @keyframes typewriterCursor {
+      0%,100% { opacity: 1; }
+      50%     { opacity: 0; }
+    }
+    @keyframes sbEdgePulse {
+      0%,100% { box-shadow: 0 0 0 1px rgba(168,85,247,0.20), 0 16px 55px rgba(0,0,0,0.60), 0 0 55px rgba(168,85,247,0.20), 0 0 110px rgba(124,58,237,0.12), inset 0 1px 0 rgba(255,255,255,0.08), inset 0 0 26px rgba(168,85,247,0.05); border-color: rgba(168,85,247,0.58); }
+      50%     { box-shadow: 0 0 0 1px rgba(168,85,247,0.32), 0 16px 55px rgba(0,0,0,0.60), 0 0 78px rgba(168,85,247,0.32), 0 0 155px rgba(124,58,237,0.18), inset 0 1px 0 rgba(255,255,255,0.12), inset 0 0 34px rgba(168,85,247,0.08); border-color: rgba(192,100,255,0.75); }
+    }
+
+    .speech-bubble-wrap {
+      position: relative;
+      width: 100%;
+      margin-bottom: 32px;
+      animation: bubbleCinematicIn 1.2s cubic-bezier(0.22,0.68,0,1.0) 1.6s both;
+    }
+    .speech-bubble {
+      position: relative;
+      width: 100%;
+      padding: 32px 36px 30px;
+      border-radius: 30px;
+      background: rgba(4, 2, 16, 0.82);
+      backdrop-filter: blur(40px);
+      -webkit-backdrop-filter: blur(40px);
+      border: 1px solid rgba(168,85,247,0.58);
+      animation: bubbleFloat 5.5s ease-in-out 2.8s infinite, sbEdgePulse 4s ease-in-out infinite;
+      transition: box-shadow 0.4s ease;
+    }
+    .speech-bubble:hover {
+      box-shadow:
+        0 0 0 1px rgba(168,85,247,0.38),
+        0 16px 55px rgba(0,0,0,0.65),
+        0 0 95px rgba(168,85,247,0.36),
+        0 0 175px rgba(124,58,237,0.20),
+        inset 0 1px 0 rgba(255,255,255,0.12),
+        inset 0 0 38px rgba(168,85,247,0.08) !important;
+    }
+    .speech-bubble::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 30px;
+      background: linear-gradient(135deg,rgba(168,85,247,0.20) 0%,transparent 45%,rgba(124,58,237,0.12) 100%);
+      pointer-events: none;
+    }
+    /* tail → LEFT toward founder */
+    .speech-bubble::after {
+      content: '';
+      position: absolute;
+      top: 48px;
+      left: -24px;
+      width: 0; height: 0;
+      border-top:    18px solid transparent;
+      border-bottom: 18px solid transparent;
+      border-right:  24px solid rgba(168,85,247,0.58);
+      filter: drop-shadow(-6px 0 18px rgba(168,85,247,0.65));
+    }
+    .sb-quote-mark {
+      font-size: 2.8rem;
+      line-height: 0.8;
+      color: var(--purple-light);
+      display: block;
+      margin-bottom: 16px;
+      opacity: 0.88;
+    }
+    .sb-text {
+      font-family: var(--font-display);
+      font-size: 1.25rem;
+      font-weight: 500;
+      color: rgba(240,232,255,0.96);
+      line-height: 1.72;
+      letter-spacing: -0.01em;
+      min-height: 5.5em;
+    }
+    .sb-text strong {
+      font-weight: 800;
+      background: linear-gradient(90deg,#e9d5ff 0%,#a855f7 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .sb-cursor {
+      display: inline-block;
+      width: 2px;
+      height: 1.1em;
+      background: var(--purple-light);
+      vertical-align: middle;
+      margin-left: 2px;
+      border-radius: 1px;
+      animation: typewriterCursor 0.75s step-end infinite;
+    }
+    .sb-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 20px;
+      padding-top: 14px;
+      border-top: 1px solid rgba(168,85,247,0.20);
+    }
+    .sb-typing { display: flex; gap: 6px; align-items: center; }
+    .sb-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: var(--purple-light);
+      animation: typingDot 1.5s ease-in-out infinite;
+    }
+    .sb-dot:nth-child(2) { animation-delay: 0.25s; }
+    .sb-dot:nth-child(3) { animation-delay: 0.5s; }
+    .sb-sparkles { position:absolute;inset:0;pointer-events:none;border-radius:30px;overflow:visible; }
+    .sb-spark {
+      position:absolute;border-radius:50%;
+      background:var(--purple-light);
+      animation:sbSparkle 3.2s ease-in-out infinite;
+    }
+    .sb-spark:nth-child(1){width:5px;height:5px;top:8%;left:6%;animation-delay:0s;}
+    .sb-spark:nth-child(2){width:3px;height:3px;top:14%;right:9%;animation-delay:0.7s;}
+    .sb-spark:nth-child(3){width:4px;height:4px;bottom:14%;left:22%;animation-delay:1.2s;background:#fff;}
+    .sb-spark:nth-child(4){width:3px;height:3px;top:45%;right:5%;animation-delay:1.9s;}
+    .sb-spark:nth-child(5){width:4px;height:4px;bottom:22%;right:20%;animation-delay:1.0s;background:#e9d5ff;}
+    .sb-author {
+      font-family: var(--font-display);
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--purple-light);
+      opacity: 0.85;
+    }
+
+    /* old speech-bubble-wrap/speech-bubble blocks replaced above */
+
+    /* ════════════════════════════════════════════════════════
+       PREMIUM COSMIC NEBULA — 3-LAYER DEEP SPACE ATMOSPHERE
+    ════════════════════════════════════════════════════════ */
+
+    /* ── Nebula Animations ── */
+    @keyframes nebulaFloat1 {
+      0%,100% { transform: translate(0,0) scale(1) rotate(0deg);       opacity: 0.75; }
+      25%     { transform: translate(-18px,12px) scale(1.06) rotate(8deg); opacity: 0.90; }
+      65%     { transform: translate(14px,-10px) scale(0.96) rotate(18deg); opacity: 0.60; }
+    }
+    @keyframes nebulaFloat2 {
+      0%,100% { transform: translate(0,0) scale(1);       opacity: 0.60; }
+      40%     { transform: translate(22px,-18px) scale(1.10); opacity: 0.82; }
+      75%     { transform: translate(-14px,22px) scale(0.92); opacity: 0.48; }
+    }
+    @keyframes nebulaFloat3 {
+      0%,100% { transform: translate(0,0) scale(1);       opacity: 0.55; }
+      50%     { transform: translate(-10px,30px) scale(1.14); opacity: 0.78; }
+    }
+    @keyframes particleDrift {
+      0%     { transform: translateY(0px) translateX(0px); opacity: 0; }
+      10%    { opacity: 1; }
+      90%    { opacity: 1; }
+      100%   { transform: translateY(-120px) translateX(40px); opacity: 0; }
+    }
+    @keyframes cloudPulse {
+      0%,100% { opacity: 0.70; }
+      50%     { opacity: 1.0; }
+    }
+
+    /* Nebula container — sits between moon (z2) and founder (z4) */
+    .fv2-nebula {
+      position: absolute;
+      inset: -25%;
+      z-index: 3;
+      pointer-events: none;
+      overflow: visible;
+    }
+
+    /* Layer 1: Deep Base — wide, very soft atmospheric glow */
+    .neb-base {
+      position: absolute;
+      bottom: -20%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 180%;
+      height: 60%;
+      background: radial-gradient(
+        ellipse 88% 55% at 50% 95%,
+        rgba(88,28,135,0.38) 0%,
+        rgba(60,15,100,0.20) 35%,
+        rgba(40,10,70,0.10) 60%,
+        transparent 80%
+      );
+      filter: blur(70px);
+      mix-blend-mode: screen;
+      animation: nebulaFloat3 32s ease-in-out infinite;
+    }
+
+    /* Layer 2: Main Nebula Cloud Bank — left dense mass */
+    .neb-cloud-l {
+      position: absolute;
+      bottom: 0%;
+      left: -15%;
+      width: 65%;
+      height: 60%;
+      background:
+        radial-gradient(ellipse 68% 62% at 20% 80%, rgba(109,40,217,0.58) 0%, rgba(91,33,182,0.28) 38%, transparent 65%),
+        radial-gradient(ellipse 42% 38% at 55% 60%, rgba(147,51,234,0.38) 0%, rgba(88,28,135,0.14) 50%, transparent 72%),
+        radial-gradient(ellipse 30% 42% at 30% 50%, rgba(124,58,237,0.28) 0%, transparent 65%);
+      filter: blur(20px);
+      mix-blend-mode: screen;
+      animation: nebulaFloat1 22s ease-in-out infinite;
+    }
+
+    /* Layer 3: Main Nebula Cloud Bank — right dense mass */
+    .neb-cloud-r {
+      position: absolute;
+      bottom: 0%;
+      right: -15%;
+      width: 62%;
+      height: 56%;
+      background:
+        radial-gradient(ellipse 64% 58% at 80% 76%, rgba(124,58,237,0.55) 0%, rgba(109,40,217,0.26) 40%, transparent 66%),
+        radial-gradient(ellipse 40% 36% at 45% 60%, rgba(139,92,246,0.36) 0%, rgba(88,28,135,0.12) 52%, transparent 70%),
+        radial-gradient(ellipse 28% 38% at 70% 45%, rgba(168,85,247,0.24) 0%, transparent 62%);
+      filter: blur(22px);
+      mix-blend-mode: screen;
+      animation: nebulaFloat2 19s ease-in-out infinite;
+    }
+
+    /* Layer 4: Center cloud mass — bottom of founder */
+    .neb-cloud-c {
+      position: absolute;
+      bottom: -5%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 140%;
+      height: 45%;
+      background:
+        radial-gradient(ellipse 58% 50% at 28% 88%, rgba(147,51,234,0.62) 0%, rgba(109,40,217,0.30) 35%, transparent 60%),
+        radial-gradient(ellipse 52% 46% at 72% 84%, rgba(124,58,237,0.58) 0%, rgba(91,33,182,0.22) 40%, transparent 65%),
+        radial-gradient(ellipse 36% 42% at 50% 95%, rgba(168,85,247,0.48) 0%, rgba(139,92,246,0.20) 45%, transparent 70%);
+      filter: blur(24px);
+      mix-blend-mode: screen;
+      animation: nebulaFloat1 26s ease-in-out infinite reverse;
+    }
+
+    /* Layer 5: Bright cloud highlight — illuminated wispy tops */
+    .neb-highlight {
+      position: absolute;
+      bottom: 10%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 120%;
+      height: 35%;
+      background:
+        radial-gradient(ellipse 35% 25% at 22% 25%, rgba(192,132,252,0.28) 0%, transparent 55%),
+        radial-gradient(ellipse 30% 22% at 78% 22%, rgba(167,139,250,0.22) 0%, transparent 52%),
+        radial-gradient(ellipse 25% 20% at 50% 15%, rgba(216,180,254,0.18) 0%, transparent 48%);
+      filter: blur(18px);
+      mix-blend-mode: screen;
+      animation: cloudPulse 14s ease-in-out infinite;
+    }
+
+    /* Layer 6: Upper atmospheric wisps around moon top */
+    .neb-upper-wisps {
+      position: absolute;
+      top: 8%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 110%;
+      height: 35%;
+      background:
+        radial-gradient(ellipse 70% 35% at 25% 55%, rgba(88,28,135,0.26) 0%, transparent 58%),
+        radial-gradient(ellipse 65% 32% at 75% 50%, rgba(109,40,217,0.22) 0%, transparent 55%);
+      filter: blur(45px);
+      mix-blend-mode: screen;
+      animation: nebulaFloat2 28s ease-in-out infinite reverse;
+    }
+
+    /* Floating cosmic micro-particles canvas overlay */
+    .fv2-particles {
+      position: absolute;
+      inset: -10%;
+      z-index: 3;
+      pointer-events: none;
+      overflow: hidden;
+    }
+    .fv2-particle {
+      position: absolute;
+      border-radius: 50%;
+      background: rgba(168,85,247,0.8);
+      animation: particleDrift linear infinite;
+    }
+
+    .fv2-center {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      overflow: visible;
+      z-index: 2;
+    }
+
+    /* ════ CINEMATIC MOON ══════════════════════════════════ */
+    @keyframes moonPulse {
+      0%,100% { opacity: 0.88; box-shadow: 0 0 80px rgba(168,85,247,0.22), 0 0 160px rgba(109,40,217,0.12), inset 0 0 140px rgba(0,0,0,0.58), inset 0 0 55px rgba(88,28,135,0.30); }
+      50%     { opacity: 1;    box-shadow: 0 0 110px rgba(168,85,247,0.32), 0 0 220px rgba(109,40,217,0.18), inset 0 0 140px rgba(0,0,0,0.52), inset 0 0 65px rgba(139,92,246,0.38); }
+    }
+    @keyframes moonSurfaceShimmer {
+      0%,100% { opacity: 0.6; }
+      50%     { opacity: 0.9; }
+    }
+
+    .fv2-moon {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 740px;
+      height: 740px;
+      z-index: 2;
+      border-radius: 50%;
+      pointer-events: none;
+    }
+    .moon-visualizer {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 3;
+      pointer-events: none;
+    }
+    .moon-core {
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      background:
+        radial-gradient(ellipse at 26% 24%, rgba(230,180,255,0.22) 0%, rgba(180,120,240,0.12) 18%, transparent 38%),
+        radial-gradient(ellipse at 74% 70%, rgba(60,20,110,0.28) 0%, transparent 35%),
+        radial-gradient(ellipse at 48% 30%, rgba(140,80,220,0.18) 0%, transparent 30%),
+        radial-gradient(ellipse at center, rgba(145,85,215,0.40) 0%, rgba(105,55,180,0.32) 25%, rgba(68,25,130,0.38) 52%, rgba(25,8,65,0.55) 75%, rgba(5,2,18,0.72) 100%);
+      box-shadow:
+        0 0 80px rgba(168,85,247,0.28),
+        0 0 180px rgba(109,40,217,0.14),
+        inset 0 0 150px rgba(0,0,0,0.55),
+        inset 0 0 60px rgba(90,35,165,0.28);
+      animation: moonPulse 9s ease-in-out infinite;
+      overflow: hidden;
+    }
+    /* Moon surface texture patches */
+    .moon-core::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      background:
+        radial-gradient(ellipse 22% 18% at 35% 28%, rgba(200,150,255,0.12) 0%, transparent 100%),
+        radial-gradient(ellipse 15% 12% at 60% 42%, rgba(160,100,230,0.10) 0%, transparent 100%),
+        radial-gradient(ellipse 18% 14% at 42% 65%, rgba(120,70,200,0.08) 0%, transparent 100%),
+        radial-gradient(ellipse 10% 8% at 70% 30%, rgba(180,120,250,0.09) 0%, transparent 100%);
+      animation: moonSurfaceShimmer 14s ease-in-out infinite;
+    }
+    .moon-crater-1 {
+      position: absolute;
+      top: 22%; left: 30%;
+      width: 90px; height: 90px;
+      border-radius: 50%;
+      background: radial-gradient(ellipse at 40% 35%, rgba(100,60,170,0.14) 0%, rgba(40,15,80,0.20) 55%, transparent 80%);
+      filter: blur(6px);
+    }
+    .moon-crater-2 {
+      position: absolute;
+      top: 55%; left: 58%;
+      width: 60px; height: 60px;
+      border-radius: 50%;
+      background: radial-gradient(ellipse at 40% 35%, rgba(80,40,140,0.12) 0%, rgba(30,10,60,0.18) 55%, transparent 80%);
+      filter: blur(4px);
+    }
+    .moon-crater-3 {
+      position: absolute;
+      top: 36%; left: 62%;
+      width: 45px; height: 45px;
+      border-radius: 50%;
+      background: radial-gradient(ellipse at 40% 35%, rgba(90,50,150,0.10) 0%, rgba(35,12,65,0.16) 55%, transparent 80%);
+      filter: blur(3px);
+    }
+    /* Subtle moon edge glow - natural, not a ring */
+    .moon-edge-glow {
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      background: radial-gradient(ellipse at 25% 20%, rgba(200,150,255,0.15) 0%, transparent 45%);
+      pointer-events: none;
+    }
+
+    /* ════ CENTER COLUMN ════════════════════════════════════ */
+    @keyframes founderFloat {
+      0%,100% { transform: translateY(0px); }
+      50%     { transform: translateY(-6px); }
+    }
+    @keyframes founderCinematicIn {
+      0%   { opacity: 0; transform: translateY(30px) scale(0.95); filter: brightness(0.7) blur(4px); }
+      60%  { opacity: 0.9; filter: brightness(1.05) blur(0px); }
+      100% { opacity: 1; transform: translateY(0) scale(1); filter: brightness(1.0) blur(0px); }
+    }
+    .fv2-img-wrapper {
+      position: relative;
+      z-index: 4;
+      animation:
+        founderCinematicIn 1.4s cubic-bezier(0.22,0.68,0,1.0) 0.4s both,
+        founderFloat 7s ease-in-out 1.9s infinite;
+      cursor: pointer;
+      transition: filter 0.4s ease;
+      will-change: transform;
+    }
+    #founder-photo {
+      bottom: 0;
+      margin-bottom: 0;
+    }
+    #cofounder-photo {
+      bottom: 0;
+      margin-bottom: 0;
+    }
+    #cofounder-photo img {
+      mix-blend-mode: normal;
+    }
+    .fv2-img-wrapper:hover {
+      filter: brightness(1.15) drop-shadow(0 0 35px rgba(168,85,247,0.55));
+    }
+    
+    /* Telemetry & Hologram Glitch CSS */
+    .fv2-img-wrapper::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(
+        rgba(18, 16, 16, 0) 50%,
+        rgba(168, 85, 247, 0.12) 50%
+      );
+      background-size: 100% 4px;
+      z-index: 5;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+    .fv2-img-wrapper:hover::before {
+      opacity: 1;
+    }
+
+    @keyframes holoScanline {
+      0% { top: 0%; }
+      100% { top: 100%; }
+    }
+    .fv2-img-wrapper::after {
+      content: '';
+      position: absolute;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: rgba(168, 85, 247, 0.85);
+      box-shadow: 0 0 12px rgba(168, 85, 247, 0.9);
+      z-index: 6;
+      pointer-events: none;
+      opacity: 0;
+      top: 0;
+      animation: holoScanline 3s linear infinite;
+    }
+    .fv2-img-wrapper:hover::after {
+      opacity: 0.8;
+    }
+
+    @keyframes imgHoloGlitch {
+      0% {
+        filter: contrast(1.15) brightness(1.15) saturate(1.3) hue-rotate(0deg);
+        transform: translate(1px, 1px) skew(0.5deg);
+      }
+      10% {
+        filter: contrast(1.2) brightness(1.25) saturate(1.4) hue-rotate(3deg);
+        transform: translate(-1px, -1px) skew(-0.5deg);
+      }
+      20% {
+        filter: contrast(1.12) brightness(1.12) saturate(1.18) hue-rotate(0deg);
+        transform: translate(0px, 0px) skew(0deg);
+      }
+      30% {
+        transform: translate(1.5px, -2px) skew(1deg);
+      }
+      40% {
+        transform: translate(-1.5px, 1.5px) skew(-1deg);
+      }
+      50% {
+        transform: translate(0px, 0px) skew(0deg);
+      }
+      100% {
+        transform: translate(0px, 0px) skew(0deg);
+      }
+    }
+    .fv2-img-wrapper:hover img {
+      animation: imgHoloGlitch 0.5s steps(2) infinite;
+    }
+
+    .holo-telemetry {
+      position: absolute;
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 0.65rem;
+      font-weight: bold;
+      color: rgba(200, 160, 255, 0.95);
+      text-shadow: 0 0 6px rgba(168, 85, 247, 0.9);
+      letter-spacing: 1px;
+      background: rgba(15, 10, 25, 0.85);
+      border: 1px solid rgba(168, 85, 247, 0.55);
+      box-shadow: 0 0 10px rgba(168, 85, 247, 0.3);
+      padding: 4px 8px;
+      border-radius: 3px;
+      pointer-events: none;
+      z-index: 7;
+      opacity: 0;
+      transform: scale(0.9);
+      transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    .fv2-img-wrapper:hover .holo-telemetry {
+      opacity: 1;
+      transform: scale(1);
+    }
+    .holo-tl { top: 15%; left: 8%; }
+    .holo-tr { top: 15%; right: 8%; }
+    .holo-bl { bottom: 15%; left: 8%; }
+    .holo-br { bottom: 15%; right: 8%; }
+
+    @media (max-width: 600px) {
+      .holo-telemetry {
+        font-size: 0.52rem;
+        padding: 2px 5px;
+      }
+      .holo-tl { top: 10%; left: 4%; }
+      .holo-tr { top: 10%; right: 4%; }
+      .holo-bl { bottom: 10%; left: 4%; }
+      .holo-br { bottom: 10%; right: 4%; }
+    }
+    .fv2-img-wrapper img {
+      display: block;
+      width: clamp(720px, 60vw, 920px);
+      max-width: 100%;
+      mix-blend-mode: screen;
+      filter: contrast(1.12) brightness(1.12) saturate(1.18);
+      -webkit-filter: contrast(1.12) brightness(1.12) saturate(1.18);
+      object-fit: contain;
+      object-position: bottom center;
+    }
+
+    /* ════ RIGHT COLUMN ═════════════════════════════════════ */
+    .fv2-right {
+      padding: 40px 0 40px 36px;
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      position: relative;
+      z-index: 3;
+      align-items: flex-start;
+      align-self: center;
+    }
+    /* vertical connector line for traits */
+    .fv2-right::before {
+      content: '';
+      position: absolute;
+      left: 60px;
+      top: 300px;
+      bottom: 80px;
+      width: 1px;
+      background: linear-gradient(to bottom, transparent, rgba(168,85,247,0.32) 20%, rgba(168,85,247,0.32) 80%, transparent);
+    }
+
+    /* ── PREMIUM SKILL CARDS ── */
+    @keyframes skillCardIn {
+      0%   { opacity: 0; transform: translateX(32px); }
+      100% { opacity: 1; transform: translateX(0); }
+    }
+    @keyframes iconGlow {
+      0%,100% { box-shadow: 0 0 12px rgba(168,85,247,0.15); }
+      50%     { box-shadow: 0 0 22px rgba(168,85,247,0.35); }
+    }
+    .fv2-trait {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      padding: 15px 18px 15px 0;
+      border-radius: 16px;
+      transition: background 0.32s ease, box-shadow 0.32s ease, transform 0.32s cubic-bezier(0.34,1.56,0.64,1);
+      cursor: default;
+      width: 100%;
+      position: relative;
+      animation: skillCardIn 0.5s cubic-bezier(0.22,0.68,0,1.2) both;
+    }
+    .fv2-trait:nth-child(2) { animation-delay: 0.5s; }
+    .fv2-trait:nth-child(3) { animation-delay: 0.65s; }
+    .fv2-trait:nth-child(4) { animation-delay: 0.80s; }
+    .fv2-trait:nth-child(5) { animation-delay: 0.95s; }
+    .fv2-trait:nth-child(6) { animation-delay: 1.10s; }
+    .fv2-trait::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 16px;
+      background: linear-gradient(135deg, rgba(168,85,247,0.10) 0%, rgba(124,58,237,0.05) 100%);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      pointer-events: none;
+    }
+    .fv2-trait:hover {
+      background: rgba(168,85,247,0.07);
+      box-shadow: 0 4px 20px rgba(168,85,247,0.12), inset 0 0 0 1px rgba(168,85,247,0.16);
+      transform: translateX(6px);
+    }
+    .fv2-trait:hover::before { opacity: 1; }
+    .fv2-trait-icon {
+      flex-shrink: 0;
+      width: 52px;
+      height: 52px;
+      border-radius: 14px;
+      background: rgba(12,6,32,0.90);
+      border: 1px solid rgba(168,85,247,0.32);
+      backdrop-filter: blur(14px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.3rem;
+      box-shadow: 0 0 16px rgba(168,85,247,0.12);
+      position: relative;
+      z-index: 1;
+      transition: transform 0.32s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.32s ease, border-color 0.32s ease;
+      animation: iconGlow 4s ease-in-out infinite;
+    }
+    .fv2-trait:hover .fv2-trait-icon {
+      transform: scale(1.15);
+      border-color: rgba(168,85,247,0.65);
+      box-shadow: 0 0 24px rgba(168,85,247,0.38);
+    }
+    .fv2-trait-body { padding-top: 0; }
+    .fv2-trait-body .ft-title {
+      font-family: var(--font-display);
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--white);
+      margin-bottom: 4px;
+    }
+    .fv2-trait-body .ft-text {
+      font-size: 0.87rem;
+      color: var(--text-muted);
+      line-height: 1.58;
+    }
+
+    /* ─── CO-FOUNDER STRIP ─────────────────────────────────────────────── */
+    #cofounder {
+      padding: 60px 24px;
+    }
+    .cofounder-card {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 48px 56px;
+      border-radius: 24px;
+      background: rgba(10,5,28,0.65);
+      border: 1px solid var(--glass-border);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      display: flex;
+      gap: 48px;
+      align-items: center;
+      box-shadow: 0 0 80px rgba(168,85,247,0.08);
+    }
+    .cofounder-avatar {
+      flex-shrink: 0;
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #7c3aed 0%, #c084fc 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-display);
+      font-size: 2.2rem;
+      font-weight: 800;
+      color: white;
+      box-shadow: 0 0 40px rgba(168,85,247,0.35);
+      border: 2px solid rgba(168,85,247,0.4);
+    }
+    .cofounder-info h3 {
+      font-family: var(--font-display);
+      font-size: 1.6rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      margin-bottom: 6px;
+    }
+    .cofounder-info .cf-role {
+      font-size: 0.8rem;
+      color: var(--purple-light);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+    .cofounder-info .cf-tagline {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      margin-bottom: 16px;
+    }
+    .cofounder-info .cf-bio {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      line-height: 1.75;
+      margin-bottom: 24px;
+      max-width: 500px;
+    }
+    .cf-stats {
+      display: flex;
+      gap: 32px;
+      flex-wrap: wrap;
+    }
+    .cf-stat .cs-val {
+      font-family: var(--font-display);
+      font-size: 1.4rem;
+      font-weight: 800;
+      color: var(--purple-light);
+    }
+    .cf-stat .cs-label {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-top: 2px;
+    }
+
+    /* ─── MISSION / VISION / PROBLEM ──────────────────────────────────── */
+    #mission {
+      padding: 60px 24px;
+    }
+    .mission-header {
+      text-align: center;
+      margin-bottom: 70px;
+    }
+    .mission-header h2 {
+      font-family: var(--font-display);
+      font-size: clamp(2rem, 4.5vw, 3.4rem);
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      line-height: 1.15;
+      max-width: 700px;
+      margin: 0 auto;
+    }
+    .mission-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+    }
+    .mission-card {
+      padding: 40px 32px;
+    }
+    .mission-card .mc-number {
+      font-family: var(--font-display);
+      font-size: 3.5rem;
+      font-weight: 900;
+      background: linear-gradient(135deg, rgba(168,85,247,0.25) 0%, rgba(168,85,247,0.06) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      line-height: 1;
+      margin-bottom: 16px;
+    }
+    .mission-card .mc-title {
+      font-family: var(--font-display);
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: var(--white);
+      margin-bottom: 12px;
+    }
+    .mission-card .mc-sub {
+      font-size: 0.85rem;
+      color: var(--purple-light);
+      font-style: italic;
+      margin-bottom: 14px;
+    }
+    .mission-card .mc-text {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      line-height: 1.75;
+    }
+
+    /* ─── FEATURES ─────────────────────────────────────────────────────── */
+    #features {
+      padding: 60px 24px;
+    }
+    .features-header {
+      text-align: center;
+      margin-bottom: 70px;
+    }
+    .features-header h2 {
+      font-family: var(--font-display);
+      font-size: clamp(2rem, 4.5vw, 3.4rem);
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      margin-bottom: 18px;
+    }
+    .features-header p {
+      font-size: 1rem;
+      color: var(--text-muted);
+      max-width: 560px;
+      margin: 0 auto;
+      line-height: 1.75;
+    }
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+    }
+    .feature-card {
+      padding: 36px 28px;
+    }
+    .feature-card .fc-icon {
+      width: 52px;
+      height: 52px;
+      border-radius: 14px;
+      background: rgba(168,85,247,0.12);
+      border: 1px solid rgba(168,85,247,0.25);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      margin-bottom: 22px;
+    }
+    .feature-card .fc-title {
+      font-family: var(--font-display);
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--white);
+      margin-bottom: 10px;
+    }
+    .feature-card .fc-text {
+      font-size: 0.875rem;
+      color: var(--text-muted);
+      line-height: 1.7;
+    }
+
+    /* ─── TECH STACK ───────────────────────────────────────────────────── */
+    #tech {
+      padding: 50px 24px;
+    }
+    .tech-header {
+      text-align: center;
+      margin-bottom: 60px;
+    }
+    .tech-header h2 {
+      font-family: var(--font-display);
+      font-size: clamp(1.8rem, 4vw, 2.8rem);
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      margin-bottom: 14px;
+    }
+    .tech-header p {
+      font-size: 0.95rem;
+      color: var(--text-muted);
+      max-width: 500px;
+      margin: 0 auto;
+      line-height: 1.75;
+    }
+    .tech-orbital-wrap {
+      position: relative;
+      width: 100%;
+      height: 480px;
+      margin: 40px auto 0;
+      perspective: 1000px;
+      transform-style: preserve-3d;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: grab;
+      user-select: none;
+    }
+    .tech-orbital-wrap:active {
+      cursor: grabbing;
+    }
+    /* Central core logo */
+    .tech-core {
+      position: absolute;
+      width: 110px;
+      height: 110px;
+      border-radius: 50%;
+      background: radial-gradient(circle, var(--purple-deep) 0%, rgba(10,5,30,0.95) 75%);
+      border: 2px solid var(--purple-light);
+      box-shadow: 0 0 45px var(--purple-glow), inset 0 0 20px rgba(168,85,247,0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-display);
+      font-size: 1.25rem;
+      font-weight: 900;
+      letter-spacing: 0.05em;
+      color: #ffffff;
+      z-index: 5;
+      text-shadow: 0 0 10px var(--purple-light);
+      animation: coreGlowPulse 4s ease-in-out infinite alternate;
+    }
+    @keyframes coreGlowPulse {
+      0% { box-shadow: 0 0 35px var(--purple-glow), inset 0 0 15px rgba(168,85,247,0.25); transform: scale(0.97); }
+      100% { box-shadow: 0 0 55px rgba(168, 85, 247, 0.55), inset 0 0 25px rgba(168,85,247,0.45); transform: scale(1.03); }
+    }
+    /* Orbiting tech pills */
+    .tech-orbit-pill {
+      position: absolute;
+      padding: 10px 24px;
+      border-radius: 100px;
+      background: rgba(10, 5, 30, 0.85);
+      border: 1.5px solid rgba(168, 85, 247, 0.35);
+      font-family: var(--font-display);
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--off-white);
+      letter-spacing: 0.02em;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      transition: border-color 0.3s, box-shadow 0.3s, background-color 0.3s;
+      white-space: nowrap;
+      cursor: pointer;
+      pointer-events: auto;
+      z-index: 10;
+    }
+    .tech-orbit-pill:hover {
+      background: rgba(168, 85, 247, 0.22) !important;
+      border-color: rgba(168, 85, 247, 0.75) !important;
+      color: var(--white) !important;
+      box-shadow: 0 0 25px rgba(168, 85, 247, 0.4) !important;
+    }
+
+    /* ─── CTA ──────────────────────────────────────────────────────────── */
+    #cta {
+      padding: 80px 24px;
+      text-align: center;
+      position: relative;
+    }
+    .cta-inner {
+      max-width: 720px;
+      margin: 0 auto;
+    }
+    .cta-inner h2 {
+      font-family: var(--font-display);
+      font-size: clamp(2rem, 5vw, 3.8rem);
+      font-weight: 900;
+      letter-spacing: -0.03em;
+      line-height: 1.1;
+      margin-bottom: 22px;
+    }
+    .cta-inner p {
+      font-size: 1.05rem;
+      color: var(--text-muted);
+      margin-bottom: 48px;
+      line-height: 1.75;
+    }
+    .cta-buttons {
+      display: flex;
+      gap: 18px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .btn-primary, .btn-secondary {
+      transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.4s ease, border-color 0.4s ease, background 0.4s ease !important;
+    }
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 16px 36px;
+      border-radius: 100px;
+      background: linear-gradient(135deg, #7c3aed 0%, #a855f7 60%, #c084fc 100%);
+      color: white;
+      font-family: var(--font-display);
+      font-size: 0.95rem;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      text-decoration: none;
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 8px 32px rgba(124,58,237,0.45);
+    }
+    .btn-primary:hover {
+      transform: translateY(-6px) scale(1.03);
+      box-shadow: 0 20px 50px rgba(124,58,237,0.60);
+    }
+    .btn-secondary {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 16px 36px;
+      border-radius: 100px;
+      background: transparent;
+      color: var(--off-white);
+      font-family: var(--font-display);
+      font-size: 0.95rem;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      text-decoration: none;
+      border: 1px solid rgba(168,85,247,0.40);
+      cursor: pointer;
+      backdrop-filter: blur(12px);
+    }
+    .btn-secondary:hover {
+      background: rgba(168,85,247,0.10);
+      border-color: rgba(168,85,247,0.65);
+      transform: translateY(-6px) scale(1.03);
+      box-shadow: 0 12px 36px rgba(168,85,247,0.25);
+    }
+
+    /* ─── FOOTER ───────────────────────────────────────────────────────── */
+    footer {
+      padding: 40px 40px;
+      border-top: 1px solid rgba(168,85,247,0.12);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+      backdrop-filter: blur(20px);
+      background: rgba(3,1,13,0.55);
+    }
+    footer p {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+    }
+    .footer-links {
+      display: flex;
+      gap: 28px;
+    }
+    .footer-links a {
+      position: relative;
+      padding-bottom: 2px;
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      text-decoration: none;
+      transition: color 0.3s ease;
+    }
+    .footer-links a::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 1px;
+      background: linear-gradient(90deg, var(--purple-light), transparent);
+      transform: scaleX(0);
+      transform-origin: right;
+      transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .footer-links a:hover {
+      color: var(--purple-light);
+    }
+    .footer-links a:hover::after {
+      transform: scaleX(1);
+      transform-origin: left;
+    }
+
+    /* ─── MOBILE RESPONSIVE ────────────────────────────────────────────── */
+    @media (max-width: 900px) {
+      .about-bg-overlay {
+        opacity: 0.8;
+      }
+      .section-container { padding: 0 28px; }
+      #hero { padding: 120px 28px 80px; text-align: left; }
+      #hero h1 { max-width: 100%; }
+      #hero p  { max-width: 100%; }
+      .hero-metrics { justify-content: flex-start; }
+      .fv2-layout {
+        grid-template-columns: 1fr;
+        min-height: unset;
+      }
+      .fv2-left { padding: 0 0 30px 0; }
+      .fv2-center { order: -1; padding-bottom: 16px; }
+      .fv2-center::before { display: none; }
+      .fv2-right { padding: 0; }
+      .fv2-right::before { display: none; }
+      #founder-photo, #cofounder-photo { bottom: 15px; margin-bottom: 0; }
+      .fv2-img-wrapper img { width: 290px; }
+      .mission-grid, .features-grid {
+        grid-template-columns: 1fr;
+      }
+      .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      .stat-cell:nth-child(2) { border-right: none; }
+      .stat-cell:nth-child(1), .stat-cell:nth-child(2) {
+        border-bottom: 1px solid var(--glass-border);
+      }
+      .cofounder-card {
+        flex-direction: column;
+        padding: 36px 28px;
+        text-align: center;
+      }
+      .cf-stats { justify-content: center; }
+    }
+
+    @media (max-width: 600px) {
+      nav { padding: 14px 20px; }
+      .section-container { padding: 0 16px; }
+      #hero { padding: 100px 16px 60px; }
+      .hero-metrics { gap: 18px; }
+      .hero-metric-divider { display: none; }
+      .features-grid { grid-template-columns: 1fr; }
+      .stats-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    /* ─── ADDED PREMIUM ANIMATIONS & EFFECTS ───────────────────────── */
+    /* Scroll Progress Bar */
+    #scroll-progress {
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--purple-light), var(--purple-deep));
+      z-index: 9999;
+      width: 0%;
+      box-shadow: 0 0 8px var(--purple-glow);
+      transition: width 0.1s ease-out;
+    }
+
+    /* Springy Hover & Entrance for Tech Pills */
+    .tech-pill {
+      opacity: 0;
+      transform: translateY(35px) scale(0.85);
+      transition: transform 0.75s cubic-bezier(0.34, 1.56, 0.64, 1), 
+                  opacity 0.75s cubic-bezier(0.34, 1.56, 0.64, 1), 
+                  background-color 0.3s, 
+                  border-color 0.3s, 
+                  box-shadow 0.3s !important;
+    }
+    .tech-pill.revealed {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+    .tech-pill.revealed:hover {
+      transform: scale(1.08) rotate(1deg) translateY(-4px) !important;
+      background: rgba(168, 85, 247, 0.22) !important;
+      border-color: rgba(168, 85, 247, 0.6) !important;
+      box-shadow: 0 8px 30px rgba(168, 85, 247, 0.25) !important;
+    }
+
+    /* Button Shimmer Sweep Effect */
+    @keyframes shimmerSweep {
+      0% { left: -150%; }
+      50% { left: 150%; }
+      100% { left: 150%; }
+    }
+    .btn-primary, .btn-secondary {
+      position: relative;
+      overflow: hidden;
+    }
+    .btn-primary::before, .btn-secondary::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -150%;
+      width: 50%;
+      height: 100%;
+      background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(255, 255, 255, 0.28),
+        transparent
+      );
+      transform: skewX(-25deg);
+      animation: shimmerSweep 6s ease-in-out infinite;
+    }
+    .btn-secondary::before {
+      background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(168, 85, 247, 0.20),
+        transparent
+      );
+    }
+
+    /* Card Mouse Hover Glowing Border Effect */
+    .glass-card {
+      position: relative;
+      overflow: hidden;
+    }
+    .glass-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      padding: 1px; /* border thickness */
+      background: radial-gradient(
+        circle 160px at var(--mouse-x, -999px) var(--mouse-y, -999px),
+        rgba(168, 85, 247, 0.45),
+        rgba(168, 85, 247, 0.08) 60%,
+        transparent 100%
+      );
+      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+      pointer-events: none;
+      z-index: 2;
+    }
+
+    /* Word Reveal Animation classes */
+    .word-reveal-parent {
+      overflow: hidden;
+      display: inline-block;
+      vertical-align: bottom;
+      line-height: 1.2;
+    }
+    .word-reveal-word {
+      display: inline-block;
+      transform: translateY(115%) rotate(2deg);
+      transform-origin: left bottom;
+      transition: transform 0.9s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .word-reveal-word.revealed {
+      transform: translateY(0) rotate(0deg);
+    }
+
+    /* ── CUSTOM COSMIC CURSOR ────────────────────────────────────────── */
+    .custom-cursor {
+      position: fixed;
+      top: 0;
+      left: 0;
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 999999;
+      opacity: 0;
+      transform: translate(-50%, -50%);
+      transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    #custom-cursor-dot {
+      width: 8px;
+      height: 8px;
+      background: var(--purple-light);
+      box-shadow: 0 0 10px var(--purple-light), 0 0 20px var(--purple-mid);
+      z-index: 1000000;
+    }
+    #custom-cursor-ring {
+      width: 36px;
+      height: 36px;
+      border: 1.5px solid rgba(192, 132, 252, 0.45);
+      box-shadow: 0 0 15px rgba(168, 85, 247, 0.1);
+      transition: width 0.35s cubic-bezier(0.16, 1, 0.3, 1), 
+                  height 0.35s cubic-bezier(0.16, 1, 0.3, 1), 
+                  border-color 0.3s, 
+                  background-color 0.3s, 
+                  box-shadow 0.3s;
+    }
+    @media (hover: hover) and (pointer: fine) {
+      html, body {
+        cursor: none;
+      }
+      a, button, .glass-card, .fv2-stat, .tech-pill, .fv2-img-wrapper, .fv2-social-btn {
+        cursor: none !important;
+      }
+    }
+    /* Cursor hover active states */
+    #custom-cursor-ring.cursor-hover {
+      width: 62px;
+      height: 62px;
+      border-color: rgba(192, 132, 252, 0.9);
+      background-color: rgba(168, 85, 247, 0.12);
+      box-shadow: 0 0 30px rgba(168, 85, 247, 0.4), inset 0 0 18px rgba(168, 85, 247, 0.2);
+    }
+    #custom-cursor-dot.cursor-hover {
+      width: 4px;
+      height: 4px;
+      background: #ffffff;
+      box-shadow: 0 0 15px #ffffff, 0 0 30px var(--purple-light);
+    }
+
+    /* ── 3D TILT & SPECULAR SHINE EFFECTS ────────────────────────────── */
+    .glass-card, .fv2-stat {
+      transform-style: preserve-3d;
+      perspective: 1000px;
+      transform: perspective(1000px) rotateX(0deg) rotateY(0deg);
+      transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), 
+                  box-shadow 0.5s cubic-bezier(0.16, 1, 0.3, 1), 
+                  border-color 0.5s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    }
+    .glass-card > *, .fv2-stat > * {
+      transform: translateZ(22px);
+      transform-style: preserve-3d;
+    }
+    .card-shine {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 15;
+      border-radius: inherit;
+      background: radial-gradient(circle 240px at var(--shine-x, -999px) var(--shine-y, -999px), rgba(255, 255, 255, 0.18), transparent 85%);
+      mix-blend-mode: overlay;
+      opacity: 0;
+      transition: opacity 0.4s ease;
+    }
+    .glass-card:hover .card-shine, .fv2-stat:hover .card-shine {
+      opacity: 1;
+    }
+
+    /* ── WORD ROTATOR ANIMATIONS ────────────────────────────────────── */
+    .word-rotator {
+      display: inline-block;
+      vertical-align: bottom;
+      overflow: hidden;
+      height: 1.15em;
+      position: relative;
+    }
+    .word-rotator-inner {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      text-align: left;
+      transition: transform 0.65s cubic-bezier(0.76, 0, 0.24, 1);
+    }
+    .word-rotator-word {
+      display: block;
+      height: 1.15em;
+      line-height: 1.15em;
+      white-space: nowrap;
+    }
+
+    /* ── NAV SOUND TOGGLE ───────────────────────────────────────────── */
+    .nav-sound-toggle {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      padding: 6px 14px;
+      border-radius: 100px;
+      background: rgba(168, 85, 247, 0.08);
+      border: 1px solid rgba(168, 85, 247, 0.22);
+      transition: all 0.3s ease;
+      user-select: none;
+    }
+    .nav-sound-toggle:hover {
+      background: rgba(168, 85, 247, 0.16);
+      border-color: rgba(168, 85, 247, 0.45);
+      box-shadow: 0 0 15px rgba(168, 85, 247, 0.15);
+    }
+    .sound-wave {
+      display: flex;
+      align-items: flex-end;
+      gap: 2px;
+      height: 12px;
+      width: 14px;
+    }
+    .sound-wave .bar {
+      width: 2px;
+      height: 100%;
+      background-color: var(--purple-light);
+      border-radius: 2px;
+      transform-origin: bottom;
+      transition: transform 0.3s ease;
+      transform: scaleY(0.3);
+    }
+    .nav-sound-toggle.active .sound-wave .bar {
+      animation: soundDance 0.8s ease-in-out infinite alternate;
+    }
+    .sound-wave .bar:nth-child(1) { animation-delay: 0.1s; }
+    .sound-wave .bar:nth-child(2) { animation-delay: 0.3s; }
+    .sound-wave .bar:nth-child(3) { animation-delay: 0.15s; }
+    .sound-wave .bar:nth-child(4) { animation-delay: 0.45s; }
+    
+    @keyframes soundDance {
+      0% { transform: scaleY(0.3); }
+      100% { transform: scaleY(1.1); }
+    }
+    .sound-label {
+      font-size: 0.65rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--purple-light);
+    }
+
+    /* Synthesizer settings button */
+    .nav-sound-settings-btn {
+      background: rgba(168, 85, 247, 0.08);
+      border: 1px solid rgba(168, 85, 247, 0.22);
+      color: var(--purple-light);
+      font-size: 1.1rem;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      user-select: none;
+      padding: 0;
+      line-height: 1;
+    }
+    .nav-sound-settings-btn:hover {
+      background: rgba(168, 85, 247, 0.16);
+      border-color: rgba(168, 85, 247, 0.45);
+      transform: rotate(45deg);
+      box-shadow: 0 0 15px rgba(168, 85, 247, 0.2);
+    }
+    
+    /* Synthesizer panel dropdown */
+    .synth-dashboard-panel {
+      position: absolute;
+      top: calc(100% + 12px);
+      right: 0;
+      width: 250px;
+      background: rgba(10, 5, 24, 0.92);
+      border: 1px solid rgba(168, 85, 247, 0.32);
+      border-radius: 18px;
+      padding: 20px;
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      box-shadow: 0 15px 45px rgba(0, 0, 0, 0.6), 0 0 35px rgba(168, 85, 247, 0.15);
+      z-index: 1000;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      opacity: 0;
+      transform: translateY(-10px) scale(0.95);
+      pointer-events: none;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      transform-origin: top right;
+    }
+    .synth-dashboard-panel.active {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+      pointer-events: auto;
+    }
+    .synth-panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid rgba(168, 85, 247, 0.2);
+      padding-bottom: 8px;
+    }
+    .synth-panel-header span {
+      font-family: var(--font-display);
+      font-size: 0.8rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #ffffff;
+    }
+    .synth-panel-header button {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 1.2rem;
+      cursor: pointer;
+      line-height: 1;
+      padding: 0;
+      transition: color 0.2s;
+    }
+    .synth-panel-header button:hover {
+      color: var(--purple-light);
+    }
+    .synth-control {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .synth-control label {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      letter-spacing: 0.02em;
+    }
+    .synth-control span {
+      font-weight: 600;
+      color: var(--purple-light);
+    }
+    
+    /* Neon style range sliders */
+    .synth-control input[type="range"] {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100%;
+      height: 4px;
+      border-radius: 2px;
+      background: rgba(168, 85, 247, 0.2);
+      outline: none;
+      transition: background 0.3s;
+    }
+    .synth-control input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: var(--purple-light);
+      border: 1px solid #ffffff;
+      box-shadow: 0 0 8px var(--purple-mid);
+      cursor: pointer;
+      transition: transform 0.15s, background-color 0.15s;
+    }
+    .synth-control input[type="range"]::-webkit-slider-thumb:hover {
+      transform: scale(1.2);
+      background: #ffffff;
+    }
+
+    /* ── OUR JOURNEY TIMELINE ──────────────────────────────────────── */
+    #journey {
+      padding: 60px 24px;
+      position: relative;
+    }
+    .journey-header {
+      text-align: center;
+      margin-bottom: 60px;
+    }
+    .journey-subtitle {
+      font-size: 0.95rem;
+      color: var(--text-muted);
+      max-width: 500px;
+      margin: 14px auto 0;
+      line-height: 1.6;
+    }
+    .timeline-container {
+      position: relative;
+      max-width: 960px;
+      margin: 40px auto 0;
+      padding: 20px 0;
+    }
+    
+    /* Spaceship Timeline Slider */
+    .timeline-spaceship {
+      position: absolute;
+      left: 50%;
+      top: 0%;
+      transform: translate(-50%, -50%) rotate(0deg);
+      width: 44px;
+      height: 44px;
+      z-index: 10;
+      cursor: grab;
+      user-select: none;
+      touch-action: none;
+      transition: top 0.12s cubic-bezier(0.1, 0.8, 0.2, 1), transform 0.2s ease;
+      filter: drop-shadow(0 0 10px rgba(168, 85, 247, 0.75));
+    }
+    .timeline-spaceship:active {
+      cursor: grabbing;
+    }
+    .timeline-spaceship svg {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+    
+    @keyframes flameFlicker {
+      0%, 100% { height: 12px; opacity: 0.8; transform: translateX(-50%) scale(1); }
+      50% { height: 16px; opacity: 1; transform: translateX(-50%) scale(1.3); filter: blur(0.5px); }
+    }
+    .ship-flame {
+      position: absolute;
+      bottom: -6px;
+      left: 50%;
+      transform: translateX(-50%) scale(0);
+      width: 6px;
+      height: 12px;
+      background: linear-gradient(to top, rgba(239, 68, 68, 0), rgba(249, 115, 22, 0.8), rgba(236, 72, 153, 1));
+      border-radius: 50% 50% 20% 20%;
+      filter: blur(0.8px);
+      box-shadow: 0 0 6px rgba(236, 72, 153, 0.85);
+      transform-origin: top center;
+      opacity: 0;
+      transition: transform 0.2s ease, opacity 0.2s ease;
+    }
+    .timeline-spaceship.moving .ship-flame {
+      opacity: 1;
+      transform: translateX(-50%) scale(1.4);
+      animation: flameFlicker 0.08s linear infinite;
+    }
+    
+    .ship-hud {
+      position: absolute;
+      left: 36px;
+      top: 50%;
+      transform: translateY(-50%) scale(0.9);
+      width: 135px;
+      background: rgba(15, 8, 25, 0.9);
+      border: 1px solid rgba(168, 85, 247, 0.5);
+      border-radius: 4px;
+      padding: 5px 8px;
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 0.6rem;
+      font-weight: bold;
+      color: rgba(200, 160, 255, 0.95);
+      text-shadow: 0 0 4px rgba(168, 85, 247, 0.6);
+      pointer-events: none;
+      opacity: 0;
+      transform-origin: left center;
+      transition: opacity 0.25s ease, transform 0.25s ease;
+      box-shadow: 0 0 12px rgba(168, 85, 247, 0.25);
+    }
+    .timeline-spaceship:hover .ship-hud,
+    .timeline-spaceship.moving .ship-hud {
+      opacity: 1;
+      transform: translateY(-50%) scale(1);
+    }
+    .hud-line {
+      margin-bottom: 2px;
+      white-space: nowrap;
+    }
+    .hud-line:last-child {
+      margin-bottom: 0;
+    }
+    /* Timeline Spine */
+    .timeline-spine {
+      position: absolute;
+      left: 50%;
+      top: 0;
+      bottom: 0;
+      width: 2px;
+      background: rgba(168, 85, 247, 0.12);
+      transform: translateX(-50%);
+    }
+    .timeline-spine-glow {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 0%;
+      background: linear-gradient(to bottom, var(--purple-light), var(--purple-deep));
+      box-shadow: 0 0 10px var(--purple-light), 0 0 20px var(--purple-mid);
+      transition: height 0.1s ease-out;
+    }
+    /* Timeline Item */
+    .timeline-item {
+      position: relative;
+      width: 50%;
+      padding: 20px 40px;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+    }
+    .timeline-item.left {
+      left: 0;
+      align-items: flex-end;
+      text-align: right;
+    }
+    .timeline-item.right {
+      left: 50%;
+      align-items: flex-start;
+      text-align: left;
+    }
+    /* Timeline Marker Dot */
+    .timeline-marker {
+      position: absolute;
+      top: 36px;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: rgba(10, 5, 25, 0.95);
+      border: 2px solid rgba(168, 85, 247, 0.35);
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.4s ease;
+    }
+    .timeline-item.left .timeline-marker {
+      right: -8px;
+    }
+    .timeline-item.right .timeline-marker {
+      left: -8px;
+    }
+    .timeline-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--purple-light);
+      box-shadow: 0 0 4px var(--purple-light);
+      transition: all 0.4s ease;
+    }
+    .timeline-item.active .timeline-marker {
+      border-color: var(--purple-light);
+      box-shadow: 0 0 15px var(--purple-light);
+      transform: scale(1.15);
+    }
+    .timeline-item.active .timeline-dot {
+      background: #ffffff;
+      box-shadow: 0 0 8px #ffffff, 0 0 15px var(--purple-light);
+      transform: scale(1.2);
+    }
+    /* Timeline Card */
+    .timeline-card {
+      padding: 24px 28px;
+      width: 100%;
+      max-width: 400px;
+    }
+    .timeline-year {
+      font-family: var(--font-display);
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--purple-light);
+      letter-spacing: 0.12em;
+      margin-bottom: 6px;
+      text-transform: uppercase;
+    }
+    .timeline-title {
+      font-family: var(--font-display);
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--white);
+      margin-bottom: 8px;
+    }
+    .timeline-desc {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      line-height: 1.65;
+    }
+
+    /* Mobile Timeline layout overrides */
+    @media (max-width: 768px) {
+      .timeline-spine {
+        left: 20px;
+        transform: none;
+      }
+      .timeline-spaceship {
+        left: 20px;
+      }
+      .ship-hud {
+        left: 32px;
+      }
+      .timeline-item {
+        width: 100%;
+        left: 0 !important;
+        padding-left: 45px;
+        padding-right: 0;
+        text-align: left !important;
+        align-items: flex-start !important;
+      }
+      .timeline-item.left .timeline-marker,
+      .timeline-item.right .timeline-marker {
+        left: 12px;
+        right: auto;
+      }
+      .timeline-card {
+        max-width: 100%;
+      }
+    }
+
+    /* ── SCROLL DOWN INDICATOR ──────────────────────────────────────── */
+    .scroll-indicator-wrap {
+      position: absolute;
+      bottom: 28px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      z-index: 10;
+      pointer-events: none;
+      animation: indicatorFade 2s ease-in-out infinite alternate;
+    }
+    .scroll-indicator-text {
+      font-family: var(--font-display);
+      font-size: 0.64rem;
+      font-weight: 600;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--purple-light);
+      opacity: 0.85;
+    }
+    .scroll-indicator-line {
+      width: 1px;
+      height: 40px;
+      background: linear-gradient(to bottom, var(--purple-light), transparent);
+      position: relative;
+      overflow: hidden;
+    }
+    .scroll-indicator-dot {
+      position: absolute;
+      top: 0;
+      left: -1px;
+      width: 3px;
+      height: 3px;
+      background: #ffffff;
+      box-shadow: 0 0 6px #ffffff, 0 0 12px var(--purple-light);
+      border-radius: 50%;
+      animation: scrollLineDot 2.2s cubic-bezier(0.76, 0, 0.24, 1) infinite;
+    }
+    @keyframes scrollLineDot {
+      0% { top: 0; opacity: 0; }
+      25% { opacity: 1; }
+      75% { opacity: 1; }
+      100% { top: 100%; opacity: 0; }
+    }
+    @keyframes indicatorFade {
+      0% { opacity: 0.55; }
+      100% { opacity: 0.95; }
+    }
+
+    /* ── MEET OUR FOUNDERS SECTION HEADER ───────────────────────────── */
+    .founders-header {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 80px 24px 20px;
+      position: relative;
+      z-index: 10;
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+    .founders-header .purple-label {
+      background: rgba(168, 85, 247, 0.08);
+      border: 1px solid rgba(168, 85, 247, 0.25);
+      box-shadow: 0 0 20px rgba(168, 85, 247, 0.10), inset 0 0 10px rgba(168, 85, 247, 0.05);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      padding: 8px 22px;
+      font-size: 0.72rem;
+      letter-spacing: 0.2em;
+      margin-bottom: 28px;
+      transition: all 0.4s ease;
+      cursor: default;
+    }
+    .founders-header .purple-label:hover {
+      border-color: rgba(168, 85, 247, 0.50);
+      box-shadow: 0 0 25px rgba(168, 85, 247, 0.20), inset 0 0 15px rgba(168, 85, 247, 0.10);
+      transform: scale(1.03);
+    }
+    .dot-blink {
+      display: inline-block;
+      color: var(--purple-light);
+      margin-right: 4px;
+      animation: dotBlinker 1.5s ease-in-out infinite alternate;
+    }
+    @keyframes dotBlinker {
+      0% { opacity: 0.3; transform: scale(0.85); }
+      100% { opacity: 1; transform: scale(1.15); }
+    }
+    .founders-title {
+      font-family: var(--font-display);
+      font-size: clamp(3rem, 6vw, 5.2rem);
+      font-weight: 900;
+      line-height: 1.1;
+      letter-spacing: -0.03em;
+      color: var(--white);
+      margin-bottom: 12px;
+      text-align: center;
+    }
+    .founders-highlight {
+      font-family: 'Playfair Display', 'Georgia', serif;
+      font-style: italic;
+      font-weight: 400;
+    }
+    .founders-highlight .word-reveal-word {
+      font-family: 'Playfair Display', 'Georgia', serif;
+      font-style: italic;
+      font-weight: 400;
+      background: linear-gradient(135deg, #c084fc 0%, #a855f7 50%, #60a5fa 100%) !important;
+      -webkit-background-clip: text !important;
+      -webkit-text-fill-color: transparent !important;
+      background-clip: text !important;
+    }
+    .founders-divider {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      margin: 18px 0 24px;
+      opacity: 0.8;
+    }
+    .founders-divider .fd-line {
+      width: 80px;
+      height: 1px;
+      background: linear-gradient(to right, transparent, var(--purple-light), transparent);
+      transform: scaleX(0);
+      animation: expandLine 1.5s cubic-bezier(0.16, 1, 0.3, 1) forwards 0.5s;
+    }
+    .founders-divider .fd-dot {
+      width: 6px;
+      height: 6px;
+      background: var(--purple-light);
+      border-radius: 50%;
+      box-shadow: 0 0 8px var(--purple-light), 0 0 16px var(--purple-mid);
+      opacity: 0;
+      animation: fadeInDot 1s ease forwards 0.2s;
+    }
+    @keyframes expandLine {
+      to { transform: scaleX(1); }
+    }
+    @keyframes fadeInDot {
+      to { opacity: 1; }
+    }
+    .founders-subtitle {
+      font-family: var(--font-body);
+      font-size: clamp(1rem, 2vw, 1.2rem);
+      color: var(--text-muted);
+      max-width: 620px;
+      margin: 0 auto;
+      line-height: 1.6;
+      text-align: center;
+    }
+
+    /* ─── BACK TO LANDING BUTTON ───────────────────────────────────────── */
+    @keyframes btnShimmer {
+      0%   { transform: translateX(-100%) skewX(-12deg); }
+      100% { transform: translateX(260%) skewX(-12deg); }
+    }
+
+    .back-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+
+      padding: 9px 18px;
+      border-radius: 22px;
+
+      /* Glassmorphism core */
+      background: rgba(10, 6, 22, 0.62);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+
+      /* Purple accent border */
+      border: 1px solid rgba(168, 85, 247, 0.28);
+      box-shadow:
+        0 4px 20px rgba(0, 0, 0, 0.35),
+        0 0 0 0 rgba(168, 85, 247, 0);
+
+      /* Typography */
+      font-family: var(--font-display);
+      font-size: 0.82rem;
+      font-weight: 600;
+      letter-spacing: 0.03em;
+      color: rgba(226, 217, 243, 0.88);
+      text-decoration: none;
+      white-space: nowrap;
+
+      /* Transitions */
+      transition:
+        transform 0.32s cubic-bezier(0.16, 1, 0.3, 1),
+        box-shadow 0.32s cubic-bezier(0.16, 1, 0.3, 1),
+        border-color 0.32s ease,
+        color 0.22s ease,
+        background 0.22s ease;
+
+      /* Shimmer layer */
+      overflow: hidden;
+    }
+
+    /* Shimmer pseudo-element */
+    .back-btn::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      background: linear-gradient(
+        105deg,
+        transparent 30%,
+        rgba(168, 85, 247, 0.18) 50%,
+        transparent 70%
+      );
+      transform: translateX(-100%) skewX(-12deg);
+      transition: none;
+      pointer-events: none;
+    }
+
+    .back-btn:hover::before {
+      animation: btnShimmer 0.65s ease forwards;
+    }
+
+    /* Hover state */
+    .back-btn:hover {
+      transform: translateY(-3px);
+      background: rgba(15, 8, 35, 0.78);
+      border-color: rgba(168, 85, 247, 0.55);
+      color: var(--white);
+      box-shadow:
+        0 8px 28px rgba(0, 0, 0, 0.40),
+        0 0 18px rgba(168, 85, 247, 0.28),
+        0 0  0px 1px rgba(168, 85, 247, 0.12) inset;
+    }
+
+    /* Active / press state */
+    .back-btn:active {
+      transform: translateY(-1px) scale(0.97);
+      box-shadow:
+        0 3px 12px rgba(0, 0, 0, 0.35),
+        0 0 10px rgba(168, 85, 247, 0.22);
+      transition-duration: 0.08s;
+    }
+
+    /* Focus (keyboard) state */
+    .back-btn:focus-visible {
+      outline: none;
+      border-color: rgba(168, 85, 247, 0.70);
+      box-shadow:
+        0 0 0 3px rgba(168, 85, 247, 0.30),
+        0 4px 20px rgba(0, 0, 0, 0.35);
+    }
+
+    /* Arrow icon */
+    .back-btn .back-btn-icon {
+      flex-shrink: 0;
+      width: 15px;
+      height: 15px;
+      color: var(--purple-light);
+      transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), color 0.22s ease;
+    }
+    .back-btn:hover .back-btn-icon {
+      transform: translateX(-3px);
+      color: #d8b4fe;
+    }
+
+    /* Responsive — smaller screens */
+    @media (max-width: 640px) {
+      .back-btn {
+        padding: 7px 12px;
+        font-size: 0.74rem;
+        gap: 5px;
+      }
+      .back-btn .back-btn-icon {
+        width: 12px;
+        height: 12px;
+      }
+    }
+
+  </style>
+</head>
+
+<body>
+  <!-- Custom Cosmic Cursor -->
+  <div id="custom-cursor-dot" class="custom-cursor"></div>
+  <div id="custom-cursor-ring" class="custom-cursor"></div>
+
+  <!-- Scroll Progress Indicator -->
+  <div id="scroll-progress"></div>
+
+  <!-- Fixed Moon Background -->
+  <div id="moon-backdrop" aria-hidden="true">
+    <video class="about-bg-video" autoplay muted loop playsinline>
+      <source src="Moon_rotation.mp4" type="video/mp4">
+    </video>
+    <div class="about-bg-overlay"></div>
+  </div>
+
+  <!-- Floating Particles Canvas -->
+  <canvas id="particles-canvas" aria-hidden="true"></canvas>
+
+  <!-- Navigation -->
+  <nav>
+    <a href="/" class="nav-logo" style="text-decoration: none;">VYOM</a>
+    <div class="nav-sound-wrapper" style="position: relative; display: flex; align-items: center; gap: 8px;">
+      <div class="nav-sound-toggle" id="sound-toggle" role="button" aria-label="Toggle sound mode">
+        <div class="sound-wave">
+          <span class="bar"></span>
+          <span class="bar"></span>
+          <span class="bar"></span>
+          <span class="bar"></span>
+        </div>
+        <span class="sound-label">Audio: Off</span>
+      </div>
+      <button class="nav-sound-settings-btn" id="sound-settings-btn" aria-label="Audio settings">⚙</button>
+      
+      <!-- Synth Dashboard Panel -->
+      <div class="synth-dashboard-panel" id="synth-panel">
+        <div class="synth-panel-header">
+          <span>Synthesizer</span>
+          <button id="close-synth-btn" aria-label="Close settings">×</button>
+        </div>
+        <div class="synth-control">
+          <label for="synth-speed">Spin Speed: <span id="val-speed">1.35Hz</span></label>
+          <input type="range" id="synth-speed" min="0.2" max="3.0" step="0.05" value="1.35">
+        </div>
+        <div class="synth-control">
+          <label for="synth-pitch">Motor Pitch: <span id="val-pitch">130Hz</span></label>
+          <input type="range" id="synth-pitch" min="60" max="220" step="5" value="130">
+        </div>
+        <div class="synth-control">
+          <label for="synth-clicks">Gear Click: <span id="val-clicks">Medium</span></label>
+          <input type="range" id="synth-clicks" min="0" max="0.08" step="0.002" value="0.025">
+        </div>
+      </div>
+    </div>
+    <a
+      href="vyom.html"
+      class="back-btn"
+      aria-label="Back to Landing Page"
+    >
+      <svg class="back-btn-icon" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path
+          d="M8.84182 3.13514C9.04327 3.32401 9.05348 3.64042 8.86462 3.84188L5.43521 7.49991L8.86462 11.1579C9.05348 11.3594 9.04327 11.6758 8.84182 11.8647C8.64036 12.0535 8.32394 12.0433 8.13508 11.8419L4.38508 7.84188C4.20477 7.64955 4.20477 7.35027 4.38508 7.15794L8.13508 3.15794C8.32394 2.95648 8.64036 2.94628 8.84182 3.13514Z"
+          fill="currentColor"
+          fill-rule="evenodd"
+          clip-rule="evenodd"
+        />
+      </svg>
+      Back to Landing Page
+    </a>
+  </nav>
+  <main class="page-content">
+    <!-- Volumetric Glow Orbs -->
+    <div class="bg-glow-orb orb-1" aria-hidden="true"></div>
+    <div class="bg-glow-orb orb-2" aria-hidden="true"></div>
+    <div class="bg-glow-orb orb-3" aria-hidden="true"></div>
+    <div class="bg-glow-orb orb-4" aria-hidden="true"></div>
+
+    <!-- ── HERO ──────────────────────────────────────────────────────── -->
+    <section id="hero">
+      <div class="section-container">
+        <p class="hero-eyebrow fade-up">About VYOM</p>
+        <h1 class="word-reveal">
+          "Every classroom has answers.<br />
+          <span class="gradient-text">The challenge is</span> <span class="word-rotator" data-words="seeing,understanding,optimizing,empowering">seeing</span> <span class="gradient-text">them.</span>"
+        </h1>
+        <p class="fade-up fade-up-delay-2">
+          We build AI-powered intelligence tools that help teachers understand what traditional classrooms miss — transforming raw data into actionable insight.
+        </p>
+        <div class="hero-metrics fade-up fade-up-delay-3">
+          <div class="hero-metric">
+            <div class="value"><span class="counter" data-target="95">0</span>%</div>
+            <div class="label">Attendance Rate</div>
+          </div>
+          <div class="hero-metric-divider"></div>
+          <div class="hero-metric">
+            <div class="value"><span class="counter" data-target="82">0</span>%</div>
+            <div class="label">Engagement</div>
+          </div>
+          <div class="hero-metric-divider"></div>
+          <div class="hero-metric">
+            <div class="value"><span class="counter" data-target="2">0</span>×</div>
+            <div class="label">Patents Filed</div>
+          </div>
+          <div class="hero-metric-divider"></div>
+          <div class="hero-metric">
+            <div class="value"><span class="counter" data-target="12">0</span>+</div>
+            <div class="label">AI Insights</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Scroll Down Indicator -->
+      <div class="scroll-indicator-wrap">
+        <span class="scroll-indicator-text">Scroll to explore</span>
+        <div class="scroll-indicator-line">
+          <div class="scroll-indicator-dot"></div>
+        </div>
+      </div>
+    </section>
+
+    <div class="section-divider" aria-hidden="true"></div>
+
+    <!-- ── STATS STRIP ────────────────────────────────────────────────── -->
+    <section id="stats-strip">
+      <div class="section-container">
+        <div class="stats-grid fade-up">
+          <div class="stat-cell">
+            <div class="s-value"><span class="counter" data-target="95">0</span>%</div>
+            <div class="s-label">Attendance Today</div>
+          </div>
+          <div class="stat-cell">
+            <div class="s-value"><span class="counter" data-target="82">0</span>%</div>
+            <div class="s-label">Engagement This Week</div>
+          </div>
+          <div class="stat-cell">
+            <div class="s-value"><span class="counter" data-target="28">0</span></div>
+            <div class="s-label">Assignment Submissions</div>
+          </div>
+          <div class="stat-cell">
+            <div class="s-value"><span class="counter" data-target="12">0</span></div>
+            <div class="s-label">AI Insights Generated</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="section-divider" aria-hidden="true"></div>
+
+    <!-- ── MEET OUR FOUNDERS HEADER ───────────────────────────────────── -->
+    <div class="founders-header fade-up">
+      <div class="purple-label">
+        <span class="dot-blink">●</span> The Minds Behind VYOM
+      </div>
+      <h2 class="founders-title word-reveal">
+        Meet Our <span class="founders-highlight">Founders</span>
+      </h2>
+      <div class="founders-divider" aria-hidden="true">
+        <span class="fd-line"></span>
+        <span class="fd-dot"></span>
+        <span class="fd-line"></span>
+      </div>
+      <p class="founders-subtitle">
+        Two visionaries. One mission. Transforming education with AI.
+      </p>
+    </div>
+
+    <!-- ── FOUNDER SECTION ────────────────────────────────────────────── -->
+    <section id="founder" class="fv2-section">
+      <div class="section-container">
+        <div class="fv2-layout">
+
+          <!-- ── LEFT INFO PANEL ── -->
+          <div class="fv2-left fade-up">
+            <div class="fv2-eyebrow">Founder &amp; CEO</div>
+            <h2 class="fv2-name" data-first="Satyander Kaushik" >
+              Satyander  Kaushik<br />
+             
+            </h2>
+            <div class="fv2-subtitle">AI Engineer • Innovator • Builder</div>
+            <div class="fv2-rule"></div>
+            <p class="fv2-desc">
+              Leading the vision of AI-first education technology. Combining full-stack engineering with research-driven innovation to redefine how classrooms work and empower every student.
+            </p>
+
+            <!-- Mini stats -->
+            <div class="fv2-stats">
+              <div class="fv2-stat">
+                <span class="fvs-icon">🚀</span>
+                <span class="fvs-val"><span class="counter" data-target="5">0</span>+</span>
+                <span class="fvs-label">Years Exp.</span>
+              </div>
+              <div class="fv2-stat">
+                <span class="fvs-icon">🤖</span>
+                <span class="fvs-val"><span class="counter" data-target="10">0</span>+</span>
+                <span class="fvs-label">AI Models</span>
+              </div>
+              <div class="fv2-stat">
+                <span class="fvs-icon">🏆</span>
+                <span class="fvs-val"><span class="counter" data-target="2">0</span></span>
+                <span class="fvs-label">Patents</span>
+              </div>
+            </div>
+
+            <!-- Quote -->
+            <div class="fv2-quote-block">
+              <span class="fvq-mark">❝</span>
+              <p>"Education is not about studying more, it's about understanding better."</p>
+            </div>
+
+            <!-- Socials -->
+            <div class="fv2-socials">
+              <a href="#" class="fv2-social-btn" id="founder-linkedin" title="LinkedIn">in</a>
+              <a href="mailto:classmind7@gmail.com" class="fv2-social-btn" id="founder-email" title="Email">✉</a>
+              <a href="#" class="fv2-social-btn" id="founder-phone" title="Contact">📞</a>
+            </div>
+          </div>
+
+          <!-- ── CENTER IMAGE ── -->
+          <div class="fv2-center" id="fv2-center">
+
+            <!-- ✦ PREMIUM NEBULA — 6 volumetric cloud layers ── -->
+            <div class="fv2-nebula" aria-hidden="true" id="fv2-nebula">
+              <div class="neb-base"></div>
+              <div class="neb-cloud-l"></div>
+              <div class="neb-cloud-r"></div>
+              <div class="neb-cloud-c"></div>
+              <div class="neb-highlight"></div>
+              <div class="neb-upper-wisps"></div>
+            </div>
+
+            <!-- ✦ CINEMATIC MOON — clean, no halos ── -->
+            <div class="fv2-moon" aria-hidden="true" id="fv2-moon">
+              <div class="moon-core"></div>
+              <div class="moon-crater-1"></div>
+              <div class="moon-crater-2"></div>
+              <div class="moon-crater-3"></div>
+              <div class="moon-edge-glow"></div>
+              <canvas class="moon-visualizer"></canvas>
+            </div>
+
+            <!-- Founder image — highest z-index -->
+            <div class="fv2-img-wrapper" id="founder-photo">
+              <img src="satyander_kumar.png" alt="Satyander Kaushik — Founder &amp; CEO of VYOM" />
+              <div class="holo-telemetry holo-tl">[ SYS_ACTIVE: SATYANDER_K ]</div>
+              <div class="holo-telemetry holo-tr">[ ROLE: FOUNDER_CEO ]</div>
+              <div class="holo-telemetry holo-bl">[ LOC: CORE_NODE ]</div>
+              <div class="holo-telemetry holo-br">[ ID: 0x9F32 ]</div>
+            </div>
+          </div>
+
+
+          <!-- ── RIGHT: Speech Bubble + Trait List ── -->
+          <div class="fv2-right fade-up fade-up-delay-2">
+
+            <!-- ✔ SPEECH BUBBLE — right of founder's shoulder -->
+            <div class="speech-bubble-wrap">
+              <div class="speech-bubble">
+                <div class="sb-sparkles">
+                  <span class="sb-spark"></span>
+                  <span class="sb-spark"></span>
+                  <span class="sb-spark"></span>
+                  <span class="sb-spark"></span>
+                  <span class="sb-spark"></span>
+                </div>
+                <span class="sb-quote-mark">❝</span>
+                <p class="sb-text" data-text="Every great innovation begins with a question. |||VYOM||| was built to answer how AI can truly transform learning."></p>
+                <div class="sb-footer">
+                  <div class="sb-typing">
+                    <div class="sb-dot"></div>
+                    <div class="sb-dot"></div>
+                    <div class="sb-dot"></div>
+                  </div>
+                  <span class="sb-author">Satyander Kaushik</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Trait cards below -->
+            <div class="fv2-trait">
+              <div class="fv2-trait-icon">🤖</div>
+              <div class="fv2-trait-body">
+                <div class="ft-title">AI Engineer</div>
+                <div class="ft-text">Building intelligent solutions that make a difference.</div>
+              </div>
+            </div>
+            <div class="fv2-trait">
+              <div class="fv2-trait-icon">📡</div>
+              <div class="fv2-trait-body">
+                <div class="ft-title">IEEE Researcher</div>
+                <div class="ft-text">Exploring new frontiers through research and innovation.</div>
+              </div>
+            </div>
+            <div class="fv2-trait">
+              <div class="fv2-trait-icon">🛡️</div>
+              <div class="fv2-trait-body">
+                <div class="ft-title">Patent Holder</div>
+                <div class="ft-text">Turning ideas into intellectual property and real-world impact.</div>
+              </div>
+            </div>
+            <div class="fv2-trait">
+              <div class="fv2-trait-icon">💻</div>
+              <div class="fv2-trait-body">
+                <div class="ft-title">Full Stack Dev</div>
+                <div class="ft-text">Crafting seamless digital experiences end-to-end.</div>
+              </div>
+            </div>
+            <div class="fv2-trait">
+              <div class="fv2-trait-icon">📊</div>
+              <div class="fv2-trait-body">
+                <div class="ft-title">Product Strategist</div>
+                <div class="ft-text">Driving product vision and creating user-centric solutions.</div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ── CO-FOUNDER SECTION ─────────────────────────────────────────── -->
+    <section id="cofounder-section" class="fv2-section">
+      <div class="section-container">
+        <div class="fv2-layout">
+
+          <!-- ── LEFT INFO PANEL ── -->
+          <div class="fv2-left fade-up">
+            <div class="fv2-eyebrow">Co-Founder &amp; CTO</div>
+            <h2 class="fv2-name" data-first="Robins Gupta" data-last="">
+              Robins Gupta
+            </h2>
+            <div class="fv2-subtitle">Data Scientist · Architect · Dreamer</div>
+            <div class="fv2-rule"></div>
+            <p class="fv2-desc">
+              Architecting the core platform of VYOM. A problem solver at heart, focused on building scalable, reliable, and secure systems that make learning seamless and data-driven.
+            </p>
+
+            <!-- Mini stats -->
+            <div class="fv2-stats">
+              <div class="fv2-stat">
+                <span class="fvs-icon">💻</span>
+                <span class="fvs-val"><span class="counter" data-target="7">0</span>+</span>
+                <span class="fvs-label">Years Coding</span>
+              </div>
+              <div class="fv2-stat">
+                <span class="fvs-icon">📊</span>
+                <span class="fvs-val"><span class="counter" data-target="15">0</span>+</span>
+                <span class="fvs-label">Projects</span>
+              </div>
+              <div class="fv2-stat">
+                <span class="fvs-icon">🏗️</span>
+                <span class="fvs-val"><span class="counter" data-target="4">0</span>+</span>
+                <span class="fvs-label">Systems</span>
+              </div>
+            </div>
+
+            <!-- Quote -->
+            <div class="fv2-quote-block">
+              <span class="fvq-mark">❝</span>
+              <p>"A problem solver at heart, focused on building scalable, reliable, and secure systems."</p>
+            </div>
+
+            <!-- Socials -->
+            <div class="fv2-socials">
+              <a href="#" class="fv2-social-btn" id="cofounder-linkedin" title="LinkedIn">in</a>
+              <a href="mailto:classmind7@gmail.com" class="fv2-social-btn" id="cofounder-email" title="Email">✉</a>
+              <a href="#" class="fv2-social-btn" id="cofounder-phone" title="Contact">📞</a>
+            </div>
+          </div>
+
+          <!-- ── CENTER IMAGE ── -->
+          <div class="fv2-center">
+
+            <!-- ✦ PREMIUM NEBULA — 6 volumetric cloud layers ── -->
+            <div class="fv2-nebula" aria-hidden="true" id="cofounder-fv2-nebula">
+              <div class="neb-base"></div>
+              <div class="neb-cloud-l"></div>
+              <div class="neb-cloud-r"></div>
+              <div class="neb-cloud-c"></div>
+              <div class="neb-highlight"></div>
+              <div class="neb-upper-wisps"></div>
+            </div>
+
+            <!-- ✦ CINEMATIC MOON — clean, no halos ── -->
+            <div class="fv2-moon" aria-hidden="true" id="cofounder-fv2-moon">
+              <div class="moon-core"></div>
+              <div class="moon-crater-1"></div>
+              <div class="moon-crater-2"></div>
+              <div class="moon-crater-3"></div>
+              <div class="moon-edge-glow"></div>
+              <canvas class="moon-visualizer"></canvas>
+            </div>
+
+            <!-- Co-Founder image — highest z-index -->
+            <div class="fv2-img-wrapper" id="cofounder-photo">
+              <img src="robins_gupta.png" alt="Robins Gupta — Co-Founder &amp; CTO of VYOM" />
+              <div class="holo-telemetry holo-tl">[ SYS_ACTIVE: ROBINS_G ]</div>
+              <div class="holo-telemetry holo-tr">[ ROLE: COFOUNDER_CTO ]</div>
+              <div class="holo-telemetry holo-bl">[ LOC: SYSTEM_ARCH ]</div>
+              <div class="holo-telemetry holo-br">[ ID: 0xCF12 ]</div>
+            </div>
+          </div>
+
+          <!-- ── RIGHT: Speech Bubble + Trait List ── -->
+          <div class="fv2-right fade-up fade-up-delay-2">
+
+            <!-- ✔ SPEECH BUBBLE — right of founder's shoulder -->
+            <div class="speech-bubble-wrap">
+              <div class="speech-bubble">
+                <div class="sb-sparkles">
+                  <span class="sb-spark"></span>
+                  <span class="sb-spark"></span>
+                  <span class="sb-spark"></span>
+                  <span class="sb-spark"></span>
+                  <span class="sb-spark"></span>
+                </div>
+                <span class="sb-quote-mark">❝</span>
+                <p class="sb-text" data-text="We don't just write code; we design resilient systems that scale to empower every student. At |||VYOM|||, we make learning seamless and data-driven."></p>
+                <div class="sb-footer">
+                  <div class="sb-typing">
+                    <div class="sb-dot"></div>
+                    <div class="sb-dot"></div>
+                    <div class="sb-dot"></div>
+                  </div>
+                  <span class="sb-author">Robins Gupta</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Trait cards below -->
+            <div class="fv2-trait">
+              <div class="fv2-trait-icon">📊</div>
+              <div class="fv2-trait-body">
+                <div class="ft-title">Data Scientist</div>
+                <div class="ft-text">Translating complex educational datasets into meaningful insights.</div>
+              </div>
+            </div>
+            <div class="fv2-trait">
+              <div class="fv2-trait-icon">🏗️</div>
+              <div class="fv2-trait-body">
+                <div class="ft-title">System Architect</div>
+                <div class="ft-text">Designing highly scalable, reliable, and secure infrastructure.</div>
+              </div>
+            </div>
+            <div class="fv2-trait">
+              <div class="fv2-trait-icon">💻</div>
+              <div class="fv2-trait-body">
+                <div class="ft-title">Full Stack Dev</div>
+                <div class="ft-text">Engineering high-performance applications from UI to database.</div>
+              </div>
+            </div>
+            <div class="fv2-trait">
+              <div class="fv2-trait-icon">🧩</div>
+              <div class="fv2-trait-body">
+                <div class="ft-title">Problem Solver</div>
+                <div class="ft-text">Tackling complex engineering challenges with elegant software solutions.</div>
+              </div>
+            </div>
+            <div class="fv2-trait">
+              <div class="fv2-trait-icon">🚀</div>
+              <div class="fv2-trait-body">
+                <div class="ft-title">Technical Leader</div>
+                <div class="ft-text">Guiding the engineering vision and fostering innovation within the team.</div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <div class="section-divider" aria-hidden="true"></div>
+
+    <!-- ── OUR JOURNEY TIMELINE ──────────────────────────────────────── -->
+    <section id="journey">
+      <div class="section-container">
+        <div class="journey-header fade-up">
+          <div class="purple-label">Our Journey</div>
+          <h2 class="section-headline word-reveal">How we built <span class="gradient-text">VYOM</span></h2>
+          <p class="journey-subtitle">The milestones, challenges, and breakthroughs that shaped our platform.</p>
+        </div>
+        
+        <div class="timeline-container" id="timeline-container">
+          <!-- Timeline spine line -->
+          <div class="timeline-spine">
+            <div class="timeline-spine-glow" id="timeline-spine-glow"></div>
+          </div>
+          
+          <!-- Spaceship Navigator Slider -->
+          <div class="timeline-spaceship" id="timeline-spaceship" aria-label="Spaceship Navigator">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 2L16 10L16 17L12 20L8 17L8 10L12 2Z" fill="url(#shipGrad)" stroke="rgba(168, 85, 247, 0.85)" stroke-width="1"/>
+              <path d="M8 12L4 16L8 16" fill="rgba(109, 40, 217, 0.6)" stroke="rgba(168, 85, 247, 0.85)" stroke-width="1"/>
+              <path d="M16 12L20 16L16 16" fill="rgba(109, 40, 217, 0.6)" stroke="rgba(168, 85, 247, 0.85)" stroke-width="1"/>
+              <circle cx="12" cy="9" r="2.5" fill="#60a5fa" stroke="#93c5fd" stroke-width="0.5"/>
+              <circle cx="12" cy="18" r="1.5" fill="#ec4899"/>
+              <defs>
+                <linearGradient id="shipGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#c084fc"/>
+                  <stop offset="100%" stop-color="#6d28d9"/>
+                </linearGradient>
+              </defs>
+            </svg>
+            <div class="ship-flame"></div>
+            <div class="ship-hud" id="ship-hud">
+              <div class="hud-line" id="hud-sector">SECTOR: INITIALIZING</div>
+              <div class="hud-line" id="hud-year">YEAR: Q1 2023</div>
+              <div class="hud-line" id="hud-vel">VEL: 0 km/s</div>
+              <div class="hud-line" id="hud-fuel">FUEL: 100%</div>
+            </div>
+          </div>
+          
+          <!-- Timeline Items -->
+          <div class="timeline-item left fade-up">
+            <div class="timeline-marker">
+              <div class="timeline-dot"></div>
+            </div>
+            <div class="timeline-card glass-card">
+              <div class="timeline-year">Q1 2023</div>
+              <h3 class="timeline-title">The Spark</h3>
+              <p class="timeline-desc">Satyander and Robins ask: Why do physical classrooms lack real-time insights? We begin initial feasibility and pedagogical research.</p>
+            </div>
+          </div>
+
+          <div class="timeline-item right fade-up">
+            <div class="timeline-marker">
+              <div class="timeline-dot"></div>
+            </div>
+            <div class="timeline-card glass-card">
+              <div class="timeline-year">Q3 2023</div>
+              <h3 class="timeline-title">First Prototypes</h3>
+              <p class="timeline-desc">Built our first real-time attention analysis model using standard webcams and local processing, demonstrating core technical feasibility.</p>
+            </div>
+          </div>
+
+          <div class="timeline-item left fade-up">
+            <div class="timeline-marker">
+              <div class="timeline-dot"></div>
+            </div>
+            <div class="timeline-card glass-card">
+              <div class="timeline-year">Q1 2024</div>
+              <h3 class="timeline-title">Patent Filed</h3>
+              <p class="timeline-desc">Filed our first official patent for real-time classroom student optimization analytics. The core VYOM architecture is finalized.</p>
+            </div>
+          </div>
+
+          <div class="timeline-item right fade-up">
+            <div class="timeline-marker">
+              <div class="timeline-dot"></div>
+            </div>
+            <div class="timeline-card glass-card">
+              <div class="timeline-year">Q4 2024</div>
+              <h3 class="timeline-title">Beta Launch</h3>
+              <p class="timeline-desc">Launched the VYOM beta in 3 pilot schools, tracking attendance and engagement dynamically, generating over 12,000 automated AI insights.</p>
+            </div>
+          </div>
+
+          <div class="timeline-item left fade-up">
+            <div class="timeline-marker">
+              <div class="timeline-dot"></div>
+            </div>
+            <div class="timeline-card glass-card">
+              <div class="timeline-year">2025 &amp; Beyond</div>
+              <h3 class="timeline-title">Scale &amp; Impact</h3>
+              <p class="timeline-desc">Scaling the platform to support hundreds of active classrooms globally, helping teachers create responsive learning environments.</p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <div class="section-divider" aria-hidden="true"></div>
+
+    <!-- ── MISSION / VISION / PROBLEM ────────────────────────────────── -->
+    <section id="mission">
+      <div class="section-container">
+        <div class="mission-header fade-up">
+          <div class="purple-label">Purpose</div>
+          <h2 class="section-headline word-reveal">"Our mission, vision,<br /><span class="gradient-text">and the problem we solve</span>"</h2>
+        </div>
+        <div class="mission-grid">
+          <div class="mission-card glass-card fade-up fade-up-delay-1">
+            <div class="mc-number">01</div>
+            <div class="mc-title">Our Mission</div>
+            <div class="mc-sub">To help every teacher understand learning as it happens.</div>
+            <p class="mc-text">We bring real-time AI intelligence that transforms how educators comprehend, guide, and support each student individually.</p>
+          </div>
+          <div class="mission-card glass-card fade-up fade-up-delay-2">
+            <div class="mc-number">02</div>
+            <div class="mc-title">Our Vision</div>
+            <div class="mc-sub">A world where no student is left behind because of data.</div>
+            <p class="mc-text">We envision education where AI and human intuition combine to create the best learning outcomes for every student on earth.</p>
+          </div>
+          <div class="mission-card glass-card fade-up fade-up-delay-3">
+            <div class="mc-number">03</div>
+            <div class="mc-title">The Problem</div>
+            <div class="mc-sub">Traditional classrooms generate data, but not insights.</div>
+            <p class="mc-text">Teachers make decisions without knowing who understood, who's struggling, or who needs help the most. VYOM changes that.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="section-divider" aria-hidden="true"></div>
+
+    <!-- ── FEATURES ───────────────────────────────────────────────────── -->
+    <section id="features">
+      <div class="section-container">
+        <div class="features-header fade-up">
+          <div class="purple-label">Platform</div>
+          <h2 class="section-headline word-reveal">What <span class="gradient-text">VYOM</span> offers</h2>
+          <p>A complete suite of AI-powered tools designed to transform classroom management and learning outcomes.</p>
+        </div>
+        <div class="features-grid">
+          <div class="feature-card glass-card fade-up fade-up-delay-1">
+            <div class="fc-icon">📊</div>
+            <div class="fc-title">Attendance</div>
+            <p class="fc-text">Real-time tracking with automated reports and intelligent anomaly detection for every class.</p>
+          </div>
+          <div class="feature-card glass-card fade-up fade-up-delay-2">
+            <div class="fc-icon">🤖</div>
+            <div class="fc-title">AI Tasks</div>
+            <p class="fc-text">AI-generated quizzes, notes, and worksheets tailored precisely to your curriculum needs.</p>
+          </div>
+          <div class="feature-card glass-card fade-up fade-up-delay-3">
+            <div class="fc-icon">📈</div>
+            <div class="fc-title">Analytics</div>
+            <p class="fc-text">Actionable insights that help teachers improve learning outcomes across every student.</p>
+          </div>
+          <div class="feature-card glass-card fade-up fade-up-delay-1">
+            <div class="fc-icon">📚</div>
+            <div class="fc-title">Content</div>
+            <p class="fc-text">Smart content management and organization tools built for efficient teacher workflows.</p>
+          </div>
+          <div class="feature-card glass-card fade-up fade-up-delay-2">
+            <div class="fc-icon">💻</div>
+            <div class="fc-title">Coding Lab</div>
+            <p class="fc-text">Interactive coding practice environment built directly into the platform for hands-on learning.</p>
+          </div>
+          <div class="feature-card glass-card fade-up fade-up-delay-3">
+            <div class="fc-icon">📋</div>
+            <div class="fc-title">Reports</div>
+            <p class="fc-text">Beautiful, shareable reports that teachers love to present — clarity at every level.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="section-divider" aria-hidden="true"></div>
+
+    <!-- ── TECH STACK ─────────────────────────────────────────────────── -->
+    <section id="tech">
+      <div class="section-container">
+        <div class="tech-header fade-up">
+          <div class="purple-label">Infrastructure</div>
+          <h2 class="section-headline word-reveal">Built with <span class="gradient-text">modern technology</span></h2>
+          <p>We use industry-leading tools and frameworks to ensure performance, reliability, and scalability at every scale.</p>
+        </div>
+        <div class="tech-orbital-wrap fade-up" id="tech-sphere-container">
+          <div class="tech-core">VYOM</div>
+          <div class="tech-orbit-pill">Next.js</div>
+          <div class="tech-orbit-pill">TypeScript</div>
+          <div class="tech-orbit-pill">Tailwind CSS</div>
+          <div class="tech-orbit-pill">Firebase</div>
+          <div class="tech-orbit-pill">PostgreSQL</div>
+          <div class="tech-orbit-pill">OpenAI</div>
+          <div class="tech-orbit-pill">FastAPI</div>
+          <div class="tech-orbit-pill">Google OAuth</div>
+        </div>
+      </div>
+    </section>
+
+    <div class="section-divider" aria-hidden="true"></div>
+
+    <!-- ── CTA ────────────────────────────────────────────────────────── -->
+    <section id="cta">
+      <div class="section-container">
+        <div class="cta-inner fade-up">
+          <div class="purple-label">Get Started</div>
+          <h2 class="section-headline word-reveal">
+            "The future classroom won't be managed.<br />
+            <span class="gradient-text">It will be</span> <span class="word-rotator" data-words="understood,empowered,transformed,optimized">understood</span><span class="gradient-text">.</span>"
+          </h2>
+          <p>Join the revolution in AI-powered classroom intelligence.</p>
+          <div class="cta-buttons">
+            <a href="/" class="btn-primary" id="explore-vyom-btn">Explore VYOM →</a>
+            <a href="mailto:classmind7@gmail.com" class="btn-secondary" id="contact-us-btn">Contact Us</a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer>
+    <p>© 2025 VYOM. All rights reserved.</p>
+    <div class="footer-links">
+      <a href="#" id="privacy-policy-link">Privacy Policy</a>
+      <a href="#" id="terms-service-link">Terms of Service</a>
+    </div>
+  </footer>
+
+  <!-- ─── JAVASCRIPT ──────────────────────────────────────────────────── -->
+  <script>
+    /* ── Star Field (layered, twinkling, with shooting stars) ───────── */
+    (function () {
+      const canvas = document.getElementById('particles-canvas');
+      const ctx    = canvas.getContext('2d');
+      let W, H, stars = [];
+      let shootingStars = [];
+
+      // Scroll speed tracker variables
+      let lastScrollTop = window.pageYOffset || document.documentElement.scrollTop;
+      let scrollVelocity = 0;
+      let targetScrollVelocity = 0;
+      let lastTime = performance.now() * 0.001;
+
+      window.addEventListener('scroll', () => {
+        const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+        const diff = Math.abs(scrollTop - lastScrollTop);
+        targetScrollVelocity = Math.min(diff * 0.15, 6.0); // cap speed multiplier contribution
+        lastScrollTop = scrollTop;
+      });
+
+      /* Three tiers of stars for depth */
+      const TIERS = [
+        /* tiny background stars  – many, dim, slowest twinkle */
+        { count: 160, rMin: 0.2, rMax: 0.7, aMin: 0.08, aMax: 0.35, speedMin: 0.0004, speedMax: 0.0012, color: 'rgba(220,210,255,' },
+        /* mid-size stars         – moderate, slightly brighter */
+        { count:  90, rMin: 0.7, rMax: 1.3, aMin: 0.18, aMax: 0.60, speedMin: 0.0008, speedMax: 0.0020, color: 'rgba(255,255,255,' },
+        /* bright accent stars    – few, vivid, faster twinkle  */
+        { count:  30, rMin: 1.3, rMax: 2.2, aMin: 0.40, aMax: 0.90, speedMin: 0.0018, speedMax: 0.0040, color: 'rgba(200,160,255,' },
+      ];
+
+      function resize() {
+        W = canvas.width  = window.innerWidth;
+        H = canvas.height = window.innerHeight;
+      }
+
+      function mkStar(tier) {
+        const a = tier.aMin + Math.random() * (tier.aMax - tier.aMin);
+        const speed = (tier.speedMin + Math.random() * (tier.speedMax - tier.speedMin))
+                      * (Math.random() < 0.5 ? 1 : -1);
+        return {
+          x:     Math.random() * W,
+          y:     Math.random() * H,
+          r:     tier.rMin + Math.random() * (tier.rMax - tier.rMin),
+          a,
+          baseA: a,
+          phase: Math.random() * Math.PI * 2,
+          speed: tier.speedMin + Math.random() * (tier.speedMax - tier.speedMin),
+          aMin:  tier.aMin,
+          aMax:  tier.aMax,
+          col:   tier.color,
+          dir:   Math.random() < 0.5 ? 1 : -1,
+        };
+      }
+
+      function init() {
+        resize();
+        stars = [];
+        TIERS.forEach(tier => {
+          for (let i = 0; i < tier.count; i++) stars.push(mkStar(tier));
+        });
+      }
+
+      function spawnShootingStar() {
+        const angle = Math.PI / 4 + Math.random() * (Math.PI / 6) * (Math.random() < 0.5 ? 1 : -1);
+        const speed = 7 + Math.random() * 6;
+        shootingStars.push({
+          x: Math.random() * W,
+          y: Math.random() * (H * 0.35),
+          dx: Math.cos(angle),
+          dy: Math.sin(angle),
+          len: 50 + Math.random() * 70,
+          speed,
+          alpha: 0.8 + Math.random() * 0.2
+        });
+      }
+
+      const flares = [
+        { x: 0.15, y: 0.20, size: 280, color: 'rgba(168, 85, 247, 0.05)', scrollSpeed: 0.22 },
+        { x: 0.80, y: 0.50, size: 360, color: 'rgba(96, 165, 250, 0.04)', scrollSpeed: 0.14 },
+        { x: 0.25, y: 0.80, size: 300, color: 'rgba(124, 58, 237, 0.05)', scrollSpeed: 0.26 },
+        { x: 0.75, y: 1.10, size: 400, color: 'rgba(192, 132, 252, 0.04)', scrollSpeed: 0.18 }
+      ];
+
+      function tick() {
+        ctx.clearRect(0, 0, W, H);
+        
+        // Calculate delta time
+        const now = performance.now() * 0.001;
+        const dt = now - lastTime;
+        lastTime = now;
+
+        // Smoothly decay velocity and update multiplier
+        scrollVelocity += (targetScrollVelocity - scrollVelocity) * 0.08;
+        targetScrollVelocity *= 0.92;
+        const velMult = 1.0 + scrollVelocity;
+
+        // Draw volumetric scroll lens flares (parallax effect background)
+        const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+        for (const f of flares) {
+          const fx = f.x * W;
+          // Apply vertical parallax scroll offset
+          const fy = (f.y * H - scrollTop * f.scrollSpeed) % (H * 1.6);
+          const adjustedFy = fy < -f.size ? fy + H * 1.6 + f.size : fy;
+
+          ctx.beginPath();
+          ctx.arc(fx, adjustedFy, f.size, 0, Math.PI * 2);
+          const grd = ctx.createRadialGradient(fx, adjustedFy, 0, fx, adjustedFy, f.size);
+          grd.addColorStop(0, f.color);
+          grd.addColorStop(0.4, f.color.replace(/[\d.]+\)$/, '0.015)'));
+          grd.addColorStop(1, 'rgba(0,0,0,0)');
+          ctx.fillStyle = grd;
+          ctx.fill();
+        }
+        
+        // Draw static/twinkling stars
+        for (const s of stars) {
+          // Accumulate phase rather than using absolute time so twinkle speeds up smoothly
+          s.currentPhase = (s.currentPhase || s.phase) + dt * s.speed * 60 * velMult;
+          const wave = Math.sin(s.currentPhase);
+          s.a = s.aMin + (s.aMax - s.aMin) * (0.5 + 0.5 * wave);
+
+          // Apply 3D-like vertical parallax scroll movement to stars
+          const starScrollSpeed = s.r * 0.08;
+          let renderY = (s.y - scrollTop * starScrollSpeed) % H;
+          if (renderY < 0) renderY += H;
+
+          // Standard twinkling circular stars
+          ctx.beginPath();
+          ctx.arc(s.x, renderY, s.r, 0, Math.PI * 2);
+          ctx.fillStyle = s.col + s.a.toFixed(3) + ')';
+          ctx.fill();
+
+          if (s.r > 1.3 && s.a > 0.55) {
+            ctx.beginPath();
+            ctx.arc(s.x, renderY, s.r * 2.8, 0, Math.PI * 2);
+            const grd = ctx.createRadialGradient(s.x, renderY, 0, s.x, renderY, s.r * 2.8);
+            grd.addColorStop(0, s.col + (s.a * 0.35).toFixed(3) + ')');
+            grd.addColorStop(1, s.col + '0)');
+            ctx.fillStyle = grd;
+            ctx.fill();
+          }
+        }
+
+        // Draw and update shooting stars
+        // Spawn probability scale based on scroll velocity multiplier
+        const spawnProb = 0.006 * (1 + scrollVelocity * 2.5);
+        const maxShootingStars = Math.floor(3 + scrollVelocity * 2.5);
+        if (Math.random() < spawnProb && shootingStars.length < maxShootingStars) {
+          spawnShootingStar();
+        }
+
+        for (let i = shootingStars.length - 1; i >= 0; i--) {
+          const ss = shootingStars[i];
+          ctx.beginPath();
+          const grad = ctx.createLinearGradient(ss.x, ss.y, ss.x - ss.dx * ss.len, ss.y - ss.dy * ss.len);
+          grad.addColorStop(0, `rgba(192, 132, 252, ${ss.alpha})`);
+          grad.addColorStop(0.15, `rgba(255, 255, 255, ${ss.alpha * 0.85})`);
+          grad.addColorStop(1, 'rgba(124, 58, 237, 0)');
+          
+          ctx.strokeStyle = grad;
+          ctx.lineWidth = 1.2 + Math.random() * 1.2;
+          ctx.lineCap = 'round';
+          ctx.moveTo(ss.x, ss.y);
+          ctx.lineTo(ss.x - ss.dx * ss.len, ss.y - ss.dy * ss.len);
+          ctx.stroke();
+
+          // Move based on velocity multiplier
+          ss.x += ss.dx * ss.speed * velMult;
+          ss.y += ss.dy * ss.speed * velMult;
+          ss.alpha -= 0.016 * (1 + scrollVelocity * 0.5);
+
+          if (ss.alpha <= 0 || ss.x < -100 || ss.x > W + 100 || ss.y > H + 100) {
+            shootingStars.splice(i, 1);
+          }
+        }
+
+        // Draw connections between cursor stardust particles (ephemeral constellations)
+        for (let i = 0; i < dustParticles.length; i++) {
+          for (let j = i + 1; j < dustParticles.length; j++) {
+            const p1 = dustParticles[i];
+            const p2 = dustParticles[j];
+            const dist = Math.hypot(p1.x - p2.x, p1.y - p2.y);
+            if (dist < 65) {
+              ctx.beginPath();
+              ctx.moveTo(p1.x, p1.y);
+              ctx.lineTo(p2.x, p2.y);
+              const avgAlpha = (p1.alpha + p2.alpha) * 0.5;
+              ctx.strokeStyle = `rgba(168, 85, 247, ${(avgAlpha * 0.12 * (1 - dist / 65)).toFixed(3)})`;
+              ctx.lineWidth = 0.6;
+              ctx.stroke();
+            }
+          }
+        }
+
+        // Draw and update interactive stardust
+        for (let i = dustParticles.length - 1; i >= 0; i--) {
+          const p = dustParticles[i];
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+          ctx.fillStyle = p.color + p.alpha.toFixed(3) + ')';
+          ctx.fill();
+
+          p.x += p.vx;
+          p.y += p.vy;
+          p.alpha -= p.decay;
+
+          if (p.alpha <= 0) {
+            dustParticles.splice(i, 1);
+          }
+        }
+
+        requestAnimationFrame(tick);
+      }
+
+      const dustParticles = [];
+      function spawnDust(x, y) {
+        for (let i = 0; i < 3; i++) {
+          const angle = Math.random() * Math.PI * 2;
+          const speed = 0.3 + Math.random() * 1.2;
+          dustParticles.push({
+            x: x + (Math.random() - 0.5) * 6,
+            y: y + (Math.random() - 0.5) * 6,
+            vx: Math.cos(angle) * speed,
+            vy: Math.sin(angle) * speed - 0.2, // float upward
+            r: 0.8 + Math.random() * 2.2,
+            alpha: 0.95,
+            decay: 0.014 + Math.random() * 0.016,
+            color: Math.random() < 0.65 ? 'rgba(168, 85, 247, ' : (Math.random() < 0.6 ? 'rgba(96, 165, 250, ' : 'rgba(255, 255, 255, ')
+          });
+        }
+      }
+
+      window.addEventListener('mousemove', (e) => {
+        spawnDust(e.clientX, e.clientY);
+      });
+
+      window.addEventListener('resize', () => { resize(); init(); });
+      init();
+      tick();
+    })();
+
+    /* ── Scroll Fade-Up Animations ──────────────────────────────────── */
+    (function () {
+      const els = document.querySelectorAll('.fade-up');
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(e => {
+          if (e.isIntersecting) {
+            e.target.classList.add('visible');
+            observer.unobserve(e.target);
+          }
+        });
+      }, { threshold: 0.12 });
+      els.forEach(el => observer.observe(el));
+    })();
+
+    /* ── Video Background Controller ────────────────────────────────── */
+    (function () {
+      const video = document.querySelector('.about-bg-video');
+      if (!video) return;
+
+      const handleVideoReady = () => { video.classList.add('ready'); };
+      if (video.readyState >= 3) {
+        handleVideoReady();
+      } else {
+        video.addEventListener('canplay', handleVideoReady);
+      }
+
+      let isIntersecting = false;
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          isIntersecting = entry.isIntersecting;
+          if (isIntersecting && document.visibilityState === 'visible') {
+            video.play().catch(() => {});
+          } else {
+            video.pause();
+          }
+        });
+      }, { threshold: 0 });
+      observer.observe(video);
+
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible' && isIntersecting) {
+          video.play().catch(() => {});
+        } else {
+          video.pause();
+        }
+      });
+    })();
+
+    /* ── Character-by-Character Founder Name Animation ──────────────── */
+    (function () {
+      const nameEls = document.querySelectorAll('.fv2-name');
+      nameEls.forEach(nameEl => {
+        const first = nameEl.getAttribute('data-first') || '';
+        const last = nameEl.getAttribute('data-last') || '';
+        if (!first) return;
+
+        function animateName() {
+          const lines = [
+            { text: first, gradient: false },
+            { text: last,   gradient: true  }
+          ];
+          let delay = 0.35; // start after founder enters
+          const charDelay = 0.048;
+
+          nameEl.innerHTML = '';
+          lines.forEach((line, li) => {
+            const lineWrap = document.createElement('span');
+            lineWrap.style.display = 'block';
+            if (line.gradient) {
+              lineWrap.className = 'gradient-text';
+            }
+
+            for (let i = 0; i < line.text.length; i++) {
+              const ch = line.text[i];
+              const span = document.createElement('span');
+              if (ch === ' ') {
+                span.className = 'char-space';
+                span.innerHTML = '&nbsp;';
+              } else {
+                span.className = 'char';
+                span.textContent = ch;
+              }
+              span.style.animationDelay = delay + 's';
+              delay += charDelay;
+              lineWrap.appendChild(span);
+            }
+            nameEl.appendChild(lineWrap);
+            if (li === 0) {
+              nameEl.appendChild(document.createTextNode('\u00A0'));
+              delay += 0.08; // small pause between lines
+            }
+          });
+        }
+
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', animateName);
+        } else {
+          animateName();
+        }
+      });
+    })();
+
+    /* ── Typewriter Animation for Speech Bubble ─────────────────────── */
+    (function () {
+      const els = document.querySelectorAll('.sb-text');
+      els.forEach((el, index) => {
+        const fullText = el.getAttribute('data-text') || '';
+        if (!fullText) return;
+
+        const speedMs = 40;
+        const pauseMs = 3800;
+        const delayMs = 2600 + (index * 400); // staggered entry
+
+        function renderHTML(raw) {
+          return raw.replace('|||VYOM|||', '<strong>VYOM</strong>');
+        }
+
+        let charIndex = 0;
+        let plain = fullText.replace('|||VYOM|||', 'VYOM');
+
+        function type() {
+          if (charIndex < plain.length) {
+            charIndex++;
+            const slice = fullText.substring(0, matchRaw(charIndex));
+            el.innerHTML = renderHTML(slice) + '<span class="sb-cursor"></span>';
+            const lastChar = plain[charIndex - 1];
+            const delay = /[.,!?]/.test(lastChar) ? speedMs * 5 : speedMs;
+            setTimeout(type, delay);
+          } else {
+            setTimeout(() => {
+              charIndex = 0;
+              el.innerHTML = '<span class="sb-cursor"></span>';
+              setTimeout(type, speedMs);
+            }, pauseMs);
+          }
+        }
+
+        function matchRaw(n) {
+          const marker    = '|||VYOM|||';
+          const markerPos = fullText.indexOf(marker);
+          const markerReal = 4;
+          if (n <= markerPos) return n;
+          if (n <= markerPos + markerReal) return markerPos + marker.length;
+          return n + (marker.length - markerReal);
+        }
+
+        setTimeout(type, delayMs);
+      });
+    })();
+
+    /* ── Premium Mouse Parallax ──────────────────────────────────────── */
+    (function () {
+      const sections = [
+        {
+          photo: document.getElementById('founder-photo'),
+          moon: document.getElementById('fv2-moon'),
+          nebula: document.getElementById('fv2-nebula')
+        },
+        {
+          photo: document.getElementById('cofounder-photo'),
+          moon: document.getElementById('cofounder-fv2-moon'),
+          nebula: document.getElementById('cofounder-fv2-nebula')
+        }
+      ];
+
+      let targetX = 0, targetY = 0;
+      let currentX = 0, currentY = 0;
+      let animating = false;
+
+      document.addEventListener('mousemove', (e) => {
+        const cx = window.innerWidth  / 2;
+        const cy = window.innerHeight / 2;
+        targetX = (e.clientX - cx) / cx;
+        targetY = (e.clientY - cy) / cy;
+        if (!animating) { animating = true; requestAnimationFrame(tick); }
+      });
+
+      function tick() {
+        currentX += (targetX - currentX) * 0.06;
+        currentY += (targetY - currentY) * 0.06;
+
+        sections.forEach(sec => {
+          if (sec.photo) {
+            const fX = currentX * 10, fY = currentY * 8;
+            sec.photo.style.transform = `translate(${fX}px, ${fY}px)`;
+          }
+          if (sec.moon) {
+            const mX = currentX * 6, mY = currentY * 5;
+            sec.moon.style.transform = `translate(calc(-50% + ${mX}px), calc(-50% + ${mY}px))`;
+          }
+          if (sec.nebula) {
+            const nX = currentX * 3.5, nY = currentY * 3;
+            sec.nebula.style.transform = `translate(${nX}px, ${nY}px)`;
+          }
+        });
+
+        const diff = Math.abs(targetX - currentX) + Math.abs(targetY - currentY);
+        if (diff > 0.001) {
+          requestAnimationFrame(tick);
+        } else {
+          animating = false;
+        }
+      }
+    })();
+
+    /* ── Scroll Progress Bar Logic ──────────────────────────────────── */
+    window.addEventListener('scroll', () => {
+      const scrollProgress = document.getElementById('scroll-progress');
+      if (!scrollProgress) return;
+      const winScroll = document.documentElement.scrollTop || document.body.scrollTop;
+      const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+      const scrolled = (winScroll / height) * 100;
+      scrollProgress.style.width = scrolled + '%';
+    });
+
+    /* ── Mouse Tracking Border Glow for Glass Cards ─────────────────── */
+    (function () {
+      const cards = document.querySelectorAll('.glass-card');
+      cards.forEach(card => {
+        card.addEventListener('mousemove', (e) => {
+          const rect = card.getBoundingClientRect();
+          const x = e.clientX - rect.left;
+          const y = e.clientY - rect.top;
+          card.style.setProperty('--mouse-x', `${x}px`);
+          card.style.setProperty('--mouse-y', `${y}px`);
+        });
+        card.addEventListener('mouseleave', () => {
+          card.style.setProperty('--mouse-x', `-999px`);
+          card.style.setProperty('--mouse-y', `-999px`);
+        });
+      });
+    })();
+
+    /* ── Word Reveal Text Animation ─────────────────────────────────── */
+    (function () {
+      const revealElements = document.querySelectorAll('.word-reveal');
+
+      function wrapWords(node) {
+        // Check if this node is inside a gradient-text element
+        let isGradient = false;
+        let p = node.parentNode;
+        while (p && p.tagName !== 'BODY') {
+          if (p.classList.contains('gradient-text')) {
+            isGradient = true;
+            break;
+          }
+          p = p.parentNode;
+        }
+
+        if (node.nodeType === Node.TEXT_NODE) {
+          const text = node.textContent;
+          // Split by spaces but preserve spaces
+          const words = text.split(/(\s+)/);
+          const fragment = document.createDocumentFragment();
+          
+          words.forEach(word => {
+            if (word.trim().length === 0) {
+              fragment.appendChild(document.createTextNode(word));
+            } else {
+              const parentSpan = document.createElement('span');
+              parentSpan.className = 'word-reveal-parent';
+              const childSpan = document.createElement('span');
+              childSpan.className = 'word-reveal-word';
+              if (isGradient) {
+                childSpan.classList.add('gradient-text');
+              }
+              childSpan.textContent = word;
+              parentSpan.appendChild(childSpan);
+              fragment.appendChild(parentSpan);
+            }
+          });
+          node.parentNode.replaceChild(fragment, node);
+        } else if (node.nodeType === Node.ELEMENT_NODE) {
+          if (node.classList.contains('word-reveal-parent') || node.classList.contains('word-rotator') || node.tagName === 'SCRIPT') return;
+          const children = Array.from(node.childNodes);
+          children.forEach(child => wrapWords(child));
+        }
+      }
+
+      // Pre-process all headings
+      revealElements.forEach(el => {
+        wrapWords(el);
+      });
+
+      // Observer to animate words in staggered sequence
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            const words = entry.target.querySelectorAll('.word-reveal-word');
+            words.forEach((word, idx) => {
+              // Stagger delay dynamically
+              setTimeout(() => {
+                word.classList.add('revealed');
+              }, idx * 48);
+            });
+            observer.unobserve(entry.target);
+          }
+        });
+      }, { threshold: 0.15 });
+
+      revealElements.forEach(el => observer.observe(el));
+    })();
+
+    /* ── Count-Up Statistics Animation ──────────────────────────────── */
+    (function () {
+      const counters = document.querySelectorAll('.counter');
+      
+      const countUp = (el) => {
+        const target = parseInt(el.getAttribute('data-target'), 10);
+        if (isNaN(target)) return;
+        
+        const duration = 1600; // ms
+        const startTime = performance.now();
+        
+        const animate = (currentTime) => {
+          const elapsed = currentTime - startTime;
+          const progress = Math.min(elapsed / duration, 1);
+          
+          // Easing function: easeOutExpo (power of 4)
+          const easeProgress = 1 - Math.pow(1 - progress, 4);
+          const currentValue = Math.floor(easeProgress * target);
+          
+          el.textContent = currentValue;
+          
+          if (progress < 1) {
+            requestAnimationFrame(animate);
+          } else {
+            el.textContent = target; // Ensure exact final value
+          }
+        };
+        
+        requestAnimationFrame(animate);
+      };
+      
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            countUp(entry.target);
+            observer.unobserve(entry.target);
+          }
+        });
+      }, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
+      
+      counters.forEach(counter => observer.observe(counter));
+    })();
+
+    /* ── Magnetic Hover Effect for Buttons ──────────────────────────── */
+    (function () {
+      const magneticButtons = document.querySelectorAll('.btn-primary, .btn-secondary, .fv2-social-btn');
+      
+      magneticButtons.forEach(btn => {
+        btn.addEventListener('mousemove', (e) => {
+          const rect = btn.getBoundingClientRect();
+          const btnX = rect.left + rect.width / 2;
+          const btnY = rect.top + rect.height / 2;
+          
+          // Distance from cursor to button center
+          const distX = e.clientX - btnX;
+          const distY = e.clientY - btnY;
+          
+          // Pull limits (pull button max 12px for primary/secondary, 8px for social)
+          const isSocial = btn.classList.contains('fv2-social-btn');
+          const maxPull = isSocial ? 8 : 12;
+          
+          const pullX = (distX / (rect.width / 2)) * maxPull;
+          const pullY = (distY / (rect.height / 2)) * maxPull;
+          
+          // Translate button
+          btn.style.transform = `translate(${pullX}px, ${pullY}px) scale(1.03)`;
+          
+          // If primary or secondary button, also pull the shimmer sweep light slightly
+          if (!isSocial) {
+            btn.style.boxShadow = `0 16px 40px rgba(124, 58, 237, 0.48), ${-pullX * 0.4}px ${-pullY * 0.4}px 20px rgba(168, 85, 247, 0.25)`;
+          }
+        });
+        
+        btn.addEventListener('mouseleave', () => {
+          btn.style.transform = '';
+          btn.style.boxShadow = '';
+        });
+      });
+    })();
+
+    /* ── Custom Trailing Cosmic Cursor ───────────────────────────────── */
+    (function () {
+      const dot = document.getElementById('custom-cursor-dot');
+      const ring = document.getElementById('custom-cursor-ring');
+      if (!dot || !ring) return;
+
+      let mouseX = 0, mouseY = 0;
+      let ringX = 0, ringY = 0;
+      let active = false;
+
+      // Detect movement to reveal cursor
+      window.addEventListener('mousemove', (e) => {
+        mouseX = e.clientX;
+        mouseY = e.clientY;
+        
+        if (!active) {
+          dot.style.opacity = '1';
+          ring.style.opacity = '1';
+          active = true;
+        }
+
+        dot.style.transform = `translate3d(calc(-50% + ${mouseX}px), calc(-50% + ${mouseY}px), 0)`;
+      });
+
+      // Springy loop for the cursor ring (lagging behind the dot)
+      function updateRing() {
+        const lerpFactor = 0.15;
+        ringX += (mouseX - ringX) * lerpFactor;
+        ringY += (mouseY - ringY) * lerpFactor;
+
+        ring.style.transform = `translate3d(calc(-50% + ${ringX}px), calc(-50% + ${ringY}px), 0)`;
+        requestAnimationFrame(updateRing);
+      }
+      requestAnimationFrame(updateRing);
+
+      // Hide cursor when leaving window
+      document.addEventListener('mouseleave', () => {
+        dot.style.opacity = '0';
+        ring.style.opacity = '0';
+        active = false;
+      });
+
+      // Hover bindings for interactive elements
+      const targetSelectors = 'a, button, .glass-card, .fv2-stat, .tech-pill, .fv2-img-wrapper, .fv2-social-btn';
+      
+      const setupHoverListeners = () => {
+        const hoverEls = document.querySelectorAll(targetSelectors);
+        hoverEls.forEach(el => {
+          el.addEventListener('mouseenter', () => {
+            dot.classList.add('cursor-hover');
+            ring.classList.add('cursor-hover');
+            if (typeof window.playChime === 'function') {
+              window.playChime();
+            }
+          });
+          el.addEventListener('mouseleave', () => {
+            dot.classList.remove('cursor-hover');
+            ring.classList.remove('cursor-hover');
+          });
+        });
+      };
+      setupHoverListeners();
+
+      // Re-run setup if dynamic content load happens
+      document.addEventListener('DOMContentLoaded', setupHoverListeners);
+    })();
+
+    /* ── 3D Perspective Card Tilt & Specular Shine ──────────────────── */
+    (function () {
+      const cards = document.querySelectorAll('.glass-card, .fv2-stat');
+      
+      cards.forEach(card => {
+        // Inject shine overlay dynamically if not already present
+        if (!card.querySelector('.card-shine')) {
+          const shine = document.createElement('div');
+          shine.className = 'card-shine';
+          card.appendChild(shine);
+        }
+        
+        card.addEventListener('mousemove', (e) => {
+          const rect = card.getBoundingClientRect();
+          const x = e.clientX - rect.left; // x position within element
+          const y = e.clientY - rect.top;  // y position within element
+          
+          card.style.setProperty('--shine-x', `${x}px`);
+          card.style.setProperty('--shine-y', `${y}px`);
+          
+          // Calculate normalized coordinates (-0.5 to 0.5)
+          const normX = (x / rect.width) - 0.5;
+          const normY = (y / rect.height) - 0.5;
+          
+          // Max rotation degrees
+          const maxRot = 12;
+          const rotX = -normY * maxRot;
+          const rotY = normX * maxRot;
+          
+          // Apply 3D rotation
+          card.style.transform = `perspective(1000px) rotateX(${rotX}deg) rotateY(${rotY}deg) translateY(-8px) scale(1.025)`;
+        });
+        
+        card.addEventListener('mouseleave', () => {
+          // Reset smoothly
+          card.style.transform = `perspective(1000px) rotateX(0deg) rotateY(0deg) translateY(0) scale(1)`;
+          card.style.setProperty('--shine-x', `-999px`);
+          card.style.setProperty('--shine-y', `-999px`);
+        });
+      });
+    })();
+
+    /* ── Slot-Machine Word Rotator Engine ───────────────────────────── */
+    (function () {
+      const rotators = document.querySelectorAll('.word-rotator');
+      
+      rotators.forEach(rotator => {
+        const rawWords = rotator.getAttribute('data-words') || '';
+        if (!rawWords) return;
+        
+        const words = rawWords.split(',').map(w => w.trim());
+        rotator.innerHTML = ''; // clear text
+        
+        const inner = document.createElement('span');
+        inner.className = 'word-rotator-inner';
+        
+        words.forEach(word => {
+          const wordSpan = document.createElement('span');
+          // Apply gradient-text directly to each child word span to fix the Chromium clip bug
+          wordSpan.className = 'word-rotator-word gradient-text';
+          wordSpan.textContent = word;
+          inner.appendChild(wordSpan);
+        });
+        
+        rotator.appendChild(inner);
+
+        // Measure maximum width in current style context to lock rotator width
+        let maxWidth = 0;
+        const style = window.getComputedStyle(rotator);
+        // Construct robust font shorthand string
+        const font = `${style.fontWeight} ${style.fontSize} ${style.fontFamily}`;
+        
+        words.forEach(word => {
+          const temp = document.createElement('span');
+          temp.style.visibility = 'hidden';
+          temp.style.position = 'absolute';
+          temp.style.whiteSpace = 'nowrap';
+          temp.style.font = font;
+          temp.textContent = word;
+          document.body.appendChild(temp);
+          maxWidth = Math.max(maxWidth, temp.offsetWidth);
+          document.body.removeChild(temp);
+        });
+        
+        // Add 2px safety margin
+        rotator.style.width = `${maxWidth + 2}px`;
+        
+        let index = 0;
+        const rotate = () => {
+          index = (index + 1) % words.length;
+          
+          const firstWord = inner.querySelector('.word-rotator-word');
+          if (firstWord) {
+            const h = firstWord.offsetHeight;
+            inner.style.transform = `translateY(-${index * h}px)`;
+          }
+        };
+        
+        // Cycle every 2.2 seconds
+        setInterval(rotate, 2200);
+      });
+    })();
+
+    /* ── Web Audio Space Synth Engine ───────────────────────────────── */
+    (function () {
+      let audioCtx = null;
+      let humNodes = [];
+      let masterGainNode = null;
+      let isAudioEnabled = false;
+      let analyser = null;
+
+      // Real-time controllable parameters and node references
+      let rotSpeed = 1.35;
+      let motorPitch = 130;
+      let clickVolume = 0.025;
+
+      let motorFilterLfo = null, motorAmpLfo = null, motorPanLfo = null;
+      let noiseSweepLfo = null, noiseAmpLfo = null, noisePanLfo = null;
+      let click1Osc = null, click2Osc = null;
+      let oscWhirr = null, oscSub = null;
+      let click1Gain = null, click2Gain = null;
+      let motorGain = null, noiseGain = null;
+
+      function initAudio() {
+        if (audioCtx) return;
+
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        audioCtx = new AudioContextClass();
+
+        // Create master gain
+        masterGainNode = audioCtx.createGain();
+        masterGainNode.gain.setValueAtTime(0, audioCtx.currentTime);
+        
+        // Initialize analyser
+        analyser = audioCtx.createAnalyser();
+        analyser.fftSize = 256;
+        masterGainNode.connect(analyser);
+        analyser.connect(audioCtx.destination);
+
+        // ── Periodic Waves for 90-Degree Phase Offset Circular Rotation ──
+        const realCos = new Float32Array([0, 1]);
+        const imagCos = new Float32Array([0, 0]);
+        const cosWave = audioCtx.createPeriodicWave(realCos, imagCos);
+
+        const realSin = new Float32Array([0, 0]);
+        const imagSin = new Float32Array([0, 1]);
+        const sinWave = audioCtx.createPeriodicWave(realSin, imagSin);
+
+        // ── 1. BASE BACKGROUND ROTATIONAL MOTOR HUM ───────────────────
+        const motorLowpass = audioCtx.createBiquadFilter();
+        motorLowpass.type = 'lowpass';
+        motorLowpass.frequency.setValueAtTime(180, audioCtx.currentTime);
+
+        motorGain = audioCtx.createGain();
+        motorGain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+
+        const motorPanner = audioCtx.createStereoPanner ? audioCtx.createStereoPanner() : null;
+
+        // Routing motor
+        if (motorPanner) {
+          motorLowpass.connect(motorGain);
+          motorGain.connect(motorPanner);
+          motorPanner.connect(masterGainNode);
+        } else {
+          motorLowpass.connect(motorGain);
+          motorGain.connect(masterGainNode);
+        }
+
+        // Two oscillators for a warm, thick mechanical motor drone
+        oscSub = audioCtx.createOscillator();
+        oscSub.type = 'triangle';
+        oscSub.frequency.setValueAtTime(motorPitch / 2, audioCtx.currentTime);
+        oscSub.connect(motorLowpass);
+        oscSub.start(0);
+        humNodes.push(oscSub);
+
+        oscWhirr = audioCtx.createOscillator();
+        oscWhirr.type = 'sawtooth';
+        oscWhirr.frequency.setValueAtTime(motorPitch, audioCtx.currentTime);
+        oscWhirr.connect(motorLowpass);
+        oscWhirr.start(0);
+        humNodes.push(oscWhirr);
+
+        // Modulate motor lowpass filter cutoff in sync with rotation (pulsing whirr)
+        motorFilterLfo = audioCtx.createOscillator();
+        motorFilterLfo.setPeriodicWave(cosWave);
+        motorFilterLfo.frequency.setValueAtTime(rotSpeed, audioCtx.currentTime);
+        const motorFilterLfoGain = audioCtx.createGain();
+        motorFilterLfoGain.gain.setValueAtTime(50, audioCtx.currentTime);
+        motorFilterLfo.connect(motorFilterLfoGain);
+        motorFilterLfoGain.connect(motorLowpass.frequency);
+        motorFilterLfo.start(0);
+        humNodes.push(motorFilterLfo);
+
+        // Modulate motor gain slightly
+        motorAmpLfo = audioCtx.createOscillator();
+        motorAmpLfo.setPeriodicWave(cosWave);
+        motorAmpLfo.frequency.setValueAtTime(rotSpeed, audioCtx.currentTime);
+        const motorAmpLfoGain = audioCtx.createGain();
+        motorAmpLfoGain.gain.setValueAtTime(0.04, audioCtx.currentTime);
+        motorAmpLfo.connect(motorAmpLfoGain);
+        motorAmpLfoGain.connect(motorGain.gain);
+        motorAmpLfo.start(0);
+        humNodes.push(motorAmpLfo);
+
+        // Modulate motor panning
+        if (motorPanner) {
+          motorPanLfo = audioCtx.createOscillator();
+          motorPanLfo.setPeriodicWave(sinWave);
+          motorPanLfo.frequency.setValueAtTime(rotSpeed, audioCtx.currentTime);
+          const motorPanLfoGain = audioCtx.createGain();
+          motorPanLfoGain.gain.setValueAtTime(0.45, audioCtx.currentTime);
+          motorPanLfo.connect(motorPanLfoGain);
+          motorPanLfoGain.connect(motorPanner.pan);
+          motorPanLfo.start(0);
+          humNodes.push(motorPanLfo);
+        }
+
+        // ── 2. ROTATING "SWOOSH/SPIN" WHITE NOISE GENERATOR ───────────
+        const bufferSize = audioCtx.sampleRate * 2;
+        const noiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+        const channelData = noiseBuffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) {
+          channelData[i] = Math.random() * 2 - 1;
+        }
+
+        const noiseNode = audioCtx.createBufferSource();
+        noiseNode.buffer = noiseBuffer;
+        noiseNode.loop = true;
+
+        const noiseFilter = audioCtx.createBiquadFilter();
+        noiseFilter.type = 'bandpass';
+        noiseFilter.Q.setValueAtTime(3.5, audioCtx.currentTime);
+        noiseFilter.frequency.setValueAtTime(450, audioCtx.currentTime);
+
+        noiseGain = audioCtx.createGain();
+        noiseGain.gain.setValueAtTime(0.04, audioCtx.currentTime);
+
+        const noisePanner = audioCtx.createStereoPanner ? audioCtx.createStereoPanner() : null;
+
+        // Routing noise
+        if (noisePanner) {
+          noiseNode.connect(noiseFilter);
+          noiseFilter.connect(noiseGain);
+          noiseGain.connect(noisePanner);
+          noisePanner.connect(masterGainNode);
+        } else {
+          noiseNode.connect(noiseFilter);
+          noiseFilter.connect(noiseGain);
+          noiseGain.connect(masterGainNode);
+        }
+        noiseNode.start(0);
+        humNodes.push(noiseNode);
+
+        // Modulate noise frequency
+        noiseSweepLfo = audioCtx.createOscillator();
+        noiseSweepLfo.setPeriodicWave(cosWave);
+        noiseSweepLfo.frequency.setValueAtTime(rotSpeed, audioCtx.currentTime);
+        const noiseSweepGain = audioCtx.createGain();
+        noiseSweepGain.gain.setValueAtTime(250, audioCtx.currentTime);
+        noiseSweepLfo.connect(noiseSweepGain);
+        noiseSweepGain.connect(noiseFilter.frequency);
+        noiseSweepLfo.start(0);
+        humNodes.push(noiseSweepLfo);
+
+        // Modulate noise gain in sync with sweep
+        noiseAmpLfo = audioCtx.createOscillator();
+        noiseAmpLfo.setPeriodicWave(cosWave);
+        noiseAmpLfo.frequency.setValueAtTime(rotSpeed, audioCtx.currentTime);
+        const noiseAmpGain = audioCtx.createGain();
+        noiseAmpGain.gain.setValueAtTime(0.03, audioCtx.currentTime);
+        noiseAmpLfo.connect(noiseAmpGain);
+        noiseAmpGain.connect(noiseGain.gain);
+        noiseAmpLfo.start(0);
+        humNodes.push(noiseAmpLfo);
+
+        // Modulate panning in sync
+        if (noisePanner) {
+          noisePanLfo = audioCtx.createOscillator();
+          noisePanLfo.setPeriodicWave(sinWave);
+          noisePanLfo.frequency.setValueAtTime(rotSpeed, audioCtx.currentTime);
+          const noisePanGain = audioCtx.createGain();
+          noisePanGain.gain.setValueAtTime(0.85, audioCtx.currentTime);
+          noisePanLfo.connect(noisePanGain);
+          noisePanGain.connect(noisePanner.pan);
+          noisePanLfo.start(0);
+          humNodes.push(noisePanLfo);
+        }
+
+        // ── 3. MECHANICAL GEAR CLICKS / TICKS (ROTATION MARKERS) ──────
+        // Click 1: Primary click once per rotation cycle
+        click1Osc = audioCtx.createOscillator();
+        click1Osc.type = 'sawtooth';
+        click1Osc.frequency.setValueAtTime(rotSpeed, audioCtx.currentTime);
+
+        const click1Filter = audioCtx.createBiquadFilter();
+        click1Filter.type = 'highpass';
+        click1Filter.frequency.setValueAtTime(2200, audioCtx.currentTime);
+        click1Filter.Q.setValueAtTime(1.2, audioCtx.currentTime);
+
+        click1Gain = audioCtx.createGain();
+        click1Gain.gain.setValueAtTime(clickVolume, audioCtx.currentTime);
+
+        if (noisePanner) {
+          click1Osc.connect(click1Filter);
+          click1Filter.connect(click1Gain);
+          click1Gain.connect(noisePanner);
+        } else {
+          click1Osc.connect(click1Filter);
+          click1Filter.connect(click1Gain);
+          click1Gain.connect(masterGainNode);
+        }
+        click1Osc.start(0);
+        humNodes.push(click1Osc);
+
+        // Click 2: Secondary tick (twice per rotation)
+        click2Osc = audioCtx.createOscillator();
+        click2Osc.type = 'sawtooth';
+        click2Osc.frequency.setValueAtTime(rotSpeed * 2, audioCtx.currentTime);
+
+        const click2Filter = audioCtx.createBiquadFilter();
+        click2Filter.type = 'highpass';
+        click2Filter.frequency.setValueAtTime(1600, audioCtx.currentTime);
+        click2Filter.Q.setValueAtTime(0.8, audioCtx.currentTime);
+
+        click2Gain = audioCtx.createGain();
+        click2Gain.gain.setValueAtTime(clickVolume * 0.48, audioCtx.currentTime);
+
+        if (noisePanner) {
+          click2Osc.connect(click2Filter);
+          click2Filter.connect(click2Gain);
+          click2Gain.connect(noisePanner);
+        } else {
+          click2Osc.connect(click2Filter);
+          click2Filter.connect(click2Gain);
+          click2Gain.connect(masterGainNode);
+        }
+        click2Osc.start(0);
+        humNodes.push(click2Osc);
+      }
+
+      window.playChime = function () {
+        if (!isAudioEnabled || !audioCtx) return;
+
+        const pentatonic = [440, 523.25, 587.33, 659.25, 783.99, 880, 1046.5];
+        const freq = pentatonic[Math.floor(Math.random() * pentatonic.length)];
+
+        const osc = audioCtx.createOscillator();
+        const oscGain = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+        osc.connect(oscGain);
+        oscGain.connect(masterGainNode);
+
+        const overtone = audioCtx.createOscillator();
+        const overtoneGain = audioCtx.createGain();
+        overtone.type = 'sine';
+        overtone.frequency.setValueAtTime(freq * 2, audioCtx.currentTime);
+        overtone.connect(overtoneGain);
+        overtoneGain.connect(oscGain);
+        overtoneGain.gain.setValueAtTime(0.12, audioCtx.currentTime);
+
+        const now = audioCtx.currentTime;
+        oscGain.gain.setValueAtTime(0, now);
+        oscGain.gain.linearRampToValueAtTime(0.35, now + 0.02);
+        oscGain.gain.exponentialRampToValueAtTime(0.0001, now + 1.5);
+
+        osc.start(now);
+        overtone.start(now);
+        osc.stop(now + 1.55);
+        overtone.stop(now + 1.55);
+      };
+
+      // ── Real-time sliders updater functions ────────────────────────
+      function updateRotationSpeed(val) {
+        rotSpeed = parseFloat(val);
+        const label = document.getElementById('val-speed');
+        if (label) label.textContent = rotSpeed.toFixed(2) + 'Hz';
+        
+        if (!audioCtx) return;
+        const now = audioCtx.currentTime;
+        [motorFilterLfo, motorAmpLfo, motorPanLfo, noiseSweepLfo, noiseAmpLfo, noisePanLfo, click1Osc].forEach(node => {
+          if (node) node.frequency.setValueAtTime(rotSpeed, now);
+        });
+        if (click2Osc) click2Osc.frequency.setValueAtTime(rotSpeed * 2, now);
+      }
+
+      function updateMotorPitch(val) {
+        motorPitch = parseFloat(val);
+        const label = document.getElementById('val-pitch');
+        if (label) label.textContent = motorPitch + 'Hz';
+
+        if (!audioCtx) return;
+        const now = audioCtx.currentTime;
+        if (oscWhirr) oscWhirr.frequency.setValueAtTime(motorPitch, now);
+        if (oscSub) oscSub.frequency.setValueAtTime(motorPitch / 2, now);
+      }
+
+      function updateClickVolume(val) {
+        clickVolume = parseFloat(val);
+        const label = document.getElementById('val-clicks');
+        if (label) {
+          if (clickVolume === 0) label.textContent = 'Muted';
+          else if (clickVolume < 0.02) label.textContent = 'Soft';
+          else if (clickVolume < 0.05) label.textContent = 'Medium';
+          else label.textContent = 'Loud';
+        }
+
+        if (!audioCtx) return;
+        const now = audioCtx.currentTime;
+        if (click1Gain) click1Gain.gain.setValueAtTime(clickVolume, now);
+        if (click2Gain) click2Gain.gain.setValueAtTime(clickVolume * 0.48, now);
+      }
+
+      // Slider UI wire-up
+      const speedSlider = document.getElementById('synth-speed');
+      const pitchSlider = document.getElementById('synth-pitch');
+      const clicksSlider = document.getElementById('synth-clicks');
+
+      if (speedSlider) {
+        speedSlider.addEventListener('input', (e) => updateRotationSpeed(e.target.value));
+      }
+      if (pitchSlider) {
+        pitchSlider.addEventListener('input', (e) => updateMotorPitch(e.target.value));
+      }
+      if (clicksSlider) {
+        clicksSlider.addEventListener('input', (e) => updateClickVolume(e.target.value));
+      }
+
+      // Settings dropdown panel toggle
+      const settingsBtn = document.getElementById('sound-settings-btn');
+      const synthPanel = document.getElementById('synth-panel');
+      const closeSynthBtn = document.getElementById('close-synth-btn');
+
+      if (settingsBtn && synthPanel) {
+        settingsBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          synthPanel.classList.toggle('active');
+        });
+      }
+      if (closeSynthBtn && synthPanel) {
+        closeSynthBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          synthPanel.classList.remove('active');
+        });
+      }
+      // Close settings panel when clicking outside
+      document.addEventListener('click', (e) => {
+        if (synthPanel && synthPanel.classList.contains('active') && !synthPanel.contains(e.target) && e.target !== settingsBtn) {
+          synthPanel.classList.remove('active');
+        }
+      });
+
+      function clearMoonVisualizers() {
+        const canvases = document.querySelectorAll('.moon-visualizer');
+        canvases.forEach(canvas => {
+          const ctx = canvas.getContext('2d');
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+        });
+      }
+
+      function drawMoonVisualizers() {
+        if (!isAudioEnabled || !analyser) {
+          clearMoonVisualizers();
+          return;
+        }
+
+        requestAnimationFrame(drawMoonVisualizers);
+
+        const bufferLength = analyser.frequencyBinCount;
+        const dataArray = new Uint8Array(bufferLength);
+        analyser.getByteFrequencyData(dataArray);
+
+        const canvases = document.querySelectorAll('.moon-visualizer');
+        canvases.forEach(canvas => {
+          if (canvas.width !== 740) {
+            canvas.width = 740;
+            canvas.height = 740;
+          }
+          const ctx = canvas.getContext('2d');
+          const W = canvas.width;
+          const H = canvas.height;
+          ctx.clearRect(0, 0, W, H);
+
+          const centerX = W / 2;
+          const centerY = H / 2;
+          const baseRadius = 370;
+
+          // Draw circular glowing visualizer
+          ctx.shadowBlur = 18;
+          ctx.shadowColor = 'rgba(168, 85, 247, 0.8)';
+          ctx.lineWidth = 4;
+
+          // Ring 1: Audio Reactive Wave ring (Purple neon)
+          ctx.beginPath();
+          for (let i = 0; i < bufferLength; i++) {
+            const angle = (i / bufferLength) * Math.PI * 2;
+            const value = dataArray[i];
+            const amplitude = (value / 255) * 45;
+
+            const r = baseRadius - 15 + amplitude;
+            const x = centerX + Math.cos(angle) * r;
+            const y = centerY + Math.sin(angle) * r;
+
+            if (i === 0) {
+              ctx.moveTo(x, y);
+            } else {
+              ctx.lineTo(x, y);
+            }
+          }
+          ctx.closePath();
+          ctx.strokeStyle = 'rgba(168, 85, 247, 0.85)';
+          ctx.stroke();
+
+          // Ring 2: Inner complementary neon blue audio wave (opposite phase)
+          ctx.beginPath();
+          ctx.shadowColor = 'rgba(96, 165, 250, 0.8)';
+          for (let i = 0; i < bufferLength; i++) {
+            const angle = (i / bufferLength) * Math.PI * 2;
+            const value = dataArray[(i + Math.floor(bufferLength / 2)) % bufferLength];
+            const amplitude = (value / 255) * 30;
+
+            const r = baseRadius - 25 - amplitude;
+            const x = centerX + Math.cos(angle) * r;
+            const y = centerY + Math.sin(angle) * r;
+
+            if (i === 0) {
+              ctx.moveTo(x, y);
+            } else {
+              ctx.lineTo(x, y);
+            }
+          }
+          ctx.closePath();
+          ctx.strokeStyle = 'rgba(96, 165, 250, 0.75)';
+          ctx.stroke();
+        });
+      }
+
+      const soundToggle = document.getElementById('sound-toggle');
+      if (soundToggle) {
+        soundToggle.addEventListener('click', () => {
+          if (!audioCtx) {
+            initAudio();
+          }
+
+          isAudioEnabled = !isAudioEnabled;
+          if (isAudioEnabled) {
+            if (audioCtx.state === 'suspended') {
+              audioCtx.resume();
+            }
+            masterGainNode.gain.setValueAtTime(masterGainNode.gain.value, audioCtx.currentTime);
+            masterGainNode.gain.linearRampToValueAtTime(1.0, audioCtx.currentTime + 0.45);
+            soundToggle.classList.add('active');
+            const label = soundToggle.querySelector('.sound-label');
+            if (label) label.textContent = 'Audio: On';
+            
+            // Start the visualizer rendering loop
+            drawMoonVisualizers();
+          } else {
+            masterGainNode.gain.setValueAtTime(masterGainNode.gain.value, audioCtx.currentTime);
+            masterGainNode.gain.linearRampToValueAtTime(0.0, audioCtx.currentTime + 0.35);
+            soundToggle.classList.remove('active');
+            const label = soundToggle.querySelector('.sound-label');
+            if (label) label.textContent = 'Audio: Off';
+          }
+        });
+      }
+    })();
+
+    /* ── 3D Orbiting Tech Stack Sphere Engine ────────────────────────── */
+    (function () {
+      const container = document.getElementById('tech-sphere-container');
+      if (!container) return;
+
+      const pills = container.querySelectorAll('.tech-orbit-pill');
+      const N = pills.length;
+      const points = [];
+      
+      // Determine radius based on viewport width
+      let R = window.innerWidth < 768 ? 140 : 190;
+      const D = 400; // perspective depth
+
+      // Distribute points evenly on a sphere using Fibonacci spiral
+      pills.forEach((pill, i) => {
+        const phi = Math.acos(-1 + (2 * i + 1) / N);
+        const theta = Math.sqrt(N * Math.PI) * phi;
+        
+        points.push({
+          el: pill,
+          x: R * Math.sin(phi) * Math.cos(theta),
+          y: R * Math.sin(phi) * Math.sin(theta),
+          z: R * Math.cos(phi)
+        });
+      });
+
+      // Rotation angles
+      let angleX = 0.003;
+      let angleY = 0.004;
+
+      // Mouse drag parameters
+      let isDragging = false;
+      let lastMouseX = 0;
+      let lastMouseY = 0;
+      let targetRotX = 0.003;
+      let targetRotY = 0.004;
+
+      // Rotate coordinates around Y-axis
+      function rotateY(pt, angle) {
+        const cos = Math.cos(angle);
+        const sin = Math.sin(angle);
+        const x1 = pt.x * cos - pt.z * sin;
+        const z1 = pt.x * sin + pt.z * cos;
+        pt.x = x1;
+        pt.z = z1;
+      }
+
+      // Rotate coordinates around X-axis
+      function rotateX(pt, angle) {
+        const cos = Math.cos(angle);
+        const sin = Math.sin(angle);
+        const y1 = pt.y * cos - pt.z * sin;
+        const z1 = pt.y * sin + pt.z * cos;
+        pt.y = y1;
+        pt.z = z1;
+      }
+
+      function update() {
+        // Slow rotation decay back to automatic speeds
+        if (!isDragging) {
+          angleX += (targetRotX - angleX) * 0.05;
+          angleY += (targetRotY - angleY) * 0.05;
+        }
+
+        points.forEach(pt => {
+          // Rotate points
+          rotateY(pt, angleY);
+          rotateX(pt, angleX);
+
+          // Perspective projection
+          const scale = D / (D - pt.z);
+          const opacity = 0.35 + 0.65 * (pt.z + R) / (2 * R);
+          
+          // Apply transforms
+          // Center core is at z-index 5. Layer pills based on depth.
+          pt.el.style.transform = `translate3d(${pt.x}px, ${pt.y}px, ${pt.z}px) scale(${scale})`;
+          pt.el.style.opacity = opacity.toFixed(3);
+          pt.el.style.zIndex = Math.round(pt.z + R);
+        });
+
+        requestAnimationFrame(update);
+      }
+
+      // Mouse and touch drag listeners
+      function handleStart(clientX, clientY) {
+        isDragging = true;
+        lastMouseX = clientX;
+        lastMouseY = clientY;
+      }
+
+      function handleMove(clientX, clientY) {
+        if (!isDragging) return;
+        const dx = clientX - lastMouseX;
+        const dy = clientY - lastMouseY;
+
+        // Convert drags to rotation speeds
+        angleY = dx * 0.005;
+        angleX = -dy * 0.005;
+
+        lastMouseX = clientX;
+        lastMouseY = clientY;
+      }
+
+      function handleEnd() {
+        isDragging = false;
+      }
+
+      container.addEventListener('mousedown', (e) => {
+        handleStart(e.clientX, e.clientY);
+      });
+
+      window.addEventListener('mousemove', (e) => {
+        handleMove(e.clientX, e.clientY);
+      });
+
+      window.addEventListener('mouseup', handleEnd);
+
+      // Touch events
+      container.addEventListener('touchstart', (e) => {
+        const touch = e.touches[0];
+        handleStart(touch.clientX, touch.clientY);
+      }, { passive: true });
+
+      window.addEventListener('touchmove', (e) => {
+        const touch = e.touches[0];
+        handleMove(touch.clientX, touch.clientY);
+      }, { passive: true });
+
+      window.addEventListener('touchend', handleEnd);
+
+      // Resize event
+      window.addEventListener('resize', () => {
+        R = window.innerWidth < 768 ? 140 : 190;
+      });
+
+      requestAnimationFrame(update);
+    })();
+
+    /* ── Our Journey Scroll-Linked Timeline Observer ─────────────────── */
+    (function () {
+      const journeySection = document.getElementById('journey');
+      const spineGlow = document.getElementById('timeline-spine-glow');
+      const items = document.querySelectorAll('.timeline-item');
+      const ship = document.getElementById('timeline-spaceship');
+      const timelineContainer = document.getElementById('timeline-container');
+      
+      const hudSector = document.getElementById('hud-sector');
+      const hudYear = document.getElementById('hud-year');
+      const hudVel = document.getElementById('hud-vel');
+      const hudFuel = document.getElementById('hud-fuel');
+
+      if (!journeySection || !spineGlow || !ship || !timelineContainer) return;
+
+      let lastScrollTop = window.pageYOffset || document.documentElement.scrollTop;
+      let lastTime = performance.now();
+      let currentRotation = 0;
+      let isDragging = false;
+      let dragStartPageY = 0;
+      let dragStartScrollTop = 0;
+
+      // Sectors configuration based on percentage along spine
+      const SECTORS = [
+        { limit: 15, name: 'THE_SPARK', year: 'Q1 2023', status: 'RESEARCH' },
+        { limit: 40, name: 'PROTOTYPE', year: 'Q3 2023', status: 'DEV' },
+        { limit: 65, name: 'PATENT', year: 'Q1 2024', status: 'LEGAL' },
+        { limit: 90, name: 'BETA_LAUNCH', year: 'Q4 2024', status: 'TESTING' },
+        { limit: 100, name: 'GLOBAL_SCALE', year: '2025 & BEYOND', status: 'ACTIVE' }
+      ];
+
+      function updateTimeline() {
+        const rect = journeySection.getBoundingClientRect();
+        const viewportHeight = window.innerHeight;
+        const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+        
+        // Calculate scroll progress through timeline section
+        const startOffset = viewportHeight * 0.70;
+        const totalHeight = rect.height;
+        const currentProgress = startOffset - rect.top;
+        
+        let percent = (currentProgress / (totalHeight - viewportHeight + startOffset)) * 100;
+        percent = Math.max(0, Math.min(percent, 100));
+        
+        // Update spine glow height
+        spineGlow.style.height = percent + '%';
+        
+        // Update spaceship position along spine
+        ship.style.top = percent + '%';
+
+        // Calculate scroll velocity (px per second)
+        const now = performance.now();
+        const dt = (now - lastTime) / 1000;
+        lastTime = now;
+
+        const scrollDiff = scrollTop - lastScrollTop;
+        lastScrollTop = scrollTop;
+
+        let velocity = 0;
+        if (dt > 0) {
+          velocity = Math.abs(scrollDiff) / dt;
+        }
+
+        // Map velocity to speed of light mock-units
+        const cSpeed = Math.min((velocity * 0.05), 9.9);
+        const velText = cSpeed > 0.02 ? `VEL: ${cSpeed.toFixed(1)}c` : 'VEL: 0.0c';
+        
+        // Find current active sector based on percent progress
+        const sector = SECTORS.find(s => percent <= s.limit) || SECTORS[SECTORS.length - 1];
+        
+        // Update HUD display fields
+        if (hudSector) hudSector.textContent = `SECTOR: ${sector.name}`;
+        if (hudYear) hudYear.textContent = `YEAR: ${sector.year}`;
+        if (hudVel) hudVel.textContent = velText;
+        
+        // Fuel is directly depleting based on progress (100% at top, 0% at bottom)
+        const fuelLeft = Math.max(0, Math.round(100 - percent));
+        if (hudFuel) hudFuel.textContent = `FUEL: ${fuelLeft}%`;
+
+        // Smooth spaceship rotation based on scroll direction
+        if (Math.abs(scrollDiff) > 0.5) {
+          const targetRot = scrollDiff > 0 ? 180 : 0;
+          currentRotation += (targetRot - currentRotation) * 0.12;
+        } else if (!isDragging) {
+          // Slowly align back to straight up if not scrolling
+          currentRotation += (0 - currentRotation) * 0.12;
+        }
+        
+        // On mobile, the spine is left-aligned, rotate around center.
+        ship.style.transform = `translate(-50%, -50%) rotate(${currentRotation}deg)`;
+
+        // Show engine fire flame on movement
+        if (velocity > 50) {
+          ship.classList.add('moving');
+        } else if (!isDragging) {
+          ship.classList.remove('moving');
+        }
+
+        // Activate timeline items
+        items.forEach(item => {
+          const itemRect = item.getBoundingClientRect();
+          if (itemRect.top < viewportHeight * 0.65) {
+            item.classList.add('active');
+          } else {
+            item.classList.remove('active');
+          }
+        });
+      }
+
+      // Drag-to-scroll functionality using Pointer Events
+      ship.addEventListener('pointerdown', (e) => {
+        isDragging = true;
+        ship.classList.add('moving');
+        ship.style.transition = 'none'; // Instant feedback during drag
+        ship.setPointerCapture(e.pointerId);
+        dragStartPageY = e.pageY;
+        dragStartScrollTop = window.pageYOffset || document.documentElement.scrollTop;
+        e.preventDefault();
+      });
+
+      ship.addEventListener('pointermove', (e) => {
+        if (!isDragging) return;
+
+        // Calculate drag offset relative to the timeline spine height
+        const rect = journeySection.getBoundingClientRect();
+        const totalHeight = rect.height;
+        const viewportHeight = window.innerHeight;
+        const startOffset = viewportHeight * 0.70;
+
+        const containerRect = timelineContainer.getBoundingClientRect();
+        const relativeY = e.pageY - (window.pageYOffset + containerRect.top) - 20; // 20px padding offset
+        const spineHeight = containerRect.height - 40; // padding top/bottom
+
+        let dragPercent = relativeY / spineHeight;
+        dragPercent = Math.max(0, Math.min(dragPercent, 1.0));
+
+        // Scroll the window corresponding to the drag percent
+        const timelineScrollStart = window.pageYOffset + rect.top - startOffset;
+        const timelineScrollRange = totalHeight - viewportHeight + startOffset;
+        const targetScroll = timelineScrollStart + dragPercent * timelineScrollRange;
+
+        window.scrollTo({
+          top: targetScroll,
+          behavior: 'auto'
+        });
+
+        // Determine orientation during drag
+        const dragDiff = e.pageY - dragStartPageY;
+        if (Math.abs(dragDiff) > 1) {
+          const targetRot = dragDiff > 0 ? 180 : 0;
+          currentRotation += (targetRot - currentRotation) * 0.15;
+          ship.style.transform = `translate(-50%, -50%) rotate(${currentRotation}deg)`;
+        }
+      });
+
+      ship.addEventListener('pointerup', (e) => {
+        isDragging = false;
+        ship.classList.remove('moving');
+        ship.style.transition = 'top 0.12s cubic-bezier(0.1, 0.8, 0.2, 1), transform 0.2s ease';
+        ship.releasePointerCapture(e.pointerId);
+        
+        // Reset rotation back to standard
+        currentRotation = 0;
+        ship.style.transform = `translate(-50%, -50%) rotate(0deg)`;
+      });
+
+      ship.addEventListener('pointercancel', (e) => {
+        isDragging = false;
+        ship.classList.remove('moving');
+        ship.style.transition = 'top 0.12s cubic-bezier(0.1, 0.8, 0.2, 1), transform 0.2s ease';
+        currentRotation = 0;
+        ship.style.transform = `translate(-50%, -50%) rotate(0deg)`;
+      });
+
+      window.addEventListener('scroll', updateTimeline);
+      window.addEventListener('resize', updateTimeline);
+      // Initial trigger
+      setTimeout(updateTimeline, 150);
+    })();
+  </script>
+</body>
+</html>

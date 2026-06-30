@@ -21306,42 +21306,7 @@ function StudentTaskView({
     loadStudentNotifPrefs();
   }, [studentId]);
 
-  // ── Continuous Geolocation Reporting (Phase 2) ──
-  React.useEffect(() => {
-    if (!wsConnected || !sessionCode) return;
-    
-    let intervalId;
-    
-    const reportLocation = async () => {
-      try {
-        const loc = await getCurrentLocation();
-        if (loc && typeof loc.lat === 'number' && typeof loc.lng === 'number') {
-          if (loc.accuracy <= 30) {
-            wsSend({
-              type: 'location_update',
-              lat: loc.lat,
-              lng: loc.lng,
-              accuracy: loc.accuracy
-            });
-          } else {
-            console.warn('[GEO] Location rejected (accuracy > 30m):', loc.accuracy);
-          }
-        }
-      } catch (err) {
-        console.error('[GEO] Geolocation error:', err);
-        wsSend({
-          type: 'gps_lost'
-        });
-      }
-    };
-    
-    reportLocation();
-    intervalId = setInterval(reportLocation, 30000);
-    
-    return () => {
-      clearInterval(intervalId);
-    };
-  }, [wsConnected, sessionCode, wsSend]);
+
 
   const saveStudentNotifPrefs = async (newPrefs) => {
     setStudentNotifPrefs(newPrefs);
@@ -22246,6 +22211,43 @@ function StudentTaskView({
       console.error("[WS Error] StudentTaskView:", err);
     }
   }, [studentId, studentName, navigate, add, playStudentBeep]));
+
+  // ── Continuous Geolocation Reporting (Phase 2) ──
+  React.useEffect(() => {
+    if (!wsConnected || !sessionCode) return;
+    
+    let intervalId;
+    
+    const reportLocation = async () => {
+      try {
+        const loc = await getCurrentLocation();
+        if (loc && typeof loc.lat === 'number' && typeof loc.lng === 'number') {
+          if (loc.accuracy <= 30) {
+            wsSend({
+              type: 'location_update',
+              lat: loc.lat,
+              lng: loc.lng,
+              accuracy: loc.accuracy
+            });
+          } else {
+            console.warn('[GEO] Location rejected (accuracy > 30m):', loc.accuracy);
+          }
+        }
+      } catch (err) {
+        console.error('[GEO] Geolocation error:', err);
+        wsSend({
+          type: 'gps_lost'
+        });
+      }
+    };
+    
+    reportLocation();
+    intervalId = setInterval(reportLocation, 30000);
+    
+    return () => {
+      clearInterval(intervalId);
+    };
+  }, [wsConnected, sessionCode, wsSend]);
 
   // ── time-spent ticker ──
   useEffect(() => {

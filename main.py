@@ -498,6 +498,68 @@ def _att(s: dict) -> dict:
     return att
 
 
+
+def init_student_geo_attendance(r: dict, now_ts: float):
+    r["joinTime"] = now_ts
+    r["accumulatedInsideTime"] = 0.0
+    r["accumulatedOutsideTime"] = 0.0
+    r["currentStatus"] = "present"
+    r["insideStartTime"] = now_ts
+    r["outsideStartTime"] = None
+    r["lastLocationTimestamp"] = now_ts
+    r["attendancePercentage"] = 100.0
+    r["exitCount"] = 0
+    r["reEntryCount"] = 0
+    r["attendanceTimeline"] = [{"timestamp": now_ts, "event": "Joined Session"}]
+    r["consecutive_outside"] = 0
+    r["consecutive_inside"] = 0
+    r["left_radius_at"] = None
+    r["gps_lost"] = False
+    r["frozen"] = False
+
+def finalize_session_attendance(s: dict):
+    att = _att(s)
+    if att.get("finalized") or att.get("state") in ("ended", "locked"):
+        if att.get("finalized"):
+            return
+            
+    end_t = now()
+    total_duration = s.get("duration_mins", 60) * 60
+    if total_duration <= 0:
+        total_duration = 60 * 60 # fallback to 1 hour
+        
+    records = att.setdefault("records", {})
+    for sid, r in records.items():
+        if r.get("frozen"):
+            continue
+            
+        current_status = r.get("currentStatus", "present")
+        if current_status == "present" and r.get("insideStartTime"):
+            r["accumulatedInsideTime"] = r.get("accumulatedInsideTime", 0.0) + (end_t - r["insideStartTime"])
+            r["insideStartTime"] = None
+        elif current_status == "temporary_absent" and r.get("outsideStartTime"):
+            r["accumulatedOutsideTime"] = r.get("accumulatedOutsideTime", 0.0) + (end_t - r["outsideStartTime"])
+            r["outsideStartTime"] = None
+            
+        inside_time = r.get("accumulatedInsideTime", 0.0)
+        percentage = (inside_time / total_duration) * 100.0
+        r["attendancePercentage"] = round(min(100.0, max(0.0, percentage)), 2)
+        
+        if r["attendancePercentage"] >= 75.0:
+            r["status"] = "present"
+        else:
+            r["status"] = "absent"
+            
+        r["leave_at"] = end_t
+        r["duration"] = inside_time
+        r["frozen"] = True
+        
+        timeline = r.setdefault("attendanceTimeline", [])
+        timeline.append({"timestamp": end_t, "event": f"Attendance Finalized ({r['status'].capitalize()})"})
+        
+    att["finalized"] = True
+
+
 def log_attendance_audit(s: dict, action: str, actor: str, details: str):
     att = _att(s)
     att.setdefault("audit_log", []).append({
@@ -536,7 +598,31 @@ def compute_attendance_summary(s: dict) -> dict:
             "leave_at":    r.get("leave_at"),
             "duration":    r.get("duration", 0),
             "interactions":r.get("interactions", 0),
+            "joinTime":    r.get("joinTime"),
+            "insideStartTime": r.get("insideStartTime"),
+            "outsideStartTime": r.get("outsideStartTime"),
+            "accumulatedInsideTime": r.get("accumulatedInsideTime", 0.0),
+            "accumulatedOutsideTime": r.get("accumulatedOutsideTime", 0.0),
+            "attendancePercentage": r.get("attendancePercentage", 100.0),
+            "currentStatus": r.get("currentStatus", "present"),
+            "lastLocationTimestamp": r.get("lastLocationTimestamp"),
+            "gpsAccuracy": r.get("gpsAccuracy"),
+            "exitCount": r.get("exitCount", 0),
+            "reEntryCount": r.get("reEntryCount", 0),
+            "attendanceTimeline": r.get("attendanceTimeline", []),
+            "gps_lost": r.get("gps_lost", False),
         }
+
+    # Calculate live dashboard analytics
+    connected_count = sum(1 for sid in records if sid in s.get("ws_clients", {}))
+    currently_inside = sum(1 for r in records.values() if r.get("currentStatus") == "present")
+    currently_outside = sum(1 for r in records.values() if r.get("currentStatus") == "temporary_absent")
+    
+    percentages = [r.get("attendancePercentage", 100.0) for r in records.values()]
+    avg_attendance = round(sum(percentages) / len(percentages)) if percentages else 100
+    
+    students_with_warnings = sum(1 for r in records.values() if r.get("exitCount", 0) >= 3 or r.get("currentStatus") == "temporary_absent" or r.get("gps_lost"))
+    total_exits = sum(r.get("exitCount", 0) for r in records.values())
 
     return {
         "state":        att.get("state", "inactive"),
@@ -556,6 +642,12 @@ def compute_attendance_summary(s: dict) -> dict:
         "session_name": s.get("session_name", "Live Class"),
         "session_status": s.get("status", "active"),
         "audit_log": att.get("audit_log", []),
+        "connected_count": connected_count,
+        "currently_inside": currently_inside,
+        "currently_outside": currently_outside,
+        "avg_attendance": avg_attendance,
+        "students_with_warnings": students_with_warnings,
+        "total_exits": total_exits,
     }
 
 
@@ -611,6 +703,7 @@ def generate_attendance_sheet(s: dict) -> dict:
             "join_time": rec.get("join_at"),
             "leave_time": rec.get("leave_at"),
             "total_duration": rec.get("duration", 0) or 0,
+            "attendance_percentage": rec.get("attendancePercentage", 100.0) if rec.get("join_at") else 0.0,
         })
 
     rows.sort(key=lambda row: (_roll_sort_value(row.get("roll_number")), (row.get("student_name") or "").lower()))
@@ -672,10 +765,11 @@ def attendance_mark_join(s: dict, student_id: str) -> None:
     if att.get("state") not in ("active", "paused"):
         return
     records = att.setdefault("records", {})
+    now_ts = now()
     if student_id not in records:
         records[student_id] = {
             "student_id":  student_id,
-            "join_at":     now(),
+            "join_at":     now_ts,
             "leave_at":    None,
             "duration":    0,
             "status":      "present",
@@ -683,10 +777,12 @@ def attendance_mark_join(s: dict, student_id: str) -> None:
         }
     else:
         r = records[student_id]
-        # Reset to present upon successful join/approval
-        r["join_at"]  = now()
+        r["join_at"]  = now_ts
         r["leave_at"] = None
         r["status"]   = "present"
+        
+    r = records[student_id]
+    init_student_geo_attendance(r, now_ts)
 
 
 def attendance_mark_leave(s: dict, student_id: str) -> None:
@@ -1458,6 +1554,9 @@ async def end_session_automatically(s: dict):
     s["auto_join_enabled"] = False
     touch_session(s)
     
+    # Finalize attendance
+    finalize_session_attendance(s)
+    
     # Broadcast to all connected clients
     await ws_broadcast(s, {"type": "session_status", "status": "ended"})
     generate_attendance_sheet(s)
@@ -1567,6 +1666,90 @@ async def code_worker():
 #  APP SETUP  ← app is defined HERE, before any @app routes
 # ══════════════════════════════════════════════════════════════════
 
+async def attendance_geo_watcher():
+    """Background worker to check for student location timeouts."""
+    from datetime import datetime
+    while True:
+        try:
+            await asyncio.sleep(3) # Check every 3 seconds
+            for s in list(sessions.values()):
+                if s.get("status") != "active":
+                    continue
+                att = _att(s)
+                if att.get("state") != "active":
+                    continue
+                    
+                now_ts = now()
+                records = att.setdefault("records", {})
+                modified = False
+                
+                for sid, r in records.items():
+                    if r.get("frozen"):
+                        continue
+                    if r.get("currentStatus") == "present":
+                        last_update = r.get("lastLocationTimestamp")
+                        if last_update and (now_ts - last_update > 30):
+                            boundary_time = r.get("left_radius_at") or last_update
+                            
+                            inside_start = r.get("insideStartTime")
+                            if inside_start and boundary_time > inside_start:
+                                r["accumulatedInsideTime"] = r.get("accumulatedInsideTime", 0.0) + (boundary_time - inside_start)
+                            r["insideStartTime"] = None
+                            r["outsideStartTime"] = boundary_time
+                            r["currentStatus"] = "temporary_absent"
+                            r["gps_lost"] = True
+                            r["exitCount"] = r.get("exitCount", 0) + 1
+                            
+                            timeline = r.setdefault("attendanceTimeline", [])
+                            timeline.append({"timestamp": now_ts, "event": "GPS Lost"})
+                            
+                            total_duration = s.get("duration_mins", 60) * 60
+                            pct = round((r.get("accumulatedInsideTime", 0.0) / total_duration) * 100, 2) if total_duration > 0 else 100.0
+                            r["attendancePercentage"] = pct
+                            
+                            student = s["students"].get(sid, {})
+                            student_name = student.get("name", "Student")
+                            
+                            if r["exitCount"] >= 3:
+                                asyncio.create_task(ws_teacher(s, {
+                                    "type": "geo_notification",
+                                    "notification_type": "exit_warning",
+                                    "student_name": student_name,
+                                    "attendance_percentage": int(pct),
+                                    "time": datetime.fromtimestamp(now_ts).strftime("%I:%M %p"),
+                                    "exit_count": r["exitCount"],
+                                    "message": f"🚨 {student_name} has exited the classroom {r['exitCount']} times. Current Attendance: {int(pct)}%. Recommendation: Review this student's attendance manually."
+                                }))
+                            else:
+                                asyncio.create_task(ws_teacher(s, {
+                                    "type": "geo_notification",
+                                    "notification_type": "gps_lost",
+                                    "student_name": student_name,
+                                    "message": f"⚠️ {student_name} location unavailable. Attendance paused."
+                                }))
+                            
+                            ws_student_conn = s.get("ws_clients", {}).get(sid)
+                            if ws_student_conn:
+                                asyncio.create_task(ws_send(ws_student_conn, {
+                                    "type": "student_attendance_update",
+                                    "currentStatus": r["currentStatus"],
+                                    "attendancePercentage": r["attendancePercentage"],
+                                    "accumulatedInsideTime": r["accumulatedInsideTime"],
+                                    "accumulatedOutsideTime": r["accumulatedOutsideTime"],
+                                    "insideStartTime": r["insideStartTime"],
+                                    "outsideStartTime": r["outsideStartTime"],
+                                    "lastLocationTimestamp": r["lastLocationTimestamp"],
+                                    "gps_lost": True,
+                                }))
+                                
+                            modified = True
+                            
+                if modified:
+                    asyncio.create_task(broadcast_attendance(s))
+        except Exception as e:
+            log.error("[GEO WATCHER] Error: %s", e, exc_info=True)
+
+
 async def autosave_worker():
     """Periodically persist all sessions to disk."""
     interval = int(os.getenv("AUTOSAVE_INTERVAL", "10"))
@@ -1613,11 +1796,12 @@ async def lifespan(app: FastAPI):
     t3 = asyncio.create_task(code_worker())
     t4 = asyncio.create_task(autosave_worker())
     t5 = asyncio.create_task(session_timer_watcher())
+    t6 = asyncio.create_task(attendance_geo_watcher())
     yield
     # Final save before shutdown
     for code in list(sessions):
         save_session(code)
-    t1.cancel(); t2.cancel(); t3.cancel(); t4.cancel(); t5.cancel()
+    t1.cancel(); t2.cancel(); t3.cancel(); t4.cancel(); t5.cancel(); t6.cancel()
     log.info("VYOM stopped.")
 
 
@@ -4554,14 +4738,16 @@ async def session_control(code: str, action: str = Query(...), background_tasks:
             # Retroactively mark any already-active students as present
             for sid, st in s.get("students", {}).items():
                 if st.get("status") == "active" and sid not in att.get("records", {}):
-                    att.setdefault("records", {})[sid] = {
+                    now_ts = now()
+                    r = att.setdefault("records", {})[sid] = {
                         "student_id": sid,
-                        "join_at":    now(),
+                        "join_at":    now_ts,
                         "leave_at":   None,
                         "duration":   0,
                         "status":     "present",
                         "interactions": 0,
                     }
+                    init_student_geo_attendance(r, now_ts)
     touch_session(s)
 
     # Compute session_end_timestamp for countdown
@@ -4578,6 +4764,14 @@ async def session_control(code: str, action: str = Query(...), background_tasks:
     })
     if action == "end":
         s["auto_join_enabled"] = False
+        
+        # End and finalize attendance
+        att = _att(s)
+        if att.get("state") not in ("ended", "locked"):
+            att["state"] = "ended"
+            att["ended_at"] = now()
+            finalize_session_attendance(s)
+            
         admin_broadcast({
             "event": "session_ended",
             "session_code": code,
@@ -5029,14 +5223,16 @@ async def attendance_control_endpoint(
         # Retroactively mark all currently active students as present
         for sid, st in s["students"].items():
             if st.get("status") == "active" and sid not in att["records"]:
-                att["records"][sid] = {
+                now_ts = now()
+                r = att["records"][sid] = {
                     "student_id": sid,
-                    "join_at":    now(),
+                    "join_at":    now_ts,
                     "leave_at":   None,
                     "duration":   0,
                     "status":     "present",
                     "interactions": 0,
                 }
+                init_student_geo_attendance(r, now_ts)
 
     elif action == "pause":
         if att.get("state") == "locked":
@@ -5056,12 +5252,10 @@ async def attendance_control_endpoint(
         att["state"]    = "ended"
         att["ended_at"] = now()
         log_attendance_audit(s, "end", actor, "Attendance ended")
-        # Finalize durations for all still-present students
-        for r in att["records"].values():
-            if r.get("status") == "present":
-                end_t = now()
-                r["leave_at"] = end_t
-                r["duration"] = end_t - (r.get("join_at") or end_t)
+        
+        # Finalize attendance
+        finalize_session_attendance(s)
+        
         generate_attendance_sheet(s)
 
     elif action == "lock":
@@ -9135,10 +9329,13 @@ async def student_ws_endpoint(ws: WebSocket, session_code: str, student_id: str)
         s["raised_hands"] = rh
     student_hand_raised = student_id in rh
 
+    att = _att(s)
+    geo_rec = att.get("records", {}).get(student_id)
     await ws_send(ws, {
         "type":                "connected",
         "role":                "student",
         "student":             student,
+        "geo_attendance":      geo_rec,
         "session_status":      s["status"],
         "session_name":        s.get("session_name", ""),
         "current_task":        current,
@@ -9186,6 +9383,249 @@ async def student_ws_endpoint(ws: WebSocket, session_code: str, student_id: str)
                 if st:
                     st["last_seen"] = now()
                 await ws_send(ws, {"type": "pong", "ts": now()})
+
+            elif cmd == "location_update":
+                lat = data.get("lat")
+                lng = data.get("lng")
+                accuracy = data.get("accuracy")
+                
+                att = _att(s)
+                if att.get("state") in ("ended", "locked"):
+                    continue
+                    
+                records = att.setdefault("records", {})
+                r = records.setdefault(student_id, {
+                    "student_id": student_id,
+                    "join_at": now(),
+                    "leave_at": None,
+                    "duration": 0,
+                    "status": "present",
+                    "interactions": 0,
+                })
+                
+                if r.get("frozen"):
+                    continue
+                    
+                now_ts = now()
+                if "joinTime" not in r:
+                    init_student_geo_attendance(r, now_ts)
+                    
+                if accuracy is None or not isinstance(accuracy, (int, float)) or accuracy > 30:
+                    log.warning("[GEO] Student %s sent low accuracy location: %s", student_id, accuracy)
+                    continue
+                    
+                last_lat = r.get("last_lat")
+                last_lng = r.get("last_lng")
+                last_ts = r.get("lastLocationTimestamp")
+                
+                if last_lat is not None and last_lng is not None and last_ts is not None:
+                    time_delta = now_ts - last_ts
+                    if time_delta > 0:
+                        distance = haversine_distance_meters(last_lat, last_lng, lat, lng)
+                        speed = distance / time_delta
+                        if speed > 25.0:
+                            log.warning("[GEO] Student %s detected with impossible speed: %s m/s", student_id, speed)
+                            continue
+                            
+                r["last_lat"] = lat
+                r["last_lng"] = lng
+                r["lastLocationTimestamp"] = now_ts
+                r["gpsAccuracy"] = accuracy
+                
+                was_lost = r.get("gps_lost", False)
+                if was_lost:
+                    r["gps_lost"] = False
+                    timeline = r.setdefault("attendanceTimeline", [])
+                    timeline.append({"timestamp": now_ts, "event": "GPS Restored"})
+                    student = s["students"].get(student_id, {})
+                    student_name = student.get("name", "Student")
+                    await ws_teacher(s, {
+                        "type": "geo_notification",
+                        "notification_type": "gps_restored",
+                        "student_name": student_name,
+                        "message": f"✅ {student_name} GPS restored."
+                    })
+                
+                teacher_location = s.get("close_access_location")
+                if teacher_location and isinstance(teacher_location, dict):
+                    t_lat = teacher_location.get("lat")
+                    t_lng = teacher_location.get("lng")
+                    radius = s.get("close_access_radius_meters", 100)
+                    
+                    if t_lat is not None and t_lng is not None:
+                        distance = haversine_distance_meters(t_lat, t_lng, lat, lng)
+                        is_inside = distance <= radius
+                        
+                        old_status = r.get("currentStatus", "present")
+                        
+                        if is_inside:
+                            r["consecutive_inside"] = r.get("consecutive_inside", 0) + 1
+                            r["consecutive_outside"] = 0
+                            
+                            if r["consecutive_inside"] >= 2:
+                                r["left_radius_at"] = None
+                                if old_status != "present":
+                                    outside_start = r.get("outsideStartTime")
+                                    if outside_start:
+                                        r["accumulatedOutsideTime"] = r.get("accumulatedOutsideTime", 0.0) + (now_ts - outside_start)
+                                    r["outsideStartTime"] = None
+                                    r["insideStartTime"] = now_ts
+                                    r["currentStatus"] = "present"
+                                    r["reEntryCount"] = r.get("reEntryCount", 0) + 1
+                                    
+                                    timeline = r.setdefault("attendanceTimeline", [])
+                                    timeline.append({"timestamp": now_ts, "event": "Returned"})
+                                    
+                                    student = s["students"].get(student_id, {})
+                                    student_name = student.get("name", "Student")
+                                    total_duration = s.get("duration_mins", 60) * 60
+                                    pct = round((r.get("accumulatedInsideTime", 0.0) / total_duration) * 100, 2) if total_duration > 0 else 100.0
+                                    
+                                    from datetime import datetime
+                                    returned_time_str = datetime.fromtimestamp(now_ts).strftime("%I:%M %p")
+                                    await ws_teacher(s, {
+                                        "type": "geo_notification",
+                                        "notification_type": "enter",
+                                        "student_name": student_name,
+                                        "attendance_percentage": int(pct),
+                                        "time": returned_time_str
+                                    })
+                        else:
+                            r["consecutive_outside"] = r.get("consecutive_outside", 0) + 1
+                            r["consecutive_inside"] = 0
+                            
+                            if r["consecutive_outside"] >= 2:
+                                if r.get("left_radius_at") is None:
+                                    r["left_radius_at"] = now_ts
+                                    
+                        left_at = r.get("left_radius_at")
+                        if left_at is not None and old_status == "present":
+                            if now_ts - left_at >= 30:
+                                inside_start = r.get("insideStartTime")
+                                if inside_start and left_at > inside_start:
+                                    r["accumulatedInsideTime"] = r.get("accumulatedInsideTime", 0.0) + (left_at - inside_start)
+                                r["insideStartTime"] = None
+                                r["outsideStartTime"] = left_at
+                                r["currentStatus"] = "temporary_absent"
+                                r["exitCount"] = r.get("exitCount", 0) + 1
+                                
+                                timeline = r.setdefault("attendanceTimeline", [])
+                                timeline.append({"timestamp": now_ts, "event": "Left Classroom"})
+                                
+                                student = s["students"].get(student_id, {})
+                                student_name = student.get("name", "Student")
+                                total_duration = s.get("duration_mins", 60) * 60
+                                pct = round((r.get("accumulatedInsideTime", 0.0) / total_duration) * 100, 2) if total_duration > 0 else 100.0
+                                
+                                from datetime import datetime
+                                left_time_str = datetime.fromtimestamp(now_ts).strftime("%I:%M %p")
+                                
+                                if r["exitCount"] >= 3:
+                                    await ws_teacher(s, {
+                                        "type": "geo_notification",
+                                        "notification_type": "exit_warning",
+                                        "student_name": student_name,
+                                        "attendance_percentage": int(pct),
+                                        "time": left_time_str,
+                                        "exit_count": r["exitCount"],
+                                        "message": f"🚨 {student_name} has exited the classroom {r['exitCount']} times. Current Attendance: {int(pct)}%. Recommendation: Review this student's attendance manually."
+                                    })
+                                else:
+                                    await ws_teacher(s, {
+                                        "type": "geo_notification",
+                                        "notification_type": "leave",
+                                        "student_name": student_name,
+                                        "attendance_percentage": int(pct),
+                                        "time": left_time_str
+                                    })
+                                    
+                if r.get("currentStatus") == "present" and r.get("insideStartTime"):
+                    current_inside = r.get("accumulatedInsideTime", 0.0) + (now_ts - r["insideStartTime"])
+                else:
+                    current_inside = r.get("accumulatedInsideTime", 0.0)
+                    
+                total_duration = s.get("duration_mins", 60) * 60
+                pct = round((current_inside / total_duration) * 100, 2) if total_duration > 0 else 100.0
+                r["attendancePercentage"] = pct
+                
+                await ws_send(ws, {
+                    "type": "student_attendance_update",
+                    "currentStatus": r["currentStatus"],
+                    "attendancePercentage": r["attendancePercentage"],
+                    "accumulatedInsideTime": r["accumulatedInsideTime"],
+                    "accumulatedOutsideTime": r["accumulatedOutsideTime"],
+                    "insideStartTime": r["insideStartTime"],
+                    "outsideStartTime": r["outsideStartTime"],
+                    "lastLocationTimestamp": r["lastLocationTimestamp"],
+                    "gps_lost": r.get("gps_lost", False),
+                })
+                
+                await broadcast_attendance(s)
+
+            elif cmd == "gps_lost":
+                att = _att(s)
+                if att.get("state") in ("ended", "locked"):
+                    continue
+                    
+                records = att.setdefault("records", {})
+                r = records.setdefault(student_id, {
+                    "student_id": student_id,
+                    "join_at": now(),
+                    "leave_at": None,
+                    "duration": 0,
+                    "status": "present",
+                    "interactions": 0,
+                })
+                
+                if r.get("frozen"):
+                    continue
+                    
+                now_ts = now()
+                if "joinTime" not in r:
+                    init_student_geo_attendance(r, now_ts)
+                    
+                old_status = r.get("currentStatus", "present")
+                r["gps_lost"] = True
+                r["lastLocationTimestamp"] = now_ts
+                
+                if old_status == "present":
+                    inside_start = r.get("insideStartTime")
+                    if inside_start:
+                        r["accumulatedInsideTime"] = r.get("accumulatedInsideTime", 0.0) + (now_ts - inside_start)
+                    r["insideStartTime"] = None
+                    r["outsideStartTime"] = now_ts
+                    r["currentStatus"] = "temporary_absent"
+                    r["exitCount"] = r.get("exitCount", 0) + 1
+                    
+                    timeline = r.setdefault("attendanceTimeline", [])
+                    timeline.append({"timestamp": now_ts, "event": "GPS Lost"})
+                    
+                    student = s["students"].get(student_id, {})
+                    student_name = student.get("name", "Student")
+                    total_duration = s.get("duration_mins", 60) * 60
+                    pct = round((r.get("accumulatedInsideTime", 0.0) / total_duration) * 100, 2) if total_duration > 0 else 100.0
+                    r["attendancePercentage"] = pct
+                    
+                    await ws_teacher(s, {
+                        "type": "geo_notification",
+                        "notification_type": "gps_lost",
+                        "student_name": student_name,
+                        "message": f"⚠️ {student_name} location unavailable. Attendance paused."
+                    })
+                    
+                    await ws_send(ws, {
+                        "type": "student_attendance_update",
+                        "currentStatus": r["currentStatus"],
+                        "attendancePercentage": r["attendancePercentage"],
+                        "accumulatedInsideTime": r["accumulatedInsideTime"],
+                        "accumulatedOutsideTime": r["accumulatedOutsideTime"],
+                        "insideStartTime": r["insideStartTime"],
+                        "outsideStartTime": r["outsideStartTime"],
+                        "lastLocationTimestamp": r["lastLocationTimestamp"],
+                        "gps_lost": True,
+                    })
+                    
+                    await broadcast_attendance(s)
 
             # SAFEGUARD: Prevent waiting students from accessing classroom features
             elif cmd not in ("ping", "heartbeat"):  # Allow only heartbeat/ping for waiting students

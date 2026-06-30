@@ -7159,6 +7159,9 @@ function TeacherShell({
         }
         loadRoster();
       } else if (msg.type === 'connected') {
+        if (msg.geo_attendance) {
+          setGeoAttendance(msg.geo_attendance);
+        }
         if (msg.analytics) setAnalytics(msg.analytics);
         if (msg.session?.status) setSessionStatus(msg.session.status);
         if (msg.session?.session_name !== undefined) setSessionDisplayName(msg.session.session_name);
@@ -7188,6 +7191,10 @@ function TeacherShell({
       } else if (msg.type === 'attendance_update') {
         if (msg.attendance && typeof window.__attUpdate === 'function') {
           window.__attUpdate(msg.attendance);
+        }
+      } else if (msg.type === 'geo_notification') {
+        if (typeof window.__geoNotification === 'function') {
+          window.__geoNotification(msg);
         }
       } else if (msg.type === 'doubt_resolved' || msg.type === 'doubt_reopened' || msg.type === 'doubts_update') {
         window.dispatchEvent(new CustomEvent('vyom:doubt_resolved', { detail: msg }));
@@ -8242,6 +8249,7 @@ function SmartAttendancePage({ sessionCode, sessionStatus, roster, wsSend }) {
   const [sheetLoading, setSheetLoading] = useState(false);
   const [minDur, setMinDur] = useState(60);
   const [search, setSearch] = useState('');
+  const [expandedStudents, setExpandedStudents] = useState({});
   const [toast, setToast] = useState(null);
   const [lastUpdated, setLastUpdated] = useState(Date.now());
   const [isLoading, setIsLoading] = useState(true);
@@ -8419,9 +8427,17 @@ function SmartAttendancePage({ sessionCode, sessionStatus, roster, wsSend }) {
       }
     };
     
+    window.__geoNotification = (notif) => {
+      console.log('[ATTENDANCE] 🔔 Geo Notification received:', notif);
+      if (notif && notif.message) {
+        add(notif.message, notif.notification_type === 'exit_warning' ? 'error' : notif.notification_type === 'gps_lost' ? 'warn' : 'success');
+      }
+    };
+    
     // Cleanup
     return () => { 
       window.__attUpdate = null;
+      window.__geoNotification = null;
     };
   }, [validateAttendanceData]);
 
@@ -8859,6 +8875,44 @@ function SmartAttendancePage({ sessionCode, sessionStatus, roster, wsSend }) {
       )
     ),
 
+    // Live Geo Analytics Summary row (render only when session has started/ended/etc.)
+    (isActive || isPaused || isEnded || isLocked) && React.createElement('div', {
+      style: {
+        display: 'grid',
+        gridTemplateColumns: 'repeat(6, 1fr)',
+        gap: 12,
+        marginBottom: 24
+      }
+    },
+      [
+        { val: att.connected_count || 0, label: '📡 Connected', color: 'var(--green)' },
+        { val: att.currently_inside || 0, label: '🟢 Inside Class', color: 'var(--green)' },
+        { val: att.currently_outside || 0, label: '🚶 Outside Class', color: '#EF4444' },
+        { val: `${att.avg_attendance || 0}%`, label: '📊 Avg Presence', color: 'var(--purple)' },
+        { val: att.students_with_warnings || 0, label: '🚨 Warnings', color: att.students_with_warnings > 0 ? '#EF4444' : 'var(--text)' },
+        { val: att.total_exits || 0, label: '🚪 Total Exits', color: 'var(--text)' }
+      ].map((card, idx) =>
+        React.createElement('div', {
+          key: idx,
+          style: {
+            background: 'var(--surface1)',
+            border: '1px solid var(--border)',
+            padding: '12px 16px',
+            borderRadius: 16,
+            textAlign: 'center',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'center',
+            minHeight: 74
+          }
+        },
+          React.createElement('div', { style: { fontSize: '1.25rem', fontWeight: '800', color: card.color, fontFamily: 'Syne, sans-serif' } }, card.val),
+          React.createElement('div', { style: { fontSize: '0.72rem', color: 'var(--text3)', marginTop: 4, fontWeight: '600', letterSpacing: '0.2px' } }, card.label)
+        )
+      )
+    ),
+
     // ══════════════════════════════
     // MIDDLE ROW: Feed | Snapshot | Session
     // ══════════════════════════════
@@ -9057,7 +9111,7 @@ function SmartAttendancePage({ sessionCode, sessionStatus, roster, wsSend }) {
         React.createElement('table', { className: 'att-sheet-table' },
           React.createElement('thead', null,
             React.createElement('tr', null,
-              ['Serial No.', 'Student Name', 'Email Address', 'Class', 'Roll Number', 'Attendance Status', 'Join Time', 'Leave Time', 'Total Duration'].map(h =>
+              ['Serial No.', 'Student Name', 'Email Address', 'Class', 'Roll Number', 'Attendance Status', 'Join Time', 'Leave Time', 'Presence %', 'Total Duration'].map(h =>
                 React.createElement('th', { key: h }, h)
               )
             )
@@ -9075,6 +9129,7 @@ function SmartAttendancePage({ sessionCode, sessionStatus, roster, wsSend }) {
                 ),
                 React.createElement('td', null, fmtTime(row.join_time)),
                 React.createElement('td', null, fmtTime(row.leave_time)),
+                React.createElement('td', null, `${Math.round(row.attendance_percentage || 0)}%`),
                 React.createElement('td', null, fmtDur(row.total_duration))
               )
             )
@@ -9090,7 +9145,7 @@ function SmartAttendancePage({ sessionCode, sessionStatus, roster, wsSend }) {
             ),
             React.createElement('div', null, row.email || '-'),
             React.createElement('div', null, `Class: ${row.class || '-'} | Roll: ${row.roll_number || '-'}`),
-            React.createElement('div', null, `In: ${fmtTime(row.join_time)} | Out: ${fmtTime(row.leave_time)} | Duration: ${fmtDur(row.total_duration)}`)
+            React.createElement('div', null, `In: ${fmtTime(row.join_time)} | Out: ${fmtTime(row.leave_time)} | Presence: ${Math.round(row.attendance_percentage || 0)}% | Duration: ${fmtDur(row.total_duration)}`)
           )
         )
       )
@@ -9120,35 +9175,97 @@ function SmartAttendancePage({ sessionCode, sessionStatus, roster, wsSend }) {
             style: { textAlign: 'center', padding: '40px', color: 'var(--text3)' }
           }, isInactive ? 'Start attendance to see student status' : 'No students found')
         : React.createElement('div', { className: 'att-student-grid' },
-            allStudents.map((rec, idx) =>
-              React.createElement('div', {
+            allStudents.map((rec, idx) => {
+              const isExpanded = !!expandedStudents[rec.student_id];
+              return React.createElement('div', {
                 key: rec.student_id,
                 className: `att-student-card status-${statusPillClass(rec.status)}`,
-                style: { animationDelay: `${Math.min(idx, 20) * 0.04}s` }
+                style: {
+                  animationDelay: `${Math.min(idx, 20) * 0.04}s`,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 12,
+                  padding: 16,
+                  borderRadius: 16,
+                  background: 'var(--surface1)',
+                  border: '1px solid var(--border)',
+                  boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
+                  transition: 'all 0.2s ease',
+                  position: 'relative'
+                }
               },
-                // Avatar
-                (() => {
-                  const _attPhoto = window.getCachedPhoto && window.getCachedPhoto(rec.student_id, rec.profile_photo);
-                  return React.createElement('div', {
-                    className: 'att-student-avatar',
-                    style: _attPhoto ? { background: 'transparent', padding: 0, overflow: 'hidden' } : {}
-                  },
-                    _attPhoto
-                      ? React.createElement('img', { src: _attPhoto, alt: rec.name || '?', style: { width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%', display: 'block' } })
-                      : (rec.name || '?')[0].toUpperCase(),
-                    React.createElement('div', {
-                      className: `att-avatar-status ${avatarDotClass(rec.status)}`
-                    })
-                  );
-                })(),
-                // Info
-                React.createElement('div', { className: 'att-student-info' },
-                  React.createElement('div', { className: 'att-student-name' }, rec.name),
-                  React.createElement('div', { className: 'att-student-meta' },
-                    `Roll: ${rec.roll || '—'}`,
-                    rec.interactions > 0 && ` · ${rec.interactions} interactions`
+                React.createElement('div', { style: { display: 'flex', gap: 16, alignItems: 'center', justifyContent: 'space-between', width: '100%' } },
+                  React.createElement('div', { style: { display: 'flex', gap: 12, alignItems: 'center' } },
+                    (() => {
+                      const _attPhoto = window.getCachedPhoto && window.getCachedPhoto(rec.student_id, rec.profile_photo);
+                      return React.createElement('div', {
+                        className: 'att-student-avatar',
+                        style: _attPhoto ? { background: 'transparent', padding: 0, overflow: 'hidden', width: 42, height: 42, borderRadius: '50%', flexShrink: 0 } : { width: 42, height: 42, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--surface3)', fontWeight: 'bold', flexShrink: 0 }
+                      },
+                        _attPhoto
+                          ? React.createElement('img', { src: _attPhoto, alt: rec.name || '?', style: { width: '100%', height: '100%', objectFit: 'cover' } })
+                          : (rec.name || '?')[0].toUpperCase(),
+                        React.createElement('div', {
+                          className: `att-avatar-status ${avatarDotClass(rec.status)}`
+                        })
+                      );
+                    })(),
+                    React.createElement('div', null,
+                      React.createElement('div', { className: 'att-student-name', style: { fontWeight: '700', fontSize: '0.92rem', color: '#fff' } }, rec.name),
+                      React.createElement('div', { className: 'att-student-meta', style: { fontSize: '0.78rem', color: 'var(--text3)' } },
+                        `Roll: ${rec.roll || '—'}${rec.interactions > 0 ? ` · ${rec.interactions} interactions` : ''}`
+                      )
+                    )
                   ),
-                  React.createElement('div', { style: { display: 'flex', alignItems: 'center', gap: 8, marginTop: 5 } },
+                  React.createElement('div', { className: 'att-student-join-time', style: { fontSize: '0.78rem', color: 'var(--text3)', textAlign: 'right', flexShrink: 0 } },
+                    rec.join_at && React.createElement('div', null, `In: ${fmtTime(rec.join_at)}`),
+                    rec.leave_at && React.createElement('div', null, `Out: ${fmtTime(rec.leave_at)}`),
+                    rec.duration > 0 && React.createElement('div', { style: { color: 'var(--purple)', fontWeight: '600' } }, fmtDur(rec.duration))
+                  )
+                ),
+                (isActive || isPaused || isEnded || isLocked) && React.createElement('div', {
+                  style: {
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(2, 1fr)',
+                    gap: 8,
+                    background: 'var(--surface2)',
+                    padding: 10,
+                    borderRadius: 10,
+                    fontSize: '0.78rem',
+                    border: '1px solid rgba(255, 255, 255, 0.03)'
+                  }
+                },
+                  React.createElement('div', null,
+                    React.createElement('span', { style: { color: 'var(--text3)' } }, 'Live Status: '),
+                    React.createElement('strong', {
+                      style: {
+                        color: rec.currentStatus === 'present' 
+                          ? (rec.gps_lost ? '#EF4444' : '#22C55E') 
+                          : '#EF4444'
+                      }
+                    },
+                      rec.gps_lost ? 'GPS Lost ⚠️' : rec.currentStatus === 'present' ? 'Inside ✅' : 'Outside 🚶'
+                    )
+                  ),
+                  React.createElement('div', null,
+                    React.createElement('span', { style: { color: 'var(--text3)' } }, 'Presence Rate: '),
+                    React.createElement('strong', { style: { color: rec.attendancePercentage >= 75.0 ? '#22C55E' : '#EF4444' } },
+                      `${Math.round(rec.attendancePercentage || 0)}%`
+                    )
+                  ),
+                  React.createElement('div', null,
+                    React.createElement('span', { style: { color: 'var(--text3)' } }, 'Inside Time: '),
+                    React.createElement('strong', null, fmtDur(rec.accumulatedInsideTime || 0))
+                  ),
+                  React.createElement('div', null,
+                    React.createElement('span', { style: { color: 'var(--text3)' } }, 'Exits: '),
+                    React.createElement('strong', { style: { color: rec.exitCount >= 3 ? '#EF4444' : 'var(--text)' } },
+                      `${rec.exitCount || 0} Exits`
+                    )
+                  )
+                ),
+                React.createElement('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', marginTop: 4 } },
+                  React.createElement('div', { style: { display: 'flex', gap: 6, alignItems: 'center' } },
                     React.createElement('span', { className: `att-student-status-pill ${statusPillClass(rec.status)}` },
                       rec.status === 'present' && React.createElement('span', { className: 'att-net-pulse' }),
                       statusLabel(rec.status)
@@ -9187,16 +9304,61 @@ function SmartAttendancePage({ sessionCode, sessionStatus, roster, wsSend }) {
                       React.createElement('option', { value: 'exited' }, 'Exited Early'),
                       React.createElement('option', { value: 'absent' }, 'Absent')
                     )
+                  ),
+                  rec.attendanceTimeline && rec.attendanceTimeline.length > 0 && React.createElement('button', {
+                    onClick: () => {
+                      setExpandedStudents(prev => ({ ...prev, [rec.student_id]: !prev[rec.student_id] }));
+                    },
+                    style: {
+                      border: 'none',
+                      background: 'transparent',
+                      color: 'var(--purple)',
+                      fontSize: '0.78rem',
+                      cursor: 'pointer',
+                      fontWeight: '600',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 4
+                    }
+                  },
+                    isExpanded ? 'Hide Path ▴' : 'Show Path ▾'
                   )
                 ),
-                // Right: join time / duration
-                React.createElement('div', { className: 'att-student-join-time' },
-                  rec.join_at && React.createElement('div', null, `In: ${fmtTime(rec.join_at)}`),
-                  rec.leave_at && React.createElement('div', null, `Out: ${fmtTime(rec.leave_at)}`),
-                  rec.duration > 0 && React.createElement('div', { style: { color: 'var(--text3)' } }, fmtDur(rec.duration))
+                isExpanded && rec.attendanceTimeline && rec.attendanceTimeline.length > 0 && React.createElement('div', {
+                  style: {
+                    marginTop: 8,
+                    paddingTop: 12,
+                    borderTop: '1px solid var(--border)',
+                    maxHeight: 120,
+                    overflowY: 'auto',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 6
+                  }
+                },
+                  rec.attendanceTimeline.map((item, keyIdx) => {
+                    let dotColor = '#94A3B8';
+                    if (item.event === 'Joined Session') dotColor = '#10B981';
+                    else if (item.event === 'Left Classroom') dotColor = '#EF4444';
+                    else if (item.event === 'Returned') dotColor = '#10B981';
+                    else if (item.event === 'GPS Lost') dotColor = '#F59E0B';
+                    else if (item.event === 'GPS Restored') dotColor = '#10B981';
+                    else if (item.event.startsWith('Attendance Finalized')) dotColor = '#F59E0B';
+                    
+                    return React.createElement('div', {
+                      key: keyIdx,
+                      style: { display: 'flex', justifyContent: 'space-between', fontSize: '0.72rem', alignItems: 'center' }
+                    },
+                      React.createElement('div', { style: { display: 'flex', alignItems: 'center', gap: 6 } },
+                        React.createElement('span', { style: { width: 6, height: 6, borderRadius: '50%', background: dotColor, display: 'inline-block' } }),
+                        React.createElement('span', { style: { color: 'var(--text2)' } }, item.event)
+                      ),
+                      React.createElement('span', { style: { color: 'var(--text3)' } }, fmtTime(item.timestamp))
+                    );
+                  })
                 )
-              )
-            )
+              );
+            })
           )
     )
   );
@@ -20617,6 +20779,9 @@ function StudentWaiting({sessionCode, studentId, studentName, navigate, studentP
     else if (msg.type === 'waiting_students') {
       setWaitingPeers(msg.students || []);
     } else if (msg.type === 'connected') {
+        if (msg.geo_attendance) {
+          setGeoAttendance(msg.geo_attendance);
+        }
       if (msg.session_name && session) setSession(s => ({...s, session_name: msg.session_name}));
     }
   }, [studentPhoto]));
@@ -21104,6 +21269,7 @@ function StudentTaskView({
 
   // ── NEW: enhanced state ──
   const [wsConnected, setWsConnected] = useState(false);
+  const [geoAttendance, setGeoAttendance] = useState(null);
   const [taskIndex, setTaskIndex] = useState(0);
   const [totalTasks, setTotalTasks] = useState(0);
   const [answeredCount, setAnsweredCount] = useState(0);
@@ -21146,6 +21312,43 @@ function StudentTaskView({
     }
     loadStudentNotifPrefs();
   }, [studentId]);
+
+  // ── Continuous Geolocation Reporting (Phase 2) ──
+  React.useEffect(() => {
+    if (!wsConnected || !sessionCode) return;
+    
+    let intervalId;
+    
+    const reportLocation = async () => {
+      try {
+        const loc = await getCurrentLocation();
+        if (loc && typeof loc.lat === 'number' && typeof loc.lng === 'number') {
+          if (loc.accuracy <= 30) {
+            wsSend({
+              type: 'location_update',
+              lat: loc.lat,
+              lng: loc.lng,
+              accuracy: loc.accuracy
+            });
+          } else {
+            console.warn('[GEO] Location rejected (accuracy > 30m):', loc.accuracy);
+          }
+        }
+      } catch (err) {
+        console.error('[GEO] Geolocation error:', err);
+        wsSend({
+          type: 'gps_lost'
+        });
+      }
+    };
+    
+    reportLocation();
+    intervalId = setInterval(reportLocation, 30000);
+    
+    return () => {
+      clearInterval(intervalId);
+    };
+  }, [wsConnected, sessionCode, wsSend]);
 
   const saveStudentNotifPrefs = async (newPrefs) => {
     setStudentNotifPrefs(newPrefs);
@@ -21698,6 +21901,9 @@ function StudentTaskView({
           toastType: 'error'
         }, 'default');
       }
+      else if (msg.type === 'student_attendance_update') {
+        setGeoAttendance(msg);
+      }
       else if (msg.type === 'chat_unsuspended') {
         setChatSuspended(false);
         addStudentNotification({
@@ -21933,6 +22139,9 @@ function StudentTaskView({
         const mine = (msg.leaderboard || []).find(r => r.name === studentName);
         if (mine) setCodingScore(mine.score);
       } else if (msg.type === 'connected') {
+        if (msg.geo_attendance) {
+          setGeoAttendance(msg.geo_attendance);
+        }
         if (msg.vc_active !== undefined) {
           setVcBanner(msg.vc_active);
           setVcSessionActive(msg.vc_active);
@@ -24988,7 +25197,8 @@ function StudentTaskView({
               studentId,
               studentName,
               studentPhoto,
-              setSPage
+              setSPage,
+              geoAttendance
             })
           )
         ),
@@ -28411,7 +28621,7 @@ function StudentHUD({sessionStatus, taskIndex, totalTasks, wsConnected, hasTask,
 // ═════════════════════════════════════════════════════════════════
 //  STUDENT ATTENDANCE PAGE (Premium EdTech SaaS)
 // ═════════════════════════════════════════════════════════════════
-function StudentAttendancePage({ sessionCode, studentId, studentName, studentPhoto, setSPage }) {
+function StudentAttendancePage({ sessionCode, studentId, studentName, studentPhoto, setSPage, geoAttendance }) {
   const { add } = useContext(AppCtx);
   const [attData, setAttData] = useState(null);
   const [reportsData, setReportsData] = useState(null);
@@ -28462,7 +28672,8 @@ function StudentAttendancePage({ sessionCode, studentId, studentName, studentPho
   // Determine states from backend response
   const attState = attData?.state || 'inactive';
   const isSessionEnded = attData?.session_status === 'ended';
-  const myRecord = attData?.records?.[studentId] || null;
+  const dbRecord = attData?.records?.[studentId] || null;
+  const myRecord = geoAttendance ? { ...dbRecord, ...geoAttendance } : dbRecord;
 
   // Determine attendance status based on real database records only (if finalized/locked/ended)
   let attendanceStatus = 'Absent';
@@ -28511,12 +28722,37 @@ function StudentAttendancePage({ sessionCode, studentId, studentName, studentPho
     heroCircleClass = 'inactive-circle';
     heroCircleIcon = React.createElement('path', { d: 'M19 4h-1V3c0-.55-.45-1-1-1s-1 .45-1 1v1H8V3c0-.55-.45-1-1-1s-1 .45-1 1v1H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 15H5V9h14v10z' });
   } else if (attState === 'active' || attState === 'paused') {
-    heroHeader = 'Attendance In Progress';
-    heroTitle = 'Waiting for Teacher Attendance';
-    heroText = 'Attendance will appear once the teacher records it.';
-    heroColor = '#EAB308';
-    heroCircleClass = 'late-circle';
-    heroCircleIcon = React.createElement('path', { d: 'M12 2C6.48 2 2 6.48 2 12s4.48 12 10 12 10-4.48 10-12S17.52 2 12 2zm1 16h-2v-2h2v2zm0-4h-2V7h2v7z' });
+    if (geoAttendance) {
+      if (geoAttendance.gps_lost) {
+        heroHeader = 'GPS Signal Lost';
+        heroTitle = 'GPS Unavailable \u26A0\ufe0f';
+        heroText = 'Your location updates are paused. Please enable GPS permissions and stay in the classroom.';
+        heroColor = '#EF4444';
+        heroCircleClass = 'absent-circle';
+        heroCircleIcon = React.createElement('path', { d: 'M12 2C6.48 2 2 6.48 2 12s4.48 12 10 12 10-4.48 10-12S17.52 2 12 2zm1 16h-2v-2h2v2zm0-4h-2V7h2v7z' });
+      } else if (geoAttendance.currentStatus === 'present') {
+        heroHeader = 'Attendance Active';
+        heroTitle = 'Inside Classroom \u2705';
+        heroText = `Live tracking active: ${Math.round(geoAttendance.attendancePercentage)}% presence (Requires >= 75% for credit).`;
+        heroColor = '#22C55E';
+        heroCircleClass = '';
+        heroCircleIcon = React.createElement('polyline', { points: '20 6 9 17 4 12' });
+      } else {
+        heroHeader = 'Outside Geo-Fence';
+        heroTitle = 'Outside Classroom \u26A0\ufe0f';
+        heroText = `You are outside the classroom boundary. Return to resume tracking. Presence: ${Math.round(geoAttendance.attendancePercentage)}%.`;
+        heroColor = '#EF4444';
+        heroCircleClass = 'absent-circle';
+        heroCircleIcon = React.createElement('path', { d: 'M12 2C6.48 2 2 6.48 2 12s4.48 12 10 12 10-4.48 10-12S17.52 2 12 2zm1 16h-2v-2h2v2zm0-4h-2V7h2v7z' });
+      }
+    } else {
+      heroHeader = 'Attendance In Progress';
+      heroTitle = 'Waiting for Teacher Attendance';
+      heroText = 'Attendance will appear once the teacher records it.';
+      heroColor = '#EAB308';
+      heroCircleClass = 'late-circle';
+      heroCircleIcon = React.createElement('path', { d: 'M12 2C6.48 2 2 6.48 2 12s4.48 12 10 12 10-4.48 10-12S17.52 2 12 2zm1 16h-2v-2h2v2zm0-4h-2V7h2v7z' });
+    }
   } else {
     // ended or locked
     if (attendanceStatus === 'Present') {
@@ -28548,15 +28784,37 @@ function StudentAttendancePage({ sessionCode, studentId, studentName, studentPho
 
   // Build real activities timeline items
   const timelineItems = [];
-  if (myRecord?.join_at) {
-    timelineItems.push({
-      key: 'join',
-      name: 'Joined Classroom',
-      desc: 'You entered the classroom',
-      time: joinTime,
-      icon: '🟢',
-      iconClass: 'green'
+  if (myRecord?.attendanceTimeline && myRecord.attendanceTimeline.length > 0) {
+    myRecord.attendanceTimeline.forEach((t, idx) => {
+      let icon = 'ℹ️';
+      let iconClass = 'blue';
+      if (t.event === 'Joined Session') { icon = '🟢'; iconClass = 'green'; }
+      else if (t.event === 'Left Classroom') { icon = '🚨'; iconClass = 'red'; }
+      else if (t.event === 'Returned') { icon = '✅'; iconClass = 'green'; }
+      else if (t.event === 'GPS Lost') { icon = '⚠️'; iconClass = 'yellow'; }
+      else if (t.event === 'GPS Restored') { icon = '📶'; iconClass = 'green'; }
+      else if (t.event.startsWith('Attendance Finalized')) { icon = '🔒'; iconClass = 'yellow'; }
+      
+      timelineItems.push({
+        key: `geo_${idx}`,
+        name: t.event,
+        desc: 'Automated location log',
+        time: formatTime(t.timestamp),
+        icon,
+        iconClass
+      });
     });
+  } else {
+    if (myRecord?.join_at) {
+      timelineItems.push({
+        key: 'join',
+        name: 'Joined Classroom',
+        desc: 'You entered the classroom',
+        time: joinTime,
+        icon: '🟢',
+        iconClass: 'green'
+      });
+    }
   }
 
   if (myRecord?.interactions > 0) {
@@ -28996,6 +29254,7 @@ function StudentAttendancePage({ sessionCode, studentId, studentName, studentPho
     .s-att-timeline-icon.purple { background: #D97706; color: #fff; }
     .s-att-timeline-icon.blue { background: #D97706; color: #fff; }
     .s-att-timeline-icon.gold { background: #D97706; color: #fff; }
+    .s-att-timeline-icon.red { background: #EF4444; color: #fff; }
     
     .s-att-timeline-content {
       flex: 1;
@@ -29211,32 +29470,58 @@ function StudentAttendancePage({ sessionCode, studentId, studentName, studentPho
     ),
 
     // Quick Info Cards
-    React.createElement('div', { className: 's-att-quick-cards' },
-      React.createElement('div', { className: 's-att-quick-card' },
-        React.createElement('div', { className: 's-att-qc-icon-wrap join' }, '\u23F0'),
-        React.createElement('div', { className: 's-att-qc-info' },
-          React.createElement('h6', null, 'Join Time'),
-          React.createElement('h4', null, joinTime),
-          React.createElement('p', null, joinTime !== '—' ? 'You joined the class.' : 'No join log recorded.')
+    (() => {
+      let leaveCardLabel = 'Leave Time';
+      let leaveCardValue = leaveTime;
+      let leaveCardDesc = leaveTime !== '—' ? 'You left the class.' : 'No exit log recorded.';
+      let leaveCardIcon = '\uD83D\uDEAA';
+      
+      if (geoAttendance && (attState === 'active' || attState === 'paused')) {
+        leaveCardLabel = 'Outside Duration';
+        const liveOutside = geoAttendance.accumulatedOutsideTime + (geoAttendance.currentStatus === 'temporary_absent' && geoAttendance.outsideStartTime ? (Date.now() / 1000 - geoAttendance.outsideStartTime) : 0);
+        const outMins = Math.round(liveOutside / 60);
+        leaveCardValue = `${outMins} Mins`;
+        leaveCardDesc = 'Total time spent outside classroom.';
+        leaveCardIcon = '🚶';
+      }
+
+      let durationCardValue = durationText;
+      let durationCardDesc = durationText !== '—' ? 'Total time spent in class.' : 'No duration calculated.';
+      
+      if (geoAttendance && (attState === 'active' || attState === 'paused')) {
+        const liveInside = geoAttendance.accumulatedInsideTime + (geoAttendance.currentStatus === 'present' && geoAttendance.insideStartTime ? (Date.now() / 1000 - geoAttendance.insideStartTime) : 0);
+        const inMins = Math.round(liveInside / 60);
+        durationCardValue = `${inMins} Min (${Math.round(geoAttendance.attendancePercentage)}%)`;
+        durationCardDesc = 'Live classroom presence duration.';
+      }
+
+      return React.createElement('div', { className: 's-att-quick-cards' },
+        React.createElement('div', { className: 's-att-quick-card' },
+          React.createElement('div', { className: 's-att-qc-icon-wrap join' }, '\u23F0'),
+          React.createElement('div', { className: 's-att-qc-info' },
+            React.createElement('h6', null, 'Join Time'),
+            React.createElement('h4', null, joinTime),
+            React.createElement('p', null, joinTime !== '—' ? 'You joined the class.' : 'No join log recorded.')
+          )
+        ),
+        React.createElement('div', { className: 's-att-quick-card' },
+          React.createElement('div', { className: 's-att-qc-icon-wrap leave' }, leaveCardIcon),
+          React.createElement('div', { className: 's-att-qc-info' },
+            React.createElement('h6', null, leaveCardLabel),
+            React.createElement('h4', null, leaveCardValue),
+            React.createElement('p', null, leaveCardDesc)
+          )
+        ),
+        React.createElement('div', { className: 's-att-quick-card' },
+          React.createElement('div', { className: 's-att-qc-icon-wrap duration' }, '\u23F3'),
+          React.createElement('div', { className: 's-att-qc-info' },
+            React.createElement('h6', null, 'Duration'),
+            React.createElement('h4', null, durationCardValue),
+            React.createElement('p', null, durationCardDesc)
+          )
         )
-      ),
-      React.createElement('div', { className: 's-att-quick-card' },
-        React.createElement('div', { className: 's-att-qc-icon-wrap leave' }, '\uD83D\uDEAA'),
-        React.createElement('div', { className: 's-att-qc-info' },
-          React.createElement('h6', null, 'Leave Time'),
-          React.createElement('h4', null, leaveTime),
-          React.createElement('p', null, leaveTime !== '—' ? 'You left the class.' : 'No exit log recorded.')
-        )
-      ),
-      React.createElement('div', { className: 's-att-quick-card' },
-        React.createElement('div', { className: 's-att-qc-icon-wrap duration' }, '\u23F3'),
-        React.createElement('div', { className: 's-att-qc-info' },
-          React.createElement('h6', null, 'Duration'),
-          React.createElement('h4', null, durationText),
-          React.createElement('p', null, durationText !== '—' ? 'Total time spent in class.' : 'No duration calculated.')
-        )
-      )
-    ),
+      );
+    })(),
 
     // Two Column Grid
     React.createElement('div', { className: 's-att-grid' },

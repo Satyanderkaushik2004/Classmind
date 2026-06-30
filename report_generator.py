@@ -189,9 +189,10 @@ def generate_attendance_sheet_pdf(sheet: dict) -> bytes:
     story.append(info_table)
     story.append(Spacer(1, 12))
 
-    headers = ["S. No.", "Student Name", "Email Address", "Class", "Roll No.", "Status", "Join Time", "Leave Time", "Duration"]
+    headers = ["S. No.", "Student Name", "Email Address", "Class", "Roll No.", "Status", "Join Time", "Leave Time", "Presence %", "Duration"]
     table_data = [[Paragraph(h, styles["header"]) for h in headers]]
     for row in sheet.get("rows", []):
+        pct_val = f"{int(round(row.get('attendance_percentage', 0)))}%"
         vals = [
             row.get("serial_no", ""),
             row.get("student_name") or "-",
@@ -201,6 +202,7 @@ def generate_attendance_sheet_pdf(sheet: dict) -> bytes:
             row.get("status_label") or "-",
             _fmt_sheet_time(row.get("join_time")),
             _fmt_sheet_time(row.get("leave_time")),
+            pct_val,
             _fmt_sheet_duration(row.get("total_duration")),
         ]
         table_data.append([Paragraph(escape(str(v)), styles["cell"]) for v in vals])
@@ -208,7 +210,7 @@ def generate_attendance_sheet_pdf(sheet: dict) -> bytes:
     records_table = Table(
         table_data,
         repeatRows=1,
-        colWidths=[0.38 * inch, 1.18 * inch, 1.4 * inch, 0.58 * inch, 0.62 * inch, 0.78 * inch, 0.68 * inch, 0.68 * inch, 0.68 * inch],
+        colWidths=[0.38 * inch, 1.15 * inch, 1.25 * inch, 0.55 * inch, 0.55 * inch, 0.72 * inch, 0.65 * inch, 0.65 * inch, 0.75 * inch, 0.85 * inch],
     )
     records_table.setStyle(TableStyle([
         ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#1e293b")),

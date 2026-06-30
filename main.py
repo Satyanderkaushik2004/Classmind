@@ -499,7 +499,12 @@ def _att(s: dict) -> dict:
 
 
 
-def init_student_geo_attendance(r: dict, now_ts: float):
+def init_student_geo_attendance(r: dict, now_ts: float, s: dict):
+    access_mode = s.get("access_mode", "open")
+    if access_mode != "close":
+        r["joinTime"] = now_ts
+        r["status"] = "present"
+        return
     r["joinTime"] = now_ts
     r["accumulatedInsideTime"] = 0.0
     r["accumulatedOutsideTime"] = 0.0
@@ -523,6 +528,23 @@ def finalize_session_attendance(s: dict):
         if att.get("finalized"):
             return
             
+    access_mode = s.get("access_mode", "open")
+    records = att.setdefault("records", {})
+    
+    if access_mode != "close":
+        for sid, r in records.items():
+            if r.get("frozen"):
+                continue
+            if r.get("join_at"):
+                r["status"] = "present"
+            else:
+                r["status"] = "absent"
+            r["frozen"] = True
+            timeline = r.setdefault("attendanceTimeline", [])
+            timeline.append({"timestamp": now(), "event": f"Attendance Finalized ({r['status'].capitalize()})"})
+        att["finalized"] = True
+        return
+        
     end_t = now()
     total_duration = s.get("duration_mins", 60) * 60
     if total_duration <= 0:
@@ -626,6 +648,7 @@ def compute_attendance_summary(s: dict) -> dict:
 
     return {
         "state":        att.get("state", "inactive"),
+        "access_mode":   s.get("access_mode", "open"),
         "started_at":   att.get("started_at"),
         "ended_at":     att.get("ended_at"),
         "locked_at":    att.get("locked_at"),
@@ -782,7 +805,7 @@ def attendance_mark_join(s: dict, student_id: str) -> None:
         r["status"]   = "present"
         
     r = records[student_id]
-    init_student_geo_attendance(r, now_ts)
+    init_student_geo_attendance(r, now_ts, s)
 
 
 def attendance_mark_leave(s: dict, student_id: str) -> None:
@@ -1674,6 +1697,8 @@ async def attendance_geo_watcher():
             await asyncio.sleep(3) # Check every 3 seconds
             for s in list(sessions.values()):
                 if s.get("status") != "active":
+                    continue
+                if s.get("access_mode", "open") != "close":
                     continue
                 att = _att(s)
                 if att.get("state") != "active":
@@ -4747,7 +4772,7 @@ async def session_control(code: str, action: str = Query(...), background_tasks:
                         "status":     "present",
                         "interactions": 0,
                     }
-                    init_student_geo_attendance(r, now_ts)
+                    init_student_geo_attendance(r, now_ts, s)
     touch_session(s)
 
     # Compute session_end_timestamp for countdown
@@ -5232,7 +5257,7 @@ async def attendance_control_endpoint(
                     "status":     "present",
                     "interactions": 0,
                 }
-                init_student_geo_attendance(r, now_ts)
+                init_student_geo_attendance(r, now_ts, s)
 
     elif action == "pause":
         if att.get("state") == "locked":
@@ -9330,12 +9355,15 @@ async def student_ws_endpoint(ws: WebSocket, session_code: str, student_id: str)
     student_hand_raised = student_id in rh
 
     att = _att(s)
-    geo_rec = att.get("records", {}).get(student_id)
+    geo_rec = None
+    if s.get("access_mode", "open") == "close":
+        geo_rec = att.get("records", {}).get(student_id)
     await ws_send(ws, {
         "type":                "connected",
         "role":                "student",
         "student":             student,
         "geo_attendance":      geo_rec,
+        "access_mode":         s.get("access_mode", "open"),
         "session_status":      s["status"],
         "session_name":        s.get("session_name", ""),
         "current_task":        current,
@@ -9385,6 +9413,8 @@ async def student_ws_endpoint(ws: WebSocket, session_code: str, student_id: str)
                 await ws_send(ws, {"type": "pong", "ts": now()})
 
             elif cmd == "location_update":
+                if s.get("access_mode", "open") != "close":
+                    continue
                 lat = data.get("lat")
                 lng = data.get("lng")
                 accuracy = data.get("accuracy")
@@ -9408,7 +9438,7 @@ async def student_ws_endpoint(ws: WebSocket, session_code: str, student_id: str)
                     
                 now_ts = now()
                 if "joinTime" not in r:
-                    init_student_geo_attendance(r, now_ts)
+                    init_student_geo_attendance(r, now_ts, s)
                     
                 if accuracy is None or not isinstance(accuracy, (int, float)) or accuracy > 30:
                     log.warning("[GEO] Student %s sent low accuracy location: %s", student_id, accuracy)
@@ -9563,6 +9593,8 @@ async def student_ws_endpoint(ws: WebSocket, session_code: str, student_id: str)
                 await broadcast_attendance(s)
 
             elif cmd == "gps_lost":
+                if s.get("access_mode", "open") != "close":
+                    continue
                 att = _att(s)
                 if att.get("state") in ("ended", "locked"):
                     continue
@@ -9582,7 +9614,7 @@ async def student_ws_endpoint(ws: WebSocket, session_code: str, student_id: str)
                     
                 now_ts = now()
                 if "joinTime" not in r:
-                    init_student_geo_attendance(r, now_ts)
+                    init_student_geo_attendance(r, now_ts, s)
                     
                 old_status = r.get("currentStatus", "present")
                 r["gps_lost"] = True

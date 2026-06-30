@@ -7152,6 +7152,9 @@ function TeacherShell({
         }
         loadRoster();
       } else if (msg.type === 'connected') {
+        if (msg.access_mode) {
+          setAccessMode(msg.access_mode);
+        }
         if (msg.geo_attendance) {
           setGeoAttendance(msg.geo_attendance);
         }
@@ -21263,6 +21266,7 @@ function StudentTaskView({
   // ── NEW: enhanced state ──
   const [wsConnected, setWsConnected] = useState(false);
   const [geoAttendance, setGeoAttendance] = useState(null);
+  const [accessMode, setAccessMode] = useState('open');
   const [taskIndex, setTaskIndex] = useState(0);
   const [totalTasks, setTotalTasks] = useState(0);
   const [answeredCount, setAnsweredCount] = useState(0);
@@ -21775,6 +21779,9 @@ function StudentTaskView({
         }
       } else if (msg.type === 'session_status') {
         setSessionStatus(msg.status);
+        if (msg.access_mode) {
+          setAccessMode(msg.access_mode);
+        }
         // ── On session end, clean up persistent live state ──────
         if (msg.status === 'ended') {
           add('Class has ended.', 'info');
@@ -21861,6 +21868,11 @@ function StudentTaskView({
       }
       else if (msg.type === 'student_attendance_update') {
         setGeoAttendance(msg);
+      }
+      else if (msg.type === 'attendance_update') {
+        if (msg.access_mode) {
+          setAccessMode(msg.access_mode);
+        }
       }
       else if (msg.type === 'chat_unsuspended') {
         setChatSuspended(false);
@@ -22214,7 +22226,7 @@ function StudentTaskView({
 
   // ── Continuous Geolocation Reporting (Phase 2) ──
   React.useEffect(() => {
-    if (!wsConnected || !sessionCode) return;
+    if (!wsConnected || !sessionCode || accessMode !== 'close') return;
     
     let intervalId;
     
@@ -22247,7 +22259,7 @@ function StudentTaskView({
     return () => {
       clearInterval(intervalId);
     };
-  }, [wsConnected, sessionCode, wsSend]);
+  }, [wsConnected, sessionCode, wsSend, accessMode]);
 
   // ── time-spent ticker ──
   useEffect(() => {
@@ -25193,7 +25205,8 @@ function StudentTaskView({
               studentName,
               studentPhoto,
               setSPage,
-              geoAttendance
+              geoAttendance,
+              accessMode
             })
           )
         ),
@@ -28616,7 +28629,7 @@ function StudentHUD({sessionStatus, taskIndex, totalTasks, wsConnected, hasTask,
 // ═════════════════════════════════════════════════════════════════
 //  STUDENT ATTENDANCE PAGE (Premium EdTech SaaS)
 // ═════════════════════════════════════════════════════════════════
-function StudentAttendancePage({ sessionCode, studentId, studentName, studentPhoto, setSPage, geoAttendance }) {
+function StudentAttendancePage({ sessionCode, studentId, studentName, studentPhoto, setSPage, geoAttendance, accessMode }) {
   const { add } = useContext(AppCtx);
   const [attData, setAttData] = useState(null);
   const [reportsData, setReportsData] = useState(null);
@@ -29421,6 +29434,60 @@ function StudentAttendancePage({ sessionCode, studentId, studentName, studentPho
       margin-bottom: 12px;
     }
   `);
+
+  // Conditional rendering for Open Access Mode
+  const currentAccessMode = accessMode || attData?.access_mode || 'open';
+  if (currentAccessMode !== 'close') {
+    let simpleStatus = 'Present';
+    let simpleText = 'You have joined the virtual classroom. Your attendance is recorded.';
+    let simpleColor = '#22C55E';
+    let simpleCircleIcon = React.createElement('polyline', { points: '20 6 9 17 4 12' });
+    let simpleCircleClass = '';
+
+    if (myRecord) {
+      if (myRecord.status === 'present') {
+        simpleStatus = 'Present';
+        simpleText = 'You have joined the virtual classroom. Your attendance has been successfully recorded.';
+      } else if (myRecord.status === 'revoked') {
+        simpleStatus = 'Revoked';
+        simpleText = 'Your attendance was revoked by the teacher.';
+        simpleColor = '#F59E0B';
+        simpleCircleClass = 'revoked-circle';
+        simpleCircleIcon = React.createElement('path', { d: 'M12 2C6.48 2 2 6.48 2 12s4.48 12 10 12 10-4.48 10-12S17.52 2 12 2zm1 16h-2v-2h2v2zm0-4h-2V7h2v7z' });
+      } else if (myRecord.status === 'absent') {
+        simpleStatus = 'Absent';
+        simpleText = 'Your attendance is not recorded for this session.';
+        simpleColor = '#EF4444';
+        simpleCircleClass = 'absent-circle';
+        simpleCircleIcon = React.createElement('path', { d: 'M18 6L6 18M6 6l12 12' });
+      }
+    }
+
+    return React.createElement('div', { className: 's-attendance-container' },
+      styleBlock,
+      headerBlock,
+      React.createElement('div', { className: 's-att-hero' },
+        React.createElement('div', { className: 's-att-hero-check-circle ' + simpleCircleClass, style: { borderColor: simpleColor, boxShadow: `0 0 24px ${simpleColor}58` } },
+          React.createElement('svg', { viewBox: '0 0 24 24', style: { stroke: simpleColor } }, simpleCircleIcon)
+        ),
+        React.createElement('div', { className: 's-att-hero-main' },
+          React.createElement('h5', { style: { color: simpleColor } }, 'Joined Successfully \u2705'),
+          React.createElement('h3', null, `Status: ${simpleStatus}`),
+          React.createElement('p', null, simpleText)
+        ),
+        React.createElement('div', { className: 's-att-hero-info' },
+          React.createElement('div', { className: 's-att-hero-info-label' }, 'Class Code'),
+          React.createElement('div', { className: 's-att-hero-info-val code-pill' }, sessionCode),
+          React.createElement('div', { className: 's-att-hero-info-label' }, 'Subject / Topic'),
+          React.createElement('div', { className: 's-att-hero-info-val' }, subjectTopic),
+          React.createElement('div', { className: 's-att-hero-info-label' }, 'Session Type'),
+          React.createElement('div', { className: 's-att-hero-info-val' }, 'Live Class'),
+          React.createElement('div', { className: 's-att-hero-info-label' }, 'Instructor'),
+          React.createElement('div', { className: 's-att-hero-info-val' }, instructorName)
+        )
+      )
+    );
+  }
 
   return React.createElement('div', { className: 's-attendance-container' },
     styleBlock,

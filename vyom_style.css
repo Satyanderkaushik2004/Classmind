@@ -36804,17 +36804,18 @@ body.light-mode .tdl-title,
   .sd-sidebar {
     display: flex !important;
     position: fixed !important;
-    left: 0 !important;
+    left: -100% !important;
     top: 0 !important;
     height: 100vh !important;
     z-index: 300 !important;
-    transform: translateX(-100%) !important;
-    transition: transform .35s cubic-bezier(.4,0,.2,1) !important;
+    transform: none !important;
+    transition: left .35s cubic-bezier(.4,0,.2,1) !important;
     width: var(--sd-sidebar-w) !important;
+    min-width: var(--sd-sidebar-w) !important;
     box-shadow: 4px 0 24px rgba(0,0,0,0.5) !important;
   }
   .sd-sidebar.open {
-    transform: translateX(0) !important;
+    left: 0 !important;
   }
   .sd-app .sidebar-overlay {
     display: none;

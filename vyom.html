@@ -7152,6 +7152,15 @@ function TeacherShell({
           add(`${msg.display_name || 'Someone'} wants to join`, 'info');
         }
         loadRoster();
+      } else if (msg.type === 'geo_mode_enabled') {
+        if (msg.access_mode) {
+          setAccessMode(msg.access_mode);
+        }
+      } else if (msg.type === 'geo_mode_disabled') {
+        if (msg.access_mode) {
+          setAccessMode(msg.access_mode);
+          setGeoAttendance(null);
+        }
       } else if (msg.type === 'connected') {
         if (msg.access_mode) {
           setAccessMode(msg.access_mode);

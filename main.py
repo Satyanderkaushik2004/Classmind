@@ -5511,8 +5511,42 @@ async def set_access_settings(code: str, req: AccessSettingsReq):
             s["close_access_location"] = {"lat": req.teacher_lat, "lng": req.teacher_lng}
         elif not s.get("close_access_location"):
             raise HTTPException(400, "Teacher location is required to enable Close Access")
-    s["access_mode"] = req.access_mode
+            
+    old_mode = s.get("access_mode", "open")
+    new_mode = req.access_mode
+    s["access_mode"] = new_mode
     save_session(code)
+    
+    if old_mode != "close" and new_mode == "close":
+        # Transition Open -> Close Access
+        att = _att(s)
+        records = att.setdefault("records", {})
+        now_ts = now()
+        for sid, r in records.items():
+            if "currentStatus" not in r:
+                init_student_geo_attendance(r, now_ts, s)
+        await ws_broadcast(s, {
+            "type": "geo_mode_enabled",
+            "access_mode": new_mode,
+            "close_access_radius_meters": s.get("close_access_radius_meters", 100),
+            "close_access_location": s.get("close_access_location"),
+        })
+    elif old_mode == "close" and new_mode != "close":
+        # Transition Close -> Open / Closed
+        att = _att(s)
+        records = att.setdefault("records", {})
+        for sid, r in records.items():
+            r["currentStatus"] = "present"
+            r["status"] = "present"
+            r["left_radius_at"] = None
+            r["consecutive_outside"] = 0
+            r["consecutive_inside"] = 0
+            r["gps_lost"] = False
+        await ws_broadcast(s, {
+            "type": "geo_mode_disabled",
+            "access_mode": new_mode,
+        })
+        
     log.info("Session %s access settings updated: mode=%s radius=%s location=%s", code, req.access_mode, req.radius_meters, s.get("close_access_location"))
     return {
         "message": "Access settings updated",

@@ -5705,6 +5705,98 @@ function TDCDoubtCard({ doubt, selected, onClick }) {
   );
 }
 
+// ── GLOBALLY SHARED MARKDOWN RENDERER ──────────────────────────────────────
+function MarkdownText({ text, className, style }) {
+  if (!text) return React.createElement('div', { className: className || 'tdc-md-body', style: style }, '(no content)');
+  
+  // 1. Sanitize HTML by escaping tags
+  let html = text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+    
+  // 2. Parse code blocks
+  html = html.replace(/```(\w*)\n?([\s\S]*?)```/g, function(match, lang, code) {
+    return `<pre class="tdc-code-block"><code class="language-${lang || 'txt'}">${code.trim()}</code></pre>`;
+  });
+  
+  // 3. Parse inline code
+  html = html.replace(/`([^`]+)`/g, '<code class="tdc-inline-code">$1</code>');
+  
+  // 4. Parse blockquotes
+  html = html.replace(/^> (.*?)$/gm, '<blockquote style="border-left: 4px solid var(--accent); padding-left: 12px; color: var(--text3); margin: 8px 0;">$1</blockquote>');
+  
+  // 5. Parse headers
+  html = html
+    .replace(/^###### (.*?)$/gm, '<h6 style="margin: 12px 0 6px 0; font-weight: 700; color: #fff;">$1</h6>')
+    .replace(/^##### (.*?)$/gm, '<h5 style="margin: 12px 0 6px 0; font-weight: 700; color: #fff;">$1</h5>')
+    .replace(/^#### (.*?)$/gm, '<h4 style="margin: 14px 0 8px 0; font-weight: 700; color: #fff;">$1</h4>')
+    .replace(/^### (.*?)$/gm, '<h3 style="margin: 16px 0 8px 0; font-weight: 700; color: #fff;">$1</h3>')
+    .replace(/^## (.*?)$/gm, '<h2 style="margin: 18px 0 10px 0; font-weight: 700; color: #fff;">$1</h2>')
+    .replace(/^# (.*?)$/gm, '<h1 style="margin: 20px 0 12px 0; font-weight: 700; color: #fff;">$1</h1>');
+    
+  // 6. Parse Images
+  html = html.replace(/!\[(.*?)\]\((.*?)\)/g, '<img src="$2" alt="$1" class="tdc-md-img" style="max-width:100%; border-radius:8px; display:block; margin:8px 0;" />');
+  
+  // 7. Parse Links
+  html = html.replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" class="tdc-md-link" style="color:var(--accent); text-decoration:underline;">$1</a>');
+  
+  // 8. Parse Tables
+  const lines = html.split('\n');
+  let inTable = false;
+  let tableHtml = '';
+  for (let i = 0; i < lines.length; i++) {
+    let line = lines[i].trim();
+    if (line.startsWith('|') && line.endsWith('|')) {
+      let cells = line.split('|').map(c => c.trim()).filter((c, idx, arr) => idx > 0 && idx < arr.length - 1);
+      if (!inTable) {
+        inTable = true;
+        tableHtml = '<table class="tdc-md-table" style="border-collapse:collapse; width:100%; margin:12px 0; border:1px solid rgba(255,255,255,0.1);"><thead><tr>';
+        cells.forEach(c => { tableHtml += `<th style="border:1px solid rgba(255,255,255,0.1); padding:8px; background:rgba(255,255,255,0.05); text-align:left; font-weight:600;">${c}</th>`; });
+        tableHtml += '</tr></thead><tbody>';
+        if (i + 1 < lines.length && lines[i+1].includes('---')) {
+          i++; 
+        }
+      } else {
+        tableHtml += '<tr>';
+        cells.forEach(c => { tableHtml += `<td style="border:1px solid rgba(255,255,255,0.1); padding:8px;">${c}</td>`; });
+        tableHtml += '</tr>';
+      }
+      lines[i] = '';
+    } else {
+      if (inTable) {
+        inTable = false;
+        tableHtml += '</tbody></table>';
+        lines[i] = tableHtml + '\n' + lines[i];
+      }
+    }
+  }
+  if (inTable) {
+    tableHtml += '</tbody></table>';
+    lines.push(tableHtml);
+  }
+  html = lines.filter(l => l !== '').join('\n');
+  
+  // 9. Parse Bullet lists
+  html = html.replace(/^\s*[\*\+-]\s+(.*?)$/gm, '<li>$1</li>');
+  html = html.replace(/(<li>.*?<\/li>)/gs, '<ul class="tdc-md-ul" style="margin: 8px 0; padding-left: 20px; list-style-type: disc;">$1</ul>');
+  
+  // 10. Parse Numbered lists
+  html = html.replace(/^\s*\d+\.\s+(.*?)$/gm, '<li class="tdc-md-ol-item">$1</li>');
+  html = html.replace(/(<li class="tdc-md-ol-item">.*?<\/li>)/gs, '<ol class="tdc-md-ol" style="margin: 8px 0; padding-left: 20px; list-style-type: decimal;">$1</ol>');
+  
+  // 11. Parse Bold & Italic
+  html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+  html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
+  
+  // 12. Newlines & formatting cleanup
+  html = html.replace(/\n/g, '<br>');
+  html = html.replace(/<br>\s*<\/?(pre|code|table|thead|tbody|tr|th|td|ul|ol|li|h[1-6]|blockquote)/g, '<$1');
+  html = html.replace(/(<\/pre>|<\/table>|<\/ul>|<\/ol>|<\/h[1-6]>|<\/blockquote>)\s*<br>/g, '$1');
+  
+  return React.createElement('div', { className: className || 'tdc-md-body', style: style, dangerouslySetInnerHTML: { __html: html } });
+}
+
 // ── CENTER: CONVERSATION ──────────────────────────────────────────────────
 function TDCConversation({ doubt, sessionCode, teacherName, wsSend, onResolved, onReopened, onReplyAdded }) {
   const [replyText, setReplyText] = useState('');
@@ -5856,16 +5948,7 @@ function TDCConversation({ doubt, sessionCode, teacherName, wsSend, onResolved, 
     }
   }
 
-  function MarkdownText({ text }) {
-    // Very basic markdown rendering
-    const html = (text || '')
-      .replace(/```(\w*)\n?([\s\S]*?)```/g, '<pre class="tdc-code-block"><code>$2</code></pre>')
-      .replace(/`([^`]+)`/g, '<code class="tdc-inline-code">$1</code>')
-      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-      .replace(/\*(.+?)\*/g, '<em>$1</em>')
-      .replace(/\n/g, '<br>');
-    return React.createElement('div', { className: 'tdc-md-body', dangerouslySetInnerHTML: { __html: html } });
-  }
+
 
   return React.createElement('div', { className: 'tdc-conversation' },
     /* ── Doubt header ── */
@@ -23339,7 +23422,7 @@ function StudentTaskView({
       doubts.length > 0 && React.createElement('div', {style:{padding:'12px 16px',borderBottom:'1px solid rgba(255,255,255,0.06)'}},
         React.createElement('div', {style:{fontSize:'0.72rem',fontWeight:700,color:'rgba(241,245,249,0.3)',textTransform:'uppercase',letterSpacing:'0.08em',marginBottom:8}}, '❓ Your Doubts'),
         (Array.isArray(doubts) ? doubts : []).map((d,i)=>React.createElement('div', {key:d.id||i,className:`s-doubt-card ${(d.resolved||d.status==='resolved'||d.status==='answered')?'s-doubt-resolved':''}`},
-          React.createElement('div', {className:'s-doubt-text'}, d.doubt_text || d.text || ''),
+          React.createElement(MarkdownText, { text: d.doubt_text || d.text || '', className: 's-doubt-text tdc-md-body' }),
           d.image_url && React.createElement('img', {
             src: d.image_url,
             alt: 'Doubt image',
@@ -23347,7 +23430,10 @@ function StudentTaskView({
             style: { marginTop: 8, maxHeight: 150, borderRadius: 8, cursor: 'pointer', objectFit: 'contain', display: 'block' },
             onClick: () => setChatLightboxImg(d.image_url)
           }),
-          (d.resolved || d.status==='resolved' || d.status==='answered') && React.createElement('div', {className:'s-doubt-answer'}, '✅ ', d.answer || d.reply || '')
+          (d.resolved || d.status==='resolved' || d.status==='answered') && React.createElement('div', {className:'s-doubt-answer', style:{display:'flex', gap:6, alignItems:'flex-start'}},
+            React.createElement('span', null, '✅'),
+            React.createElement(MarkdownText, { text: d.answer || d.reply || '', className: 'tdc-md-body', style:{flex:1} })
+          )
         ))
       ),
 

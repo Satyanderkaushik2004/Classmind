@@ -1,6 +1,29 @@
 /* ── Reset & Variables ── */
 *{box-sizing:border-box;margin:0;padding:0}
 :root{
+  /* --- Production-Grade Responsive Design System Spacing & Typography --- */
+  --space-xs: clamp(0.25rem, 0.5vw, 0.5rem);
+  --space-sm: clamp(0.5rem, 1vw, 0.75rem);
+  --space-md: clamp(0.75rem, 1.5vw, 1.25rem);
+  --space-lg: clamp(1.25rem, 2.5vw, 2rem);
+  --space-xl: clamp(2rem, 4vw, 3.5rem);
+
+  --radius-sm: 8px;
+  --radius-md: 16px;
+  --radius-lg: 24px;
+
+  --font-xs: clamp(0.7rem, 0.75rem + 0.1vw, 0.8rem);
+  --font-sm: clamp(0.8rem, 0.85rem + 0.15vw, 0.95rem);
+  --font-md: clamp(0.95rem, 1rem + 0.2vw, 1.15rem);
+  --font-lg: clamp(1.15rem, 1.25rem + 0.3vw, 1.5rem);
+  --font-xl: clamp(1.5rem, 1.75rem + 0.5vw, 2.25rem);
+  --font-xxl: clamp(2.25rem, 2.5rem + 0.8vw, 3.5rem);
+
+  --max-w-container: 1400px;
+  --max-w-content: 1100px;
+  --header-h: 70px;
+  --sd-header-h: 70px;
+
   /* New Rebranded Color Palette */
   --bg-primary: #000000;
   --bg-secondary: #050505;
@@ -36753,4 +36776,128 @@ body.light-mode .tdl-title,
 
 [data-theme="light"] .vyom-demo-card:hover {
   border-color: rgba(255, 122, 26, 0.5);
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
+   ENTERPRISE-GRADE RESPONSIVE OVERRIDES
+   Redesigning the entire project layout architecture for mobile & tablet
+   ────────────────────────────────────────────────────────────────────────── */
+
+/* Grid and Card Fluid Sizing Improvements */
+.db-stats-row {
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)) !important;
+}
+.db-bottom-grid {
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)) !important;
+}
+
+/* Student Sidebar Drawer Navigation */
+@media (max-width: 900px) {
+  .sd-sidebar {
+    position: fixed !important;
+    left: 0 !important;
+    top: 0 !important;
+    height: 100vh !important;
+    z-index: 300 !important;
+    transform: translateX(-100%) !important;
+    transition: transform .35s cubic-bezier(.4,0,.2,1) !important;
+    width: var(--sd-sidebar-w) !important;
+    box-shadow: 4px 0 24px rgba(0,0,0,0.5) !important;
+  }
+  .sd-sidebar.open {
+    transform: translateX(0) !important;
+  }
+  .sd-app .sidebar-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    z-index: 299;
+  }
+  .sd-app .sidebar-overlay.open {
+    display: block !important;
+  }
+  .sd-main {
+    width: 100% !important;
+  }
+}
+
+/* Teacher Doubt Center Responsiveness */
+.tdc-back-btn {
+  display: none;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--surface2);
+  color: var(--text2);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  margin-right: 12px;
+}
+@media (max-width: 768px) {
+  .tdc-back-btn {
+    display: inline-flex !important;
+  }
+  .tdc-body {
+    grid-template-columns: 1fr !important;
+  }
+  .tdc-left-panel {
+    display: flex !important;
+    width: 100% !important;
+  }
+  .tdc-center-panel {
+    display: none !important;
+    width: 100% !important;
+  }
+  .tdc-body.thread-active .tdc-left-panel {
+    display: none !important;
+  }
+  .tdc-body.thread-active .tdc-center-panel {
+    display: flex !important;
+  }
+}
+
+/* Student Doubt Center Responsiveness */
+@media (max-width: 768px) {
+  .doubt-system-shell {
+    flex-direction: column !important;
+  }
+  .doubt-system-shell .doubt-sidebar {
+    width: 100% !important;
+    display: block !important;
+  }
+  .doubt-system-shell .doubt-main {
+    width: 100% !important;
+    display: none !important;
+  }
+  .doubt-system-shell.thread-active .doubt-sidebar {
+    display: none !important;
+  }
+  .doubt-system-shell.thread-active .doubt-main {
+    display: flex !important;
+  }
+}
+
+/* Video participant grid optimization */
+@media (max-width: 600px) {
+  .vc-video-grid.duo {
+    grid-template-columns: 1fr !important;
+    grid-template-rows: 1fr 1fr !important;
+  }
+  .vc-video-grid.trio {
+    grid-template-columns: 1fr !important;
+    grid-template-rows: repeat(3, 1fr) !important;
+  }
+}
+
+/* Attendance Timeline Stacking */
+@media (max-width: 480px) {
+  .s-att-timeline-item {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 6px !important;
+  }
 }

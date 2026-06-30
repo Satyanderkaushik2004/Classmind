@@ -5798,7 +5798,7 @@ function MarkdownText({ text, className, style }) {
 }
 
 // ── CENTER: CONVERSATION ──────────────────────────────────────────────────
-function TDCConversation({ doubt, sessionCode, teacherName, wsSend, onResolved, onReopened, onReplyAdded }) {
+function TDCConversation({ doubt, sessionCode, teacherName, wsSend, onResolved, onReopened, onReplyAdded, onBack }) {
   const [replyText, setReplyText] = useState('');
   const [sending, setSending] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);
@@ -5953,6 +5953,10 @@ function TDCConversation({ doubt, sessionCode, teacherName, wsSend, onResolved, 
   return React.createElement('div', { className: 'tdc-conversation' },
     /* ── Doubt header ── */
     React.createElement('div', { className: 'tdc-conv-header' },
+      onBack && React.createElement('button', {
+        className: 'tdc-back-btn',
+        onClick: onBack
+      }, '← Back'),
       React.createElement('div', { className: 'tdc-conv-hdr-top' },
         React.createElement('span', { className: 'tdc-conv-id' }, '#DB-' + (doubt.id || '').slice(-6).toUpperCase()),
         React.createElement('span', { className: 'tdc-status-pill', style: { background: tdc_statusColor(status) + '22', color: tdc_statusColor(status), borderColor: tdc_statusColor(status) + '44' } }, tdc_statusLabel(status)),
@@ -6423,7 +6427,8 @@ function TDCProfilePanel({ doubt, roster, navTo, wsSend, sessionCode }) {
         backgroundColor: 'rgba(0,0,0,0.8)', display: 'flex',
         alignItems: 'center', justifyContent: 'center', zIndex: 10000,
         backdropFilter: 'blur(5px)'
-      }
+      },
+      onClick: () => setActiveActionModal(null)
     },
       React.createElement('div', {
         className: 'settings-card-full',
@@ -6432,7 +6437,8 @@ function TDCProfilePanel({ doubt, roster, navTo, wsSend, sessionCode }) {
           border: '1px solid var(--border)', borderRadius: '12px',
           padding: '24px', boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
           color: '#fff'
-        }
+        },
+        onClick: e => e.stopPropagation()
       },
         /* HEADER */
         React.createElement('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' } },
@@ -6808,7 +6814,8 @@ function TeacherDoubtCenter({ sessionCode, roster, analytics, wsSend, teacherNam
           wsSend,
           onResolved: handleResolved,
           onReopened: handleReopened,
-          onReplyAdded: handleReplyAdded
+          onReplyAdded: handleReplyAdded,
+          onBack: () => selectDoubt(null)
         })
       ),
 
@@ -21115,6 +21122,7 @@ function StudentTaskView({
   updateUserProfile,
   studentPhoto: initialStudentPhoto
 }) {
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
   // Restore sPage from sessionStorage — if test was active, go back to test
   const [sPage, setSPage] = useState(() => {
     try {
@@ -24963,7 +24971,11 @@ function StudentTaskView({
     // ══════════════════════════════════════════════════
     // PREMIUM SIDEBAR
     // ══════════════════════════════════════════════════
-    React.createElement('aside', {className:'sd-sidebar'},
+    React.createElement('div', {
+      className: `sidebar-overlay${mobileNavOpen ? ' open' : ''}`,
+      onClick: () => setMobileNavOpen(false)
+    }),
+    React.createElement('aside', {className:`sd-sidebar${mobileNavOpen ? ' open' : ''}`},
 
       // Decorative floating stars
       React.createElement('div', {className:'sd-sidebar-stars'},
@@ -24995,7 +25007,7 @@ function StudentTaskView({
         React.createElement('button', {
           id:'sn-home',
           className:'sd-nav-item'+(sPage==='home'?' active':''),
-          onClick:()=>setSPage('home')
+          onClick:()=>{setSPage('home');setMobileNavOpen(false);}
         },
           React.createElement('span', {className:'sd-nav-item-icon'}, '\uD83C\uDFE0'),
           'Dashboard'
@@ -25003,7 +25015,7 @@ function StudentTaskView({
         React.createElement('button', {
           id:'sn-tasks',
           className:'sd-nav-item'+(sPage==='task'?' active':''),
-          onClick:()=>setSPage('task')
+          onClick:()=>{setSPage('task');setMobileNavOpen(false);}
         },
           React.createElement('span', {className:'sd-nav-item-icon'}, '\u2705'),
           'My Tasks'
@@ -25011,7 +25023,7 @@ function StudentTaskView({
         React.createElement('button', {
           id:'sn-content',
           className:'sd-nav-item'+(sPage==='library'?' active':''),
-          onClick:()=>setSPage('library')
+          onClick:()=>{setSPage('library');setMobileNavOpen(false);}
         },
           React.createElement('span', {className:'sd-nav-item-icon'}, '\uD83D\uDCC1'),
           'Content'
@@ -25019,7 +25031,7 @@ function StudentTaskView({
         React.createElement('button', {
           id:'sn-attendance',
           className:'sd-nav-item'+(sPage==='attendance'?' active':''),
-          onClick:()=>setSPage('attendance')
+          onClick:()=>{setSPage('attendance');setMobileNavOpen(false);}
         },
           React.createElement('span', {className:'sd-nav-item-icon'}, '\uD83D\uDCC5'),
           'Attendance'
@@ -25027,7 +25039,7 @@ function StudentTaskView({
         React.createElement('button', {
           id:'sn-reports',
           className:'sd-nav-item'+(sPage==='reports'?' active':''),
-          onClick:()=>setSPage('reports')
+          onClick:()=>{setSPage('reports');setMobileNavOpen(false);}
         },
           React.createElement('span', {className:'sd-nav-item-icon'}, '\uD83D\uDCC8'),
           'Reports'
@@ -25035,7 +25047,7 @@ function StudentTaskView({
         React.createElement('button', {
           id:'sn-chat',
           className:'sd-nav-item'+(sPage==='chat'?' active':''),
-          onClick:()=>{setSPage('chat');setChatUnread(0);}
+          onClick:()=>{setSPage('chat');setChatUnread(0);setMobileNavOpen(false);}
         },
           React.createElement('span', {className:'sd-nav-item-icon'}, '\uD83D\uDCAC'),
           'Chat',
@@ -25044,7 +25056,7 @@ function StudentTaskView({
         React.createElement('button', {
           id:'sn-coding',
           className:'sd-nav-item'+(sPage==='coding'?' active':''),
-          onClick:()=>setSPage('coding')
+          onClick:()=>{setSPage('coding');setMobileNavOpen(false);}
         },
           React.createElement('span', {className:'sd-nav-item-icon'}, '\uD83D\uDCBB'),
           'Coding Lab'
@@ -25055,7 +25067,7 @@ function StudentTaskView({
         React.createElement('button', {
           id:'sn-doubt',
           className:'sd-nav-item'+(sPage==='doubt'?' active':''),
-          onClick:()=>setSPage('doubt')
+          onClick:()=>{setSPage('doubt');setMobileNavOpen(false);}
         },
           React.createElement('span', {className:'sd-nav-item-icon'}, '\u2753'),
           'Ask Doubt',
@@ -25064,7 +25076,7 @@ function StudentTaskView({
         React.createElement('button', {
           id:'sn-resources',
           className:'sd-nav-item'+(sPage==='library'?' active':''),
-          onClick:()=>setSPage('library')
+          onClick:()=>{setSPage('library');setMobileNavOpen(false);}
         },
           React.createElement('span', {className:'sd-nav-item-icon'}, '\uD83D\uDCDA'),
           'Resources'
@@ -25116,6 +25128,11 @@ function StudentTaskView({
 
       // ── Top Header ──
       React.createElement('header', {className:'sd-header'},
+        React.createElement('button', {
+          className: 'sidebar-hamburger',
+          'aria-label': 'Menu',
+          onClick: () => setMobileNavOpen(o => !o)
+        }, '☰'),
         React.createElement('div', {className:'sd-header-avatar-wrap', onClick:()=>setProfileOpen(true)},
           React.createElement('div', {className:'sd-header-avatar', style:{overflow:'hidden'}},
             studentPhoto
@@ -30420,7 +30437,7 @@ function AskDoubtSystem({ sessionCode, studentId, studentName, studentPhoto, dou
   }
 
   return React.createElement(React.Fragment, null,
-    React.createElement('div', { className: 'doubt-system-shell' },
+    React.createElement('div', { className: 'doubt-system-shell' + (activeDoubtId ? ' thread-active' : '') },
       sidebar,
       React.createElement('div', { className: 'doubt-main' }, renderThread())
     ),

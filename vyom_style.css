@@ -36791,9 +36791,18 @@ body.light-mode .tdl-title,
   grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)) !important;
 }
 
+/* Scale theme customization toggle button on mobile */
+@media (max-width: 600px) {
+  .bb8-toggle.bb8-toggle-sm {
+    --toggle-size: clamp(3.2px, 1vw, 5.2px) !important;
+    font-size: clamp(3.2px, 1vw, 5.2px) !important;
+  }
+}
+
 /* Student Sidebar Drawer Navigation */
 @media (max-width: 900px) {
   .sd-sidebar {
+    display: flex !important;
     position: fixed !important;
     left: 0 !important;
     top: 0 !important;
@@ -36812,7 +36821,8 @@ body.light-mode .tdl-title,
     position: fixed;
     inset: 0;
     background: rgba(0,0,0,0.6);
-    z-index: 299;
+    z-index: 299 !important;
+    pointer-events: auto !important;
   }
   .sd-app .sidebar-overlay.open {
     display: block !important;

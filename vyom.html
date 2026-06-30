@@ -25132,7 +25132,7 @@ function StudentTaskView({
           className: 'sidebar-hamburger',
           'aria-label': 'Menu',
           onClick: () => setMobileNavOpen(o => !o)
-        }, '☰'),
+        }, mobileNavOpen ? '✕' : '☰'),
         React.createElement('div', {className:'sd-header-avatar-wrap', onClick:()=>setProfileOpen(true)},
           React.createElement('div', {className:'sd-header-avatar', style:{overflow:'hidden'}},
             studentPhoto

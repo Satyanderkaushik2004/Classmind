@@ -30347,7 +30347,7 @@ function AskDoubtSystem({ sessionCode, studentId, studentName, studentPhoto, dou
                 isTeacher ? '👨‍🏫 Teacher' : (studentName || 'You'),
                 React.createElement('span', { className: 'doubt-msg-time' }, fmtTime(msg.ts || Date.now()))
               ),
-              msg.text && React.createElement('div', { className: 'doubt-msg-bubble' }, msg.text),
+              msg.text && React.createElement(MarkdownText, { text: msg.text, className: 'doubt-msg-bubble tdc-md-body' }),
               (msg.attachments || []).map((att, ai) => {
                 if (att.type === 'image') {
                   return React.createElement('img', {

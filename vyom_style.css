@@ -36926,3 +36926,11 @@ body.light-mode .tdl-title,
     padding: 16px 20px !important;
   }
 }
+
+/* Teacher Mobile Sidebar Visibility Fix */
+@media (max-width: 900px) {
+  .teacher-sidebar.open {
+    display: flex !important;
+    transform: translateX(0) !important;
+  }
+}

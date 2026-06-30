@@ -5833,30 +5833,23 @@ function TDCConversation({ doubt, sessionCode, teacherName, wsSend, onResolved, 
     try {
       const question = doubt.doubt_text || doubt.text || '';
       const context  = replyText.trim() ? `Teacher draft: ${replyText}\n\n` : '';
-      const res = await fetch('/api/copilot/chat', {
+      const res = await fetch('/api/ai/chatbot', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          messages: [{ role:'user', content: `${context}Student asked: "${question}"\n\nAs a helpful teacher, write a clear, concise, beginner-friendly answer. Include a short code example if relevant. Keep it under 200 words.` }],
-          session_code: sessionCode
+          message: `${context}Student asked: "${question}"\n\nAs a helpful teacher, write a clear, concise, beginner-friendly answer. Include a short code example if relevant. Keep it under 200 words.`,
+          history: [],
+          session_code: sessionCode,
+          role: 'teacher',
+          language: 'en'
         })
       });
       if (!res.ok) throw new Error('AI failed');
       const data = await res.json();
-      const reply = data.reply || data.message || data.content || '';
+      const reply = data.response || '';
       if (reply) setReplyText(reply);
     } catch(e) {
       console.error('AI generation error', e);
-      // fallback: try anthropic directly
-      try {
-        const res2 = await fetch('/api/ai/generate', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ prompt: doubt.doubt_text || doubt.text })
-        });
-        const d2 = await res2.json();
-        if (d2.result) setReplyText(d2.result);
-      } catch {}
     } finally {
       setAiLoading(false);
     }

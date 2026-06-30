@@ -5841,7 +5841,8 @@ function TDCConversation({ doubt, sessionCode, teacherName, wsSend, onResolved, 
           history: [],
           session_code: sessionCode,
           role: 'teacher',
-          language: 'en'
+          language: 'en',
+          api_key: localStorage.getItem('cm_teacher_saved_api_key') || localStorage.getItem('cm_openrouter_key') || localStorage.getItem('cm_gemini_key') || ''
         })
       });
       if (!res.ok) throw new Error('AI failed');

@@ -6022,7 +6022,7 @@ async def ai_chatbot(req: ChatbotRequest):
         return {"response": response_text, "source": "llm"}
     except Exception as exc:
         log.warning("[AI CHATBOT] LLM call failed: %s", exc)
-        fallback_msg = "Sorry, I am having trouble connecting to the AI service right now. Please check your API key configuration."
+        fallback_msg = "Sorry, I am having trouble connecting to the AI service right now. Please check your API key configuration (Click your Profile icon in the top-right -> Settings ⚙️ -> AI API Key)."
         if lang_code == "hi":
             fallback_msg = "क्षमा करें, मुझे इस समय AI सेवा से जुड़ने में समस्या हो रही है। कृपया अपना API कुंजी कॉन्फ़िगरेशन जांचें।"
         elif lang_code == "pa":

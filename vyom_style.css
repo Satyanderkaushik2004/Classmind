@@ -36912,3 +36912,13 @@ body.light-mode .tdl-title,
     gap: 6px !important;
   }
 }
+
+/* Student Hero Stats Stacking on Mobile */
+@media (max-width: 480px) {
+  .sd-hero-right {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 16px !important;
+    padding: 16px 20px !important;
+  }
+}

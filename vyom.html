@@ -24262,6 +24262,33 @@ function StudentTaskView({
                     )
                   )
                 )
+              ),
+
+              // ── KEY FEATURES HIGHLIGHT ROW (Mockup Section 3) ──
+              React.createElement('div', {key:'key_features', className:'sd-hub-section'},
+                React.createElement('div', {className:'sd-section-header'},
+                  React.createElement('div', {className:'sd-section-title'},
+                    'Key Platform Features',
+                    React.createElement('span', {style:{fontSize:'1.1rem'}}, '\u2728')
+                  ),
+                  React.createElement('div', {className:'sd-section-sub'}, 'Designed for a premium mobile-first learning experience')
+                ),
+                React.createElement('div', {className:'sd-features-row'},
+                  [
+                    {icon:'\uD83D\uDCF1', title:'Mobile First', desc:'Built for mobile with perfect touch experience'},
+                    {icon:'\uD83C\uDF9B\uFE0F', title:'Clean Design', desc:'Better spacing, typography & visual hierarchy'},
+                    {icon:'\u26A1', title:'Fast & Smooth', desc:'Optimized for performance and smooth animations'},
+                    {icon:'\uD83D\uDEB8', title:'Fully Accessible', desc:'WCAG friendly with excellent contrast'}
+                  ].map((f, i) =>
+                    React.createElement('div', {key:i, className:'sd-feature-card'},
+                      React.createElement('div', {className:'sd-feature-icon'}, f.icon),
+                      React.createElement('div', {className:'sd-feature-info'},
+                        React.createElement('h5', null, f.title),
+                        React.createElement('p', null, f.desc)
+                      )
+                    )
+                  )
+                )
               )
             ].filter(Boolean)
       )
@@ -25336,31 +25363,31 @@ function StudentTaskView({
       // ── Mobile Bottom Nav ──
       React.createElement('div', {className:'s-mobile-nav'},
         React.createElement('div', {className:'s-mobile-nav-inner'},
-          [{id:'home',icon:'\uD83C\uDFE0',label:'Home'},{id:'task',icon:'\uD83D\uDCDD',label:'Task'},{id:'doubt',icon:'\u2753',label:'Doubts'},{id:'chat',icon:'\uD83D\uDCAC',label:'Chat'},{id:'reports',icon:'\uD83D\uDCCA',label:'Reports'}].map(n=>
-            React.createElement('button', {key:n.id, className:'s-mobile-tab '+(sPage===n.id?'active':''),
-              onClick:()=>{setSPage(n.id);if(n.id==='chat')setChatUnread(0);if(n.id==='doubt')setDoubtUnread(0);}
+          [
+            {id:'home',icon:'\uD83C\uDFE0',label:'Home'},
+            {id:'attendance',icon:'\uD83D\uDCC5',label:'Attendance'},
+            {id:'chat',icon:'\uD83D\uDCAC',label:'Chat'},
+            {id:'doubt',icon:'\u2753',label:'Doubts'},
+            {id:'more',icon:'\u2022\u2022\u2022',label:'More'}
+          ].map(n =>
+            React.createElement('button', {
+              key: n.id,
+              className: 's-mobile-tab ' + (n.id === 'more' ? (mobileNavOpen ? 'active' : '') : (sPage === n.id ? 'active' : '')),
+              onClick: () => {
+                if (n.id === 'more') {
+                  setMobileNavOpen(true);
+                } else {
+                  setSPage(n.id);
+                  if (n.id === 'chat') setChatUnread(0);
+                  if (n.id === 'doubt') setDoubtUnread(0);
+                }
+              }
             },
               React.createElement('span', {className:'s-mobile-tab-icon'}, n.icon),
               React.createElement('span', null, n.label),
-              n.id==='chat' && chatUnread>0 && React.createElement('span', {className:'s-badge',style:{background:'#EF4444',color:'#fff',fontSize:'0.55rem',width:14,height:14,display:'flex',alignItems:'center',justifyContent:'center',borderRadius:'50%',position:'absolute',top:4,right:8,fontWeight:800,border:'2px solid #050505'}}, chatUnread > 9 ? '9+' : chatUnread)
+              n.id === 'chat' && chatUnread > 0 && React.createElement('span', {className:'s-badge',style:{background:'#EF4444',color:'#fff',fontSize:'0.55rem',width:14,height:14,display:'flex',alignItems:'center',justifyContent:'center',borderRadius:'50%',position:'absolute',top:4,right:8,fontWeight:800,border:'2px solid #050505'}}, chatUnread > 9 ? '9+' : chatUnread),
+              n.id === 'doubt' && doubtUnread > 0 && React.createElement('span', {className:'s-badge',style:{background:'var(--accent)',color:'#fff',fontSize:'0.55rem',width:14,height:14,display:'flex',alignItems:'center',justifyContent:'center',borderRadius:'50%',position:'absolute',top:4,right:8,fontWeight:800,border:'2px solid #050505'}}, doubtUnread > 9 ? '9+' : doubtUnread)
             )
-          ),
-          React.createElement('button', {className:'s-mobile-tab '+(handRaised?'active':''),onClick:toggleHand,style:{color:handRaised?'#EAB308':''}},
-            React.createElement('span', {className:'s-mobile-tab-icon'}, '\u270B'),
-            React.createElement('span', null, handRaised?'Raised':'Hand')
-          ),
-          React.createElement('button', {className:'s-mobile-tab',onClick:()=>setProfileOpen(true)},
-            React.createElement('span', {className:'s-mobile-tab-icon',style:{
-              width:22,height:22,borderRadius:'50%',overflow:'hidden',
-              background: studentPhoto ? 'transparent' : 'linear-gradient(135deg,var(--accent),var(--accent))',
-              display:'inline-flex',alignItems:'center',justifyContent:'center',
-              fontSize:'0.6rem',fontWeight:800,color:'#fff',flexShrink:0
-            }},
-              studentPhoto
-                ? React.createElement('img', {src:studentPhoto, alt:'Me', style:{width:'100%',height:'100%',objectFit:'cover',borderRadius:'50%'}})
-                : getStudentInitials(studentName)
-            ),
-            React.createElement('span', null, 'Me')
           )
         )
       ),
@@ -29602,104 +29629,105 @@ function StudentAttendancePage({ sessionCode, studentId, studentName, studentPho
     );
   }
 
+  // ── Show History state ──
+  const [showHistory, setShowHistory] = React.useState(false);
+
+  // ── Get week days helper ──
+  const getWeekDays = () => {
+    const today = new Date();
+    const dayOfWeek = today.getDay();
+    const monday = new Date(today);
+    monday.setDate(today.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1));
+    
+    const days = [];
+    const labels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
+    for (let i = 0; i < 5; i++) {
+      const d = new Date(monday);
+      d.setDate(monday.getDate() + i);
+      days.push({
+        label: labels[i],
+        dayNum: d.getDate(),
+        isToday: d.toDateString() === today.toDateString()
+      });
+    }
+    return days;
+  };
+
+  const weekDays = getWeekDays();
+  const dateStrip = React.createElement('div', { className: 's-att-date-strip' },
+    weekDays.map(d =>
+      React.createElement('div', {
+        key: d.label,
+        className: 's-att-date-item' + (d.isToday ? ' active' : '')
+      },
+        React.createElement('span', { className: 's-att-date-day' }, d.label),
+        React.createElement('span', { className: 's-att-date-num' }, d.dayNum)
+      )
+    )
+  );
+
+  let currentStatusLabel = 'Absent';
+  let currentStatusClass = 'absent';
+  if (geoAttendance) {
+    if (geoAttendance.currentStatus === 'present') {
+      currentStatusLabel = 'Present';
+      currentStatusClass = 'present';
+    } else if (geoAttendance.currentStatus === 'temporary_absent') {
+      currentStatusLabel = 'Temporary Absent';
+      currentStatusClass = 'absent';
+    }
+  } else if (attendanceStatus === 'Present') {
+    currentStatusLabel = 'Present';
+    currentStatusClass = 'present';
+  } else if (attendanceStatus === 'Late') {
+    currentStatusLabel = 'Late';
+    currentStatusClass = 'present';
+  }
+
+  const statusBadge = React.createElement('div', { className: 's-att-status-badge-row' },
+    React.createElement('span', null, "Today's Status"),
+    React.createElement('div', { className: 's-att-status-pill ' + currentStatusClass },
+      currentStatusLabel + ' \u25BE'
+    )
+  );
+
+  const isInside = geoAttendance?.isInside ?? (attendanceStatus === 'Present' || attendanceStatus === 'Late');
+
+  const radarCard = React.createElement('div', { className: 's-radar-card' },
+    React.createElement('div', { className: 's-radar-card-header' },
+      React.createElement('span', { className: 's-radar-card-dot ' + (isInside ? 'inside' : 'outside') }),
+      React.createElement('span', null, 'Your Location: '),
+      React.createElement('strong', null, isInside ? 'Within Safe Zone' : 'Outside Safe Zone')
+    ),
+    React.createElement('div', { className: 's-radar-map-wrap' },
+      React.createElement('div', { className: 's-radar-crosshair-h' }),
+      React.createElement('div', { className: 's-radar-crosshair-v' }),
+      React.createElement('div', { className: 's-radar-grid-circle s-radar-grid-circle-1' }),
+      React.createElement('div', { className: 's-radar-grid-circle s-radar-grid-circle-2' }),
+      React.createElement('div', { className: 's-radar-grid-circle s-radar-grid-circle-3' }),
+      React.createElement('div', { className: 's-radar-sweep' }),
+      React.createElement('div', { className: 's-radar-safe-zone' },
+        isInside && React.createElement('div', { className: 's-radar-ping' })
+      ),
+      !isInside && React.createElement('div', { className: 's-radar-ping outside', style: { top: '50px', left: '45px' } })
+    )
+  );
+
   return React.createElement('div', { className: 's-attendance-container' },
     styleBlock,
     headerBlock,
-
-    // Hero Attendance Card
-    React.createElement('div', { className: 's-att-hero' },
-      React.createElement('div', { className: 's-att-hero-check-circle ' + heroCircleClass },
-        React.createElement('svg', { viewBox: '0 0 24 24', style: { stroke: heroColor } }, heroCircleIcon)
-      ),
-      React.createElement('div', { className: 's-att-hero-main' },
-        React.createElement('h5', { style: { color: heroColor } },
-          React.createElement('span', { style: { width: 6, height: 6, borderRadius: '50%', background: heroColor, display: 'inline-block' } }),
-          heroHeader
-        ),
-        React.createElement('h3', null, heroTitle),
-        React.createElement('p', null, heroText)
-      ),
-      // Class Info
-      React.createElement('div', { className: 's-att-hero-info' },
-        React.createElement('div', { className: 's-att-hero-info-label' }, 'Class Code'),
-        React.createElement('div', { className: 's-att-hero-info-val code-pill' }, sessionCode),
-        React.createElement('div', { className: 's-att-hero-info-label' }, 'Subject / Topic'),
-        React.createElement('div', { className: 's-att-hero-info-val' }, subjectTopic),
-        React.createElement('div', { className: 's-att-hero-info-label' }, 'Session Type'),
-        React.createElement('div', { className: 's-att-hero-info-val' }, 'Live Class'),
-        React.createElement('div', { className: 's-att-hero-info-label' }, 'Instructor'),
-        React.createElement('div', { className: 's-att-hero-info-val' }, instructorName)
-      ),
-      // Achievement Badge
-      (attendanceStatus === 'Present' || attendanceStatus === 'Late') && (attState === 'locked' || attState === 'ended') && React.createElement('div', { className: 's-att-hero-badge' },
-        React.createElement('div', { className: 's-att-badge-icon' },
-          React.createElement('svg', { viewBox: '0 0 24 24' },
-            React.createElement('path', { d: 'M19 5h-2V3H7v2H5C3.9 5 3 5.9 3 7v1c0 2.55 1.92 4.63 4.39 4.94A5.998 5.998 0 0011 17.9v2H9v2h6v-2h-2v-2c2.12-.38 3.93-1.85 4.61-3.96C20.08 12.63 22 10.55 22 8V7c0-1.1-.9-2-2-2zM5 8V7h2v3.82C5.84 10.4 5 9.3 5 8zm14 0c0 1.3-.84 2.4-2 2.82V7h2v1z' })
-          )
-        ),
-        React.createElement('div', { className: 's-att-badge-text' },
-          React.createElement('h6', null, '\uD83C\uDFC6 Excellent'),
-          React.createElement('p', null, 'Keep attending to maintain it.')
-        )
-      )
+    dateStrip,
+    statusBadge,
+    radarCard,
+    
+    React.createElement('div', { style: { display: 'flex', justifyContent: 'center', marginBottom: 24 } },
+      React.createElement('button', {
+        className: 's-radar-history-btn',
+        onClick: () => setShowHistory(prev => !prev)
+      }, showHistory ? 'Hide History \u25B4' : 'View History \u25BE')
     ),
 
-    // Quick Info Cards
-    (() => {
-      let leaveCardLabel = 'Leave Time';
-      let leaveCardValue = leaveTime;
-      let leaveCardDesc = leaveTime !== '—' ? 'You left the class.' : 'No exit log recorded.';
-      let leaveCardIcon = '\uD83D\uDEAA';
-      
-      if (geoAttendance && (attState === 'active' || attState === 'paused')) {
-        leaveCardLabel = 'Outside Duration';
-        const liveOutside = geoAttendance.accumulatedOutsideTime + (geoAttendance.currentStatus === 'temporary_absent' && geoAttendance.outsideStartTime ? (Date.now() / 1000 - geoAttendance.outsideStartTime) : 0);
-        const outMins = Math.round(liveOutside / 60);
-        leaveCardValue = `${outMins} Mins`;
-        leaveCardDesc = 'Total time spent outside classroom.';
-        leaveCardIcon = '🚶';
-      }
-
-      let durationCardValue = durationText;
-      let durationCardDesc = durationText !== '—' ? 'Total time spent in class.' : 'No duration calculated.';
-      
-      if (geoAttendance && (attState === 'active' || attState === 'paused')) {
-        const liveInside = geoAttendance.accumulatedInsideTime + (geoAttendance.currentStatus === 'present' && geoAttendance.insideStartTime ? (Date.now() / 1000 - geoAttendance.insideStartTime) : 0);
-        const inMins = Math.round(liveInside / 60);
-        durationCardValue = `${inMins} Min (${Math.round(geoAttendance.attendancePercentage)}%)`;
-        durationCardDesc = 'Live classroom presence duration.';
-      }
-
-      return React.createElement('div', { className: 's-att-quick-cards' },
-        React.createElement('div', { className: 's-att-quick-card' },
-          React.createElement('div', { className: 's-att-qc-icon-wrap join' }, '\u23F0'),
-          React.createElement('div', { className: 's-att-qc-info' },
-            React.createElement('h6', null, 'Join Time'),
-            React.createElement('h4', null, joinTime),
-            React.createElement('p', null, joinTime !== '—' ? 'You joined the class.' : 'No join log recorded.')
-          )
-        ),
-        React.createElement('div', { className: 's-att-quick-card' },
-          React.createElement('div', { className: 's-att-qc-icon-wrap leave' }, leaveCardIcon),
-          React.createElement('div', { className: 's-att-qc-info' },
-            React.createElement('h6', null, leaveCardLabel),
-            React.createElement('h4', null, leaveCardValue),
-            React.createElement('p', null, leaveCardDesc)
-          )
-        ),
-        React.createElement('div', { className: 's-att-quick-card' },
-          React.createElement('div', { className: 's-att-qc-icon-wrap duration' }, '\u23F3'),
-          React.createElement('div', { className: 's-att-qc-info' },
-            React.createElement('h6', null, 'Duration'),
-            React.createElement('h4', null, durationCardValue),
-            React.createElement('p', null, durationCardDesc)
-          )
-        )
-      );
-    })(),
-
-    // Two Column Grid
-    React.createElement('div', { className: 's-att-grid' },
+    showHistory && React.createElement('div', { className: 's-att-grid' },
       // Left Column: Session Activity Timeline
       React.createElement('div', { className: 's-att-panel' },
         React.createElement('h4', { className: 's-att-panel-title' },
@@ -29742,34 +29770,23 @@ function StudentAttendancePage({ sessionCode, studentId, studentName, studentPho
                   )
                 )
               )
-            : React.createElement('div', { style: { color: 'var(--text3)', fontSize: '0.85rem' } }, 'No instructor feedback available.')
+            : React.createElement('div', { style: { color: 'rgba(241,245,249,0.4)', fontSize: '0.85rem', padding: '10px 0' } }, 'No feedback provided yet for this session.')
         ),
-        // AI Insights Card (Only shown if Present/Late)
+
+        // AI Insights Card
         showAI && React.createElement('div', { className: 's-att-ai-card' },
           React.createElement('div', { className: 's-att-ai-info' },
             React.createElement('h5', null,
               React.createElement('span', null, '\uD83E\uDD16'),
-              React.createElement('span', null, 'VYOM AI Insight')
+              React.createElement('span', null, 'AI Insights')
             ),
             React.createElement('p', null, aiInsightText)
           ),
           React.createElement('div', { className: 's-att-ai-art' },
-            React.createElement('div', { className: 's-att-ai-robot' },
-              React.createElement('div', { className: 's-att-ai-robot-face' },
-                React.createElement('div', { className: 's-att-ai-robot-eye' }),
-                React.createElement('div', { className: 's-att-ai-robot-eye' })
-              ),
-              React.createElement('div', { className: 's-att-ai-robot-ear' })
-            )
+            React.createElement('div', { className: 's-att-ai-robot' })
           )
         )
       )
-    ),
-
-    // Bottom Informational Banner
-    React.createElement('div', { className: 's-att-banner' },
-      React.createElement('span', null, '\u2139\uFE0F'),
-      React.createElement('span', null, 'Attendance is session-based and does not persist after the class ends.')
     )
   );
 }

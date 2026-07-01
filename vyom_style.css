@@ -36934,3 +36934,311 @@ body.light-mode .tdl-title,
     transform: translateX(0) !important;
   }
 }
+
+/* ──────────────────────────────────────────────────
+   STUDENT DASHBOARD: KEY FEATURES ROW (Mockup Sec 3)
+   ────────────────────────────────────────────────── */
+.sd-features-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-top: 14px;
+}
+.sd-feature-card {
+  background: rgba(255, 255, 255, 0.02) !important;
+  border: 1px solid rgba(255, 255, 255, 0.05) !important;
+  border-radius: 16px !important;
+  padding: 16px !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 16px !important;
+  transition: transform 0.2s, border-color 0.2s, background-color 0.2s !important;
+}
+.sd-feature-card:hover {
+  background: rgba(255, 255, 255, 0.04) !important;
+  border-color: rgba(var(--accent-rgb), 0.25) !important;
+  transform: translateY(-2px) !important;
+}
+.sd-feature-icon {
+  width: 44px !important;
+  height: 44px !important;
+  border-radius: 12px !important;
+  background: rgba(var(--accent-rgb), 0.1) !important;
+  border: 1px solid rgba(var(--accent-rgb), 0.15) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 1.25rem !important;
+  flex-shrink: 0 !important;
+}
+.sd-feature-info h5 {
+  font-size: 0.85rem !important;
+  font-weight: 700 !important;
+  color: #fff !important;
+  margin: 0 0 4px !important;
+}
+.sd-feature-info p {
+  font-size: 0.72rem !important;
+  color: rgba(241, 245, 249, 0.45) !important;
+  margin: 0 !important;
+  line-height: 1.4 !important;
+}
+
+@media (max-width: 900px) {
+  .sd-features-row {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}
+@media (max-width: 480px) {
+  .sd-features-row {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+}
+
+/* ──────────────────────────────────────────────────
+   STUDENT PORTAL: ATTENDANCE ENHANCEMENTS (Mockup Sec 4)
+   ────────────────────────────────────────────────── */
+
+/* Date Strip Selector */
+.s-att-date-strip {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 20px;
+  overflow-x: auto;
+  padding: 4px 2px;
+}
+.s-att-date-item {
+  flex: 1;
+  min-width: 52px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  border-radius: 14px;
+  padding: 10px 6px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.s-att-date-item:hover {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+.s-att-date-item.active {
+  background: linear-gradient(135deg, var(--accent), #ea580c) !important;
+  border-color: transparent !important;
+  box-shadow: 0 4px 16px rgba(var(--accent-rgb), 0.3) !important;
+}
+.s-att-date-day {
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: rgba(241, 245, 249, 0.4);
+  letter-spacing: 0.02em;
+}
+.s-att-date-item.active .s-att-date-day {
+  color: rgba(255, 255, 255, 0.85);
+}
+.s-att-date-num {
+  font-family: 'Syne', sans-serif;
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #fff;
+}
+.s-att-date-item.active .s-att-date-num {
+  color: #fff;
+}
+
+/* Today's Status Dropdown Pill Row */
+.s-att-status-badge-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 20px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  border-radius: 16px;
+  margin-bottom: 20px;
+  font-size: 0.85rem;
+  color: rgba(241, 245, 249, 0.6);
+}
+.s-att-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 0.78rem;
+  cursor: pointer;
+  border: 1px solid transparent;
+}
+.s-att-status-pill.present {
+  background: rgba(34, 197, 94, 0.1);
+  color: #22c55e;
+  border-color: rgba(34, 197, 94, 0.2);
+}
+.s-att-status-pill.absent {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+  border-color: rgba(239, 68, 68, 0.2);
+}
+
+/* Radar Location Safe-Zone Card */
+.s-radar-card {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  border-radius: 24px;
+  padding: 24px;
+  margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+}
+.s-radar-card-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.88rem;
+  color: rgba(241, 245, 249, 0.7);
+}
+.s-radar-card-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  box-shadow: 0 0 8px currentColor;
+}
+.s-radar-card-dot.inside {
+  background: #22c55e;
+  color: #22c55e;
+}
+.s-radar-card-dot.outside {
+  background: #ef4444;
+  color: #ef4444;
+}
+.s-radar-card-header strong {
+  color: #fff;
+}
+
+.s-radar-map-wrap {
+  width: 200px;
+  height: 200px;
+  position: relative;
+  border-radius: 50%;
+  border: 1.5px solid rgba(var(--accent-rgb), 0.15);
+  background: radial-gradient(circle, rgba(var(--accent-rgb), 0.03) 0%, rgba(var(--accent-rgb), 0.08) 80%, transparent 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.6);
+}
+/* Concentric rings */
+.s-radar-grid-circle {
+  position: absolute;
+  border-radius: 50%;
+  border: 1px dashed rgba(255, 255, 255, 0.06);
+}
+.s-radar-grid-circle-1 { width: 50px; height: 50px; }
+.s-radar-grid-circle-2 { width: 100px; height: 100px; }
+.s-radar-grid-circle-3 { width: 150px; height: 150px; }
+
+/* Grid Crosshairs */
+.s-radar-crosshair-h {
+  position: absolute;
+  width: 100%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.08), transparent);
+}
+.s-radar-crosshair-v {
+  position: absolute;
+  height: 100%;
+  width: 1px;
+  background: linear-gradient(180deg, transparent, rgba(255, 255, 255, 0.08), transparent);
+}
+
+/* Sweep rotation */
+.s-radar-sweep {
+  position: absolute;
+  width: 50%;
+  height: 50%;
+  top: 0;
+  left: 50%;
+  background: conic-gradient(from 0deg, transparent, rgba(var(--accent-rgb), 0.15));
+  transform-origin: 0% 100%;
+  animation: radar-sweep-spin 4s linear infinite;
+  pointer-events: none;
+}
+@keyframes radar-sweep-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Safe Zone circle limit */
+.s-radar-safe-zone {
+  position: absolute;
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(34, 197, 94, 0.25);
+  background: rgba(34, 197, 94, 0.02);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Locator ping marker */
+.s-radar-ping {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  background: #22c55e;
+  border-radius: 50%;
+  box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.3);
+  animation: radar-ping-pulse 1.8s ease-out infinite;
+}
+.s-radar-ping.outside {
+  background: #ef4444;
+  box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.3);
+  animation-name: radar-ping-pulse-red;
+}
+@keyframes radar-ping-pulse {
+  0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.5); }
+  70% { box-shadow: 0 0 0 10px rgba(34, 197, 94, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+}
+@keyframes radar-ping-pulse-red {
+  0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.5); }
+  70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+}
+
+/* Collapse timeline history toggle button */
+.s-radar-history-btn {
+  background: rgba(var(--accent-rgb), 0.15);
+  border: 1.5px solid rgba(var(--accent-rgb), 0.3);
+  color: #fff;
+  border-radius: 12px;
+  padding: 8px 18px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.s-radar-history-btn:hover {
+  background: rgba(var(--accent-rgb), 0.25);
+  border-color: rgba(var(--accent-rgb), 0.4);
+  transform: translateY(-1px);
+}
+.s-radar-history-btn:active {
+  transform: scale(0.97);
+}
+

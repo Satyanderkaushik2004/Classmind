@@ -3058,13 +3058,19 @@ function LandingPage({
           title: "About VYOM"
         }, "\u2139\uFE0F About Us"),
         /* Theme toggle — BB-8 */
-        /*#__PURE__*/React.createElement("label", {className: "bb8-toggle bb8-toggle-sm", title: isLight ? "Switch to Night Mode" : "Switch to Day Mode"},
+        /*#__PURE__*/React.createElement("label", {
+          className: "bb8-toggle bb8-toggle-sm", 
+          title: isLight ? "Switch to Night Mode" : "Switch to Day Mode",
+          onClick: (e) => {
+            e.preventDefault();
+            setTheme(isLight ? 'dark' : 'light');
+          }
+        },
           /*#__PURE__*/React.createElement("input", {
             className: "bb8-toggle__checkbox",
             type: "checkbox",
             checked: !isLight,
-            onChange: () => setTheme(isLight ? 'dark' : 'light'),
-            readOnly: false
+            readOnly: true
           }),
           /*#__PURE__*/React.createElement("div", {className: "bb8-toggle__container"},
             /*#__PURE__*/React.createElement("div", {className: "bb8-toggle__scenery"},
@@ -7980,13 +7986,19 @@ function TeacherShell({
       /* RIGHT: Actions */
       /*#__PURE__*/React.createElement("div", { className: "teacher-header-actions" },
         /* Theme toggle — BB-8 */
-        /*#__PURE__*/React.createElement("label", {className: "bb8-toggle bb8-toggle-sm", title: isLight ? 'Dark Mode' : 'Light Mode'},
+        /*#__PURE__*/React.createElement("label", {
+          className: "bb8-toggle bb8-toggle-sm", 
+          title: isLight ? 'Dark Mode' : 'Light Mode',
+          onClick: (e) => {
+            e.preventDefault();
+            setTheme(isLight ? 'dark' : 'light');
+          }
+        },
           /*#__PURE__*/React.createElement("input", {
             className: "bb8-toggle__checkbox",
             type: "checkbox",
             checked: !isLight,
-            onChange: () => setTheme(isLight ? 'dark' : 'light'),
-            readOnly: false
+            readOnly: true
           }),
           /*#__PURE__*/React.createElement("div", {className: "bb8-toggle__container"},
             /*#__PURE__*/React.createElement("div", {className: "bb8-toggle__scenery"},
@@ -25209,10 +25221,19 @@ function StudentTaskView({
             onClick:toggleHand
           }, '\u270B\u00A0', handRaised ? 'Hand Raised' : 'Raise Hand'),
           // Theme toggle — BB-8 (always visible, matches teacher header)
-          React.createElement('label', {className:'bb8-toggle bb8-toggle-sm', title:isLightTheme?'Dark Mode':'Light Mode'},
+          React.createElement('label', {
+            className: 'bb8-toggle bb8-toggle-sm', 
+            title: isLightTheme ? 'Dark Mode' : 'Light Mode',
+            onClick: (e) => {
+              e.preventDefault();
+              setTheme(isLightTheme ? 'dark' : 'light');
+            }
+          },
             React.createElement('input', {
-              className:'bb8-toggle__checkbox', type:'checkbox',
-              checked:!isLightTheme, onChange:()=>setTheme(isLightTheme ? 'dark' : 'light'), readOnly:false
+              className: 'bb8-toggle__checkbox', 
+              type: 'checkbox',
+              checked: !isLightTheme, 
+              readOnly: true
             }),
             React.createElement('div', {className:'bb8-toggle__container'},
               React.createElement('div', {className:'bb8-toggle__scenery'},

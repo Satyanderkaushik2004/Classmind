@@ -7706,7 +7706,8 @@ async def teacher_reply_with_file(
 
     found_doubt.setdefault("replies", []).append(reply_obj)
     save_session(session_code)
-    await ws_broadcast(s, {"type": "new_doubt", "doubt": found_doubt})
+    await ws_teacher(s, {"type": "new_doubt", "doubt": found_doubt})
+    await ws_student(s, found_doubt["student_id"], {"type": "new_doubt", "doubt": found_doubt})
     return {"success": True, "reply": reply_obj}
 
 
@@ -7724,7 +7725,8 @@ async def resolve_doubt(req: ResolveDoubtReq):
                 "resolved_at": now(),
                 "resolved_by": "teacher",
             })
-            await ws_broadcast(s, {"type": "doubt_resolved", "doubt": d})
+            await ws_teacher(s, {"type": "doubt_resolved", "doubt": d})
+            await ws_student(s, d["student_id"], {"type": "doubt_resolved", "doubt": d})
             return d
     raise HTTPException(404, "Doubt not found")
 
@@ -7743,7 +7745,8 @@ async def reopen_doubt(req: ReopenDoubtReq):
                 "resolved_at": None,
                 "resolved_by": None,
             })
-            await ws_broadcast(s, {"type": "doubt_reopened", "doubt": d})
+            await ws_teacher(s, {"type": "doubt_reopened", "doubt": d})
+            await ws_student(s, d["student_id"], {"type": "doubt_reopened", "doubt": d})
             return d
     raise HTTPException(404, "Doubt not found")
 
@@ -9110,7 +9113,8 @@ async def teacher_ws_endpoint(ws: WebSocket, session_code: str):
                         d.setdefault("text", d.get("doubt_text", ""))
                         found = True
                         save_session(session_code)
-                        await ws_broadcast(s, {"type": "doubt_resolved", "doubt": d})
+                        await ws_teacher(s, {"type": "doubt_resolved", "doubt": d})
+                        await ws_student(s, d["student_id"], {"type": "doubt_resolved", "doubt": d})
                         await ws_send(ws, {"type": "doubts_update", "doubts": s["doubts"]})
                         break
                 if not found:
@@ -10652,7 +10656,8 @@ async def teacher_reply_doubt(req: TeacherDoubtReplyReq):
             d["status"] = "answered"
             d["updated_at"] = now()
             save_session(req.session_code)
-            await ws_broadcast(s, {"type": "new_doubt", "doubt": d})
+            await ws_teacher(s, {"type": "new_doubt", "doubt": d})
+            await ws_student(s, d["student_id"], {"type": "new_doubt", "doubt": d})
             return d
     raise HTTPException(404, "Doubt not found")
 

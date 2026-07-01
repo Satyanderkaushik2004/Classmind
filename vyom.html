@@ -22047,7 +22047,7 @@ function StudentTaskView({
       }
       else if (msg.type === 'new_doubt' || msg.type === 'doubt_resolved') {
         const rawD = msg.doubt;
-        if (rawD && rawD.id && (rawD.student_id === studentId || msg.type === 'doubt_resolved')) {
+        if (rawD && rawD.id && rawD.student_id === studentId) {
           // Map raw server doubt → student UI format
           function _mapRawDoubt(d) {
             const extToType = ext => {
@@ -22096,7 +22096,7 @@ function StudentTaskView({
             return [...arr, mapped];
           });
         }
-        if (msg.type === 'doubt_resolved') {
+        if (msg.type === 'doubt_resolved' && rawD && rawD.student_id === studentId) {
           addStudentNotification({
             id: 'doubt_resolved_' + Date.now(),
             icon: '💡',
@@ -22118,7 +22118,7 @@ function StudentTaskView({
       } else if (msg.type === 'doubt_submitted') {
         // WS confirmation that doubt was received
         const submittedDoubt = msg.doubt;
-        if (submittedDoubt && submittedDoubt.id) {
+        if (submittedDoubt && submittedDoubt.id && submittedDoubt.student_id === studentId) {
           setDoubts(prev => {
             const arr = Array.isArray(prev) ? prev : [];
             const exists = arr.some(d => d.id === submittedDoubt.id);

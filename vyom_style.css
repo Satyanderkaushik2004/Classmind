@@ -37242,3 +37242,12 @@ body.light-mode .tdl-title,
   transform: scale(0.97);
 }
 
+/* Ensure landing navigation controls (About Us, Theme Toggle, Profile/Login) are fully visible on mobile viewports */
+@media (max-width: 768px) {
+  .landing .landing-nav > .nav-right {
+    display: flex !important;
+    margin-left: auto !important;
+    align-items: center !important;
+    gap: 8px !important;
+  }
+}

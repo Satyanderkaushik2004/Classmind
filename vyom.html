@@ -1291,6 +1291,31 @@ function useToasts() {
     }, 320);
   }, []);
   const add = useCallback((msg, type = 'info', opts = {}) => {
+    let finalLabel = opts.label;
+    if (type === 'error' && !finalLabel) {
+      const lowercaseMsg = String(msg || '').toLowerCase();
+      const isValidation = 
+        lowercaseMsg.includes('enter') || 
+        lowercaseMsg.includes('required') || 
+        lowercaseMsg.includes('please select') || 
+        lowercaseMsg.includes('please fill') || 
+        lowercaseMsg.includes('choose') || 
+        lowercaseMsg.includes('select at least') || 
+        lowercaseMsg.includes('upload a') || 
+        lowercaseMsg.includes('must be under') || 
+        lowercaseMsg.includes('cannot be empty') || 
+        lowercaseMsg.includes('write some code') || 
+        lowercaseMsg.includes('describe your') || 
+        lowercaseMsg.includes('select a') ||
+        lowercaseMsg.includes('must be') ||
+        lowercaseMsg.includes('fill in') ||
+        lowercaseMsg.includes('add at least') ||
+        lowercaseMsg.includes('invalid email') ||
+        lowercaseMsg.includes('valid email');
+      if (isValidation) {
+        finalLabel = 'Mandatory Details';
+      }
+    }
     try {
       const stored = localStorage.getItem('cm_notif_prefs');
       if (stored) {
@@ -1369,7 +1394,7 @@ function useToasts() {
       msg,
       type,
       duration,
-      label: opts.label,
+      label: finalLabel,
       progress: opts.progress, // optional 0-100 for progress-bar style toasts
     }]);
     timers.current[id] = setTimeout(() => removeToast(id), duration);
@@ -2138,6 +2163,14 @@ function LoginModal({defaultRole, onComplete, onClose}) {
       
       let finalProfile = profile;
       if (existingAcc) {
+        const mergedRole = (profile.role && existingAcc.role && profile.role !== existingAcc.role) ? 'both' : (profile.role || existingAcc.role);
+        const mergedRoleHistory = Array.from(new Set([
+          ...(existingAcc.roleHistory || []),
+          ...(profile.roleHistory || []),
+          ...(existingAcc.role ? [existingAcc.role] : []),
+          ...(profile.role ? [profile.role] : [])
+        ]));
+
         finalProfile = {
           ...existingAcc,
           ...profile,
@@ -2145,12 +2178,17 @@ function LoginModal({defaultRole, onComplete, onClose}) {
           email: profile.email || existingAcc.email || null,
           phone: profile.phone || existingAcc.phone || null,
           name: profile.name || existingAcc.name,
-          role: profile.role || existingAcc.role,
+          role: mergedRole,
+          roleHistory: mergedRoleHistory,
           stats: {
             ...existingAcc.stats,
             ...profile.stats
           }
         };
+      } else {
+        if (!finalProfile.roleHistory) {
+          finalProfile.roleHistory = finalProfile.role ? [finalProfile.role] : ['teacher'];
+        }
       }
       
       localStorage.setItem('cm_user', JSON.stringify(finalProfile));
@@ -2172,8 +2210,8 @@ function LoginModal({defaultRole, onComplete, onClose}) {
     }
     
     setTimeout(() => {
-      add('Welcome to VYOM, ' + profile.name + '! \uD83C\uDF89', 'success');
-      onComplete(profile);
+      add('Welcome to VYOM, ' + finalProfile.name + '! \uD83C\uDF89', 'success');
+      onComplete(finalProfile);
     }, 180);
   }
 
@@ -2444,7 +2482,7 @@ const DEMO_FEATURES = [
     shortTitle: 'Create Class',
     description: 'Teachers can create a classroom, configure settings, invite students and start teaching in less than a minute.',
     duration: '0:52',
-    icon: '🏫',
+    icon: 'fa-solid fa-school',
     src: '/how to create class as teacher.mp4',
     color: '#FF7A1A'
   },
@@ -2454,7 +2492,7 @@ const DEMO_FEATURES = [
     shortTitle: 'Coding Lab',
     description: 'Practice real code, test your logic and get instant feedback in multiple languages.',
     duration: '0:30',
-    icon: '</>',
+    icon: 'fa-solid fa-code',
     src: '/Multi-Language_Coding_Lab.mp4',
     color: '#a855f7'
   },
@@ -2464,7 +2502,7 @@ const DEMO_FEATURES = [
     shortTitle: 'Doubt Center',
     description: 'Ask doubts anonymously, upload images or PDFs. Get expert help from teachers.',
     duration: '0:45',
-    icon: '?',
+    icon: 'fa-solid fa-circle-question',
     src: '/VYOM_Doubt_Center_product.mp4',
     color: '#8b5cf6'
   },
@@ -2474,7 +2512,7 @@ const DEMO_FEATURES = [
     shortTitle: 'Classroom Chat',
     description: 'Chat in real-time with teachers and classmates. AI-powered moderation and thread management.',
     duration: '0:38',
-    icon: '💬',
+    icon: 'fa-regular fa-comments',
     src: '/VYOM_Intelligent_Classroom_Chat.mp4',
     color: '#22c55e'
   },
@@ -2484,7 +2522,7 @@ const DEMO_FEATURES = [
     shortTitle: 'Content Hub',
     description: 'Access all resources, notes, PDFs, videos and links in one organised place.',
     duration: '0:42',
-    icon: '📂',
+    icon: 'fa-regular fa-folder-open',
     src: '/content page reel.mp4',
     color: '#10b981'
   },
@@ -2494,7 +2532,7 @@ const DEMO_FEATURES = [
     shortTitle: 'Student Join',
     description: 'Students join with a simple code and get instant access to the live classroom.',
     duration: '0:22',
-    icon: '👤',
+    icon: 'fa-solid fa-user-plus',
     src: '/how to enter a class as a student.mp4',
     color: '#f59e0b'
   }
@@ -2537,6 +2575,7 @@ function LiveDemoShowcase() {
 
   return React.createElement('div', {
     ref: sectionRef,
+    id: 'demo-section',
     style: {
       padding: '80px 0 60px',
       position: 'relative'
@@ -2690,9 +2729,8 @@ function LiveDemoShowcase() {
             ),
             // Card info
             React.createElement('div', { className: 'vyom-demo-card-info' },
-              React.createElement('div', { className: 'vyom-demo-card-icon', style: { background: f.color + '22', color: f.color } },
-                f.icon.length <= 2 && !f.icon.includes('<') ? f.icon :
-                React.createElement('span', { style: { fontFamily: 'monospace', fontSize: '0.7rem', fontWeight: 700 } }, f.icon)
+              React.createElement('div', { className: 'vyom-demo-card-icon', style: { background: f.color + '22', color: f.color, display: 'flex', alignItems: 'center', justifyContent: 'center' } },
+                React.createElement('i', { className: f.icon, style: { fontSize: '0.85rem' } })
               ),
               React.createElement('div', null,
                 React.createElement('div', { className: 'vyom-demo-card-title' }, f.shortTitle),
@@ -2747,6 +2785,7 @@ function LandingPage({
   const [selectedStudentPhoto, setSelectedStudentPhoto] = useState(null);
   const joinPhotoDragging = React.useRef(false);
   const [joinPhotoDrag, setJoinPhotoDrag] = useState(false);
+  const [infoModal, setInfoModal] = useState(null);
   function handleJoinPhotoSelect(file) {
     if (!file) return;
     if (!['image/jpeg','image/jpg','image/png','image/webp'].includes(file.type)) {
@@ -3035,6 +3074,66 @@ function LandingPage({
     }
   ];
 
+  const renderInfoModal = () => {
+    if (!infoModal) return null;
+
+    const title = infoModal === 'privacy' ? 'Privacy Policy' : 'Terms & Conditions';
+    const content = infoModal === 'privacy' ? (
+      /*#__PURE__*/React.createElement('div', { className: 'lp-info-modal-body' },
+        /*#__PURE__*/React.createElement('p', null, 'Last updated: July 2026'),
+        /*#__PURE__*/React.createElement('h3', null, '1. Information We Collect'),
+        /*#__PURE__*/React.createElement('p', null, 'We collect information you provide directly to us when creating an account, participating in classrooms, or communicating with us. This includes your name, email address, password, and role selection (Teacher or Student).'),
+        /*#__PURE__*/React.createElement('h3', null, '2. How We Use Your Information'),
+        /*#__PURE__*/React.createElement('p', null, 'We use the information we collect to operate and maintain the VYOM platform, including verifying classroom entry, managing student role history, delivering real-time coding evaluations, and sending notifications.'),
+        /*#__PURE__*/React.createElement('h3', null, '3. Data Security & Storage'),
+        /*#__PURE__*/React.createElement('p', null, 'Your data is securely stored and encrypted. We use industry-standard security measures to prevent unauthorized access, alteration, disclosure, or destruction of your personal information.'),
+        /*#__PURE__*/React.createElement('h3', null, '4. Third-Party Integrations'),
+        /*#__PURE__*/React.createElement('p', null, 'VYOM integrates with services like SendGrid/SMTP for OTP delivery and Google Drive for resource storage. These services access data solely to perform functions on our behalf.'),
+        /*#__PURE__*/React.createElement('h3', null, '5. Contact Us'),
+        /*#__PURE__*/React.createElement('p', null, 'If you have any questions about this Privacy Policy, please reach out via our contact form.')
+      )
+    ) : (
+      /*#__PURE__*/React.createElement('div', { className: 'lp-info-modal-body' },
+        /*#__PURE__*/React.createElement('p', null, 'Last updated: July 2026'),
+        /*#__PURE__*/React.createElement('h3', null, '1. Acceptance of Terms'),
+        /*#__PURE__*/React.createElement('p', null, 'By accessing or using VYOM, you agree to comply with and be bound by these Terms & Conditions. If you do not agree, please do not use the service.'),
+        /*#__PURE__*/React.createElement('h3', null, '2. User Accounts'),
+        /*#__PURE__*/React.createElement('p', null, 'You are responsible for maintaining the confidentiality of your account credentials. You must immediately notify us of any unauthorized use of your account.'),
+        /*#__PURE__*/React.createElement('h3', null, '3. Classroom Conduct'),
+        /*#__PURE__*/React.createElement('p', null, 'Teachers are responsible for managing their virtual classrooms and content. Students must adhere to academic integrity guidelines, particularly during coding tests and assignments.'),
+        /*#__PURE__*/React.createElement('h3', null, '4. Intellectual Property'),
+        /*#__PURE__*/React.createElement('p', null, 'The VYOM application, including all source code, design systems, logos, and UI components, is the property of VYOM. You may not reproduce or reverse engineer the software.'),
+        /*#__PURE__*/React.createElement('h3', null, '5. Limitation of Liability'),
+        /*#__PURE__*/React.createElement('p', null, 'VYOM is provided "as is" without warranties of any kind. We are not liable for any service interruptions, data loss, or indirect damages resulting from your use of the platform.')
+      )
+    );
+
+    return /*#__PURE__*/React.createElement('div', {
+      className: 'lp-info-modal-overlay',
+      onClick: () => setInfoModal(null)
+    },
+      /*#__PURE__*/React.createElement('div', {
+        className: 'lp-info-modal-card',
+        onClick: (e) => e.stopPropagation()
+      },
+        /*#__PURE__*/React.createElement('div', { className: 'lp-info-modal-header' },
+          /*#__PURE__*/React.createElement('h2', null, title),
+          /*#__PURE__*/React.createElement('button', {
+            className: 'lp-info-modal-close',
+            onClick: () => setInfoModal(null)
+          }, /*#__PURE__*/React.createElement('i', { className: 'fa-solid fa-xmark' }))
+        ),
+        /*#__PURE__*/React.createElement('div', { className: 'lp-info-modal-content' }, content),
+        /*#__PURE__*/React.createElement('div', { className: 'lp-info-modal-footer' },
+          /*#__PURE__*/React.createElement('button', {
+            className: 'btn btn-primary',
+            onClick: () => setInfoModal(null)
+          }, 'I Understand')
+        )
+      )
+    );
+  };
+
   return /*#__PURE__*/React.createElement("div", {
     className: "landing" + (isLight ? " light" : "")
   }, 
@@ -3043,6 +3142,7 @@ function LandingPage({
       onComplete: handleLoginComplete,
       onClose: () => setLoginModal(null)
     }), 
+    renderInfoModal(),
     /*#__PURE__*/React.createElement("nav", {
       className: "nav landing-nav" + (navScrolled ? " landing-nav--scrolled" : ""),
       style: { position: 'sticky', top: 0, zIndex: 100 }
@@ -3193,11 +3293,11 @@ function LandingPage({
               /*#__PURE__*/React.createElement("option", { value: "120" }, "2 hours")
             )
           ),
-          /*#__PURE__*/React.createElement("div", { className: "flex gap-8" },
+          /*#__PURE__*/React.createElement("div", { style: { display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '20px' } },
             /*#__PURE__*/React.createElement("button", { className: "btn btn-ghost", onClick: () => setShowTeacher(false) }, "Back"),
             /*#__PURE__*/React.createElement("button", {
               className: "btn btn-primary",
-              style: { flex: 1 },
+              style: { flex: 'none', padding: '12px 24px' },
               onClick: createSession,
               disabled: loading
             }, loading ? "Creating..." : "Create Session →")
@@ -3295,13 +3395,18 @@ function LandingPage({
           // ── Email — only shown when no saved profile ──
           !userProfile && /*#__PURE__*/React.createElement("div", { className: "form-group" }, 
             /*#__PURE__*/React.createElement("label", null, "Email"), 
-            /*#__PURE__*/React.createElement("input", { value: studentEmail, onChange: e => setStudentEmail(e.target.value) })
+            /*#__PURE__*/React.createElement("input", {
+              value: studentEmail,
+              onChange: e => setStudentEmail(e.target.value),
+              placeholder: "e.g., alex@school.com"
+            })
           ), 
           /*#__PURE__*/React.createElement("div", { className: "form-group" }, 
             /*#__PURE__*/React.createElement("label", null, "Roll Number"), 
             /*#__PURE__*/React.createElement("input", { 
               value: roll, 
               onChange: e => setRoll(e.target.value),
+              placeholder: "e.g., 23",
               onKeyDown: e => e.key === 'Enter' && joinSession() 
             })
           ), 
@@ -3310,6 +3415,7 @@ function LandingPage({
             /*#__PURE__*/React.createElement("input", { 
               value: cls, 
               onChange: e => setCls(e.target.value),
+              placeholder: "e.g., Class 10A",
               onKeyDown: e => e.key === 'Enter' && joinSession() 
             })
           ), 
@@ -3327,7 +3433,7 @@ function LandingPage({
               boxShadow: '0 2px 8px rgba(239, 68, 68, 0.1)',
               animation: 's-fade-in 0.2s ease-out'
             }
-          }, "\u26a0\ufe0f ", joinError),
+          }, React.createElement("i", { className: "fa-solid fa-triangle-exclamation", style: { marginRight: 6 } }), joinError),
           /*#__PURE__*/React.createElement("div", { className: "flex gap-8" }, 
             /*#__PURE__*/React.createElement("button", { className: "btn btn-ghost", onClick: () => { setShowStudent(false); setJoinError(''); } }, "Back"), 
             /*#__PURE__*/React.createElement("button", {
@@ -3335,7 +3441,7 @@ function LandingPage({
               style: { flex: 1 },
               onClick: joinSession,
               disabled: loading
-            }, loading ? '\u23f3 Joining...' : 'Join Session \u2192')
+            }, loading ? React.createElement("span", null, React.createElement("i", { className: "fa-solid fa-spinner fa-spin", style: { marginRight: 6 } }), "Joining...") : React.createElement("span", null, "Join Session ", React.createElement("i", { className: "fa-solid fa-arrow-right", style: { marginLeft: 6 } })))
           )
         )
       )
@@ -3354,11 +3460,11 @@ function LandingPage({
       /*#__PURE__*/React.createElement("div", { className: "lp-hiw-grid" },
         /*#__PURE__*/React.createElement("div", { className: "lp-hiw-left" },
           [
-            { step: 1, num: '01', icon: '🏛️', title: 'Create Your Classroom', desc: 'Teacher creates a class, selects duration, and starts a session.' },
-            { step: 2, num: '02', icon: '✨', title: 'Classroom Ready', desc: 'VYOM instantly generates and activates the classroom.' },
-            { step: 3, num: '03', icon: '🔑', title: 'Share the Access Code', desc: 'Teacher copies and shares the classroom code with students.' },
-            { step: 4, num: '04', icon: '👥', title: 'Students Join Instantly', desc: 'Students enter their name and classroom code to join.' },
-            { step: 5, num: '05', icon: '🚀', title: 'Interactive Classroom', desc: 'Students successfully enter the session and begin participating.' }
+            { step: 1, num: '01', icon: 'fa-solid fa-graduation-cap', title: 'Create Your Classroom', desc: 'Teacher creates a class, selects duration, and starts a session.' },
+            { step: 2, num: '02', icon: 'fa-solid fa-wand-magic-sparkles', title: 'Classroom Ready', desc: 'VYOM instantly generates and activates the classroom.' },
+            { step: 3, num: '03', icon: 'fa-solid fa-key', title: 'Share the Access Code', desc: 'Teacher copies and shares the classroom code with students.' },
+            { step: 4, num: '04', icon: 'fa-solid fa-users', title: 'Students Join Instantly', desc: 'Students enter their name and classroom code to join.' },
+            { step: 5, num: '05', icon: 'fa-solid fa-rocket', title: 'Interactive Classroom', desc: 'Students successfully enter the session and begin participating.' }
           ].map((s) =>
             /*#__PURE__*/React.createElement("div", {
               key: s.step,
@@ -3367,8 +3473,8 @@ function LandingPage({
               onClick: () => setActiveStep(s.step)
             },
               /*#__PURE__*/React.createElement("div", { className: "lp-hiw-card-num" }, s.num),
-              /*#__PURE__*/React.createElement("div", { className: "lp-hiw-card-icon-wrap" },
-                /*#__PURE__*/React.createElement("span", { className: "lp-hiw-card-icon" }, s.icon)
+              /*#__PURE__*/React.createElement("div", { className: "lp-hiw-card-icon-wrap", style: { display: 'flex', alignItems: 'center', justifyContent: 'center' } },
+                /*#__PURE__*/React.createElement("i", { className: s.icon, style: { fontSize: '1rem' } })
               ),
               /*#__PURE__*/React.createElement("div", { className: "lp-hiw-card-body" },
                 /*#__PURE__*/React.createElement("div", { className: "lp-hiw-card-title" }, s.title),
@@ -3408,7 +3514,8 @@ function LandingPage({
     ),
     React.createElement(LiveDemoShowcase, null),
     /*#__PURE__*/React.createElement("div", {
-      className: "lp-section"
+      className: "lp-section",
+      id: "features-section"
     }, 
       /*#__PURE__*/React.createElement("div", {
         className: "lp-animate-trigger",
@@ -3448,11 +3555,9 @@ function LandingPage({
               /*#__PURE__*/React.createElement("div", { className: "lp-role-sub" }, "Learn actively, compete, and grow")
             )
           ), 
-          /*#__PURE__*/React.createElement("ul", { className: "lp-role-list", style: { listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 12 } }, 
+          /*#__PURE__*/React.createElement("ul", { className: "lp-role-list" }, 
             ['Receive tasks and answer in real-time — MCQs, text, or code', 'Get instant feedback: right answer, explanation, and your score', 'Climb the live leaderboard and compete with classmates', 'Raise your hand silently to signal confusion without disrupting class', 'Ask doubts through the chat and get answers from your teacher', 'Track your performance across tasks and see where to improve'].map((item, i) => 
-              /*#__PURE__*/React.createElement("li", { key: i, style: { display: 'flex', alignItems: 'flex-start', gap: 10, fontSize: '0.9rem', color: 'var(--text2)', lineHeight: 1.5 } }, 
-                /*#__PURE__*/React.createElement("span", { style: { color: 'var(--green)', fontWeight: 700, flexShrink: 0, marginTop: 1 } }, "\u2192"), item
-              )
+              /*#__PURE__*/React.createElement("li", { key: i }, item)
             )
           )
         )
@@ -3482,14 +3587,116 @@ function LandingPage({
       )
     ), 
     React.createElement(LandingContactForm, null),
-    /*#__PURE__*/React.createElement("div", {
+    /*#__PURE__*/React.createElement("footer", {
       className: "lp-footer"
     }, 
-      /*#__PURE__*/React.createElement("div", { style: { display: "flex", flexDirection: "column", alignItems: "center", gap: "10px", padding: "20px 0" } },
-        /*#__PURE__*/React.createElement("img", { src: "/vyom_logo.png", style: { height: "40px", width: "40px", borderRadius: "50%", objectFit: "cover" }, alt: "VYOM" }),
-        /*#__PURE__*/React.createElement("span", { style: { fontWeight: "700", letterSpacing: "1px", color: "var(--accent2)" } }, "VYOM"),
-        /*#__PURE__*/React.createElement("div", { style: { fontSize: "0.85rem", opacity: 0.8 } }, "Virtualized Youth Optimization & Mentorship"),
-        /*#__PURE__*/React.createElement("div", { style: { fontSize: "0.75rem", opacity: 0.5 } }, "© 2026 VYOM. All rights reserved.")
+      /*#__PURE__*/React.createElement("div", { className: "lp-footer-content" }, 
+        /* Section 1: About Us */
+        /*#__PURE__*/React.createElement("h3", null, "About Us"), 
+        /*#__PURE__*/React.createElement("p", null, "VYOM (Virtualized Youth Optimization & Mentorship) is a premium, real-time virtual classroom system and interactive workspace designed to optimize modern education. Launched in 2026, VYOM offers highly personalized and effective virtual learning programs, giving educators data-driven insights with a live student understanding meter, and offering students an engaging space with real-time feedback, automated coding evaluations, interactive tasks, and peer-to-peer collaboration."), 
+
+        /* Section 2: What Makes Us Different? & Personalised Learning */
+        /*#__PURE__*/React.createElement("h3", null, "What Makes Us Different?"), 
+        /*#__PURE__*/React.createElement("h4", null, "Personalised Learning"), 
+        /*#__PURE__*/React.createElement("p", null, "Our niche is creating personalized, real-time learning experiences for every type of learner. The VYOM platform provides students with a learning environment where they can build, compile, and run code in real-time. VYOM brings together the best educators, AI-driven feedback loops, and interactive workspaces to construct a seamless, world-class virtual learning experience for each and every student."), 
+
+        /* Section 3: Why Choose Us? */
+        /*#__PURE__*/React.createElement("h3", null, "Why Choose Us?"), 
+        /*#__PURE__*/React.createElement("p", null, "Active participation is pivotal for a student's success in academics and future career paths. The Digital Age is deeply shaping how students learn and will also determine their career readiness. At VYOM, we encourage students to embrace this fast-paced, interactive environment and make them ready for tomorrow by being their constant learning and mentorship partner."), 
+        /*#__PURE__*/React.createElement("p", null, "We craft customized learning journeys for every student that address their unique needs. We believe in the power of interactive education that addresses every child's learning speed, allowing students to be holistically involved in their education and become active, lifelong learners."), 
+
+        /* Section 4: Our Three Pillars */
+        /*#__PURE__*/React.createElement("h3", null, "Our Three Pillars"), 
+        /*#__PURE__*/React.createElement("h4", null, "Personalised Learning Journeys"), 
+        /*#__PURE__*/React.createElement("p", null, "Personalized, interactive feedback is the foundation of our program. Using real-time response metrics, the platform adapts and helps create customized learning paths for students. It provides a comprehensive coverage of programming concepts, coding practices, fun interactive quizzes, and instant AI guidance."), 
+        /*#__PURE__*/React.createElement("p", null, "Based on the student's live answers, personal stats are updated instantly to help analyze strengths and areas of improvement. Each question and task gets tagged with different difficulty levels to create a smooth learning curve that keeps students motivated. Whenever errors are made, context-specific AI guidance is provided to strengthen and improve the student's understanding."), 
+
+        /* Pillar 2: Technology Enabled Learning */
+        /*#__PURE__*/React.createElement("h4", null, "Technology Enabled Learning"), 
+        /*#__PURE__*/React.createElement("p", null, "At VYOM, we leverage modern web technology to merge best practices like real-time code sandboxes, live WebSockets, and peer-to-peer interactive tools so that every child has access to the best learning experiences."), 
+        /*#__PURE__*/React.createElement("p", null, "Key features of the learning platform:"), 
+        /*#__PURE__*/React.createElement("ul", null, 
+          /*#__PURE__*/React.createElement("li", null, "Interactive and engaging coding modules with automated test cases"), 
+          /*#__PURE__*/React.createElement("li", null, "Visually rich dashboard and real-time reports to enable conceptual clarity and retention"), 
+          /*#__PURE__*/React.createElement("li", null, "Personalised performance metrics designed for every student, powered by data science")
+        ), 
+
+        /* Pillar 3: Best Teachers & Engaging Content */
+        /*#__PURE__*/React.createElement("h4", null, "Best Teachers & Engaging Content"), 
+        /*#__PURE__*/React.createElement("p", null, "The VYOM digital classroom provides students a holistic learning experience. Students across regions can access live classes and see concepts come to life. Every detail of a student's session is logged and analyzed at the deepest level, backed by smart AI integrations like our Copilot, interactive quizzes, and instant code assessments."), 
+        /*#__PURE__*/React.createElement("p", null, "The platform integrates these well-crafted lessons from our teachers and assessments along with live analysis and recommendations, personalized to suit each student's learning style. This holistic approach builds active engagement, keeping students motivated and curious."), 
+        /*#__PURE__*/React.createElement("p", null, "We work towards offering students the best learning experience. We offer interactive environments for core subjects and preparation tracks:"), 
+        /*#__PURE__*/React.createElement("ul", null, 
+          /*#__PURE__*/React.createElement("li", null, "Real-Time Programming, Algorithmic Analysis, and System Design tracks"), 
+          /*#__PURE__*/React.createElement("li", null, "Interactive Coding Labs and Competitive Exam preparation modules")
+        ), 
+
+        /* Section 5: Tech integrations row (styled like payment gateways row) */
+        /*#__PURE__*/React.createElement("div", { className: "lp-footer-tech-section" }, 
+          /*#__PURE__*/React.createElement("div", { className: "lp-footer-tech-title" }, "Supported Tech Stack & Integrations"), 
+          /*#__PURE__*/React.createElement("div", { className: "lp-footer-tech-grid" }, 
+            /* Python */
+            /*#__PURE__*/React.createElement("div", { className: "lp-footer-tech-card" }, 
+              /*#__PURE__*/React.createElement("i", { className: "fa-brands fa-python" }), 
+              /*#__PURE__*/React.createElement("span", null, "Python / FastAPI")
+            ), 
+            /* React */
+            /*#__PURE__*/React.createElement("div", { className: "lp-footer-tech-card" }, 
+              /*#__PURE__*/React.createElement("i", { className: "fa-brands fa-react" }), 
+              /*#__PURE__*/React.createElement("span", null, "React JS")
+            ), 
+            /* WebRTC */
+            /*#__PURE__*/React.createElement("div", { className: "lp-footer-tech-card" }, 
+              /*#__PURE__*/React.createElement("i", { className: "fa-solid fa-video" }), 
+              /*#__PURE__*/React.createElement("span", null, "WebRTC P2P")
+            ), 
+            /* WebSockets */
+            /*#__PURE__*/React.createElement("div", { className: "lp-footer-tech-card" }, 
+              /*#__PURE__*/React.createElement("i", { className: "fa-solid fa-circle-nodes" }), 
+              /*#__PURE__*/React.createElement("span", null, "WebSockets Sync")
+            ), 
+            /* SQLite */
+            /*#__PURE__*/React.createElement("div", { className: "lp-footer-tech-card" }, 
+              /*#__PURE__*/React.createElement("i", { className: "fa-solid fa-database" }), 
+              /*#__PURE__*/React.createElement("span", null, "SQLite Database")
+            ), 
+            /* HTML5/CSS3 */
+            /*#__PURE__*/React.createElement("div", { className: "lp-footer-tech-card" }, 
+              /*#__PURE__*/React.createElement("i", { className: "fa-brands fa-html5" }), 
+              /*#__PURE__*/React.createElement("span", null, "HTML5 / CSS3")
+            ), 
+            /* AI Copilot */
+            /*#__PURE__*/React.createElement("div", { className: "lp-footer-tech-card" }, 
+              /*#__PURE__*/React.createElement("i", { className: "fa-solid fa-brain" }), 
+              /*#__PURE__*/React.createElement("span", null, "AI Copilot")
+            ), 
+            /* Secure OTP */
+            /*#__PURE__*/React.createElement("div", { className: "lp-footer-tech-card" }, 
+              /*#__PURE__*/React.createElement("i", { className: "fa-solid fa-shield-halved" }), 
+              /*#__PURE__*/React.createElement("span", null, "Secure OTP Auth")
+            )
+          )
+        ), 
+
+        /* Divider */
+        /*#__PURE__*/React.createElement("div", { className: "lp-footer-divider" }), 
+
+        /* Bottom Row */
+        /*#__PURE__*/React.createElement("div", { className: "lp-footer-bottom-row" }, 
+          /* Legal Links */
+          /*#__PURE__*/React.createElement("div", { className: "lp-footer-bottom-links" }, 
+            /* Disclaimer */
+            /*#__PURE__*/React.createElement("a", { href: "#", onClick: (e) => { e.preventDefault(); add("VYOM is a simulator platform built for interactive, real-time classroom training.", "info"); } }, "Disclaimer"), 
+            /* Privacy */
+            /*#__PURE__*/React.createElement("a", { href: "#", onClick: (e) => { e.preventDefault(); setInfoModal("privacy"); } }, "Privacy Policy"), 
+            /* Terms */
+            /*#__PURE__*/React.createElement("a", { href: "#", onClick: (e) => { e.preventDefault(); setInfoModal("terms"); } }, "Terms of Services"), 
+            /* Sitemap */
+            /*#__PURE__*/React.createElement("a", { href: "#", onClick: (e) => { e.preventDefault(); add("Site navigation is available in the main header and sidebar.", "info"); } }, "Sitemap")
+          ), 
+          /* Copyright */
+          /*#__PURE__*/React.createElement("p", { className: "lp-footer-copyright" }, "© 2026, VYOM. All rights reserved.")
+        )
       )
     ),
     /*#__PURE__*/React.createElement(LandingHelpChip, null),
@@ -3500,10 +3707,10 @@ function LandingPage({
       onClick: scrollToHowItWorks,
       title: 'Jump to How It Works'
     },
-      React.createElement('div', { className: 'lp-autonotif__icon' }, '🎬'),
+      React.createElement('div', { className: 'lp-autonotif__icon', style: { display: 'flex', alignItems: 'center', justifyContent: 'center' } }, React.createElement('i', { className: 'fa-solid fa-clapperboard' })),
       React.createElement('div', { className: 'lp-autonotif__body' },
         React.createElement('div', { className: 'lp-autonotif__title' }, 'New to VYOM?'),
-        React.createElement('div', { className: 'lp-autonotif__text' }, 'See how to get started in 5 simple steps ↓')
+        React.createElement('div', { className: 'lp-autonotif__text' }, 'See how to get started in 5 simple steps ', React.createElement('i', { className: 'fa-solid fa-arrow-down', style: { marginLeft: 4 } }))
       ),
       React.createElement('button', {
         className: 'lp-autonotif__close',
@@ -3622,13 +3829,36 @@ function LandingContactForm() {
     setStatus({ type: '', text: '' });
 
     try {
-      const res = await fetch('/api/contact/submit', {
+      // 1. Submit to local backend for logging
+      try {
+        await fetch('/api/contact/submit', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name: name.trim(), email: email.trim(), message: message.trim() })
+        });
+      } catch (logErr) {
+        console.warn("Could not log contact submission locally:", logErr);
+      }
+
+      // 2. Submit directly to Web3Forms from client side (required on Free tier)
+      const web3Key = '3f37ab63-4172-49b6-98f2-df2b0ea48a57';
+      const web3Res = await fetch('https://api.web3forms.com/submit', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: name.trim(), email: email.trim(), message: message.trim() })
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        body: JSON.stringify({
+          access_key: web3Key,
+          name: name.trim(),
+          email: email.trim(),
+          message: message.trim(),
+          subject: 'New Contact Submission from VYOM',
+          from_name: 'VYOM Portal'
+        })
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || data.message || 'Submission failed');
+      const web3Data = await web3Res.json();
+      if (!web3Data.success) {
+        throw new Error(web3Data.message || 'Web3Forms submission failed');
+      }
+
       setStatus({ type: 'success', text: 'Thank you! Your message has been sent successfully.' });
       setName(''); setEmail(''); setMessage('');
     } catch (err) {
@@ -3679,7 +3909,7 @@ function LandingContactForm() {
     )
   );
 
-  return React.createElement('div', { className: 'lcf-wrap' },
+  return React.createElement('div', { className: 'lcf-wrap', id: 'contact-section' },
     /* Outer card */
     React.createElement('div', { className: 'lcf-card' },
       /* Left panel */
@@ -5242,11 +5472,11 @@ function AILessonPlannerPage({ sessionCode, wsSend, teacherName }) {
 
       sections.length > 0 ? React.createElement('div', null,
         React.createElement('div', {className:'lp-export-bar'},
-          React.createElement('span',{className:'lp-export-bar-label'},'📤 Export:'),
-          React.createElement(ToggleDownloadBtn,{label:'📄 PDF',doneLabel:'Saved!',onClick:exportPDF,size:'sm'}),
-          React.createElement(ToggleDownloadBtn,{label:'📝 TXT',doneLabel:'Saved!',onClick:exportText,size:'sm'}),
-          React.createElement(ToggleDownloadBtn,{label:'{ } JSON',doneLabel:'Saved!',onClick:exportJSON,size:'sm'}),
-          React.createElement('button',{className:'lp-action-btn',onClick:function(){window.print();}},'🖨️ Print')
+          React.createElement('span',{className:'lp-export-bar-label'},'Export:'),
+          React.createElement(ToggleDownloadBtn,{label:React.createElement('span', null, React.createElement('i', { className: 'fa-regular fa-file-pdf', style: { marginRight: 6 } }), 'PDF'),doneLabel:'Saved!',onClick:exportPDF,size:'sm'}),
+          React.createElement(ToggleDownloadBtn,{label:React.createElement('span', null, React.createElement('i', { className: 'fa-regular fa-file-lines', style: { marginRight: 6 } }), 'TXT'),doneLabel:'Saved!',onClick:exportText,size:'sm'}),
+          React.createElement(ToggleDownloadBtn,{label:React.createElement('span', null, React.createElement('i', { className: 'fa-regular fa-file-code', style: { marginRight: 6 } }), 'JSON'),doneLabel:'Saved!',onClick:exportJSON,size:'sm'}),
+          React.createElement('button',{className:'lp-action-btn',onClick:function(){window.print();}},React.createElement('i', { className: 'fa-solid fa-print', style: { marginRight: 6 } }),'Print')
         ),
         React.createElement('div',{className:'lp-extras-row'},
           EXTRAS.map(function(label){
@@ -5412,7 +5642,7 @@ function StudentLessonViewer({ sessionCode, studentId }) {
             lesson.difficulty?React.createElement('span',null,'💪 '+lesson.difficulty):null
           )
         ),
-        React.createElement(ToggleDownloadBtn,{label:'Download',doneLabel:'Saved!',onClick:downloadLesson,size:'sm'})
+        React.createElement(ToggleDownloadBtn,{label:React.createElement('span', null, React.createElement('i', { className: 'fa-solid fa-download', style: { marginRight: 6 } }), 'Download'),doneLabel:'Saved!',onClick:downloadLesson,size:'sm'})
       ),
       React.createElement('div',{style:{marginTop:12}},
         React.createElement('div',{style:{display:'flex',justifyContent:'space-between',fontSize:'0.8rem',color:'var(--text2)',marginBottom:4}},
@@ -5622,7 +5852,14 @@ function VyomAiBubble({ roster, analytics, navTo, onMessageChange }) {
 // ── Tiny helpers ─────────────────────────────────────────────────────────
 function tdc_relTime(tsMs) {
   if (!tsMs) return '';
-  const diff = Date.now() - new Date(tsMs).getTime();
+  let d;
+  if (typeof tsMs === 'number' && tsMs < 1e12) {
+    d = new Date(tsMs * 1000); // Unix seconds → ms
+  } else {
+    d = new Date(tsMs);
+  }
+  if (isNaN(d.getTime())) return String(tsMs);
+  const diff = Date.now() - d.getTime();
   const s = Math.floor(diff / 1000);
   if (s < 60)  return 'just now';
   const m = Math.floor(s / 60);
@@ -6523,7 +6760,8 @@ function TDCProfilePanel({ doubt, roster, navTo, wsSend, sessionCode }) {
               type: 'text',
               style: { width: '100%', background: '#1e1e1e', border: '1px solid var(--border)', borderRadius: '6px', color: '#fff', padding: '8px', fontSize: '0.9rem' },
               value: modalInputValue,
-              onChange: e => setModalInputValue(e.target.value)
+              onChange: e => setModalInputValue(e.target.value),
+              placeholder: "e.g., https://example.com/slides"
             })
           ),
           React.createElement('div', { style: { marginBottom: '20px' } },
@@ -6532,7 +6770,8 @@ function TDCProfilePanel({ doubt, roster, navTo, wsSend, sessionCode }) {
               type: 'text',
               style: { width: '100%', background: '#1e1e1e', border: '1px solid var(--border)', borderRadius: '6px', color: '#fff', padding: '8px', fontSize: '0.9rem' },
               value: modalInputValue2,
-              onChange: e => setModalInputValue2(e.target.value)
+              onChange: e => setModalInputValue2(e.target.value),
+              placeholder: "e.g., Lecture slides for today's session"
             })
           ),
           React.createElement('div', { style: { display: 'flex', justifyContent: 'space-between', gap: '8px' } },
@@ -8952,7 +9191,7 @@ function SmartAttendancePage({ sessionCode, sessionStatus, roster, wsSend }) {
             },
             disabled: sheetLoading
           }, sheetLoading ? 'Preparing...' : 'View Attendance Sheet'),
-          React.createElement(ToggleDownloadBtn, { label: 'Download PDF', doneLabel: 'Saved!', onClick: downloadAttendanceSheetPDF, size: 'sm' })
+          React.createElement(ToggleDownloadBtn, { label: React.createElement('span', null, React.createElement('i', { className: 'fa-regular fa-file-pdf', style: { marginRight: 6 } }), 'Download PDF'), doneLabel: 'Saved!', onClick: downloadAttendanceSheetPDF, size: 'sm' })
         ),
 
         React.createElement('div', { className: 'att-hero-info' },
@@ -9225,7 +9464,7 @@ function SmartAttendancePage({ sessionCode, sessionStatus, roster, wsSend }) {
         ),
         React.createElement('div', { className: 'att-sheet-actions inline' },
           React.createElement('button', { className: 'att-start-btn ghost', onClick: () => setSheetOpen(false) }, 'Hide Sheet'),
-          React.createElement(ToggleDownloadBtn, { label: 'Download PDF', doneLabel: 'Saved!', onClick: downloadAttendanceSheetPDF, size: 'sm' })
+          React.createElement(ToggleDownloadBtn, { label: React.createElement('span', null, React.createElement('i', { className: 'fa-regular fa-file-pdf', style: { marginRight: 6 } }), 'Download PDF'), doneLabel: 'Saved!', onClick: downloadAttendanceSheetPDF, size: 'sm' })
         )
       ),
       React.createElement('div', { className: 'att-sheet-meta-grid' },
@@ -10623,14 +10862,17 @@ function TeacherDashboard({
               "LIVE DATA"
             ),
             React.createElement("div", { style: { display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 } },
-              React.createElement("div", { className: "db-stat-icon-wrap purple" }, "\uD83E\uDDE0"),
+              React.createElement("div", { className: "db-stat-icon-wrap purple" }, React.createElement("i", { className: "fas fa-brain" })),
               React.createElement("div", { style: { display: 'flex', gap: 4 } },
-                [['mcq','✅','#22c55e'], ['short','✍️',getComputedAccent()], ['long','📄','#f97316']].map(([id, icon, color]) =>
+                [['mcq','fa-check-circle','#22c55e'], ['short','fa-pen',getComputedAccent()], ['long','fa-file-alt','#f97316']].map(([id, icon, color]) =>
                   React.createElement('button', {
                     key: id,
                     onClick: () => setUnderstandingType(id),
-                    style: { padding: '2px 7px', borderRadius: 10, border: 'none', cursor: 'pointer', fontSize: '0.65rem', fontWeight: 700, background: understandingType === id ? color : 'var(--surface3)', color: understandingType === id ? '#fff' : 'var(--text3)', transition: 'all 0.15s' }
-                  }, icon + ' ' + id.toUpperCase())
+                    style: { display: 'inline-flex', alignItems: 'center', gap: '3px', padding: '2px 7px', borderRadius: 10, border: 'none', cursor: 'pointer', fontSize: '0.65rem', fontWeight: 700, background: understandingType === id ? color : 'var(--surface3)', color: understandingType === id ? '#fff' : 'var(--text3)', transition: 'all 0.15s' }
+                  },
+                    React.createElement("i", { className: `fas ${icon}`, style: { fontSize: '0.65rem' } }),
+                    id.toUpperCase()
+                  )
                 )
               )
             ),
@@ -10653,7 +10895,7 @@ function TeacherDashboard({
               React.createElement("span", { className: "db-pulse-dot-orange" }),
               "ENGAGED"
             ),
-            React.createElement("div", { className: "db-stat-icon-wrap violet" }, "\uD83D\uDC65"),
+            React.createElement("div", { className: "db-stat-icon-wrap violet" }, React.createElement("i", { className: "fas fa-user-friends" })),
             React.createElement("div", { className: "db-stat-value violet" }, analytics?.participation || 0, "%"),
             React.createElement("div", { className: "db-stat-label" }, "Participation"),
             React.createElement("div", { className: "db-stat-trend" }, "↑ This session"),
@@ -10662,7 +10904,7 @@ function TeacherDashboard({
           /* Active Students */
           React.createElement("div", { className: "db-stat-card stat-blue", style: { minHeight: 135 } },
             React.createElement("div", { className: "db-stat-badge info" }, "CLASSROOM"),
-            React.createElement("div", { className: "db-stat-icon-wrap blue" }, "\uD83C\uDF93"),
+            React.createElement("div", { className: "db-stat-icon-wrap blue" }, React.createElement("i", { className: "fas fa-graduation-cap" })),
             React.createElement("div", { className: "db-stat-value blue" }, roster.active?.length || 0),
             React.createElement("div", { className: "db-stat-label" }, "Active Students"),
             React.createElement("div", { className: "db-stat-trend" }, sessionStatus === 'active' ? '● Live in class' : '○ Not started'),
@@ -10671,7 +10913,7 @@ function TeacherDashboard({
           /* Tasks Queued */
           React.createElement("div", { className: "db-stat-card stat-orange", style: { minHeight: 135 } },
             React.createElement("div", { className: "db-stat-badge warning" }, "QUEUE"),
-            React.createElement("div", { className: "db-stat-icon-wrap orange" }, "\uD83D\uDCCB"),
+            React.createElement("div", { className: "db-stat-icon-wrap orange" }, React.createElement("i", { className: "fas fa-clipboard-list" })),
             React.createElement("div", { className: "db-stat-value orange" }, tasks.length),
             React.createElement("div", { className: "db-stat-label" }, "Tasks Queued"),
             React.createElement("div", { className: "db-stat-trend" }, tasks.length === 0 ? 'No tasks queued' : 'Ready to send'),
@@ -10690,7 +10932,7 @@ function TeacherDashboard({
       /* ── ACTIVE STUDENTS ── */
       React.createElement("div", { className: "db-panel" },
         React.createElement("div", { className: "db-panel-header" },
-          React.createElement("span", null, "\uD83D\uDC65"),
+          React.createElement("i", { className: "fas fa-user-friends", style: { color: 'var(--accent)', marginRight: '6px' } }),
           React.createElement("span", { className: "db-panel-title" }, "Active Students"),
           React.createElement("span", { className: "db-panel-count" }, "(", roster.active?.length || 0, ")")
         ),
@@ -10703,7 +10945,7 @@ function TeacherDashboard({
             onChange: e => setStudentSearch(e.target.value)
           })
         ),
-        React.createElement("div", { style: { flex: 1, overflowY: 'auto', maxHeight: 240 } },
+        React.createElement("div", { style: { flex: 1, overflowY: 'auto' } },
           filteredStudents.length > 0
             ? filteredStudents.map(st => React.createElement("div", { key: st.id, className: "db-student-row" },
                 React.createElement("div", {
@@ -10723,18 +10965,17 @@ function TeacherDashboard({
                 React.createElement("button", { className: "db-student-kick-btn", onClick: () => kickStudent(st.id), title: "Remove student" }, "✕")
               ))
             : React.createElement("div", { className: "db-empty-room" },
-                React.createElement("div", { className: "db-empty-room-icon" }, "\uD83C\uDF93"),
+                React.createElement("div", { className: "db-empty-room-icon" }, React.createElement("i", { className: "fas fa-graduation-cap" })),
                 React.createElement("div", { className: "db-empty-room-title" }, "No active students yet"),
                 React.createElement("div", { className: "db-empty-room-sub" }, "Students will appear here once they join")
               )
-        ),
-        React.createElement("button", { className: "db-view-all-link" }, "View All Students \u2192")
+        )
       ),
 
       /* ── WAITING ROOM ── */
       React.createElement("div", { className: "db-panel" },
         React.createElement("div", { className: "db-panel-header" },
-          React.createElement("span", null, "\u23F3"),
+          React.createElement("i", { className: "fas fa-hourglass-half", style: { color: 'var(--tdc-orange)', marginRight: '6px' } }),
           React.createElement("span", { className: "db-panel-title" }, "Waiting Room"),
           React.createElement("span", { className: "db-panel-count" }, "(", roster.waiting?.length || 0, ")",
             roster.waiting?.length > 0 && React.createElement("span", { className: "notification-dot", style: { display: 'inline-block', marginLeft: 4 } })
@@ -10759,7 +11000,7 @@ function TeacherDashboard({
               ))
             )
           : React.createElement("div", { className: "db-empty-room", style: { flex: 1 } },
-              React.createElement("div", { className: "db-empty-room-icon", style: { fontSize: '2rem', opacity: 0.25 } }, "\uD83D\uDCBB"),
+              React.createElement("div", { className: "db-empty-room-icon", style: { fontSize: '2rem', opacity: 0.25 } }, React.createElement("i", { className: "fas fa-desktop" })),
               React.createElement("div", { className: "db-empty-room-title" }, "No students waiting"),
               React.createElement("div", { className: "db-empty-room-sub" }, "Students who want to join will appear here.")
             )
@@ -10768,14 +11009,14 @@ function TeacherDashboard({
       /* ── QUICK CONTROLS ── */
       React.createElement("div", { className: "db-panel" },
         React.createElement("div", { className: "db-panel-header" },
-          React.createElement("span", null, "\u26A1"),
+          React.createElement("i", { className: "fas fa-bolt", style: { color: 'var(--accent2)', marginRight: '6px' } }),
           React.createElement("span", { className: "db-panel-title" }, "Quick Controls")
         ),
         React.createElement("div", {
           className: `db-qc-auto-join-card ${autoJoinEnabled ? 'active' : ''}`,
           onClick: () => toggleAutoJoin(!autoJoinEnabled)
         },
-          React.createElement("div", { className: "db-qc-auto-join-icon" }, autoJoinEnabled ? "🚀" : "🔒"),
+          React.createElement("div", { className: "db-qc-auto-join-icon" }, autoJoinEnabled ? React.createElement("i", { className: "fas fa-rocket" }) : React.createElement("i", { className: "fas fa-lock" })),
           React.createElement("div", { className: "db-qc-auto-join-details" },
             React.createElement("div", { className: "db-qc-auto-join-title" }, "Auto Join"),
             React.createElement("div", { className: "db-qc-auto-join-desc" }, "Allow students to instantly enter the classroom without waiting room approval.")
@@ -11362,7 +11603,8 @@ function AIQuestionEditor({
     onChange: e => setDraft(d => ({
       ...d,
       question: e.target.value
-    }))
+    })),
+    placeholder: "Enter question text..."
   })), draft.type === 'mcq' && /*#__PURE__*/React.createElement("div", {
     style: {
       marginBottom: 12
@@ -13554,11 +13796,11 @@ function ContentManagementPage({ sessionCode, tasks, teacherName, roster }) {
             ? React.createElement('div', null,
                 React.createElement('div', { className: 'cm2-form-group' },
                   React.createElement('label', null, 'AI Title'),
-                  React.createElement('input', { value: aiDesc.title || '', onChange: e => setAiDesc(d => ({ ...d, title: e.target.value })) })
+                  React.createElement('input', { value: aiDesc.title || '', onChange: e => setAiDesc(d => ({ ...d, title: e.target.value })), placeholder: 'AI generated title...' })
                 ),
                 React.createElement('div', { className: 'cm2-form-group' },
                   React.createElement('label', null, 'AI Description'),
-                  React.createElement('textarea', { rows: 3, value: aiDesc.description || '', onChange: e => setAiDesc(d => ({ ...d, description: e.target.value })) })
+                  React.createElement('textarea', { rows: 3, value: aiDesc.description || '', onChange: e => setAiDesc(d => ({ ...d, description: e.target.value })), placeholder: 'AI generated description...' })
                 ),
                 React.createElement('div', { className: 'ch-ai-desc-box' },
                   React.createElement('div', { className: 'ch-ai-label' }, '🎯 Learning Objective'),
@@ -15394,14 +15636,14 @@ function TestReportsTab({ sessionCode }) {
     React.createElement('div', { style: { display: 'flex', justifyContent: 'space-between', marginBottom: 16, alignItems: 'center', flexWrap: 'wrap', gap: 12 } },
       React.createElement('div', { style: { fontSize: '0.9rem', fontWeight: 700 } }, 'Class Test Summary'),
       React.createElement('div', { style: { display: 'flex', gap: 6, flexWrap: 'wrap' } },
-        React.createElement(ToggleDownloadBtn, { label: '📄 PDF', doneLabel: 'Saved!', onClick: () => downloadFile('pdf'), size: 'sm' }),
-        React.createElement(ToggleDownloadBtn, { label: '📊 Excel', doneLabel: 'Saved!', onClick: () => downloadFile('excel'), size: 'sm' }),
-        React.createElement(ToggleDownloadBtn, { label: '📋 CSV', doneLabel: 'Saved!', onClick: () => downloadFile('csv'), size: 'sm' }),
+        React.createElement(ToggleDownloadBtn, { label: React.createElement('span', null, React.createElement('i', { className: 'fa-regular fa-file-pdf', style: { marginRight: 6 } }), 'PDF'), doneLabel: 'Saved!', onClick: () => downloadFile('pdf'), size: 'sm' }),
+        React.createElement(ToggleDownloadBtn, { label: React.createElement('span', null, React.createElement('i', { className: 'fa-regular fa-file-excel', style: { marginRight: 6 } }), 'Excel'), doneLabel: 'Saved!', onClick: () => downloadFile('excel'), size: 'sm' }),
+        React.createElement(ToggleDownloadBtn, { label: React.createElement('span', null, React.createElement('i', { className: 'fa-solid fa-file-csv', style: { marginRight: 6 } }), 'CSV'), doneLabel: 'Saved!', onClick: () => downloadFile('csv'), size: 'sm' }),
         React.createElement('button', {
           className: `btn btn-primary btn-sm ${uploadingGDrive ? 'loading' : ''}`,
           onClick: () => saveToGDrive('pdf'),
           disabled: uploadingGDrive
-        }, '☁️ Save to Drive')
+        }, React.createElement('i', { className: 'fa-solid fa-cloud', style: { marginRight: 6 } }), 'Save to Drive')
       )
     ),
 
@@ -15973,15 +16215,15 @@ function CodingReportsTab({ sessionCode }) {
         React.createElement('div', { style: { fontSize: '0.78rem', color: 'var(--text3)' } }, `Default Language: ${codingData.task?.language || 'python'}`)
       ),
       React.createElement('div', { style: { display: 'flex', gap: 6, flexWrap: 'wrap' } },
-        React.createElement(ToggleDownloadBtn, { label: '📄 PDF', doneLabel: 'Saved!', onClick: () => downloadFile('pdf'), size: 'sm' }),
-        React.createElement(ToggleDownloadBtn, { label: '📊 Excel', doneLabel: 'Saved!', onClick: () => downloadFile('excel'), size: 'sm' }),
-        React.createElement(ToggleDownloadBtn, { label: '📋 CSV', doneLabel: 'Saved!', onClick: () => downloadFile('csv'), size: 'sm' }),
-        React.createElement(ToggleDownloadBtn, { label: '📦 Code ZIP', doneLabel: 'Saved!', onClick: downloadCodeArchive, size: 'sm' }),
+        React.createElement(ToggleDownloadBtn, { label: React.createElement('span', null, React.createElement('i', { className: 'fa-regular fa-file-pdf', style: { marginRight: 6 } }), 'PDF'), doneLabel: 'Saved!', onClick: () => downloadFile('pdf'), size: 'sm' }),
+        React.createElement(ToggleDownloadBtn, { label: React.createElement('span', null, React.createElement('i', { className: 'fa-regular fa-file-excel', style: { marginRight: 6 } }), 'Excel'), doneLabel: 'Saved!', onClick: () => downloadFile('excel'), size: 'sm' }),
+        React.createElement(ToggleDownloadBtn, { label: React.createElement('span', null, React.createElement('i', { className: 'fa-solid fa-file-csv', style: { marginRight: 6 } }), 'CSV'), doneLabel: 'Saved!', onClick: () => downloadFile('csv'), size: 'sm' }),
+        React.createElement(ToggleDownloadBtn, { label: React.createElement('span', null, React.createElement('i', { className: 'fa-regular fa-file-zip', style: { marginRight: 6 } }), 'Code ZIP'), doneLabel: 'Saved!', onClick: downloadCodeArchive, size: 'sm' }),
         React.createElement('button', {
           className: `btn btn-primary btn-sm ${uploadingGDrive ? 'loading' : ''}`,
           onClick: () => saveToGDrive('pdf'),
           disabled: uploadingGDrive
-        }, '☁️ Save to Drive')
+        }, React.createElement('i', { className: 'fa-solid fa-cloud', style: { marginRight: 6 } }), 'Save to Drive')
       )
     ),
 
@@ -16198,13 +16440,13 @@ function StudentMarksRegisterTab({ sessionCode, report }) {
         )
       ),
       React.createElement('div', { style: { display: 'flex', gap: 6, flexWrap: 'wrap' } },
-        React.createElement(ToggleDownloadBtn, { label: '📄 PDF', doneLabel: 'Saved!', onClick: () => downloadFile('pdf'), size: 'sm' }),
-        React.createElement(ToggleDownloadBtn, { label: '📊 Excel', doneLabel: 'Saved!', onClick: () => downloadFile('excel'), size: 'sm' }),
+        React.createElement(ToggleDownloadBtn, { label: React.createElement('span', null, React.createElement('i', { className: 'fa-regular fa-file-pdf', style: { marginRight: 6 } }), 'PDF'), doneLabel: 'Saved!', onClick: () => downloadFile('pdf'), size: 'sm' }),
+        React.createElement(ToggleDownloadBtn, { label: React.createElement('span', null, React.createElement('i', { className: 'fa-regular fa-file-excel', style: { marginRight: 6 } }), 'Excel'), doneLabel: 'Saved!', onClick: () => downloadFile('excel'), size: 'sm' }),
         React.createElement('button', {
           className: `btn btn-primary btn-sm ${uploadingGDrive ? 'loading' : ''}`,
           onClick: () => saveToGDrive('pdf'),
           disabled: uploadingGDrive
-        }, '☁️ Save to Drive')
+        }, React.createElement('i', { className: 'fa-solid fa-cloud', style: { marginRight: 6 } }), 'Save to Drive')
       )
     ),
 
@@ -18843,7 +19085,7 @@ function TestModePage({
 
     /* ── Header ── */
     React.createElement("div", { className: "tm2-header" },
-      React.createElement("div", { className: "tm2-header-icon" }, "🧪"),
+      React.createElement("div", { className: "tm2-header-icon" }, React.createElement("i", { className: "fa-solid fa-flask" })),
       React.createElement("div", { className: "tm2-header-info" },
         React.createElement("div", { className: "tm2-header-title" }, "Test Mode"),
         React.createElement("div", { className: "tm2-header-sub" }, "Create, customize and launch AI-powered tests effortlessly.")
@@ -18853,7 +19095,7 @@ function TestModePage({
         onClick: startTest,
         disabled: !testTasks.length || sessionStatus !== 'active',
         title: sessionStatus !== 'active' ? 'Start the session first' : ''
-      }, "🚀 Launch Test")
+      }, React.createElement("span", null, React.createElement("i", { className: "fa-solid fa-rocket", style: { marginRight: 8 } }), "Launch Test"))
     ),
 
     /* ── Two-column grid: Settings + AI Generator ── */
@@ -18863,7 +19105,7 @@ function TestModePage({
       React.createElement("div", { className: "tm2-card" },
         React.createElement("div", { className: "tm2-card-glow" }),
         React.createElement("div", { className: "tm2-card-title" },
-          React.createElement("span", { className: "tm2-card-icon" }, "📋"),
+          React.createElement("span", { className: "tm2-card-icon" }, React.createElement("i", { className: "fa-regular fa-clipboard" })),
           React.createElement("span", { className: "tm2-card-label" }, "Test Settings")
         ),
         /* Test Title */
@@ -18901,20 +19143,20 @@ function TestModePage({
         /* Stats summary */
         React.createElement("div", { className: "tm2-stats-row" },
           React.createElement("div", { className: "tm2-stat-chip" },
-            "📊 ", React.createElement("strong", null, testTasks.length), " questions"
+            React.createElement("i", { className: "fa-solid fa-chart-simple", style: { marginRight: 6 } }), React.createElement("strong", null, testTasks.length), " questions"
           ),
           React.createElement("div", { className: "tm2-stat-chip" },
-            "⏱ ", React.createElement("strong", null, duration + " min")
+            React.createElement("i", { className: "fa-regular fa-clock", style: { marginRight: 6 } }), React.createElement("strong", null, duration + " min")
           ),
           React.createElement("div", { className: "tm2-stat-chip" },
-            "🏆 ", React.createElement("strong", null, totalMarks), " total marks"
+            React.createElement("i", { className: "fa-solid fa-trophy", style: { marginRight: 6 } }), React.createElement("strong", null, totalMarks), " total marks"
           )
         ),
         /* Toggles */
         React.createElement("div", { className: "tm2-toggles-row" },
-          React.createElement("div", { className: "tm2-toggle-chip" }, "✅ Questions shuffled"),
-          React.createElement("div", { className: "tm2-toggle-chip" }, "🛡 Single attempt"),
-          React.createElement("div", { className: "tm2-toggle-chip" }, "⏰ Auto-submit on timer")
+          React.createElement("div", { className: "tm2-toggle-chip" }, React.createElement("i", { className: "fa-regular fa-square-check", style: { marginRight: 6 } }), "Questions shuffled"),
+          React.createElement("div", { className: "tm2-toggle-chip" }, React.createElement("i", { className: "fa-solid fa-shield-halved", style: { marginRight: 6 } }), "Single attempt"),
+          React.createElement("div", { className: "tm2-toggle-chip" }, React.createElement("i", { className: "fa-regular fa-hourglass-half", style: { marginRight: 6 } }), "Auto-submit on timer")
         )
       ),
 
@@ -18922,17 +19164,17 @@ function TestModePage({
       React.createElement("div", { className: "tm2-card tm2-ai-panel" },
         React.createElement("div", { className: "tm2-card-glow", style: { background: 'radial-gradient(circle, rgba(var(--accent-rgb), 0.035) 0%, transparent 70%)' } }),
         React.createElement("div", { className: "tm2-card-title" },
-          React.createElement("span", { className: "tm2-card-icon" }, "👑"),
+          React.createElement("span", { className: "tm2-card-icon" }, React.createElement("i", { className: "fa-solid fa-wand-magic-sparkles" })),
           React.createElement("span", { className: "tm2-card-label" }, "AI Test Generator"),
           React.createElement("span", { className: "tm2-ai-badge" }, "AI")
         ),
         /* Type selector */
         React.createElement("div", { className: "tm2-type-selector" },
           [
-            { value: 'mcq', label: 'MCQ' },
-            { value: 'short', label: '✍️ Short' },
-            { value: 'long', label: 'Long' },
-            { value: 'coding', label: '💻 Coding' }
+            { value: 'mcq', label: React.createElement("span", null, React.createElement("i", { className: "fa-regular fa-circle-dot", style: { marginRight: 6 } }), "MCQ") },
+            { value: 'short', label: React.createElement("span", null, React.createElement("i", { className: "fa-solid fa-pen", style: { marginRight: 6 } }), "Short") },
+            { value: 'long', label: React.createElement("span", null, React.createElement("i", { className: "fa-regular fa-file-lines", style: { marginRight: 6 } }), "Long") },
+            { value: 'coding', label: React.createElement("span", null, React.createElement("i", { className: "fa-solid fa-laptop-code", style: { marginRight: 6 } }), "Coding") }
           ].map(t => React.createElement("button", {
             key: t.value,
             className: `tm2-type-btn${aiQType === t.value ? ' active' : ''}`,
@@ -18973,13 +19215,13 @@ function TestModePage({
           className: "tm2-gen-btn",
           onClick: generateAITestQuestions,
           disabled: aiGenerating
-        }, aiGenerating ? '⏳ Generating…' : '✦ Generate 5 Qs'),
+        }, aiGenerating ? React.createElement("span", null, React.createElement("i", { className: "fa-solid fa-spinner fa-spin", style: { marginRight: 6 } }), "Generating…") : React.createElement("span", null, React.createElement("i", { className: "fa-solid fa-wand-magic-sparkles", style: { marginRight: 6 } }), "Generate 5 Qs")),
         aiGenerating && React.createElement(PencilLoader, { text: 'AI is crafting your questions…' }),
         /* API Key section */
         React.createElement("details", { style: { marginTop: 12 } },
           React.createElement("summary", {
             style: { fontSize: '0.78rem', color: 'rgba(var(--accent-rgb), 0.8)', cursor: 'pointer', userSelect: 'none', fontWeight: 600 }
-          }, "🔑 Gemini API Key (optional — enables real AI)"),
+          }, React.createElement("i", { className: "fa-solid fa-key", style: { marginRight: 6 } }), "Gemini API Key (optional — enables real AI)"),
           React.createElement("div", { className: "tm2-api-section" },
             React.createElement("div", { style: { display: 'flex', gap: 8, alignItems: 'center', marginBottom: 8 } },
               React.createElement("input", {
@@ -19006,7 +19248,7 @@ function TestModePage({
     /* ── Add Question Directly bar ── */
     React.createElement("div", { className: "tm2-add-q-bar" },
       React.createElement("div", { className: "tm2-add-q-header" },
-        React.createElement("div", { className: "tm2-add-q-plus" }, "➕"),
+        React.createElement("div", { className: "tm2-add-q-plus" }, React.createElement("i", { className: "fa-solid fa-plus" })),
         React.createElement("div", { className: "tm2-add-q-label" }, "Add Question Directly"),
         !addingQ && React.createElement("div", { style: { flex: 1 } }),
         !addingQ && React.createElement("button", {
@@ -19016,7 +19258,7 @@ function TestModePage({
         addingQ && React.createElement("button", {
           style: { background: 'none', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: 8, padding: '6px 14px', color: 'rgba(148,163,184,0.8)', cursor: 'pointer', fontSize: '0.8rem', fontFamily: 'inherit', marginLeft: 'auto' },
           onClick: () => setAddingQ(false)
-        }, "▲ Cancel")
+        }, React.createElement("span", null, React.createElement("i", { className: "fa-solid fa-angle-up", style: { marginRight: 6 } }), "Cancel"))
       ),
       addingQ && React.createElement("div", { style: { marginTop: 16 } },
         /* Type selector */
@@ -19026,7 +19268,7 @@ function TestModePage({
               key: t,
               className: `tm2-type-btn${newQ.type === t ? ' active' : ''}`,
               onClick: () => setNewQ(q => ({ ...q, type: t }))
-            }, t === 'mcq' ? '🔘 MCQ' : t === 'short' ? '✍️ Short' : t === 'long' ? '📄 Long' : '💻 Coding')
+            }, t === 'mcq' ? React.createElement("span", null, React.createElement("i", { className: "fa-regular fa-circle-dot", style: { marginRight: 6 } }), "MCQ") : t === 'short' ? React.createElement("span", null, React.createElement("i", { className: "fa-solid fa-pen", style: { marginRight: 6 } }), "Short") : t === 'long' ? React.createElement("span", null, React.createElement("i", { className: "fa-regular fa-file-lines", style: { marginRight: 6 } }), "Long") : React.createElement("span", null, React.createElement("i", { className: "fa-solid fa-laptop-code", style: { marginRight: 6 } }), "Coding"))
           )
         ),
         /* Question */
@@ -19093,8 +19335,8 @@ function TestModePage({
                 className: "tm2-input",
                 style: { cursor: 'pointer' }
               },
-                React.createElement("option", { value: "manual" }, "👨‍🏫 Manual Grading"),
-                React.createElement("option", { value: "ai" }, "🤖 AI Evaluation")
+                React.createElement("option", { value: "manual" }, "Manual Grading"),
+                React.createElement("option", { value: "ai" }, "AI Evaluation")
               )
             ),
             newQ.evaluation_mode === 'ai' && React.createElement("div", null,
@@ -19149,8 +19391,8 @@ function TestModePage({
                 className: "tm2-input",
                 style: { cursor: 'pointer' }
               },
-                React.createElement("option", { value: "manual" }, "👨‍🏫 Sandbox Test Cases Only"),
-                React.createElement("option", { value: "ai" }, "🤖 AI Code & Output Analysis")
+                React.createElement("option", { value: "manual" }, "Sandbox Test Cases Only"),
+                React.createElement("option", { value: "ai" }, "AI Code & Output Analysis")
               )
             ),
             newQ.evaluation_mode === 'ai' && React.createElement("div", null,
@@ -19170,7 +19412,7 @@ function TestModePage({
         /* Hint + Marks row */
         React.createElement("div", { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 14 } },
           React.createElement("div", null,
-            React.createElement("label", { className: "tm2-label" }, "💡 Hint"),
+            React.createElement("label", { className: "tm2-label" }, React.createElement("i", { className: "fa-regular fa-lightbulb", style: { marginRight: 6 } }), "Hint"),
             React.createElement("input", {
               value: newQ.hint || '',
               placeholder: "Optional hint…",
@@ -19197,14 +19439,14 @@ function TestModePage({
           className: "tm2-add-q-btn",
           onClick: addCustomQuestion,
           style: { width: '100%', padding: '11px', fontSize: '0.875rem', justifyContent: 'center', display: 'flex', alignItems: 'center', gap: 8 }
-        }, "✚ Add to Test")
+        }, React.createElement("span", null, React.createElement("i", { className: "fa-solid fa-plus", style: { marginRight: 6 } }), "Add to Test"))
       )
     ),
 
     /* ── Questions List ── */
     React.createElement("div", { className: "tm2-questions-card" },
       React.createElement("div", { className: "tm2-q-header" },
-        React.createElement("span", { style: { fontSize: '1.1rem' } }, "📝"),
+        React.createElement("span", { style: { fontSize: '1.1rem', marginRight: 6 } }, React.createElement("i", { className: "fa-regular fa-file-lines" })),
         React.createElement("span", { className: "tm2-q-title-text" }, "Questions"),
         React.createElement("span", { className: "tm2-q-count" }, testTasks.length),
         React.createElement("div", { style: { flex: 1 } }),
@@ -19218,7 +19460,7 @@ function TestModePage({
           ? React.createElement("div", {
               style: { padding: '32px 16px', textAlign: 'center', color: 'rgba(148,163,184,0.5)' }
             },
-              React.createElement("div", { style: { fontSize: '2.5rem', marginBottom: 12, opacity: 0.4 } }, "🧪"),
+              React.createElement("div", { style: { fontSize: '2.5rem', marginBottom: 12, opacity: 0.4 } }, React.createElement("i", { className: "fa-solid fa-flask" })),
               React.createElement("div", { style: { fontSize: '0.9rem', fontWeight: 600, marginBottom: 4, color: 'rgba(203,213,225,0.6)' } }, "No questions yet"),
               React.createElement("div", { style: { fontSize: '0.78rem' } }, "Add questions from the Tasks page or use the AI Generator above.")
             )
@@ -19247,7 +19489,7 @@ function TestModePage({
       ),
       allAvailable.length > 0 && React.createElement("div", { className: "tm2-q-footer" },
         testTasks.length === allAvailable.length
-          ? "All questions ready to go! 🚀"
+          ? React.createElement("span", null, "All questions ready to go! ", React.createElement("i", { className: "fa-solid fa-rocket" }))
           : `${testTasks.length} of ${allAvailable.length} questions selected`
       )
     )
@@ -19976,6 +20218,7 @@ function CodingLabPage({
     value: code,
     onChange: e => setCode(e.target.value),
     spellCheck: false,
+    placeholder: "# Write code here...",
     onKeyDown: e => {
       if (e.key === 'Tab') {
         e.preventDefault();
@@ -20496,6 +20739,7 @@ function StudentTestRunner({
       [task.id]: e.target.value
     })),
     spellCheck: false,
+    placeholder: "# Write code here...",
     onKeyDown: e => {
       if (e.key === 'Tab') {
         e.preventDefault();
@@ -25170,7 +25414,7 @@ function StudentTaskView({
           className:'sd-nav-item'+(sPage==='home'?' active':''),
           onClick:()=>{setSPage('home');setMobileNavOpen(false);}
         },
-          React.createElement('span', {className:'sd-nav-item-icon'}, '\uD83C\uDFE0'),
+          React.createElement('span', {className:'sd-nav-item-icon'}, React.createElement('i', { className: 'fa-solid fa-house' })),
           'Dashboard'
         ),
         React.createElement('button', {
@@ -25178,7 +25422,7 @@ function StudentTaskView({
           className:'sd-nav-item'+(sPage==='task'?' active':''),
           onClick:()=>{setSPage('task');setMobileNavOpen(false);}
         },
-          React.createElement('span', {className:'sd-nav-item-icon'}, '\u2705'),
+          React.createElement('span', {className:'sd-nav-item-icon'}, React.createElement('i', { className: 'fa-regular fa-square-check' })),
           'My Tasks'
         ),
         React.createElement('button', {
@@ -25186,7 +25430,7 @@ function StudentTaskView({
           className:'sd-nav-item'+(sPage==='library'?' active':''),
           onClick:()=>{setSPage('library');setMobileNavOpen(false);}
         },
-          React.createElement('span', {className:'sd-nav-item-icon'}, '\uD83D\uDCC1'),
+          React.createElement('span', {className:'sd-nav-item-icon'}, React.createElement('i', { className: 'fa-regular fa-folder-open' })),
           'Content'
         ),
         React.createElement('button', {
@@ -25194,7 +25438,7 @@ function StudentTaskView({
           className:'sd-nav-item'+(sPage==='attendance'?' active':''),
           onClick:()=>{setSPage('attendance');setMobileNavOpen(false);}
         },
-          React.createElement('span', {className:'sd-nav-item-icon'}, '\uD83D\uDCC5'),
+          React.createElement('span', {className:'sd-nav-item-icon'}, React.createElement('i', { className: 'fa-regular fa-calendar-check' })),
           'Attendance'
         ),
         React.createElement('button', {
@@ -25202,7 +25446,7 @@ function StudentTaskView({
           className:'sd-nav-item'+(sPage==='reports'?' active':''),
           onClick:()=>{setSPage('reports');setMobileNavOpen(false);}
         },
-          React.createElement('span', {className:'sd-nav-item-icon'}, '\uD83D\uDCC8'),
+          React.createElement('span', {className:'sd-nav-item-icon'}, React.createElement('i', { className: 'fa-solid fa-chart-pie' })),
           'Reports'
         ),
         React.createElement('button', {
@@ -25210,7 +25454,7 @@ function StudentTaskView({
           className:'sd-nav-item'+(sPage==='chat'?' active':''),
           onClick:()=>{setSPage('chat');setChatUnread(0);setMobileNavOpen(false);}
         },
-          React.createElement('span', {className:'sd-nav-item-icon'}, '\uD83D\uDCAC'),
+          React.createElement('span', {className:'sd-nav-item-icon'}, React.createElement('i', { className: 'fa-regular fa-comments' })),
           'Chat',
           chatUnread > 0 && React.createElement('span', {style:{marginLeft:'auto',background:'#ef4444',color:'#fff',borderRadius:'10px',fontSize:'0.58rem',padding:'1px 6px',fontWeight:800}}, chatUnread > 9 ? '9+' : chatUnread)
         ),
@@ -25219,7 +25463,7 @@ function StudentTaskView({
           className:'sd-nav-item'+(sPage==='coding'?' active':''),
           onClick:()=>{setSPage('coding');setMobileNavOpen(false);}
         },
-          React.createElement('span', {className:'sd-nav-item-icon'}, '\uD83D\uDCBB'),
+          React.createElement('span', {className:'sd-nav-item-icon'}, React.createElement('i', { className: 'fa-solid fa-code' })),
           'Coding Lab'
         ),
 
@@ -25230,7 +25474,7 @@ function StudentTaskView({
           className:'sd-nav-item'+(sPage==='doubt'?' active':''),
           onClick:()=>{setSPage('doubt');setMobileNavOpen(false);}
         },
-          React.createElement('span', {className:'sd-nav-item-icon'}, '\u2753'),
+          React.createElement('span', {className:'sd-nav-item-icon'}, React.createElement('i', { className: 'fa-regular fa-circle-question' })),
           'Ask Doubt',
           doubtUnread > 0 && React.createElement('span', {style:{marginLeft:'auto',background:'var(--accent)',color:'#fff',borderRadius:'10px',fontSize:'0.58rem',padding:'1px 6px',fontWeight:800}}, doubtUnread > 9 ? '9+' : doubtUnread)
         ),
@@ -25239,7 +25483,7 @@ function StudentTaskView({
           className:'sd-nav-item'+(sPage==='library'?' active':''),
           onClick:()=>{setSPage('library');setMobileNavOpen(false);}
         },
-          React.createElement('span', {className:'sd-nav-item-icon'}, '\uD83D\uDCDA'),
+          React.createElement('span', {className:'sd-nav-item-icon'}, React.createElement('i', { className: 'fa-solid fa-book-open' })),
           'Resources'
         )
       ),
@@ -31840,8 +32084,8 @@ function ReportCenter({ sessionCode, studentId, studentName, studentPhoto: propS
         React.createElement('p', { className: 'rc-subtitle-new' }, 'Track your learning progress and test performance')
       ),
       React.createElement('div', { className: 'rc-dl-bar' },
-        React.createElement(ToggleDownloadBtn, { label: '📄 Export PDF', doneLabel: 'Saved!', onClick: () => downloadReportsPDF(filtered, studentName || 'Student', add, studentPhoto), size: 'sm' }),
-        React.createElement(ToggleDownloadBtn, { label: '📊 Export Excel', doneLabel: 'Saved!', onClick: () => downloadReportsExcel(filtered, studentName || 'Student', add), size: 'sm' })
+        React.createElement(ToggleDownloadBtn, { label: React.createElement('span', null, React.createElement('i', { className: 'fa-regular fa-file-pdf', style: { marginRight: 6 } }), 'Export PDF'), doneLabel: 'Saved!', onClick: () => downloadReportsPDF(filtered, studentName || 'Student', add, studentPhoto), size: 'sm' }),
+        React.createElement(ToggleDownloadBtn, { label: React.createElement('span', null, React.createElement('i', { className: 'fa-regular fa-file-excel', style: { marginRight: 6 } }), 'Export Excel'), doneLabel: 'Saved!', onClick: () => downloadReportsExcel(filtered, studentName || 'Student', add), size: 'sm' })
       )
     ),
 
@@ -33449,7 +33693,8 @@ function ProfileDrawer({ open, onClose, userName, role, sessionCode, updateUserP
                     React.createElement("input", {
                       className: "input-saas",
                       value: editName,
-                      onChange: e => setEditName(e.target.value)
+                      onChange: e => setEditName(e.target.value),
+                      placeholder: "Enter full name..."
                     })
                   ),
                   React.createElement("div", { className: "form-group-saas" },
@@ -33457,7 +33702,8 @@ function ProfileDrawer({ open, onClose, userName, role, sessionCode, updateUserP
                     React.createElement("input", {
                       className: "input-saas",
                       value: email,
-                      readOnly: true
+                      readOnly: true,
+                      placeholder: "No email address"
                     })
                   )
                 ),
@@ -33849,9 +34095,9 @@ function ProfileDrawer({ open, onClose, userName, role, sessionCode, updateUserP
                                       dlMarkDownloaded(report.id);
                                       viewReportPDF(report.id);
                                     }
-                                  }, "👁 View"),
-                                  React.createElement(ToggleDownloadBtn, { label: '📄 PDF', doneLabel: 'Done!', onClick: () => { dlMarkDownloaded(report.id); triggerFileDownload(report.id, 'pdf', report.name); }, size: 'sm' }),
-                                  cat.formats.includes('excel') && React.createElement(ToggleDownloadBtn, { label: '📊 Excel', doneLabel: 'Done!', onClick: () => { dlMarkDownloaded(report.id); triggerFileDownload(report.id, 'excel', report.name); }, size: 'sm' }),
+                                  }, React.createElement('i', { className: 'fa-regular fa-eye', style: { marginRight: 6 } }), "View"),
+                                  React.createElement(ToggleDownloadBtn, { label: React.createElement('span', null, React.createElement('i', { className: 'fa-regular fa-file-pdf', style: { marginRight: 6 } }), 'PDF'), doneLabel: 'Done!', onClick: () => { dlMarkDownloaded(report.id); triggerFileDownload(report.id, 'pdf', report.name); }, size: 'sm' }),
+                                  cat.formats.includes('excel') && React.createElement(ToggleDownloadBtn, { label: React.createElement('span', null, React.createElement('i', { className: 'fa-regular fa-file-excel', style: { marginRight: 6 } }), 'Excel'), doneLabel: 'Done!', onClick: () => { dlMarkDownloaded(report.id); triggerFileDownload(report.id, 'excel', report.name); }, size: 'sm' }),
                                   React.createElement("button", {
                                     className: "sdl-action-btn sdl-action-del",
                                     onClick: () => {
@@ -34075,8 +34321,8 @@ function ProfileDrawer({ open, onClose, userName, role, sessionCode, updateUserP
             React.createElement("div", { className: "section-header" },
               React.createElement("div", { className: "section-title" }, "Sessions Created"),
               React.createElement("div", { className: "flex gap-8" },
-                React.createElement(ToggleDownloadBtn, { label: '📊 Excel', doneLabel: 'Saved!', onClick: exportTeacherExcel, size: 'sm' }),
-                React.createElement(ToggleDownloadBtn, { label: '📄 PDF', doneLabel: 'Saved!', onClick: exportTeacherPDF, size: 'sm' })
+                React.createElement(ToggleDownloadBtn, { label: React.createElement('span', null, React.createElement('i', { className: 'fa-regular fa-file-excel', style: { marginRight: 6 } }), 'Excel'), doneLabel: 'Saved!', onClick: exportTeacherExcel, size: 'sm' }),
+                React.createElement(ToggleDownloadBtn, { label: React.createElement('span', null, React.createElement('i', { className: 'fa-regular fa-file-pdf', style: { marginRight: 6 } }), 'PDF'), doneLabel: 'Saved!', onClick: exportTeacherPDF, size: 'sm' })
               )
             ),
             tSessions.length === 0 ? React.createElement("div", { className: "prof-empty" }, "No sessions recorded yet.") :
@@ -34130,7 +34376,7 @@ function ProfileDrawer({ open, onClose, userName, role, sessionCode, updateUserP
           tab === 'settings' && React.createElement("div", null,
             React.createElement("div", { className: "prof-settings-section" },
               React.createElement("div", { className: "prof-settings-label" }, "✏️ Name"),
-              React.createElement("input", { className: "prof-settings-input", value: editName, onChange: e => setEditName(e.target.value) }),
+              React.createElement("input", { className: "prof-settings-input", value: editName, onChange: e => setEditName(e.target.value), placeholder: "Enter display name..." }),
               role === 'teacher' && sessionCode && React.createElement(React.Fragment, null,
                 React.createElement("div", { className: "prof-settings-label", style: { marginTop: 14 } }, "🔑 Class Code"),
                 React.createElement("input", { className: "prof-settings-input", value: sessionCode, readOnly: true, style: { cursor: 'default', opacity: 0.75 } })
@@ -34287,12 +34533,12 @@ function ProfileDrawer({ open, onClose, userName, role, sessionCode, updateUserP
                                 dlMarkDownloaded(report.id);
                                 viewReportPDF(report.id);
                               }
-                            }, "👁 View"),
-                            React.createElement(ToggleDownloadBtn, { label: '📄 PDF', doneLabel: 'Done!', onClick: () => {
+                            }, React.createElement('i', { className: 'fa-regular fa-eye', style: { marginRight: 6 } }), "View"),
+                            React.createElement(ToggleDownloadBtn, { label: React.createElement('span', null, React.createElement('i', { className: 'fa-regular fa-file-pdf', style: { marginRight: 6 } }), 'PDF'), doneLabel: 'Done!', onClick: () => {
                                 dlMarkDownloaded(report.id);
                                 triggerFileDownload(report.id, 'pdf', report.name);
                               }, size: 'sm' }),
-                            cat.formats.includes('excel') && React.createElement(ToggleDownloadBtn, { label: '📊 Excel', doneLabel: 'Done!', onClick: () => {
+                            cat.formats.includes('excel') && React.createElement(ToggleDownloadBtn, { label: React.createElement('span', null, React.createElement('i', { className: 'fa-regular fa-file-excel', style: { marginRight: 6 } }), 'Excel'), doneLabel: 'Done!', onClick: () => {
                                 dlMarkDownloaded(report.id);
                                 triggerFileDownload(report.id, 'excel', report.name);
                               }, size: 'sm' }),
@@ -34304,7 +34550,7 @@ function ProfileDrawer({ open, onClose, userName, role, sessionCode, updateUserP
                                   add('Report removed from library', 'success');
                                 }
                               }
-                            }, "🗑 Delete")
+                            }, React.createElement('i', { className: 'fa-regular fa-trash-can', style: { marginRight: 6 } }), "Delete")
                           )
                         );
                       })

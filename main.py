@@ -41,6 +41,7 @@ from fastapi import (
 )
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse, Response
+from fastapi.staticfiles import StaticFiles
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic import BaseModel, Field
 
@@ -1031,6 +1032,41 @@ async def push_roster(s: dict):
     })
 
 
+async def push_roster_delta(s: dict, change: str, student_id: str, fields: dict = None):
+    """
+    Sends a delta update to the teacher.
+    change: "join" | "leave" | "update" | "waiting_join" | "waiting_leave"
+    """
+    payload = {
+        "type": "roster_delta",
+        "change": change,
+        "student_id": student_id,
+    }
+    if fields:
+        payload["student"] = fields
+    elif change in ("join", "waiting_join"):
+        st = s["students"].get(student_id)
+        if st:
+            if change == "join":
+                payload["student"] = {
+                    "id": st["id"],
+                    "name": st["name"],
+                    "status": st.get("status", "active"),
+                    "correct": st.get("correct", 0),
+                    "total_answered": st.get("total_answered", 0),
+                    "coding_submitted": st.get("coding_submitted", False),
+                    "profile_photo": st.get("profile_photo") or None,
+                }
+            else: # waiting_join
+                payload["student"] = {
+                    "id": st["id"],
+                    "name": st["name"],
+                    "profile_photo": st.get("profile_photo") or None,
+                }
+    
+    await ws_teacher(s, payload)
+
+
 # ══════════════════════════════════════════════════════════════════
 #  TASK DELIVERY PIPELINE
 # ══════════════════════════════════════════════════════════════════
@@ -1596,7 +1632,7 @@ async def end_session_automatically(s: dict):
         teacher_sessions.pop(t_email, None)
         log.info("[SESSION] Removed session %s from active mapping for %s", code, t_email)
         
-    save_session(code)
+    save_session(code, force=True)
     # Queue the auto-email reports
     asyncio.create_task(_send_session_end_emails(s))
     log.info("[SESSION] Timed auto-end triggered for session %s. Cleanup complete.", code)
@@ -1776,12 +1812,31 @@ async def attendance_geo_watcher():
 
 
 async def autosave_worker():
-    """Periodically persist all sessions to disk."""
-    interval = int(os.getenv("AUTOSAVE_INTERVAL", "10"))
+    """Periodically persist all dirty sessions to disk."""
+    interval = int(os.getenv("BATCH_SAVE_INTERVAL", "5"))
+    from store import dirty_sessions, dirty_lock
     while True:
         await asyncio.sleep(interval)
-        for code in list(sessions):
-            save_session(code)
+        with dirty_lock:
+            to_save = list(dirty_sessions)
+        for code in to_save:
+            try:
+                save_session(code, force=True)
+            except Exception as e:
+                log.warning("Autosave worker failed to save session %s: %s", code, e)
+
+
+async def session_memory_cleanup_worker():
+    """Periodically purge inactive/ended sessions from memory to prevent leaks."""
+    cleanup_hours = int(os.getenv("CLEANUP_INACTIVE_HOURS", "24"))
+    while True:
+        # Run cleanup every 1 hour (3600 seconds)
+        await asyncio.sleep(3600)
+        try:
+            from store import cleanup_inactive_sessions
+            cleanup_inactive_sessions(max_inactive_hours=cleanup_hours)
+        except Exception as e:
+            log.warning("Memory cleanup worker encountered error: %s", e)
 
 
 @asynccontextmanager
@@ -1822,11 +1877,12 @@ async def lifespan(app: FastAPI):
     t4 = asyncio.create_task(autosave_worker())
     t5 = asyncio.create_task(session_timer_watcher())
     t6 = asyncio.create_task(attendance_geo_watcher())
+    t7 = asyncio.create_task(session_memory_cleanup_worker())
     yield
     # Final save before shutdown
     for code in list(sessions):
-        save_session(code)
-    t1.cancel(); t2.cancel(); t3.cancel(); t4.cancel(); t5.cancel(); t6.cancel()
+        save_session(code, force=True)
+    t1.cancel(); t2.cancel(); t3.cancel(); t4.cancel(); t5.cancel(); t6.cancel(); t7.cancel()
     log.info("VYOM stopped.")
 
 
@@ -2176,6 +2232,12 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Mount static files directory (for profile photos etc)
+import os
+os.makedirs("data/profile_photos", exist_ok=True)
+app.mount("/static", StaticFiles(directory="data"), name="static")
+
 
 # ── Global exception handlers ─────────────────────────────────────
 @app.exception_handler(HTTPException)
@@ -4830,7 +4892,7 @@ async def session_control(code: str, action: str = Query(...), background_tasks:
             log.info("[AUTO-EMAIL] Class-start notification task queued for %s", code)
         # ── Broadcast attendance state after auto-start ───────────────
         asyncio.create_task(broadcast_attendance(s))
-    save_session(code)
+    save_session(code, force=True)
     return {"status": s["status"], "session_end_timestamp": session_end_timestamp}
 
 
@@ -4960,7 +5022,7 @@ async def join_session(
             "status": "active",
         })
         
-        await push_roster(s)
+        await push_roster_delta(s, "join", student["id"])
         
         return {
             "student_id": student["id"],
@@ -4994,7 +5056,7 @@ async def join_session(
 
         # ═ STEP 2: Broadcast waiting room update to teacher immediately ═
         log.debug("[JOIN] Broadcasting waiting room to teacher for session %s", code)
-        await push_roster(s)  # This sends both active and waiting to teacher
+        await push_roster_delta(s, "waiting_join", student["id"])
         await ws_teacher(s, {
             "type": "student_waiting",
             "student_id": student["id"],
@@ -5043,7 +5105,7 @@ async def approve_student(code: str, student_id: str):
     
     # ═ STEP 5: Update roster for teacher (shows new active student, removes from waiting) ═
     log.debug("[APPROVE] Broadcasting updated roster")
-    await push_roster(s)
+    await push_roster_delta(s, "join", student_id)
     
     save_session(code)
     
@@ -5087,7 +5149,7 @@ async def reject_student(code: str, student_id: str):
     
     # ═ STEP 6: Update roster for teacher ═
     log.debug("[REJECT] Broadcasting updated roster")
-    await push_roster(s)
+    await push_roster_delta(s, "waiting_leave", student_id)
     
     admin_broadcast({
         "event": "student_left",
@@ -5115,7 +5177,7 @@ async def kick_student(code: str, student_id: str):
         "reason": "kicked",
     })
     await ws_student(s, student_id, {"type": "kicked"})
-    await push_roster(s)
+    await push_roster_delta(s, "leave", student_id)
     roll = s["students"].get(student_id, {}).get("roll")
     if roll:
         s.get("active_rolls", set()).discard(normalize_string(roll))
@@ -5129,7 +5191,7 @@ class PhotoUploadReq(BaseModel):
 
 @app.post("/api/session/{code}/student/{student_id}/photo")
 async def upload_student_photo(code: str, student_id: str, req: PhotoUploadReq):
-    """Store student's profile photo (base64 data URL) on their session record.
+    """Store student's profile photo (decoded to local file) on their session record.
     Returns immediately; no WebSocket broadcast needed — photo is cosmetic only."""
     s = _S(code)
     student = s["students"].get(student_id)
@@ -5137,15 +5199,58 @@ async def upload_student_photo(code: str, student_id: str, req: PhotoUploadReq):
         raise HTTPException(404, "Student not found")
     if not req.photo or not req.photo.startswith("data:image/"):
         raise HTTPException(400, "Invalid photo format — must be a base64 image data URL")
-    # Limit to ~3 MB base64 payload (4 bytes per 3 raw bytes ≈ 4 MB base64 for 3 MB image)
-    if len(req.photo) > 4_100_000:
-        raise HTTPException(400, "Photo too large — max 3 MB")
-    student["profile_photo"] = req.photo
+    
+    max_mb = int(os.getenv("MAX_IMAGE_SIZE_MB", "3"))
+    max_bytes = max_mb * 1_000_000
+    
+    # Limit base64 input length (base64 has ~33% overhead, so multiply by 1.45)
+    if len(req.photo) > max_bytes * 1.45:
+        raise HTTPException(400, f"Photo too large — max {max_mb} MB")
+        
+    import base64
+    import asyncio
+    import io
+    
+    try:
+        header, encoded = req.photo.split(",", 1)
+        img_data = base64.b64decode(encoded)
+    except Exception as e:
+        raise HTTPException(400, f"Invalid base64 encoding: {str(e)}")
+        
+    if len(img_data) > max_bytes:
+        raise HTTPException(400, f"Photo too large — max {max_mb} MB")
+        
+    # Write image to disk in a background thread with Pillow resizing and JPEG compression
+    filename = f"{code}_{student_id}.jpg"
+    filepath = os.path.join("data", "profile_photos", filename)
+    
+    def _write_img():
+        try:
+            from PIL import Image
+            img = Image.open(io.BytesIO(img_data))
+            if img.mode != "RGB":
+                img = img.convert("RGB")
+            
+            resample_mode = getattr(Image, "Resampling", Image)
+            resample_filter = getattr(resample_mode, "LANCZOS", Image.BICUBIC)
+            img = img.resize((256, 256), resample_filter)
+            
+            img.save(filepath, format="JPEG", quality=80, optimize=True)
+            log.info("[PHOTO] Compressed and saved profile photo for %s to disk", student_id)
+        except Exception as e:
+            log.warning("[PHOTO] PIL compression failed, falling back to raw save: %s", e)
+            with open(filepath, "wb") as f:
+                f.write(img_data)
+            
+    await asyncio.to_thread(_write_img)
+    
+    # Store static web URL in session
+    student["profile_photo"] = f"/static/profile_photos/{filename}"
     touch_session(s)
     save_session(code)
-    log.info("[PHOTO] Saved profile photo for student %s in session %s", student_id, code)
+    log.info("[PHOTO] Saved profile photo for student %s on disk in session %s", student_id, code)
     # Notify teacher so their roster/avatar updates immediately
-    await push_roster(s)
+    await push_roster_delta(s, "update", student_id, {"profile_photo": student["profile_photo"]})
     return {"saved": True}
 
 @app.get("/api/session/{code}/student/{student_id}/photo")
@@ -5201,7 +5306,7 @@ async def student_leave_session(code: str, student_id: str):
     asyncio.create_task(broadcast_attendance(s))
     
     # ═ STEP 6: Update roster for teacher ═
-    await push_roster(s)
+    await push_roster_delta(s, "leave", student_id)
     
     touch_session(s)
     save_session(code)
@@ -5493,7 +5598,8 @@ async def toggle_auto_join(code: str, request: Request):
                     "message": "You have been approved to join the classroom"
                 })
         if waiting_ids:
-            await push_roster(s)
+            for student_id in waiting_ids:
+                await push_roster_delta(s, "join", student_id)
             asyncio.create_task(broadcast_attendance(s))
             
     save_session(code)
@@ -6355,7 +6461,12 @@ Do not include any markdown styling, code blocks, or extra text. Output only the
                 log.warning("[AI EVALUATION] failed to update analytics: %s", analytics_err)
                 
             try:
-                await push_roster(s)
+                st = s["students"].get(student_id)
+                if st:
+                    await push_roster_delta(s, "update", student_id, {
+                        "total_answered": st.get("total_answered", 0),
+                        "correct": st.get("correct", 0)
+                    })
             except Exception as roster_err:
                 log.warning("[AI EVALUATION] failed to push roster: %s", roster_err)
                 
@@ -10652,7 +10763,12 @@ async def approve_evaluation_endpoint(code: str, req: ApproveEvalReq):
         "type": "analytics_update",
         "analytics": _appr_analytics,
     })
-    await push_roster(s)
+    st = s["students"].get(req.student_id)
+    if st:
+        await push_roster_delta(s, "update", req.student_id, {
+            "total_answered": st.get("total_answered", 0),
+            "correct": st.get("correct", 0)
+        })
     
     await ws_student(s, req.student_id, {
         "type": "evaluation_approved",

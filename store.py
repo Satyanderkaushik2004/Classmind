@@ -10,6 +10,8 @@ import random
 import string
 import time
 import uuid
+import concurrent.futures
+import threading
 from pathlib import Path
 from typing import Dict, Optional
 
@@ -152,23 +154,58 @@ def _deserialize_session(d: dict) -> dict:
     return s
 
 
-def save_session(code: str) -> None:
-    """Persist one session to disk (JSON mode only)."""
+# Thread pool for asynchronous background saving
+_save_executor = concurrent.futures.ThreadPoolExecutor(max_workers=3)
+_save_locks = {}
+_save_locks_lock = threading.Lock()
+
+def _get_session_lock(code: str) -> threading.Lock:
+    with _save_locks_lock:
+        if code not in _save_locks:
+            _save_locks[code] = threading.Lock()
+        return _save_locks[code]
+
+def _bg_save_session(code: str, serialized_data: dict, path: Path) -> None:
+    lock = _get_session_lock(code)
+    with lock:
+        try:
+            tmp = path.with_suffix(".tmp")
+            content = json.dumps(serialized_data, ensure_ascii=False, indent=2)
+            tmp.write_text(content, encoding="utf-8")
+            tmp.replace(path)
+        except Exception as exc:
+            log.warning("Failed to save session %s in background: %s", code, exc)
+
+# Track dirty sessions in memory for batch saving
+dirty_sessions = set()
+dirty_lock = threading.Lock()
+
+def mark_session_dirty(code: str) -> None:
+    with dirty_lock:
+        dirty_sessions.add(code)
+
+def save_session(code: str, force: bool = False) -> None:
+    """Save session to disk. If force is False, it is marked dirty for batch saving."""
     if _persistence_mode != "json":
         return
+    
+    if not force:
+        mark_session_dirty(code)
+        return
+        
     s = sessions.get(code)
     if s is None:
         return
     try:
+        with dirty_lock:
+            dirty_sessions.discard(code)
+            
+        # Serialize synchronously to prevent concurrent modification errors in background thread
+        serialized_data = _serialize_session(s)
         path = _session_path(code)
-        tmp  = path.with_suffix(".tmp")
-        tmp.write_text(
-            json.dumps(_serialize_session(s), ensure_ascii=False, indent=2),
-            encoding="utf-8",
-        )
-        tmp.replace(path)
+        _save_executor.submit(_bg_save_session, code, serialized_data, path)
     except Exception as exc:
-        log.warning("Failed to save session %s: %s", code, exc)
+        log.warning("Failed to queue save for session %s: %s", code, exc)
 
 
 def delete_session_file(code: str) -> None:
@@ -780,3 +817,41 @@ def delete_download(email: str, report_id: str) -> None:
                 log.warning("Failed to delete report file %s: %s", file_path, e)
     _downloads_store[email_clean] = [r for r in lib if r.get("id") != report_id]
     save_downloads()
+
+
+def cleanup_inactive_sessions(max_inactive_hours: int = 24) -> int:
+    """Remove sessions that have been inactive or ended for too long. Returns purged count."""
+    now_ts = now()
+    max_inactive_secs = max_inactive_hours * 3600
+    to_remove = []
+    
+    for code, s in list(sessions.items()):
+        status = s.get("status", "waiting")
+        last_activity = s.get("last_activity_at", s.get("created_at", now_ts))
+        
+        is_inactive = (now_ts - last_activity) > max_inactive_secs
+        is_ended = status == "ended"
+        
+        # Clean up ended sessions after 2 hours, or active/waiting after max_inactive_hours
+        if (is_ended and (now_ts - last_activity) > 7200) or is_inactive:
+            to_remove.append(code)
+            
+    purged = 0
+    for code in to_remove:
+        s = sessions.get(code)
+        if s:
+            try:
+                # Save state before purging
+                save_session(code, force=True)
+            except Exception as e:
+                log.warning("[MEM PURGE] Failed to save session %s before purging: %s", code, e)
+                
+            sessions.pop(code, None)
+            t_email = s.get("teacher_email")
+            if t_email and teacher_sessions.get(t_email) == code:
+                teacher_sessions.pop(t_email, None)
+            purged += 1
+            
+    if purged > 0:
+        log.info("[MEM PURGE] Cleaned %d expired/ended session(s) from memory", purged)
+    return purged

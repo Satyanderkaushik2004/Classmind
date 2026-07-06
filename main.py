@@ -2415,7 +2415,8 @@ async def send_otp(req: SendOtpReq):
         return {
             "success": True,
             "demo": True,
-            "message": "Demo mode: Email service not configured on server. Please check the backend console logs for your OTP code."
+            "otp": otp,
+            "message": f"Demo mode: Email service not configured on server. Use OTP code: {otp}"
         }
         
     try:

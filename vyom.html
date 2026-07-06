@@ -2058,6 +2058,7 @@ function LoginModal({defaultRole, onComplete, onClose}) {
 
   const [otp, setOtp] = useState('');
   const [cooldown, setCooldown] = useState(0);
+  const [demoOtp, setDemoOtp] = useState('');
 
   // Initialize Google Identity Services
   useEffect(() => {
@@ -2258,7 +2259,14 @@ function LoginModal({defaultRole, onComplete, onClose}) {
           phone: phone.trim() || null
         }
       });
-      add('Verification code sent successfully!', 'success');
+      if (res.demo && res.otp) {
+        setDemoOtp(res.otp);
+        setOtp(res.otp);
+        add(`Demo Mode: Auto-filled verification code ${res.otp}`, 'success', { duration: 15000 });
+      } else {
+        setDemoOtp('');
+        add('Verification code sent successfully!', 'success');
+      }
       setCooldown(30);
       setView('otp');
     } catch (err) {
@@ -2275,7 +2283,7 @@ function LoginModal({defaultRole, onComplete, onClose}) {
     setBusy(true);
     try {
       add('Resending verification code...', 'info');
-      await apiFetch('/api/auth/send-otp', {
+      const res = await apiFetch('/api/auth/send-otp', {
         method: 'POST',
         body: {
           email: email.trim().toLowerCase(),
@@ -2284,7 +2292,14 @@ function LoginModal({defaultRole, onComplete, onClose}) {
           phone: phone.trim() || null
         }
       });
-      add('Verification code resent successfully!', 'success');
+      if (res.demo && res.otp) {
+        setDemoOtp(res.otp);
+        setOtp(res.otp);
+        add(`Demo Mode: Auto-filled verification code ${res.otp}`, 'success', { duration: 15000 });
+      } else {
+        setDemoOtp('');
+        add('Verification code resent successfully!', 'success');
+      }
       setCooldown(30);
     } catch (err) {
       add(err.message || 'Failed to resend code', 'error');
@@ -2429,6 +2444,9 @@ function LoginModal({defaultRole, onComplete, onClose}) {
                   autoFocus:true,
                   style:{textAlign:'center',letterSpacing:8,fontSize:'1.5rem',fontFamily:'monospace',height:52,border:'2px solid var(--accent)',background:'var(--surface2)',borderRadius:8}
                 }),
+                demoOtp && /*#__PURE__*/React.createElement("div", {
+                  style:{marginTop:12,padding:'8px 12px',background:'rgba(245,158,11,0.08)',border:'1px solid rgba(245,158,11,0.2)',borderRadius:8,color:'#F59E0B',fontSize:'0.85rem',fontWeight:'600',textAlign:'center'}
+                }, `Demo Verification Code: ${demoOtp}`),
                 /*#__PURE__*/React.createElement("button", {className:"login-submit", style:{marginTop:16}, onClick:handleVerifyOtp, disabled:busy}, busy?'Verifying\u2026':'Verify & Login \u2192'),
                 /*#__PURE__*/React.createElement("div", {className:"login-divider", style:{marginTop:16}}, "or"),
                 /*#__PURE__*/React.createElement("button", {className:"login-use-another", onClick:resendOtp, disabled:busy || cooldown > 0, style:{marginTop:8,justifyContent:'center'}}, 

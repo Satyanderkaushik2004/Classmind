@@ -293,6 +293,12 @@ async def send_mail_raw(
 
             log.error("[SMTP] ERROR: All ports failed to send via SMTP. Last error: %s", last_err)
             return False, f"SMTP Send Error: {str(last_err)}"
+        except ImportError:
+            log.error("[SMTP] aiosmtplib not installed")
+            return False, "aiosmtplib library not installed"
+        except Exception as outer_err:
+            log.error("[SMTP] ERROR: Unexpected error during SMTP send: %s", outer_err, exc_info=True)
+            return False, f"SMTP unexpected error: {str(outer_err)}"
 
     return False, "Email service not configured. Please set EMAIL_ADDRESS and EMAIL_PASSWORD or SENDGRID_API_KEY in .env"
 

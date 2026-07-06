@@ -2415,7 +2415,8 @@ async def send_otp(req: SendOtpReq):
         return {
             "success": True,
             "demo": True,
-            "message": "Demo mode: Email service not configured on server. Please check the backend console logs for your OTP code."
+            "otp": otp,
+            "message": f"Demo mode: Email service not configured on server. Use OTP code: {otp}"
         }
         
     try:
@@ -10124,6 +10125,46 @@ async def admin_ws_endpoint(ws: WebSocket, token: str = Query(None)):
         log.info("Admin disconnected: %s", username)
     finally:
         admin_connections.discard(ws)
+
+
+# Video Call Signaling registry
+# { session_code: { user_id: WebSocket } }
+vc_sessions = {}
+
+@app.websocket("/ws/vc/{session_code}/{user_id}")
+async def vc_signaling_endpoint(ws: WebSocket, session_code: str, user_id: str):
+    await ws.accept()
+    if session_code not in vc_sessions:
+        vc_sessions[session_code] = {}
+    vc_sessions[session_code][user_id] = ws
+    try:
+        while True:
+            data = await ws.receive_text()
+            msg = json.loads(data)
+            target = msg.get("target")
+            if target and session_code in vc_sessions:
+                msg["from"] = user_id
+                if target == "teacher":
+                    for uid, socket in vc_sessions[session_code].items():
+                        if uid == "teacher":
+                            try:
+                                await socket.send_text(json.dumps(msg))
+                            except Exception:
+                                pass
+                else:
+                    socket = vc_sessions[session_code].get(target)
+                    if socket:
+                        try:
+                            await socket.send_text(json.dumps(msg))
+                        except Exception:
+                            pass
+    except WebSocketDisconnect:
+        pass
+    finally:
+        if session_code in vc_sessions:
+            vc_sessions[session_code].pop(user_id, None)
+            if not vc_sessions[session_code]:
+                vc_sessions.pop(session_code, None)
 
 
 # ══════════════════════════════════════════════════════════════════

@@ -28,7 +28,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <!-- jsPDF + SheetJS -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://meet.jit.si/external_api.js"></script>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <!-- ✅ No runtime transpiler needed — all JSX pre-compiled to React.createElement -->
@@ -2058,6 +2058,7 @@ function LoginModal({defaultRole, onComplete, onClose}) {
 
   const [otp, setOtp] = useState('');
   const [cooldown, setCooldown] = useState(0);
+  const [demoOtp, setDemoOtp] = useState('');
 
   // Initialize Google Identity Services
   useEffect(() => {
@@ -2258,7 +2259,14 @@ function LoginModal({defaultRole, onComplete, onClose}) {
           phone: phone.trim() || null
         }
       });
-      add('Verification code sent successfully!', 'success');
+      if (res.demo && res.otp) {
+        setDemoOtp(res.otp);
+        setOtp(res.otp);
+        add(`Demo Mode: Auto-filled verification code ${res.otp}`, 'success', { duration: 15000 });
+      } else {
+        setDemoOtp('');
+        add('Verification code sent successfully!', 'success');
+      }
       setCooldown(30);
       setView('otp');
     } catch (err) {
@@ -2275,7 +2283,7 @@ function LoginModal({defaultRole, onComplete, onClose}) {
     setBusy(true);
     try {
       add('Resending verification code...', 'info');
-      await apiFetch('/api/auth/send-otp', {
+      const res = await apiFetch('/api/auth/send-otp', {
         method: 'POST',
         body: {
           email: email.trim().toLowerCase(),
@@ -2284,7 +2292,14 @@ function LoginModal({defaultRole, onComplete, onClose}) {
           phone: phone.trim() || null
         }
       });
-      add('Verification code resent successfully!', 'success');
+      if (res.demo && res.otp) {
+        setDemoOtp(res.otp);
+        setOtp(res.otp);
+        add(`Demo Mode: Auto-filled verification code ${res.otp}`, 'success', { duration: 15000 });
+      } else {
+        setDemoOtp('');
+        add('Verification code resent successfully!', 'success');
+      }
       setCooldown(30);
     } catch (err) {
       add(err.message || 'Failed to resend code', 'error');
@@ -2429,6 +2444,9 @@ function LoginModal({defaultRole, onComplete, onClose}) {
                   autoFocus:true,
                   style:{textAlign:'center',letterSpacing:8,fontSize:'1.5rem',fontFamily:'monospace',height:52,border:'2px solid var(--accent)',background:'var(--surface2)',borderRadius:8}
                 }),
+                demoOtp && /*#__PURE__*/React.createElement("div", {
+                  style:{marginTop:12,padding:'8px 12px',background:'rgba(245,158,11,0.08)',border:'1px solid rgba(245,158,11,0.2)',borderRadius:8,color:'#F59E0B',fontSize:'0.85rem',fontWeight:'600',textAlign:'center'}
+                }, `Demo Verification Code: ${demoOtp}`),
                 /*#__PURE__*/React.createElement("button", {className:"login-submit", style:{marginTop:16}, onClick:handleVerifyOtp, disabled:busy}, busy?'Verifying\u2026':'Verify & Login \u2192'),
                 /*#__PURE__*/React.createElement("div", {className:"login-divider", style:{marginTop:16}}, "or"),
                 /*#__PURE__*/React.createElement("button", {className:"login-use-another", onClick:resendOtp, disabled:busy || cooldown > 0, style:{marginTop:8,justifyContent:'center'}}, 
@@ -4234,33 +4252,136 @@ function PresenterVideo({ stream }) {
   });
 }
 
+// ── SVG Icons for VideoCallRoom ──────────────────────────────────
+function SvgCamera() {
+  return React.createElement('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 2, strokeLinecap: 'round', strokeLinejoin: 'round', style: { width: 16, height: 16 } },
+    React.createElement('path', { d: 'M23 7l-7 5 7 5V7z' }),
+    React.createElement('rect', { x: 1, y: 5, width: 15, height: 14, rx: 2, ry: 2 })
+  );
+}
+
+function SvgUsers() {
+  return React.createElement('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 2, strokeLinecap: 'round', strokeLinejoin: 'round', style: { width: 14, height: 14 } },
+    React.createElement('path', { d: 'M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2' }),
+    React.createElement('circle', { cx: 9, cy: 7, r: 4 }),
+    React.createElement('path', { d: 'M23 21v-2a4 4 0 0 0-3-3.87' }),
+    React.createElement('path', { d: 'M16 3.13a4 4 0 0 1 0 7.75' })
+  );
+}
+
+function SvgMinimize() {
+  return React.createElement('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 2, strokeLinecap: 'round', strokeLinejoin: 'round', style: { width: 14, height: 14 } },
+    React.createElement('path', { d: 'M4 14h6v6' }),
+    React.createElement('path', { d: 'M20 10h-6V4' }),
+    React.createElement('path', { d: 'M14 10l7-7' }),
+    React.createElement('path', { d: 'M10 14l-7 7' })
+  );
+}
+
+function SvgRestore() {
+  return React.createElement('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 2, strokeLinecap: 'round', strokeLinejoin: 'round', style: { width: 14, height: 14 } },
+    React.createElement('path', { d: 'M4 14h6v6' }),
+    React.createElement('path', { d: 'M20 10h-6V4' }),
+    React.createElement('path', { d: 'M14 10l7-7' }),
+    React.createElement('path', { d: 'M10 14l-7 7' })
+  );
+}
+
+function SvgExpand() {
+  return React.createElement('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 2, strokeLinecap: 'round', strokeLinejoin: 'round', style: { width: 14, height: 14 } },
+    React.createElement('path', { d: 'M8 3H5a2 2 0 0 0-2 2v3' }),
+    React.createElement('path', { d: 'M21 8V5a2 2 0 0 0-2-2h-3' }),
+    React.createElement('path', { d: 'M3 16v3a2 2 0 0 0 2 2h3' }),
+    React.createElement('path', { d: 'M16 21h3a2 2 0 0 0 2-2v-3' })
+  );
+}
+
+function SvgEndCall() {
+  return React.createElement('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 2, strokeLinecap: 'round', strokeLinejoin: 'round', style: { width: 16, height: 16 } },
+    React.createElement('path', { d: 'M10.68 13.31a16 16 0 0 0 3.41 2.6l1.27-1.27a2 2 0 0 1-2.11-.45 12.84 12.84 0 0 0-2.81-.7 2 2 0 0 1-1.72 2v3a2 2 0 0 1 2.18 2 19.79 19.79 0 0 1 8.63-3.07 19.42 19.42 0 0 1 6-6 19.79 19.79 0 0 1 3.07-8.67A2 2 0 0 1 19.89 2h-3a2 2 0 0 1-2 1.72 12.84 12.84 0 0 0-.7 2.81 2 2 0 0 1 .45 2.11l1.27 1.27c-1.3 1.83-2.6 3.13-3.4 3.4z', style: { transform: 'rotate(135deg)', transformOrigin: 'center' } })
+  );
+}
+
+function SvgMicOff() {
+  return React.createElement('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 2, strokeLinecap: 'round', strokeLinejoin: 'round', style: { width: 18, height: 18 } },
+    React.createElement('line', { x1: 1, y1: 1, x2: 23, y2: 23 }),
+    React.createElement('path', { d: 'M9 9v3a3 3 0 0 0 5.12 2.12M15 9.34V4a3 3 0 0 0-5.94-.6' }),
+    React.createElement('path', { d: 'M17 16.95A7 7 0 0 1 5 12v-2m14 0v2a7 7 0 0 1-.11 1.23' }),
+    React.createElement('line', { x1: 12, y1: 19, x2: 12, y2: 23 }),
+    React.createElement('line', { x1: 8, y1: 23, x2: 16, y2: 23 })
+  );
+}
+
+function SvgMicOn() {
+  return React.createElement('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 2, strokeLinecap: 'round', strokeLinejoin: 'round', style: { width: 18, height: 18 } },
+    React.createElement('path', { d: 'M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z' }),
+    React.createElement('path', { d: 'M19 10v2a7 7 0 0 1-14 0v-2' }),
+    React.createElement('line', { x1: 12, y1: 19, x2: 12, y2: 23 }),
+    React.createElement('line', { x1: 8, y1: 23, x2: 16, y2: 23 })
+  );
+}
+
+function SvgCamOff() {
+  return React.createElement('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 2, strokeLinecap: 'round', strokeLinejoin: 'round', style: { width: 18, height: 18 } },
+    React.createElement('line', { x1: 1, y1: 1, x2: 23, y2: 23 }),
+    React.createElement('path', { d: 'M21 21H3a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2' }),
+    React.createElement('path', { d: 'M16 16a4 4 0 0 1-6-6' }),
+    React.createElement('path', { d: 'M23 7l-7 5 7 5V7z' })
+  );
+}
+
+function SvgCamOn() {
+  return React.createElement('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 2, strokeLinecap: 'round', strokeLinejoin: 'round', style: { width: 18, height: 18 } },
+    React.createElement('path', { d: 'M23 7l-7 5 7 5V7z' }),
+    React.createElement('rect', { x: 1, y: 5, width: 15, height: 14, rx: 2, ry: 2 }),
+    React.createElement('circle', { cx: 8, cy: 12, r: 3 })
+  );
+}
+
+function SvgShareScreen() {
+  return React.createElement('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 2, strokeLinecap: 'round', strokeLinejoin: 'round', style: { width: 18, height: 18 } },
+    React.createElement('rect', { x: 2, y: 3, width: 20, height: 14, rx: 2, ry: 2 }),
+    React.createElement('line', { x1: 8, y1: 21, x2: 16, y2: 21 }),
+    React.createElement('line', { x1: 12, y1: 17, x2: 12, y2: 21 })
+  );
+}
+
 // ── VideoCallRoom ────────────────────────────────────────────────
 function VideoCallRoom({ sessionCode, userId, role, userName, onClose }) {
+  const [participants, setParticipants] = useState([]);
+  const [localStream,  setLocalStream]  = useState(null);
   const [muted,        setMuted]        = useState(false);
   const [camOff,       setCamOff]       = useState(false);
   const [status,       setStatus]       = useState('Connecting…');
   const [minimized,    setMinimized]    = useState(false);
-  const [size,         setSize]         = useState({ w: 420, h: 320 });
+  const [size,         setSize]         = useState({ w: 320, h: 260 });
   const [isFullScreen, setIsFullScreen] = useState(false);
 
   // Screen Sharing states & refs
   const [localScreenStream, setLocalScreenStream] = useState(null);
+  const [sharingUser, setSharingUser] = useState(null);
+  const [sharingUserName, setSharingUserName] = useState(null);
   const [shareRequests, setShareRequests] = useState([]);
   const [requestStatus, setRequestStatus] = useState('idle'); // 'idle' | 'pending' | 'accepted' | 'denied'
   const [cooldownSeconds, setCooldownSeconds] = useState(0);
   const [toast, setToast] = useState(null);
-  const [participantsCount, setParticipantsCount] = useState(1);
 
-  // Refs
-  const wsRef = useRef(null);
-  const resizeRef = useRef(null);
-  const jitsiApiRef = useRef(null);
+  const cameraVideoTrackRef = useRef(null);
+  const localScreenStreamRef = useRef(null);
+  const localStreamRef = useRef(null);
+  const iceCandidatesQueueRef = useRef({}); // { [peerId]: [candidates] }
   
   // Callback refs to stabilize the main useEffect
+  const callPeerRef = useRef(null);
+  const createPCRef = useRef(null);
   const playNotificationSoundRef = useRef(null);
   const startLocalScreenShareRef = useRef(null);
   const stopLocalScreenShareRef = useRef(null);
   const showToastRef = useRef(null);
+
+  useEffect(() => {
+    localScreenStreamRef.current = localScreenStream;
+  }, [localScreenStream]);
 
   const showToast = useCallback((msg) => {
     setToast(msg);
@@ -4269,21 +4390,37 @@ function VideoCallRoom({ sessionCode, userId, role, userName, onClose }) {
     }, 4000);
   }, []);
 
+  const wsRef    = useRef(null);
+  const pcsRef   = useRef({});
+  const resizeRef = useRef(null);
+
   const { position, isDragging, handleMouseDown, handleTouchStart } = useDraggable();
+
+  const ICE_SERVERS = {
+    iceServers: [
+      { urls: 'stun:stun.l.google.com:19302' },
+      { urls: 'stun:stun1.l.google.com:19302' },
+    ]
+  };
 
   const playNotificationSound = useCallback(() => {
     try {
       const ctx = new (window.AudioContext || window.webkitAudioContext)();
       const now = ctx.currentTime;
+      
       const osc1 = ctx.createOscillator();
       const gain1 = ctx.createGain();
+      
       osc1.type = 'sine';
       osc1.frequency.setValueAtTime(587.33, now); // D5
       osc1.frequency.setValueAtTime(880.00, now + 0.12); // A5
+      
       gain1.gain.setValueAtTime(0.15, now);
       gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
+      
       osc1.connect(gain1);
       gain1.connect(ctx.destination);
+      
       osc1.start(now);
       osc1.stop(now + 0.4);
     } catch (e) {
@@ -4291,25 +4428,123 @@ function VideoCallRoom({ sessionCode, userId, role, userName, onClose }) {
     }
   }, []);
 
-  const startLocalScreenShare = useCallback(() => {
-    if (jitsiApiRef.current) {
-      jitsiApiRef.current.executeCommand('toggleShareScreen');
+  const replaceVideoTrack = useCallback(async (newTrack) => {
+    console.log(`[VC] Replacing video track with: kind=${newTrack?.kind}, id=${newTrack?.id}`);
+    for (const [peerId, pc] of Object.entries(pcsRef.current)) {
+      const transceivers = pc.getTransceivers();
+      const videoTransceiver = transceivers.find(t => 
+        (t.sender.track && t.sender.track.kind === 'video') || 
+        (t.receiver.track && t.receiver.track.kind === 'video')
+      );
+      if (videoTransceiver && videoTransceiver.sender) {
+        try {
+          console.log(`[VC] [${peerId}] Found video transceiver. Replacing track...`);
+          await videoTransceiver.sender.replaceTrack(newTrack);
+          console.log(`[VC] [${peerId}] Track replaced successfully.`);
+        } catch (e) {
+          console.error(`[VC] [${peerId}] replaceTrack error:`, e);
+        }
+      } else {
+        console.warn(`[VC] [${peerId}] No video transceiver found for track replacement.`);
+      }
     }
   }, []);
 
-  const stopLocalScreenShare = useCallback(() => {
-    if (jitsiApiRef.current) {
-      jitsiApiRef.current.executeCommand('toggleShareScreen');
+  const stopLocalScreenShare = useCallback(async (optStream, optCamTrack) => {
+    console.log('[VC] Stopping screen share');
+    const stream = optStream || localScreenStreamRef.current;
+    if (stream) {
+      stream.getTracks().forEach(t => {
+        console.log(`[VC] Stopping screen share track: kind=${t.kind}, id=${t.id}`);
+        t.stop();
+      });
     }
-  }, []);
+    
+    const camTrack = optCamTrack || cameraVideoTrackRef.current || (localStreamRef.current ? localStreamRef.current.getVideoTracks()[0] : null);
+    if (camTrack) {
+      console.log(`[VC] Restoring camera video track: id=${camTrack.id}`);
+      await replaceVideoTrack(camTrack);
+    } else {
+      console.warn('[VC] No camera video track found to restore.');
+    }
+    
+    setLocalScreenStream(null);
+    setSharingUser(null);
+    setSharingUserName(null);
+    setRequestStatus('idle');
+    
+    if (wsRef.current?.readyState === WebSocket.OPEN) {
+      wsRef.current.send(JSON.stringify({
+        type: 'screen_share_stopped'
+      }));
+    }
+  }, [replaceVideoTrack]);
+
+  const startLocalScreenShare = useCallback(async () => {
+    if (role === 'student' && requestStatus !== 'accepted') {
+      showToast('You need teacher permission to share screen.');
+      return;
+    }
+    try {
+      console.log('[VC] Requesting display media...');
+      const stream = await navigator.mediaDevices.getDisplayMedia({
+        video: { cursor: 'always' },
+        audio: true
+      });
+      console.log('[VC] Captured screen share stream:', stream.id);
+      
+      const track = stream.getVideoTracks()[0];
+      track.onended = () => {
+        console.log(`[VC] Screen share track ended: id=${track.id}`);
+        stopLocalScreenShareRef.current(stream, cameraVideoTrackRef.current);
+      };
+      track.onmute = () => console.log(`[VC] Screen share track muted: id=${track.id}`);
+      track.onunmute = () => console.log(`[VC] Screen share track unmuted: id=${track.id}`);
+      
+      const localVideoTrack = localStreamRef.current ? localStreamRef.current.getVideoTracks()[0] : null;
+      if (localVideoTrack) {
+        cameraVideoTrackRef.current = localVideoTrack;
+      }
+      
+      await replaceVideoTrack(track);
+      
+      setLocalScreenStream(stream);
+      setSharingUser(userId);
+      setSharingUserName(userName || userId);
+      
+      if (wsRef.current?.readyState === WebSocket.OPEN) {
+        wsRef.current.send(JSON.stringify({
+          type: 'screen_share_started',
+          userName: userName || userId
+        }));
+      }
+      
+    } catch (err) {
+      console.error('[VC] Screen share capture failed:', err);
+      setRequestStatus('idle');
+      showToast('Screen share cancelled or denied.');
+    }
+  }, [role, requestStatus, replaceVideoTrack, userId, userName, showToast]);
 
   // Keep callback refs updated so the main effect doesn't need to rebuild
   useEffect(() => {
+    callPeerRef.current = callPeer;
+    createPCRef.current = createPC;
     playNotificationSoundRef.current = playNotificationSound;
     startLocalScreenShareRef.current = startLocalScreenShare;
     stopLocalScreenShareRef.current = stopLocalScreenShare;
     showToastRef.current = showToast;
   });
+
+  // Auto-remove expired requests (expired after 30 seconds)
+  useEffect(() => {
+    if (role !== 'teacher') return;
+    const interval = setInterval(() => {
+      const now = Date.now();
+      setShareRequests(prev => prev.filter(r => now - r.timestamp < 30000));
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [role]);
 
   // Cooldown timer effect for student request
   useEffect(() => {
@@ -4320,143 +4555,343 @@ function VideoCallRoom({ sessionCode, userId, role, userName, onClose }) {
     return () => clearInterval(timer);
   }, [cooldownSeconds]);
 
-  // ── Mount: Jitsi Init → connect signaling ────────────────────
+  // ── Create peer connection ───────────────────────────────────
+  const createPC = useCallback((peerId) => {
+    if (pcsRef.current[peerId]) {
+      console.log(`[VC] [${peerId}] Returning existing RTCPeerConnection`);
+      return pcsRef.current[peerId];
+    }
+    
+    console.log(`[VC] [${peerId}] Creating new RTCPeerConnection`);
+    const pc = new RTCPeerConnection(ICE_SERVERS);
+    pcsRef.current[peerId] = pc;
+    
+    // Logging all transitions
+    pc.onconnectionstatechange = () => {
+      console.log(`[VC] [${peerId}] Connection state change: ${pc.connectionState}`);
+      if (['failed', 'closed'].includes(pc.connectionState)) {
+        console.warn(`[VC] [${peerId}] Connection failed/closed. Performing cleanup.`);
+        setParticipants(prev => prev.filter(p => p.id !== peerId));
+        pc.close();
+        delete pcsRef.current[peerId];
+        delete iceCandidatesQueueRef.current[peerId];
+      } else if (pc.connectionState === 'disconnected') {
+        console.warn(`[VC] [${peerId}] Connection disconnected. Waiting to see if it recovers...`);
+      }
+    };
+    
+    pc.oniceconnectionstatechange = () => {
+      console.log(`[VC] [${peerId}] ICE Connection state change: ${pc.iceConnectionState}`);
+    };
+    
+    pc.onicegatheringstatechange = () => {
+      console.log(`[VC] [${peerId}] ICE Gathering state change: ${pc.iceGatheringState}`);
+    };
+    
+    pc.onsignalingstatechange = () => {
+      console.log(`[VC] [${peerId}] Signaling state change: ${pc.signalingState}`);
+    };
+    
+    const addedTracks = new Set();
+    
+    // 1. Add active video track (screen share if active, else camera)
+    const activeVideoStream = localScreenStreamRef.current || localStreamRef.current;
+    if (activeVideoStream) {
+      const videoTrack = activeVideoStream.getVideoTracks()[0];
+      if (videoTrack && !addedTracks.has(videoTrack.id)) {
+        console.log(`[VC] [${peerId}] Adding video track: id=${videoTrack.id} from stream=${activeVideoStream.id}`);
+        pc.addTrack(videoTrack, activeVideoStream);
+        addedTracks.add(videoTrack.id);
+      }
+    }
+    
+    // If no video track was added (e.g. camera disabled), add video transceiver to negotiate media line
+    const hasVideoSender = pc.getSenders().some(s => s.track && s.track.kind === 'video');
+    if (!hasVideoSender) {
+      try {
+        console.log(`[VC] [${peerId}] No video sender found. Adding video transceiver.`);
+        pc.addTransceiver('video', { direction: 'sendrecv' });
+      } catch (err) {
+        console.warn(`[VC] [${peerId}] addTransceiver video failed:`, err);
+      }
+    }
+    
+    // 2. Add local microphone audio track (always from camera/mic stream)
+    if (localStreamRef.current) {
+      const audioTrack = localStreamRef.current.getAudioTracks()[0];
+      if (audioTrack && !addedTracks.has(audioTrack.id)) {
+        console.log(`[VC] [${peerId}] Adding audio track: id=${audioTrack.id} from stream=${localStreamRef.current.id}`);
+        pc.addTrack(audioTrack, localStreamRef.current);
+        addedTracks.add(audioTrack.id);
+      }
+    }
+    
+    pc.onicecandidate = (e) => {
+      if (e.candidate && wsRef.current?.readyState === WebSocket.OPEN) {
+        console.log(`[VC] [${peerId}] Sending ICE candidate to peer`);
+        wsRef.current.send(JSON.stringify({ type: 'ice-candidate', target: peerId, data: e.candidate }));
+      }
+    };
+    
+    pc.ontrack = (e) => {
+      const stream = e.streams[0];
+      console.log(`[VC] [${peerId}] OnTrack received: kind=${e.track.kind}, id=${e.track.id}, streams=${stream?.id}`);
+      
+      e.track.onmute = () => console.log(`[VC] [${peerId}] Track muted: kind=${e.track.kind}, id=${e.track.id}`);
+      e.track.onunmute = () => console.log(`[VC] [${peerId}] Track unmuted: kind=${e.track.kind}, id=${e.track.id}`);
+      e.track.onended = () => console.log(`[VC] [${peerId}] Track ended: kind=${e.track.kind}, id=${e.track.id}`);
+      
+      setParticipants(prev => {
+        const idx = prev.findIndex(p => p.id === peerId);
+        if (idx >= 0) {
+          const n = [...prev];
+          n[idx] = { id: peerId, stream };
+          return n;
+        }
+        return [...prev, { id: peerId, stream }];
+      });
+    };
+    
+    return pc;
+  }, []);
+
+  const callPeer = useCallback(async (peerId) => {
+    console.log(`[VC] [${peerId}] Calling peer (initiating call)...`);
+    const pc = createPC(peerId);
+    try {
+      const offer = await pc.createOffer();
+      await pc.setLocalDescription(offer);
+      console.log(`[VC] [${peerId}] Created offer and set local description. Sending offer...`);
+      wsRef.current?.send(JSON.stringify({ type: 'offer', target: peerId, data: offer }));
+    } catch (err) {
+      console.error(`[VC] [${peerId}] callPeer offer error:`, err);
+    }
+  }, [createPC]);
+
+  // ── Mount: get media → connect signaling ────────────────────
   useEffect(() => {
     let alive = true;
-    console.log('[VC] Main Jitsi effect mounting: sessionCode=', sessionCode, 'userId=', userId, 'role=', role);
+    console.log('[VC] Main effect mounting: sessionCode=', sessionCode, 'userId=', userId, 'role=', role);
     
-    // Initialize Jitsi Meet Iframe inside the container
-    const containerId = `jitsi-container-${sessionCode}-${userId}`;
-    
-    // We delay slightly to let React mount the container div
-    setTimeout(() => {
-      if (!alive) return;
-      const container = document.getElementById(containerId);
-      if (container && !jitsiApiRef.current) {
-        console.log('[VC] Initializing Jitsi Meet iframe in parent node');
+    async function init() {
+      let stream;
+      try {
+        console.log('[VC] Requesting local camera/microphone media...');
+        stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+      } catch (err) {
+        console.warn('[VC] Failed to get video + audio, trying audio only...', err);
         try {
-          const domain = 'meet.jit.si';
-          const options = {
-            roomName: 'Classmind_Session_' + sessionCode,
-            width: '100%',
-            height: '100%',
-            parentNode: container,
-            configOverwrite: {
-              startWithAudioMuted: false,
-              startWithVideoMuted: false,
-              prejoinPageEnabled: false, // Skip Jitsi prejoin page
-              toolbarButtons: [], // Hide default Jitsi bottom bar to use ours
-              disableDeepLinking: true, // Prevents mobile redirection
-            },
-            interfaceConfigOverwrite: {
-              TOOLBAR_BUTTONS: [],
-              SETTINGS_SECTIONS: [],
-              SHOW_JITSI_WATERMARK: false,
-              SHOW_BRAND_WATERMARK: false,
-              SHOW_POWERED_BY: false,
-            },
-            userInfo: {
-              displayName: userName || 'User'
-            }
-          };
-          const api = new JitsiMeetExternalAPI(domain, options);
-          jitsiApiRef.current = api;
-
-          // Event Listeners to sync status back to our controls
-          api.addEventListener('audioMuteStatusChanged', (e) => {
-            if (alive) setMuted(e.muted);
-          });
-          api.addEventListener('videoMuteStatusChanged', (e) => {
-            if (alive) setCamOff(e.muted);
-          });
-          api.addEventListener('screenSharingStatusChanged', (e) => {
-            if (alive) setLocalScreenStream(e.on ? true : null);
-          });
-          api.addEventListener('participantJoined', () => {
-            if (alive) setParticipantsCount(api.getNumberOfParticipants());
-          });
-          api.addEventListener('participantLeft', () => {
-            if (alive) setParticipantsCount(api.getNumberOfParticipants());
-          });
-          api.addEventListener('videoConferenceJoined', () => {
-            if (alive) {
-              setStatus('Connected');
-              setParticipantsCount(api.getNumberOfParticipants());
-            }
-          });
-          api.addEventListener('videoConferenceLeft', () => {
-            if (alive) onClose();
-          });
-        } catch (jitsiErr) {
-          console.error('[VC] Jitsi Meet IFrame API error:', jitsiErr);
-          setStatus('Failed to load video call');
+          stream = await navigator.mediaDevices.getUserMedia({ video: false, audio: true });
+        } catch (e) {
+          console.error('[VC] Camera/mic access denied:', e);
+          setStatus('Camera/mic access denied');
+          return;
         }
       }
-    }, 300);
-
-    // Initialize Signaling WebSocket (used ONLY for screen share requests/approvals)
-    const wsUrl = `${WS_BASE}/ws/vc/${sessionCode}/${userId}`;
-    console.log('[VC] Opening WebSocket signaling connection (permissions only) to:', wsUrl);
-    const ws = new WebSocket(wsUrl);
-    wsRef.current = ws;
-
-    ws.onopen = () => {
-      if (!alive) return;
-      console.log('[VC] WebSocket connection opened');
-      ws.send(JSON.stringify({ type: 'join', user_id: userId, role }));
-    };
-
-    ws.onmessage = async (evt) => {
-      if (!alive) return;
-      let msg;
-      try {
-        msg = JSON.parse(evt.data);
-      } catch (err) {
-        console.error('[VC] Failed to parse WebSocket message:', err);
+      
+      if (!alive) {
+        console.log('[VC] Main effect unmounted before getUserMedia resolved. Stopping tracks.');
+        stream.getTracks().forEach(t => t.stop());
         return;
       }
       
-      const from = msg.from;
+      console.log('[VC] Successfully acquired local stream:', stream.id);
+      stream.getTracks().forEach(t => {
+        console.log(`[VC] Local track: kind=${t.kind}, id=${t.id}, enabled=${t.enabled}`);
+        t.onmute = () => console.log(`[VC] Local track muted: kind=${t.kind}, id=${t.id}`);
+        t.onunmute = () => console.log(`[VC] Local track unmuted: kind=${t.kind}, id=${t.id}`);
+        t.onended = () => console.log(`[VC] Local track ended: kind=${t.kind}, id=${t.id}`);
+      });
       
-      // Handle screen sharing permissions
-      if (msg.type === 'screen_share_request' && role === 'teacher') {
-        console.log(`[VC] Received screen share request from: ${from}`);
-        playNotificationSoundRef.current();
-        setShareRequests(prev => {
-          if (prev.some(r => r.studentId === from)) return prev;
-          return [...prev, { studentId: from, studentName: msg.studentName || from, timestamp: Date.now() }];
-        });
-      } else if (msg.type === 'screen_share_accept' && role === 'student') {
-        console.log('[VC] Screen share request approved by teacher');
-        setRequestStatus('accepted');
-        showToastRef.current('Teacher approved screen share. Starting...');
-        startLocalScreenShareRef.current();
-      } else if (msg.type === 'screen_share_reject' && role === 'student') {
-        console.log('[VC] Screen share request denied by teacher');
-        setRequestStatus('denied');
-        showToastRef.current('Teacher denied screen share request.');
-      }
-    };
+      setLocalStream(stream);
+      localStreamRef.current = stream;
 
-    ws.onerror = (err) => {
-      console.error('[VC] WebSocket signaling error:', err);
-    };
+      const wsUrl = `${WS_BASE}/ws/vc/${sessionCode}/${userId}`;
+      console.log('[VC] Opening WebSocket signaling connection to:', wsUrl);
+      const ws = new WebSocket(wsUrl);
+      wsRef.current = ws;
+
+      ws.onopen = () => {
+        if (!alive) return;
+        console.log('[VC] WebSocket connection opened');
+        setStatus('Connected');
+        ws.send(JSON.stringify({ type: 'join', user_id: userId, role }));
+      };
+
+      ws.onmessage = async (evt) => {
+        if (!alive) return;
+        let msg;
+        try {
+          msg = JSON.parse(evt.data);
+        } catch (err) {
+          console.error('[VC] Failed to parse WebSocket message:', err);
+          return;
+        }
+        
+        const from = msg.from;
+        console.log(`[VC] Received signaling message: type=${msg.type}, from=${from || 'server'}`);
+        
+        if (msg.type === 'room_state') {
+          if (role === 'teacher') {
+            const peers = msg.participants || [];
+            console.log('[VC] Received room state. Current participants:', peers);
+            for (const pid of peers) {
+              await callPeerRef.current(pid);
+            }
+          }
+        } else if (msg.type === 'participant_joined') {
+          console.log(`[VC] Participant joined: user_id=${msg.user_id}, role=${msg.role}`);
+          if (role === 'teacher' && msg.user_id !== userId) {
+            await callPeerRef.current(msg.user_id);
+          }
+        } else if (msg.type === 'participant_left') {
+          const pid = msg.user_id;
+          console.log(`[VC] Participant left: user_id=${pid}`);
+          setParticipants(prev => prev.filter(p => p.id !== pid));
+          pcsRef.current[pid]?.close();
+          delete pcsRef.current[pid];
+          delete iceCandidatesQueueRef.current[pid];
+          // Stop presenting layout if the presenter left
+          setSharingUser(prev => prev === pid ? null : prev);
+          setSharingUserName(prev => prev === pid ? null : prev);
+        } else if (msg.type === 'offer' && from) {
+          console.log(`[VC] Processing offer from: ${from}`);
+          const pc = createPCRef.current(from);
+          const activeStream = localScreenStreamRef.current || localStreamRef.current;
+          if (activeStream) {
+            const senders = pc.getSenders();
+            activeStream.getTracks().forEach(t => {
+              if (!senders.find(s => s.track === t)) {
+                console.log(`[VC] Adding track: id=${t.id} to new connection with peer: ${from}`);
+                pc.addTrack(t, activeStream);
+              }
+            });
+          }
+          try {
+            await pc.setRemoteDescription(new RTCSessionDescription(msg.data));
+            console.log(`[VC] [${from}] Set remote description (offer) successfully`);
+            
+            // Flush queued candidates
+            const queue = iceCandidatesQueueRef.current[from] || [];
+            if (queue.length > 0) {
+              console.log(`[VC] [${from}] Flushing ${queue.length} queued ICE candidates`);
+              for (const cand of queue) {
+                try { await pc.addIceCandidate(new RTCIceCandidate(cand)); } catch (e) { console.error(`[VC] [${from}] Error adding queued ICE candidate:`, e); }
+              }
+              iceCandidatesQueueRef.current[from] = [];
+            }
+
+            const answer = await pc.createAnswer();
+            await pc.setLocalDescription(answer);
+            ws.send(JSON.stringify({ type: 'answer', target: from, data: answer }));
+          } catch (e) {
+            console.error(`[VC] [${from}] offer processing error:`, e);
+          }
+        } else if (msg.type === 'answer' && from) {
+          console.log(`[VC] Processing answer from: ${from}`);
+          const pc = pcsRef.current[from];
+          if (pc) {
+            try {
+              await pc.setRemoteDescription(new RTCSessionDescription(msg.data));
+              console.log(`[VC] [${from}] Set remote description (answer) successfully`);
+              
+              // Flush queued candidates
+              const queue = iceCandidatesQueueRef.current[from] || [];
+              if (queue.length > 0) {
+                console.log(`[VC] [${from}] Flushing ${queue.length} queued ICE candidates`);
+                for (const cand of queue) {
+                  try { await pc.addIceCandidate(new RTCIceCandidate(cand)); } catch (e) { console.error(`[VC] [${from}] Error adding queued ICE candidate:`, e); }
+                }
+                iceCandidatesQueueRef.current[from] = [];
+              }
+            } catch (e) {
+              console.error(`[VC] [${from}] setRemote error:`, e);
+            }
+          } else {
+            console.warn(`[VC] [${from}] Received answer but no peer connection exists`);
+          }
+        } else if (msg.type === 'ice-candidate' && from) {
+          const pc = pcsRef.current[from];
+          if (pc) {
+            if (pc.remoteDescription && pc.remoteDescription.type) {
+              try {
+                console.log(`[VC] [${from}] Adding ICE candidate directly`);
+                await pc.addIceCandidate(new RTCIceCandidate(msg.data));
+              } catch (e) { console.error(`[VC] [${from}] Add ICE candidate error:`, e); }
+            } else {
+              console.log(`[VC] [${from}] Queueing ICE candidate because remoteDescription is not yet set`);
+              if (!iceCandidatesQueueRef.current[from]) {
+                iceCandidatesQueueRef.current[from] = [];
+              }
+              iceCandidatesQueueRef.current[from].push(msg.data);
+            }
+          } else {
+            console.warn(`[VC] [${from}] Received ICE candidate but peer connection does not exist yet.`);
+          }
+        }
+        
+        // ── Real-time Screen Sharing events ──
+        else if (msg.type === 'screen_share_request' && role === 'teacher') {
+          console.log(`[VC] Received screen share request from: ${from}`);
+          playNotificationSoundRef.current();
+          setShareRequests(prev => {
+            if (prev.some(r => r.studentId === from)) return prev;
+            return [...prev, { studentId: from, studentName: msg.studentName || from, timestamp: Date.now() }];
+          });
+        } else if (msg.type === 'screen_share_accept' && role === 'student') {
+          console.log('[VC] Screen share request approved by teacher');
+          setRequestStatus('accepted');
+          showToastRef.current('Teacher approved screen share. Starting...');
+          startLocalScreenShareRef.current();
+        } else if (msg.type === 'screen_share_reject' && role === 'student') {
+          console.log('[VC] Screen share request denied by teacher');
+          setRequestStatus('denied');
+          showToastRef.current('Teacher denied screen share request.');
+        } else if (msg.type === 'screen_share_started') {
+          console.log(`[VC] Peer started screen share: user_id=${msg.user_id}`);
+          setSharingUser(msg.user_id);
+          setSharingUserName(msg.userName || msg.user_id);
+        } else if (msg.type === 'screen_share_stopped') {
+          console.log(`[VC] Peer stopped screen share: user_id=${msg.user_id}`);
+          setSharingUser(prev => prev === msg.user_id ? null : prev);
+          setSharingUserName(prev => prev === msg.user_id ? null : prev);
+        }
+      };
+
+      ws.onerror = (err) => {
+        console.error('[VC] WebSocket signaling error:', err);
+        setStatus('Signaling error');
+      };
+      
+      ws.onclose = (evt) => {
+        if (alive) {
+          console.warn('[VC] WebSocket connection closed unexpectedly:', evt);
+          setStatus('Disconnected');
+        }
+      };
+    }
     
-    ws.onclose = (evt) => {
-      if (alive) {
-        console.warn('[VC] WebSocket connection closed:', evt);
-      }
-    };
+    init();
     
     return () => {
-      console.log('[VC] Main Jitsi effect cleanup executing...');
+      console.log('[VC] Main effect cleanup executing...');
       alive = false;
-      
-      if (jitsiApiRef.current) {
-        console.log('[VC] Disposing Jitsi Meet API instance');
-        jitsiApiRef.current.dispose();
-        jitsiApiRef.current = null;
+      if (localScreenStreamRef.current) {
+        console.log('[VC] Stopping local screen share stream');
+        localScreenStreamRef.current.getTracks().forEach(t => t.stop());
       }
+      if (localStreamRef.current) {
+        console.log('[VC] Stopping local camera/microphone stream');
+        localStreamRef.current.getTracks().forEach(t => t.stop());
+      }
+      localStreamRef.current = null;
+      
+      Object.entries(pcsRef.current).forEach(([pid, pc]) => {
+        console.log(`[VC] [${pid}] Closing PeerConnection`);
+        pc.close();
+      });
+      pcsRef.current = {};
+      iceCandidatesQueueRef.current = {};
       
       if (wsRef.current) {
         console.log('[VC] Closing WebSocket signaling connection');
@@ -4500,21 +4935,14 @@ function VideoCallRoom({ sessionCode, userId, role, userName, onClose }) {
   }, [size]);
 
   function toggleMute() {
-    if (jitsiApiRef.current) {
-      jitsiApiRef.current.executeCommand('toggleAudio');
-    }
+    localStream?.getAudioTracks().forEach(t => { t.enabled = !t.enabled; });
+    setMuted(m => !m);
   }
-  
   function toggleCam() {
-    if (jitsiApiRef.current) {
-      jitsiApiRef.current.executeCommand('toggleVideo');
-    }
+    localStream?.getVideoTracks().forEach(t => { t.enabled = !t.enabled; });
+    setCamOff(c => !c);
   }
-  
   async function endCall() {
-    if (jitsiApiRef.current) {
-      jitsiApiRef.current.executeCommand('hangup');
-    }
     if (role === 'teacher') {
       try { await apiFetch(`/api/session/${sessionCode}/vc/end`, { method: 'POST' }); } catch {}
     }
@@ -4557,7 +4985,15 @@ function VideoCallRoom({ sessionCode, userId, role, userName, onClose }) {
     );
   };
 
-  const connDotClass = status === 'Connected' ? '' : (status.includes('error') || status.includes('Failed') ? ' error' : ' warn');
+  // ── Layout helpers ────────────────────────────────────────────
+  const total = participants.length;
+  const gridClass = total === 0 ? 'solo' : total === 1 ? 'duo' : total === 2 ? 'trio' : 'multi';
+  const totalParticipants = total + 1;
+
+  // Connection status derived from status string
+  const connDotClass = status === 'Connected' ? '' : (status.includes('error') || status.includes('denied') || status.includes('Disconnected') ? ' error' : ' warn');
+
+  const isSomeonePresenting = sharingUser !== null;
 
   const windowStyle = isFullScreen
     ? { left:'0px', top:'0px', width:'100vw', height:'100vh' }
@@ -4570,7 +5006,7 @@ function VideoCallRoom({ sessionCode, userId, role, userName, onClose }) {
 
   return ReactDOM.createPortal(
     React.createElement('div', {
-      className: `vc-floating-window${minimized ? ' vc-minimized' : ''}${isDragging ? ' vc-dragging' : ''}${isFullScreen ? ' vc-fullscreen' : ''}`,
+      className: `vc-floating-window${minimized ? ' vc-minimized' : ''}${isDragging ? ' vc-dragging' : ''}${isFullScreen ? ' vc-fullscreen' : ''}${isSomeonePresenting ? ' vc-presenting-mode' : ''}`,
       style: windowStyle,
     },
 
@@ -4590,7 +5026,7 @@ function VideoCallRoom({ sessionCode, userId, role, userName, onClose }) {
                 ),
                 React.createElement('div', { className: 'vc-participant-count' },
                   React.createElement(SvgUsers, null),
-                  `${participantsCount}`
+                  `${totalParticipants}`
                 )
               )
         ),
@@ -4617,12 +5053,57 @@ function VideoCallRoom({ sessionCode, userId, role, userName, onClose }) {
       // ── Teacher Permission queue ──
       role === 'teacher' && renderTeacherPermissionQueue(),
 
-      // ── Video body (Jitsi Container) ─────────────────────────────
-      !minimized && React.createElement('div', { className: 'vc-float-body', style: { padding: 0, overflow: 'hidden' } },
-        React.createElement('div', {
-          id: `jitsi-container-${sessionCode}-${userId}`,
-          style: { width: '100%', height: '100%', borderRadius: '4px', overflow: 'hidden', background: '#0e0e11' }
-        })
+      // ── Video body ──────────────────────────────────────────────
+      !minimized && React.createElement('div', { className: 'vc-float-body' },
+        isSomeonePresenting
+          ? React.createElement('div', { className: 'vc-presentation-area' },
+              React.createElement('div', { className: 'vc-presentation-border-glow' }),
+              React.createElement('div', { className: 'vc-presenting-badge' },
+                React.createElement('div', { className: 'vc-presenting-badge-dot' }),
+                'LIVE PRESENTING'
+              ),
+              React.createElement('div', { className: 'vc-presenting-label' },
+                sharingUser === userId ? 'You are presenting' : `${sharingUserName} is presenting`
+              ),
+              sharingUser === userId
+                ? React.createElement(PresenterVideo, { stream: localScreenStream })
+                : React.createElement(PresenterVideo, {
+                    stream: (() => {
+                      const p = participants.find(part => part.id === sharingUser);
+                      return p ? p.stream : null;
+                    })()
+                  }),
+              React.createElement('div', { className: 'vc-presentation-thumbnails' },
+                !camOff && React.createElement('div', { className: 'vc-thumb-tile' },
+                  React.createElement(LocalVideo, {
+                    stream: localStream,
+                    style: { width: '100%', height: '100%', objectFit: 'cover' }
+                  }),
+                  React.createElement('div', { className: 'vc-thumb-label' }, 'You')
+                ),
+                participants
+                  .filter(p => p.id !== sharingUser)
+                  .map(p => React.createElement(RemoteThumbnailVideo, { key: p.id, participant: p }))
+              )
+            )
+          : React.createElement('div', { className: `vc-video-grid ${gridClass}` },
+              total === 0
+                ? React.createElement('div', { className: 'vc-tile' },
+                    React.createElement('div', { className: 'vc-tile-empty' },
+                      React.createElement('div', { className: 'vc-tile-empty-ring' },
+                        React.createElement(SvgUsers, null)
+                      ),
+                      'Waiting for others to join…'
+                    )
+                  )
+                : participants.map(p => React.createElement(RemoteVideo, { key: p.id, participant: p }))
+            ),
+        !isSomeonePresenting && React.createElement('div', { className: 'vc-self-pip' },
+          React.createElement(LocalVideo, {
+            stream: localStream,
+            style: { width:'100%', height:'100%', objectFit:'cover', filter: camOff ? 'brightness(0)' : 'none' }
+          })
+        )
       ),
 
       // ── Premium Controls Bar ─────────────────────────────────────

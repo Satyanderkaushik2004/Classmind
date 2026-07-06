@@ -63,27 +63,41 @@ async def verify_smtp_credentials() -> Tuple[bool, str]:
             import aiosmtplib
             SMTP_HOST = os.getenv("SMTP_HOST", "smtp.gmail.com").strip()
             SMTP_PORT = int(os.getenv("SMTP_PORT", "587").strip())
-            use_ssl = (SMTP_PORT == 465)
 
-            log.info("[EMAIL_SERVICE] Verifying SMTP credentials synchronously for: %s", email_address)
-            smtp = aiosmtplib.SMTP(hostname=SMTP_HOST, port=SMTP_PORT, use_tls=use_ssl, timeout=5)
-            await smtp.connect()
-            if not use_ssl:
+            ports_to_try = [SMTP_PORT]
+            if SMTP_PORT == 587:
+                ports_to_try.append(465)
+            elif SMTP_PORT == 465:
+                ports_to_try.append(587)
+
+            last_err = None
+            for port in ports_to_try:
+                use_ssl = (port == 465)
+                log.info("[EMAIL_SERVICE] Verifying SMTP credentials for %s on port %s...", email_address, port)
                 try:
-                    await smtp.starttls()
-                except aiosmtplib.SMTPException as tls_err:
-                    if "already using TLS" not in str(tls_err):
-                        raise
-            await smtp.login(email_address, email_password)
-            await smtp.quit()
-            log.info("[EMAIL_SERVICE] SMTP credentials verified successfully!")
-            return True, "SMTP credentials verified successfully"
-        except Exception as smtp_err:
-            err_msg = str(smtp_err)
-            log.error("[EMAIL_SERVICE] SMTP Verification failed: %s", err_msg)
+                    smtp = aiosmtplib.SMTP(hostname=SMTP_HOST, port=port, use_tls=use_ssl, timeout=5)
+                    await smtp.connect()
+                    if not use_ssl:
+                        try:
+                            await smtp.starttls()
+                        except aiosmtplib.SMTPException as tls_err:
+                            if "already using TLS" not in str(tls_err):
+                                raise
+                    await smtp.login(email_address, email_password)
+                    await smtp.quit()
+                    log.info("[EMAIL_SERVICE] SMTP credentials verified successfully on port %s!", port)
+                    return True, "SMTP credentials verified successfully"
+                except Exception as smtp_err:
+                    last_err = smtp_err
+                    log.warning("[EMAIL_SERVICE] SMTP Verification failed on port %s: %s", port, smtp_err)
+
+            err_msg = str(last_err)
+            log.error("[EMAIL_SERVICE] All SMTP ports failed. Last error: %s", err_msg)
             if "535" in err_msg and email_address.lower().endswith("@gmail.com"):
                 err_msg += " (Gmail App Password required. Please generate a 16-character App Password at https://myaccount.google.com/apppasswords instead of using your main Gmail password)"
             return False, f"SMTP Connection/Auth failed: {err_msg}"
+        except Exception as outer_err:
+            return False, f"SMTP verification unexpected error: {str(outer_err)}"
 
     return False, "Email service not configured. Please set EMAIL_ADDRESS and EMAIL_PASSWORD or SENDGRID_API_KEY in .env"
 
@@ -247,28 +261,44 @@ async def send_mail_raw(
 
             SMTP_HOST = os.getenv("SMTP_HOST", "smtp.gmail.com").strip()
             SMTP_PORT = int(os.getenv("SMTP_PORT", "587").strip())
-            use_ssl = (SMTP_PORT == 465)
 
-            smtp = aiosmtplib.SMTP(hostname=SMTP_HOST, port=SMTP_PORT, use_tls=use_ssl, timeout=5)
-            await smtp.connect()
-            if not use_ssl:
+            ports_to_try = [SMTP_PORT]
+            if SMTP_PORT == 587:
+                ports_to_try.append(465)
+            elif SMTP_PORT == 465:
+                ports_to_try.append(587)
+
+            last_err = None
+            for port in ports_to_try:
+                use_ssl = (port == 465)
+                log.info("[SMTP] Attempting delivery on port %s...", port)
                 try:
-                    await smtp.starttls()
-                except aiosmtplib.SMTPException as tls_err:
-                    if "already using TLS" not in str(tls_err):
-                        raise
-            await smtp.login(email_address, email_password)
-            await smtp.send_message(message)
-            await smtp.quit()
-            
-            log.info("[SMTP] SUCCESS: Email sent successfully to %s", to_email)
-            return True, "Email sent successfully via SMTP"
+                    smtp = aiosmtplib.SMTP(hostname=SMTP_HOST, port=port, use_tls=use_ssl, timeout=5)
+                    await smtp.connect()
+                    if not use_ssl:
+                        try:
+                            await smtp.starttls()
+                        except aiosmtplib.SMTPException as tls_err:
+                            if "already using TLS" not in str(tls_err):
+                                raise
+                    await smtp.login(email_address, email_password)
+                    await smtp.send_message(message)
+                    await smtp.quit()
+                    
+                    log.info("[SMTP] SUCCESS: Email sent successfully to %s on port %s", to_email, port)
+                    return True, "Email sent successfully via SMTP"
+                except Exception as smtp_err:
+                    last_err = smtp_err
+                    log.warning("[SMTP] Failed to send on port %s: %s", port, smtp_err)
+
+            log.error("[SMTP] ERROR: All ports failed to send via SMTP. Last error: %s", last_err)
+            return False, f"SMTP Send Error: {str(last_err)}"
         except ImportError:
             log.error("[SMTP] aiosmtplib not installed")
             return False, "aiosmtplib library not installed"
-        except Exception as smtp_err:
-            log.error("[SMTP] ERROR: Failed to send via SMTP: %s", smtp_err, exc_info=True)
-            return False, f"SMTP Send Error: {str(smtp_err)}"
+        except Exception as outer_err:
+            log.error("[SMTP] ERROR: Unexpected error during SMTP send: %s", outer_err, exc_info=True)
+            return False, f"SMTP unexpected error: {str(outer_err)}"
 
     return False, "Email service not configured. Please set EMAIL_ADDRESS and EMAIL_PASSWORD or SENDGRID_API_KEY in .env"
 

@@ -2058,7 +2058,6 @@ function LoginModal({defaultRole, onComplete, onClose}) {
 
   const [otp, setOtp] = useState('');
   const [cooldown, setCooldown] = useState(0);
-  const [demoOtp, setDemoOtp] = useState('');
 
   // Initialize Google Identity Services
   useEffect(() => {
@@ -2165,14 +2164,6 @@ function LoginModal({defaultRole, onComplete, onClose}) {
       
       let finalProfile = profile;
       if (existingAcc) {
-        const mergedRole = (profile.role && existingAcc.role && profile.role !== existingAcc.role) ? 'both' : (profile.role || existingAcc.role);
-        const mergedRoleHistory = Array.from(new Set([
-          ...(existingAcc.roleHistory || []),
-          ...(profile.roleHistory || []),
-          ...(existingAcc.role ? [existingAcc.role] : []),
-          ...(profile.role ? [profile.role] : [])
-        ]));
-
         finalProfile = {
           ...existingAcc,
           ...profile,
@@ -2180,17 +2171,12 @@ function LoginModal({defaultRole, onComplete, onClose}) {
           email: profile.email || existingAcc.email || null,
           phone: profile.phone || existingAcc.phone || null,
           name: profile.name || existingAcc.name,
-          role: mergedRole,
-          roleHistory: mergedRoleHistory,
+          role: profile.role || existingAcc.role,
           stats: {
             ...existingAcc.stats,
             ...profile.stats
           }
         };
-      } else {
-        if (!finalProfile.roleHistory) {
-          finalProfile.roleHistory = finalProfile.role ? [finalProfile.role] : ['teacher'];
-        }
       }
       
       localStorage.setItem('cm_user', JSON.stringify(finalProfile));
@@ -2212,8 +2198,8 @@ function LoginModal({defaultRole, onComplete, onClose}) {
     }
     
     setTimeout(() => {
-      add('Welcome to VYOM, ' + finalProfile.name + '! \uD83C\uDF89', 'success');
-      onComplete(finalProfile);
+      add('Welcome to VYOM, ' + profile.name + '! \uD83C\uDF89', 'success');
+      onComplete(profile);
     }, 180);
   }
 
@@ -2259,14 +2245,7 @@ function LoginModal({defaultRole, onComplete, onClose}) {
           phone: phone.trim() || null
         }
       });
-      if (res.demo && res.otp) {
-        setDemoOtp(res.otp);
-        setOtp(res.otp);
-        add(`Demo Mode: Auto-filled verification code ${res.otp}`, 'success', { duration: 15000 });
-      } else {
-        setDemoOtp('');
-        add('Verification code sent successfully!', 'success');
-      }
+      add('Verification code sent successfully!', 'success');
       setCooldown(30);
       setView('otp');
     } catch (err) {
@@ -2283,7 +2262,7 @@ function LoginModal({defaultRole, onComplete, onClose}) {
     setBusy(true);
     try {
       add('Resending verification code...', 'info');
-      const res = await apiFetch('/api/auth/send-otp', {
+      await apiFetch('/api/auth/send-otp', {
         method: 'POST',
         body: {
           email: email.trim().toLowerCase(),
@@ -2292,14 +2271,7 @@ function LoginModal({defaultRole, onComplete, onClose}) {
           phone: phone.trim() || null
         }
       });
-      if (res.demo && res.otp) {
-        setDemoOtp(res.otp);
-        setOtp(res.otp);
-        add(`Demo Mode: Auto-filled verification code ${res.otp}`, 'success', { duration: 15000 });
-      } else {
-        setDemoOtp('');
-        add('Verification code resent successfully!', 'success');
-      }
+      add('Verification code resent successfully!', 'success');
       setCooldown(30);
     } catch (err) {
       add(err.message || 'Failed to resend code', 'error');
@@ -2444,9 +2416,6 @@ function LoginModal({defaultRole, onComplete, onClose}) {
                   autoFocus:true,
                   style:{textAlign:'center',letterSpacing:8,fontSize:'1.5rem',fontFamily:'monospace',height:52,border:'2px solid var(--accent)',background:'var(--surface2)',borderRadius:8}
                 }),
-                demoOtp && /*#__PURE__*/React.createElement("div", {
-                  style:{marginTop:12,padding:'8px 12px',background:'rgba(245,158,11,0.08)',border:'1px solid rgba(245,158,11,0.2)',borderRadius:8,color:'#F59E0B',fontSize:'0.85rem',fontWeight:'600',textAlign:'center'}
-                }, `Demo Verification Code: ${demoOtp}`),
                 /*#__PURE__*/React.createElement("button", {className:"login-submit", style:{marginTop:16}, onClick:handleVerifyOtp, disabled:busy}, busy?'Verifying\u2026':'Verify & Login \u2192'),
                 /*#__PURE__*/React.createElement("div", {className:"login-divider", style:{marginTop:16}}, "or"),
                 /*#__PURE__*/React.createElement("button", {className:"login-use-another", onClick:resendOtp, disabled:busy || cooldown > 0, style:{marginTop:8,justifyContent:'center'}}, 
@@ -2501,7 +2470,7 @@ const DEMO_FEATURES = [
     shortTitle: 'Create Class',
     description: 'Teachers can create a classroom, configure settings, invite students and start teaching in less than a minute.',
     duration: '0:52',
-    icon: 'fa-solid fa-school',
+    icon: '🏫',
     src: '/how to create class as teacher.mp4',
     color: '#FF7A1A'
   },
@@ -2511,7 +2480,7 @@ const DEMO_FEATURES = [
     shortTitle: 'Coding Lab',
     description: 'Practice real code, test your logic and get instant feedback in multiple languages.',
     duration: '0:30',
-    icon: 'fa-solid fa-code',
+    icon: '</>',
     src: '/Multi-Language_Coding_Lab.mp4',
     color: '#a855f7'
   },
@@ -2521,7 +2490,7 @@ const DEMO_FEATURES = [
     shortTitle: 'Doubt Center',
     description: 'Ask doubts anonymously, upload images or PDFs. Get expert help from teachers.',
     duration: '0:45',
-    icon: 'fa-solid fa-circle-question',
+    icon: '?',
     src: '/VYOM_Doubt_Center_product.mp4',
     color: '#8b5cf6'
   },
@@ -2531,7 +2500,7 @@ const DEMO_FEATURES = [
     shortTitle: 'Classroom Chat',
     description: 'Chat in real-time with teachers and classmates. AI-powered moderation and thread management.',
     duration: '0:38',
-    icon: 'fa-regular fa-comments',
+    icon: '💬',
     src: '/VYOM_Intelligent_Classroom_Chat.mp4',
     color: '#22c55e'
   },
@@ -2541,7 +2510,7 @@ const DEMO_FEATURES = [
     shortTitle: 'Content Hub',
     description: 'Access all resources, notes, PDFs, videos and links in one organised place.',
     duration: '0:42',
-    icon: 'fa-regular fa-folder-open',
+    icon: '📂',
     src: '/content page reel.mp4',
     color: '#10b981'
   },
@@ -2551,7 +2520,7 @@ const DEMO_FEATURES = [
     shortTitle: 'Student Join',
     description: 'Students join with a simple code and get instant access to the live classroom.',
     duration: '0:22',
-    icon: 'fa-solid fa-user-plus',
+    icon: '👤',
     src: '/how to enter a class as a student.mp4',
     color: '#f59e0b'
   }

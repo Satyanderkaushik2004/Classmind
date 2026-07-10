@@ -40,5 +40,6 @@ reportlab==5.0.0
 openpyxl==3.1.5
 weasyprint==62.3
 pydyf<0.11.0
-
-
+pymongo==4.6.1
+PyJWT==2.8.0
+bcrypt==4.1.2

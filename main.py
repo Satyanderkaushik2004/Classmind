@@ -86,6 +86,85 @@ from email_service import (
 )
 from video_call import router as vc_router
 
+# ── Auth Redesign: Imports & Helpers ──────────────────────────────
+import bcrypt
+import jwt
+import datetime
+import auth_db
+
+JWT_SECRET = os.getenv("JWT_SECRET", "vyom_super_secret_jwt_key_2026")
+JWT_ALGORITHM = "HS256"
+
+def hash_password(password: str) -> str:
+    salt = bcrypt.gensalt()
+    hashed = bcrypt.hashpw(password.encode('utf-8'), salt)
+    return hashed.decode('utf-8')
+
+def verify_password(password: str, hashed: str) -> bool:
+    try:
+        return bcrypt.checkpw(password.encode('utf-8'), hashed.encode('utf-8'))
+    except Exception:
+        return False
+
+def sign_jwt(payload: dict, expires_in_days: int = 7) -> str:
+    import datetime as dt_module
+    data = payload.copy()
+    data.update({
+        "exp": dt_module.datetime.utcnow() + dt_module.timedelta(days=expires_in_days)
+    })
+    return jwt.encode(data, JWT_SECRET, algorithm=JWT_ALGORITHM)
+
+def verify_jwt(token: str) -> Optional[dict]:
+    try:
+        return jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
+    except Exception:
+        return None
+
+def validate_password_strength(password: str) -> Optional[str]:
+    if len(password) < 8:
+        return "Password must be at least 8 characters long."
+    if not any(c.isupper() for c in password):
+        return "Password must contain at least one uppercase letter."
+    if not any(c.islower() for c in password):
+        return "Password must contain at least one lowercase letter."
+    if not any(c.isdigit() for c in password):
+        return "Password must contain at least one number."
+    if not any(c in "@$!%*?&_-" for c in password):
+        return "Password must contain at least one special character (@$!%*?&_-)."
+    return None
+
+auth_ip_limits = {}
+
+def check_auth_rate_limit(ip: str) -> bool:
+    now_ts = time.time()
+    if ip in auth_ip_limits:
+        auth_ip_limits[ip] = [t for t in auth_ip_limits[ip] if now_ts - t < 60]
+    else:
+        auth_ip_limits[ip] = []
+        
+    if len(auth_ip_limits[ip]) >= 15:
+        return False
+    auth_ip_limits[ip].append(now_ts)
+    return True
+
+def save_profile_photo(base64_data: str, user_id: str) -> Optional[str]:
+    try:
+        if not base64_data or not base64_data.startswith("data:image/"):
+            return None
+        header, encoded = base64_data.split(",", 1)
+        image_format = header.split(";")[0].split("/")[1]
+        if image_format not in ["png", "jpg", "jpeg", "webp"]:
+            image_format = "png"
+        data = base64.b64decode(encoded)
+        os.makedirs("data/profile_photos", exist_ok=True)
+        filename = f"{user_id}_{int(time.time())}.{image_format}"
+        filepath = Path("data/profile_photos") / filename
+        filepath.write_bytes(data)
+        return f"/static/profile_photos/{filename}"
+    except Exception as e:
+        log.warning("Failed to save profile photo: %s", e)
+        return None
+
 
 
 
@@ -1140,9 +1219,43 @@ def resolve_task_recipients(
 
 def _S(code: str) -> dict:
     """Return session dict or raise 404."""
-    s = sessions.get(code)
+    code_clean = code.strip().upper()
+    s = sessions.get(code_clean)
     if not s:
-        raise HTTPException(404, f"Session '{code}' not found")
+        if len(code_clean) == 6:
+            import classroom_db
+            import hashlib
+            db = classroom_db.get_db()
+            code_hash = hashlib.sha256(code_clean.encode("utf-8")).hexdigest()
+            lecture = db.lectures.find_one({"lecture_code_hash": code_hash})
+            if lecture:
+                s = sessions[code_clean] = {
+                    "code": code_clean,
+                    "name": f"Lecture - {code_clean}",
+                    "status": lecture["status"],
+                    "duration_mins": 60,
+                    "teacher_name": "Teacher",
+                    "email": "teacher@vyom.org",
+                    "phone": "",
+                    "created_at": lecture["start_time"],
+                    "end_timestamp": 0,
+                    "students": {},
+                    "waiting_room": [],
+                    "tasks": [],
+                    "groups": [],
+                    "attendance": {
+                        "state": "active",
+                        "started_at": lecture["start_time"],
+                        "min_duration": 60,
+                        "records": {},
+                        "audit_log": []
+                    },
+                    "doubts": [],
+                    "chats": [],
+                    "quiz_active": False
+                }
+                return s
+        raise HTTPException(404, f"Session '{code_clean}' not found")
     return s
 
 
@@ -1845,6 +1958,14 @@ async def lifespan(app: FastAPI):
     semaphore       = asyncio.Semaphore(3)
     execution_queue = asyncio.Queue()
 
+    # Initialize MongoDB Auth & Classroom Database
+    auth_db.init_db()
+    try:
+        import classroom_db
+        classroom_db.init_db()
+    except Exception as e:
+        log.error("Failed to initialize classroom database during startup: %s", e)
+
     # ── Persistence: configure and load saved sessions ────────────
     configure_persistence(
         mode     = os.getenv("PERSISTENCE", "json"),
@@ -1894,6 +2015,8 @@ app = FastAPI(
     redoc_url="/redoc",
 )
 app.include_router(vc_router)
+import classroom_routes
+app.include_router(classroom_routes.router)
 
 def google_authorized(
     credentials: Optional[HTTPAuthorizationCredentials] = Depends(HTTPBearer(auto_error=False)),
@@ -2238,6 +2361,65 @@ import os
 os.makedirs("data/profile_photos", exist_ok=True)
 app.mount("/static", StaticFiles(directory="data"), name="static")
 
+@app.middleware("http")
+async def verify_auth_token(request: Request, call_next):
+    path = request.url.path
+    
+    # Bypass auth verification for non-API, public, static, and auth routes
+    if (path.startswith("/api/auth/") or 
+        path.startswith("/static/") or 
+        path == "/api/config" or 
+        path.startswith("/api/debug/") or 
+        path in ("/vyom.html", "/", "/login page background video.mp4", "/VYOM_background.mp4", "/waiting_room.mp4") or
+        not path.startswith("/api/")):
+        return await call_next(request)
+        
+    auth_header = request.headers.get("Authorization")
+    if not auth_header or not auth_header.startswith("Bearer "):
+        return JSONResponse(status_code=401, content={"error": "Authorization token required"})
+        
+    token = auth_header.split(" ", 1)[1]
+    
+    # 1. Try legacy admin token
+    if token in admin_tokens:
+        return await call_next(request)
+        
+    # 2. Try verifying as our custom JWT
+    payload = verify_jwt(token)
+    verified_email = None
+    verified_role = None
+    
+    if payload:
+        verified_email = payload.get("email")
+        verified_role = payload.get("role")
+    else:
+        # 3. Try verifying as Google ID token
+        try:
+            idinfo = id_token.verify_oauth2_token(token, requests.Request(), get_google_client_id())
+            verified_email = idinfo.get("email")
+            # Look up email in our database to get their role
+            user_info = auth_db.get_user_by_email(verified_email)
+            if user_info:
+                verified_role = user_info.get("role")
+            else:
+                return JSONResponse(status_code=401, content={"error": "Google account not registered. Please sign up first."})
+        except Exception:
+            return JSONResponse(status_code=401, content={"error": "Invalid or expired authorization token"})
+            
+    if not verified_email or not verified_role:
+        return JSONResponse(status_code=401, content={"error": "Invalid token payload"})
+        
+    new_headers = []
+    for k, v in request.scope.get("headers", []):
+        if k.lower() not in (b"x-user-email", b"x-user-role"):
+            new_headers.append((k, v))
+            
+    new_headers.append((b"x-user-email", verified_email.encode("utf-8")))
+    new_headers.append((b"x-user-role", verified_role.encode("utf-8")))
+    request.scope["headers"] = new_headers
+    
+    return await call_next(request)
+
 
 # ── Global exception handlers ─────────────────────────────────────
 @app.exception_handler(HTTPException)
@@ -2370,27 +2552,63 @@ async def google_auth(req: GoogleLoginReq, request: Request):
 # ── OTP Email Authentication ──────────────────────────────────────
 otp_store: Dict[str, dict] = {}
 
+# ── Auth Redesign Request Schemas ────────────────────────────────
 class SendOtpReq(BaseModel):
     email: str
-    name: str
-    role: str
+    name: Optional[str] = None
+    role: Optional[str] = None
     phone: Optional[str] = None
+    intent: str = "register" # "register" or "reset_password"
+
+class SignupReq(BaseModel):
+    full_name: str
+    email: str
+    password: str
+    otp: str
+    role: str # "student" or "teacher"
+    organization: Optional[str] = None
+    designation: Optional[str] = None
+    department: Optional[str] = None
+    phone: Optional[str] = None
+    bio: Optional[str] = None
+
+class LoginReq(BaseModel):
+    email: str
+    password: str
 
 class VerifyOtpReq(BaseModel):
     email: str
     otp: str
 
+class ResetPasswordReq(BaseModel):
+    email: str
+    otp: str
+    new_password: str
+
+class UpdatePhotoReq(BaseModel):
+    profile_photo: str # base64 image data
+
 @app.post("/api/auth/send-otp")
-async def send_otp(req: SendOtpReq):
+async def send_otp(req: SendOtpReq, request: Request):
+    client_ip = request.client.host or "unknown"
+    if not check_auth_rate_limit(client_ip):
+        raise HTTPException(429, "Too many requests. Please try again later.")
+        
     email = req.email.strip().lower()
-    name = req.name.strip()
-    role = req.role.strip().lower()
-    phone = req.phone.strip() if req.phone else None
+    intent = req.intent.strip().lower()
     
-    if not email or not name:
-        raise HTTPException(400, "Email and Name are required")
-    if role not in ["teacher", "student"]:
-        raise HTTPException(400, "Invalid role. Must be 'teacher' or 'student'")
+    if not email:
+        raise HTTPException(400, "Email is required")
+    if not is_valid_email(email):
+        raise HTTPException(400, "Invalid email format")
+        
+    existing_user = auth_db.get_user_by_email(email)
+    
+    # Auto-adjust intent for passwordless unified login/signup flow
+    if existing_user:
+        intent = "reset_password"
+    else:
+        intent = "register"
         
     otp = "".join(random.choices(string.digits, k=6))
     expires_at = time.time() + 300
@@ -2398,9 +2616,9 @@ async def send_otp(req: SendOtpReq):
     otp_store[email] = {
         "otp": otp,
         "expires_at": expires_at,
-        "name": name,
-        "phone": phone,
-        "role": role
+        "name": req.name or "User",
+        "role": req.role or "student",
+        "intent": intent
     }
     
     from email_service import validate_smtp_config
@@ -2409,7 +2627,6 @@ async def send_otp(req: SendOtpReq):
                     f"========================================\n"
                     f"🔑 [DEMO MODE] EMAIL NOT CONFIGURED\n"
                     f"📧 Email: {email}\n"
-                    f"👤 Name: {name} ({role})\n"
                     f"🔢 OTP Code: {otp}\n"
                     f"========================================\n")
         return {
@@ -2420,6 +2637,7 @@ async def send_otp(req: SendOtpReq):
         }
         
     try:
+        name = req.name or "User"
         ok, msg = await send_otp_email(email, otp, name)
         if not ok:
             log.error("[OTP] Failed to send email to %s: %s", email, msg)
@@ -2458,28 +2676,78 @@ async def verify_otp(req: VerifyOtpReq):
         
     record = otp_store.get(email)
     if not record:
-        raise HTTPException(400, "No verification pending for this email. Please request a new code.")
+        raise HTTPException(400, "No verification pending for this email.")
         
     if time.time() > record["expires_at"]:
         otp_store.pop(email, None)
-        raise HTTPException(400, "Verification code has expired. Please request a new code.")
+        raise HTTPException(400, "Verification code has expired.")
         
     if record["otp"] != otp_code:
-        raise HTTPException(400, "Incorrect verification code. Please try again.")
+        raise HTTPException(400, "Incorrect verification code.")
         
-    # Success! Remove OTP from store
-    otp_store.pop(email, None)
+    # OTP is verified successfully, get user profile or create one
+    import auth_db
+    import jwt
+    import uuid
     
-    profile = {
-        "id": "u_" + str(int(time.time() * 1000)),
-        "name": record["name"],
+    user = auth_db.get_user_by_email(email)
+    if user:
+        user_id = user["_id"]
+        role = user.get("role", "student")
+        full_name = user.get("full_name", "User")
+    else:
+        # Create a new user on the fly
+        user_id = "u_" + uuid.uuid4().hex[:12]
+        role = record.get("role", "student")
+        full_name = record.get("name", "User")
+        
+        # Override role to admin if it's the configured admin email
+        if email == "admin@vyom.com":
+            role = "admin"
+            
+        pw_hash = hash_password("TempPassword123!")
+        
+        auth_db.create_user(
+            user_id=user_id,
+            full_name=full_name,
+            email=email,
+            password_hash=pw_hash,
+            role=role,
+            email_verified=True
+        )
+        if role == "teacher":
+            auth_db.create_teacher_profile(
+                user_id=user_id,
+                organization="VYOM School",
+                designation="Teacher",
+                department="Science"
+            )
+        elif role == "student":
+            auth_db.create_student_profile(user_id=user_id)
+            
+    # If the email matches the default admin email, force role to admin
+    if email == "admin@vyom.com":
+        role = "admin"
+        
+    # Generate JWT token
+    token_data = {
         "email": email,
-        "phone": record["phone"],
-        "role": record["role"],
-        "createdAt": int(time.time() * 1000),
-        "roleHistory": [record["role"]],
-        "sessionsCreated": [],
-        "sessionsJoined": [],
+        "role": role,
+        "exp": int(time.time()) + 86400 * 30  # 30 days expiry
+    }
+    jwt_token = jwt.encode(token_data, JWT_SECRET, algorithm=JWT_ALGORITHM)
+    
+    # Store token in local admin_tokens if role is admin
+    if role == "admin":
+        admin_tokens[jwt_token] = "admin"
+        
+    profile = {
+        "id": user_id,
+        "name": full_name,
+        "email": email,
+        "role": role,
+        "token": jwt_token,
+        "roleHistory": [role],
         "stats": {
             "totalSessionsCreated": 0,
             "totalSessionsJoined": 0,
@@ -2488,10 +2756,233 @@ async def verify_otp(req: VerifyOtpReq):
         }
     }
     
-    log.info("[OTP] OTP verification successful for %s (%s)", email, record["role"])
+    # Clean up OTP record
+    otp_store.pop(email, None)
+    
+    log.info("[AUTH] Passwordless OTP verification login successful for %s (%s)", email, role)
     return {
         "success": True,
         "profile": profile
+    }
+
+@app.post("/api/auth/signup")
+async def signup(req: SignupReq, request: Request):
+    client_ip = request.client.host or "unknown"
+    if not check_auth_rate_limit(client_ip):
+        raise HTTPException(429, "Too many requests. Please try again later.")
+        
+    email = req.email.strip().lower()
+    otp_code = req.otp.strip()
+    
+    if not req.full_name.strip() or not email or not req.password:
+        raise HTTPException(400, "Full Name, Email and Password are required")
+    if req.role not in ["student", "teacher"]:
+        raise HTTPException(400, "Invalid role. Must be 'student' or 'teacher'")
+        
+    pw_err = validate_password_strength(req.password)
+    if pw_err:
+        raise HTTPException(400, pw_err)
+        
+    record = otp_store.get(email)
+    if not record or record.get("intent") != "register":
+        raise HTTPException(400, "No registration OTP pending for this email.")
+        
+    if time.time() > record["expires_at"]:
+        otp_store.pop(email, None)
+        raise HTTPException(400, "Verification code has expired. Please request a new code.")
+        
+    if record["otp"] != otp_code:
+        raise HTTPException(400, "Incorrect verification code. Please try again.")
+        
+    existing_user = auth_db.get_user_by_email(email)
+    if existing_user:
+        otp_store.pop(email, None)
+        raise HTTPException(400, "Email is already registered. Please login instead.")
+        
+    pw_hash = hash_password(req.password)
+    
+    user_id = "u_" + uuid.uuid4().hex[:12]
+    auth_db.create_user(
+        user_id=user_id,
+        full_name=req.full_name.strip(),
+        email=email,
+        password_hash=pw_hash,
+        role=req.role,
+        profile_photo=None,
+        email_verified=True
+    )
+    
+    if req.role == "student":
+        auth_db.create_student_profile(user_id)
+    else:
+        org = req.organization.strip() if req.organization else "Unspecified"
+        desig = req.designation.strip() if req.designation else "Unspecified"
+        dept = req.department.strip() if req.department else "Unspecified"
+        phone = req.phone.strip() if req.phone else None
+        bio = req.bio.strip() if req.bio else None
+        
+        auth_db.create_teacher_profile(
+            user_id=user_id,
+            organization=org,
+            designation=desig,
+            department=dept,
+            phone=phone,
+            bio=bio,
+            is_verified_teacher=False
+        )
+        
+    otp_store.pop(email, None)
+    
+    token_payload = {"user_id": user_id, "email": email, "role": req.role}
+    token = sign_jwt(token_payload)
+    
+    profile = {
+        "id": user_id,
+        "name": req.full_name.strip(),
+        "email": email,
+        "phone": req.phone.strip() if req.phone else "",
+        "role": req.role,
+        "createdAt": int(time.time() * 1000),
+        "roleHistory": [req.role],
+        "sessionsCreated": [],
+        "sessionsJoined": [],
+        "stats": {
+            "totalSessionsCreated": 0,
+            "totalSessionsJoined": 0,
+            "avgParticipation": 0,
+            "avgUnderstanding": 0
+        },
+        "token": token,
+        "google_id_token": token
+    }
+    
+    log.info("[AUTH] User registered successfully: %s (%s)", email, req.role)
+    return {
+        "success": True,
+        "profile": profile
+    }
+
+@app.post("/api/auth/login")
+async def login(req: LoginReq, request: Request):
+    client_ip = request.client.host or "unknown"
+    if not check_auth_rate_limit(client_ip):
+        raise HTTPException(429, "Too many requests. Please try again later.")
+        
+    email = req.email.strip().lower()
+    password = req.password
+    
+    if not email or not password:
+        raise HTTPException(400, "Email and Password are required")
+        
+    user = auth_db.get_user_by_email(email)
+    if not user:
+        raise HTTPException(401, "Invalid email or password")
+        
+    if not verify_password(password, user["password_hash"]):
+        raise HTTPException(401, "Invalid email or password")
+        
+    user_id = user["_id"]
+    role = user["role"]
+    
+    phone = ""
+    if role == "teacher":
+        t_prof = auth_db.get_teacher_profile(user_id)
+        if t_prof:
+            phone = t_prof.get("phone") or ""
+            
+    token_payload = {"user_id": user_id, "email": email, "role": role}
+    token = sign_jwt(token_payload)
+    
+    profile = {
+        "id": user_id,
+        "name": user["full_name"],
+        "email": email,
+        "phone": phone,
+        "role": role,
+        "profile_photo": user.get("profile_photo"),
+        "createdAt": user.get("created_at") or int(time.time() * 1000),
+        "roleHistory": [role],
+        "sessionsCreated": [],
+        "sessionsJoined": [],
+        "stats": {
+            "totalSessionsCreated": 0,
+            "totalSessionsJoined": 0,
+            "avgParticipation": 0,
+            "avgUnderstanding": 0
+        },
+        "token": token,
+        "google_id_token": token
+    }
+    
+    log.info("[AUTH] User logged in: %s (%s)", email, role)
+    return {
+        "success": True,
+        "profile": profile
+    }
+
+@app.post("/api/auth/reset-password")
+async def reset_password(req: ResetPasswordReq, request: Request):
+    client_ip = request.client.host or "unknown"
+    if not check_auth_rate_limit(client_ip):
+        raise HTTPException(429, "Too many requests. Please try again later.")
+        
+    email = req.email.strip().lower()
+    otp_code = req.otp.strip()
+    new_password = req.new_password
+    
+    if not email or not otp_code or not new_password:
+        raise HTTPException(400, "Email, OTP and New Password are required")
+        
+    pw_err = validate_password_strength(new_password)
+    if pw_err:
+        raise HTTPException(400, pw_err)
+        
+    record = otp_store.get(email)
+    if not record or record.get("intent") != "reset_password":
+        raise HTTPException(400, "No password reset OTP pending for this email.")
+        
+    if time.time() > record["expires_at"]:
+        otp_store.pop(email, None)
+        raise HTTPException(400, "Verification code has expired. Please request a new code.")
+        
+    if record["otp"] != otp_code:
+        raise HTTPException(400, "Incorrect verification code. Please try again.")
+        
+    user = auth_db.get_user_by_email(email)
+    if not user:
+        raise HTTPException(404, "User account not found")
+        
+    pw_hash = hash_password(new_password)
+    auth_db.update_user_password(email, pw_hash)
+    
+    otp_store.pop(email, None)
+    
+    log.info("[AUTH] Password reset successful for %s", email)
+    return {
+        "success": True,
+        "message": "Password updated successfully. Please login with your new password."
+    }
+
+@app.post("/api/user/update-photo")
+async def update_user_profile_photo(req: UpdatePhotoReq, request: Request):
+    email = request.headers.get("X-User-Email")
+    if not email:
+        raise HTTPException(401, "Unauthorized: X-User-Email header missing")
+        
+    user = auth_db.get_user_by_email(email)
+    if not user:
+        raise HTTPException(404, "User not found")
+        
+    photo_url = save_profile_photo(req.profile_photo, user["_id"])
+    if not photo_url:
+        raise HTTPException(400, "Failed to process image data")
+        
+    auth_db.update_user_photo(email, photo_url)
+    
+    log.info("[AUTH] Profile photo updated for %s: %s", email, photo_url)
+    return {
+        "success": True,
+        "profile_photo": photo_url
     }
 
 
@@ -5338,6 +5829,90 @@ async def student_leave_session(code: str, student_id: str):
 
 @app.get("/api/session/{code}/attendance")
 def get_attendance(code: str):
+    code_clean = code.strip().upper()
+    if len(code_clean) == 6:
+        import classroom_db
+        import hashlib
+        db = classroom_db.get_db()
+        code_hash = hashlib.sha256(code_clean.encode("utf-8")).hexdigest()
+        lecture = db.lectures.find_one({"$or": [{"lecture_code_hash": code_hash}, {"_id": code_clean}]})
+        if lecture:
+            classroom_id = lecture["classroom_id"]
+            members = list(db.classroom_members.find({"classroom_id": classroom_id}))
+            member_ids = [m["student_id"] for m in members]
+            
+            users = {u["_id"]: u for u in db.users.find({"_id": {"$in": member_ids}})}
+            profiles = {p["_id"]: p for p in db.student_profiles.find({"_id": {"$in": member_ids}})}
+            
+            records = {}
+            attendance_recs = list(db.attendance.find({"lecture_id": lecture["_id"]}))
+            
+            present_count = 0
+            absent_count = 0
+            late_count = 0
+            
+            for r in attendance_recs:
+                sid = r["student_id"]
+                u = users.get(sid, {})
+                p = profiles.get(sid, {})
+                status = r["status"]
+                
+                if status in ["present", "late", "excused", "left_early"]:
+                    present_count += 1
+                else:
+                    absent_count += 1
+                    
+                if status == "late":
+                    late_count += 1
+                    
+                records[sid] = {
+                    "student_id": sid,
+                    "name": u.get("full_name", "Student"),
+                    "roll": p.get("roll_number", "N/A"),
+                    "join_at": r.get("join_time"),
+                    "leave_at": r.get("leave_time") or None,
+                    "duration": r.get("duration_seconds", 0),
+                    "status": status,
+                    "device_info": r.get("device_info"),
+                    "ip_address": r.get("ip_address"),
+                    "geo_location": r.get("geo_location")
+                }
+                
+            for sid in member_ids:
+                if sid not in records:
+                    u = users.get(sid, {})
+                    p = profiles.get(sid, {})
+                    absent_count += 1
+                    records[sid] = {
+                        "student_id": sid,
+                        "name": u.get("full_name", "Student"),
+                        "roll": p.get("roll_number", "N/A"),
+                        "join_at": None,
+                        "leave_at": None,
+                        "duration": 0,
+                        "status": "absent"
+                    }
+                    
+            pct = round((present_count / len(member_ids)) * 100) if member_ids else 0
+            
+            return {
+                "state": "ended" if lecture["status"] == "ended" else "active",
+                "session_status": lecture["status"],
+                "started_at": lecture["start_time"],
+                "ended_at": lecture.get("end_time") or None,
+                "locked_at": lecture.get("end_time") or None,
+                "min_duration": 60,
+                "total": len(member_ids),
+                "present": present_count,
+                "exited": 0,
+                "revoked": 0,
+                "late": late_count,
+                "absent": absent_count,
+                "percentage": pct,
+                "records": records,
+                "audit_log": []
+            }
+            
     s = _S(code)
     return compute_attendance_summary(s)
 

@@ -1547,11 +1547,11 @@ async function apiFetch(path, opts = {}) {
   let res;
   try {
     res = await fetch(fetchUrl, {
+      ...opts,
       headers: {
         ...headers,
         ...opts.headers
       },
-      ...opts,
       body: opts.body && typeof opts.body !== 'string' ? JSON.stringify(opts.body) : opts.body
     });
   } catch (err) {
@@ -1564,11 +1564,11 @@ async function apiFetch(path, opts = {}) {
       console.warn(`[VYOM] Primary fetch failed (${err.message}). Retrying on fallback API: ${fallbackAPI}${path}`);
       try {
         res = await fetch(`${fallbackAPI}${path}`, {
+          ...opts,
           headers: {
             ...headers,
             ...opts.headers
           },
-          ...opts,
           body: opts.body && typeof opts.body !== 'string' ? JSON.stringify(opts.body) : opts.body
         });
       } catch (retryErr) {
@@ -3242,7 +3242,12 @@ function LandingPage({
           /*#__PURE__*/React.createElement("div", { className: "role-card", onClick: gotoStudent }, 
             /*#__PURE__*/React.createElement("div", { className: "role-icon" }, "👨‍🎓"), 
             /*#__PURE__*/React.createElement("div", { className: "role-title" }, "Join as Student"), 
-            /*#__PURE__*/React.createElement("div", { className: "role-desc" }, "Enter a session code to join")
+            /*#__PURE__*/React.createElement("div", { className: "role-desc" }, "Enter a session code to join"),
+          (userProfile?.role === 'admin' || userProfile?.email === 'admin@vyom.com') && /*#__PURE__*/React.createElement("div", { className: "role-card", style: { border: '2px solid var(--accent)' }, onClick: () => navigate('admin') },
+            /*#__PURE__*/React.createElement("div", { className: "role-icon" }, "\uD83D\uDEE1\uFE0F"),
+            /*#__PURE__*/React.createElement("div", { className: "role-title" }, "Admin Console"),
+            /*#__PURE__*/React.createElement("div", { className: "role-desc" }, "Manage courses, students, and academic structure")
+          )
           )
         ), 
         showTeacher && /*#__PURE__*/React.createElement("div", {
@@ -7397,8 +7402,8 @@ function TeacherShell({
   }, [page]);
   const teacherUser = JSON.parse(localStorage.getItem('cm_user') || '{}');
   const teacherEmailParam = teacherUser.email ? `?email=${encodeURIComponent(teacherUser.email)}&role=${encodeURIComponent(teacherUser.role || 'teacher')}` : '';
-  const wsUrl = `${WS_BASE}/ws/teacher/${sessionCode}${teacherEmailParam}`;
-  const wsSend = useWS(wsUrl, useCallback(msg => {
+  const wsUrl = sessionCode ? `${WS_BASE}/ws/teacher/${sessionCode}${teacherEmailParam}` : '';
+  const wsSend = useWS(wsUrl ? wsUrl : null, useCallback(msg => {
     try {
       if (!msg) return;
       if (msg.type === 'analytics_update') {
@@ -16789,6 +16794,7 @@ function BulkExportModal({ sessionCode, onClose }) {
               { key: 'tests', label: '🧪 Test Reports' },
               { key: 'coding', label: '💻 Coding Reports' }
             ].map(item =>
+
               React.createElement('label', { key: item.key, style: { display: 'flex', alignItems: 'center', gap: 8, fontSize: '0.85rem', cursor: 'pointer' } },
                 React.createElement('input', {
                   type: 'checkbox',
@@ -16998,499 +17004,887 @@ function ReportsPage({ sessionCode }) {
 
 
 // ── TEACHER: Admin Dashboard ──
-function AdminDashboardPage({
-  navigate
-}) {
-  const [username, setUsername] = useState('admin');
-  const [password, setPassword] = useState('');
-  const [token, setToken] = useState(() => {
-    // RBAC: Check if current Google user is an authorized admin
+
+
+function AdminDashboardPage({ navigate }) {
+  const { add } = React.useContext(AppCtx);
+    const [token, setToken] = React.useState(() => {
     try {
+      const adminToken = localStorage.getItem('cm_admin_token');
+      if (adminToken) return adminToken;
       const user = JSON.parse(localStorage.getItem('cm_user') || '{}');
-      if (user.email && ADMIN_EMAILS.includes(user.email) && user.google_id_token) {
-        return user.google_id_token;
+      if (user && (user.role === 'admin' || user.email === 'admin@vyom.com') && user.token) {
+        localStorage.setItem('cm_admin_token', user.token);
+        return user.token;
       }
-    } catch (_) {}
-    try {
-      return localStorage.getItem('cm_admin_token') || '';
-    } catch {
-      return '';
-    }
+    } catch (e) {}
+    return '';
   });
-  const [overview, setOverview] = useState(null);
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [wsStatus, setWsStatus] = useState('offline');
-  const [events, setEvents] = useState([]);
-  const wsRef = useRef(null);
-  const heartbeatRef = useRef(null);
-  useEffect(() => {
+  const [tab, setTab] = React.useState('overview');
+  
+  const [stats, setStats] = React.useState(null);
+  const [institutions, setInstitutions] = React.useState([]);
+  const [departments, setDepartments] = React.useState([]);
+  const [courses, setCourses] = React.useState([]);
+  const [subjects, setSubjects] = React.useState([]);
+  const [classrooms, setClassrooms] = React.useState([]);
+  const [teachers, setTeachers] = React.useState([]);
+  const [students, setStudents] = React.useState([]);
+  
+  const [loading, setLoading] = React.useState(false);
+  const [searchQuery, setSearchQuery] = React.useState('');
+  const [formData, setFormData] = React.useState({});
+
+  async function loadData() {
+    setLoading(true);
+    try {
+      const authHeader = { Authorization: `Bearer ${token}` };
+      
+      const statsRes = await apiFetch('/api/classroom-system/admin/dashboard-stats', { headers: authHeader }).catch(() => null);
+      if (statsRes) setStats(statsRes);
+      
+      const insts = await apiFetch('/api/classroom-system/setup/institutions', { headers: authHeader }).catch(() => ({ institutions: [] }));
+      setInstitutions(insts.institutions || []);
+      
+      const depts = await apiFetch('/api/classroom-system/setup/departments', { headers: authHeader }).catch(() => ({ departments: [] }));
+      setDepartments(depts.departments || []);
+      
+      const crs = await apiFetch('/api/classroom-system/setup/courses', { headers: authHeader }).catch(() => ({ courses: [] }));
+      setCourses(crs.courses || []);
+      
+      const subjs = await apiFetch('/api/classroom-system/setup/subjects', { headers: authHeader }).catch(() => ({ subjects: [] }));
+      setSubjects(subjs.subjects || []);
+      
+      const classes = await apiFetch('/api/classroom-system/setup/classrooms', { headers: authHeader }).catch(() => ({ classrooms: [] }));
+      setClassrooms(classes.classrooms || []);
+      
+      const studs = await apiFetch('/api/classroom-system/setup/students', { headers: authHeader }).catch(() => ({ students: [] }));
+      setStudents(studs.students || []);
+      
+      const tchs = await apiFetch('/api/classroom-system/setup/teachers', { headers: authHeader }).catch(() => ({ teachers: [] }));
+      setTeachers(tchs.teachers || []);
+    } catch (e) {
+      console.warn("Failed to load admin dashboard data", e);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  React.useEffect(() => {
     if (token) {
-      try {
-        localStorage.setItem('cm_admin_token', token);
-      } catch (_) {}
-      loadOverview();
+      loadData();
     }
   }, [token]);
-  useEffect(() => {
-    return () => {
-      try {
-        if (wsRef.current) wsRef.current.close();
-      } catch (_) {}
-      try {
-        if (heartbeatRef.current) clearInterval(heartbeatRef.current);
-      } catch (_) {}
-    };
-  }, []);
-  async function login() {
-    setLoading(true);
-    setError('');
-    try {
-      const res = await fetch(`${API}/admin/login`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          username,
-          password
-        })
-      });
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new Error(data.detail || data.message || 'Admin login failed');
-      }
-      const data = await res.json();
-      setToken(data.token);
-      setPassword('');
-    } catch (err) {
-      setError(err.message || 'Login failed');
-    } finally {
-      setLoading(false);
-    }
-  }
-  async function loadOverview() {
-    if (!token) return;
-    setLoading(true);
-    setError('');
-    try {
-      const res = await fetch(`${API}/admin/dashboard`, {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      });
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        const msg = data.detail || data.message || 'Cannot fetch dashboard';
-        // Only clear token on auth failure (401)
-        if (res.status === 401) {
-          setToken('');
-          try {
-            localStorage.removeItem('cm_admin_token');
-          } catch (_) {}
-        }
-        throw new Error(msg);
-      }
-      setOverview(await res.json());
-    } catch (err) {
-      setError(err.message || 'Failed to load admin dashboard');
-    } finally {
-      setLoading(false);
-    }
-  }
-  function connectWebSocket() {
-    if (!token) {
-      setError('Login first to connect admin WebSocket');
-      return;
-    }
 
-    // Close any existing connection
+  async function handleCreate(type, body) {
     try {
-      if (wsRef.current) {
-        wsRef.current.close();
-        wsRef.current = null;
+      await apiFetch(`/api/classroom-system/setup/${type}`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+        body
+      });
+      add(`${type.toUpperCase()} created successfully!`, 'success');
+      loadData();
+      setFormData({});
+    } catch (err) { add(err.message, 'error'); }
+  }
+
+  async function handleUpdate(type, id, body) {
+    try {
+      await apiFetch(`/api/classroom-system/setup/${type}/${id}`, {
+        method: 'PUT',
+        headers: { Authorization: `Bearer ${token}` },
+        body
+      });
+      add(`${type.toUpperCase()} updated successfully!`, 'success');
+      loadData();
+      setFormData({});
+    } catch (err) { add(err.message, 'error'); }
+  }
+
+  async function handleDelete(type, id) {
+    if (!window.confirm("Are you sure you want to delete this item?")) return;
+    try {
+      await apiFetch(`/api/classroom-system/setup/${type}/${id}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      add(`${type.toUpperCase()} deleted successfully!`, 'success');
+      loadData();
+    } catch (err) { add(err.message, 'error'); }
+  }
+
+  async function handleBulkUpload(classroom_id, file) {
+    if (!file) return;
+    const form = new FormData();
+    form.append("file", file);
+    try {
+      const res = await fetch(`${API}/api/classroom-system/setup/enroll-bulk/${classroom_id}`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+        body: form
+      });
+      const data = await res.json();
+      if (data.success) {
+        add(`Successfully enrolled ${data.enrolled_count} students!`, 'success');
+        loadData();
+      } else {
+        add(data.detail || 'Bulk enrollment failed', 'error');
       }
-    } catch (_) {}
-    let ws;
-    try {
-      ws = new WebSocket(`${WS_BASE}/ws/admin?token=${encodeURIComponent(token)}`);
-    } catch (err) {
-      setWsStatus('error');
-      setError('Could not create WebSocket connection');
-      return;
-    }
-    wsRef.current = ws;
-    setWsStatus('connecting');
-    ws.onopen = () => {
-      setWsStatus('connected');
-      setError('');
-      // Send heartbeat
-      try {
-        ws.send(JSON.stringify({
-          type: 'ping'
-        }));
-      } catch (_) {}
-    };
-    ws.onclose = () => {
-      setWsStatus('offline');
-      if (wsRef.current === ws) wsRef.current = null;
-    };
-    ws.onerror = () => {
-      setWsStatus('error');
-      try {
-        ws.close();
-      } catch (_) {}
-    };
-    ws.onmessage = evt => {
-      try {
-        const data = JSON.parse(evt.data);
-        if (data.type === 'error') {
-          setError(data.message || 'Admin WS error');
-          try {
-            ws.close();
-          } catch (_) {}
-          return;
-        }
-        setEvents(prev => [data, ...prev].slice(0, 25));
-        if (data.dashboard) setOverview(data.dashboard);
-      } catch (_) {}
-    };
+    } catch (err) { add(err.message, 'error'); }
   }
-  function logout() {
-    setToken('');
-    setOverview(null);
-    setEvents([]);
-    setWsStatus('offline');
+
+  async function handlePromote(student_ids, new_semester, new_academic_year) {
     try {
-      localStorage.removeItem('cm_admin_token');
-    } catch (_) {}
-    try {
-      if (wsRef.current) wsRef.current.close();
-    } catch (_) {}
-    try {
-      if (heartbeatRef.current) clearInterval(heartbeatRef.current);
-    } catch (_) {}
+      await apiFetch('/api/classroom-system/admin/students/promote', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+        body: { student_ids, new_semester, new_academic_year }
+      });
+      add('Students promoted successfully!', 'success');
+      loadData();
+    } catch (err) { add(err.message, 'error'); }
   }
-  const isGoogleAdmin = (() => {
+
+  async function handleTransfer(student_id, new_classroom_id) {
     try {
-      const user = JSON.parse(localStorage.getItem('cm_user') || '{}');
-      return user.email && ADMIN_EMAILS.includes(user.email) && user.google_id_token === token;
-    } catch (_) {
-      return false;
-    }
-  })();
-  return /*#__PURE__*/React.createElement("div", {
-    className: "page admin-page"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "page-header",
-    style: {
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      gap: 16,
-      marginBottom: 24
-    }
-  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
-    className: "page-title"
-  }, "\uD83D\uDEE1\uFE0F Admin Dashboard"), /*#__PURE__*/React.createElement("div", {
-    className: "page-subtitle"
-  }, "Monitor all sessions, teachers, and students live.")), navigate && /*#__PURE__*/React.createElement("button", {
-    className: "btn btn-ghost btn-sm",
-    onClick: () => navigate('landing')
-  }, "\u2190 Back to Home")), error && /*#__PURE__*/React.createElement("div", {
-    className: "alert alert-error",
-    style: {
-      marginBottom: 16
-    }
-  }, error), !token ? /*#__PURE__*/React.createElement("div", {
-    className: "card",
-    style: {
-      maxWidth: 520,
-      margin: '0 auto',
-      textAlign: 'center',
-      padding: '40px 20px'
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      fontSize: '3rem',
-      marginBottom: 16
-    }
-  }, "\u231B"), /*#__PURE__*/React.createElement("div", {
-    className: "card-title",
-    style: {
-      justifyContent: 'center'
-    }
-  }, "Session Expired"), /*#__PURE__*/React.createElement("p", {
-    className: "text-muted",
-    style: {
-      marginBottom: 24
-    }
-  }, "Your administrative session has expired or is invalid. Please return to the home page and ensure you are logged in with an authorized admin account."), /*#__PURE__*/React.createElement("button", {
-    className: "btn btn-primary",
-    style: {
-      width: '100%',
-      justifyContent: 'center'
-    },
-    onClick: () => navigate('landing')
-  }, "Back to Landing Page")) : /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
-    className: "grid grid-3",
-    style: {
-      gap: 16,
-      marginBottom: 16
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "card"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "card-title"
-  }, "Connection"), /*#__PURE__*/React.createElement("div", {
-    className: "text-lg font-bold",
-    style: {
-      color: wsStatus === 'connected' ? 'var(--green)' : wsStatus === 'connecting' ? 'var(--yellow)' : 'var(--text2)'
-    }
-  }, wsStatus === 'connected' ? '🟢 Live' : wsStatus === 'connecting' ? '🟡 Connecting…' : '⚫ Offline'), /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: 'flex',
-      gap: 8,
-      marginTop: 8
-    }
-  }, /*#__PURE__*/React.createElement("button", {
-    className: "btn btn-sm btn-primary",
-    onClick: connectWebSocket
-  }, wsStatus === 'connected' ? 'Reconnect' : 'Connect Live'), /*#__PURE__*/React.createElement("button", {
-    className: "btn btn-sm btn-ghost",
-    onClick: loadOverview,
-    disabled: loading
-  }, loading ? '…' : '↻ Refresh'))), /*#__PURE__*/React.createElement("div", {
-    className: "card"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "card-title"
-  }, "Admin Session"), /*#__PURE__*/React.createElement("div", {
-    className: "text-sm break-all",
-    style: {
-      wordBreak: 'break-all',
-      color: 'var(--text2)',
-      fontFamily: 'monospace',
-      fontSize: '0.78rem'
-    }
-  }, token.slice(0, 18), "\u2026"), /*#__PURE__*/React.createElement("button", {
-    className: "btn btn-sm btn-danger",
-    onClick: logout,
-    style: {
-      marginTop: 8
-    }
-  }, "Logout")), /*#__PURE__*/React.createElement("div", {
-    className: "card"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "card-title"
-  }, "Live Event Feed"), /*#__PURE__*/React.createElement("div", {
-    className: "text-sm text-muted"
-  }, events.length, " events received"), events.length > 0 && /*#__PURE__*/React.createElement("button", {
-    className: "btn btn-sm btn-ghost",
-    onClick: () => setEvents([]),
-    style: {
-      marginTop: 8
-    }
-  }, "Clear"))), overview ? /*#__PURE__*/React.createElement("div", {
-    className: "grid grid-4",
-    style: {
-      marginBottom: 16
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "stat"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "stat-value"
-  }, overview.total_sessions), /*#__PURE__*/React.createElement("div", {
-    className: "stat-label"
-  }, "Total Sessions")), /*#__PURE__*/React.createElement("div", {
-    className: "stat"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "stat-value",
-    style: {
-      color: 'var(--green)'
-    }
-  }, overview.active_sessions), /*#__PURE__*/React.createElement("div", {
-    className: "stat-label"
-  }, "Active Sessions")), /*#__PURE__*/React.createElement("div", {
-    className: "stat"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "stat-value",
-    style: {
-      color: 'var(--accent)'
-    }
-  }, overview.total_students), /*#__PURE__*/React.createElement("div", {
-    className: "stat-label"
-  }, "Students Online")), /*#__PURE__*/React.createElement("div", {
-    className: "stat"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "stat-value",
-    style: {
-      color: 'var(--accent2)'
-    }
-  }, overview.total_teachers), /*#__PURE__*/React.createElement("div", {
-    className: "stat-label"
-  }, "Teachers"))) : /*#__PURE__*/React.createElement("div", {
-    className: "card",
-    style: {
-      marginBottom: 16
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "card-title"
-  }, "Ready to monitor"), /*#__PURE__*/React.createElement("p", {
-    className: "text-sm text-muted"
-  }, "Click \"Refresh\" or \"Connect Live\" to load dashboard data.")), /*#__PURE__*/React.createElement("div", {
-    className: "card",
-    style: {
-      marginBottom: 16
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "card-title"
-  }, "\uD83D\uDFE2 Live Sessions", /*#__PURE__*/React.createElement("span", {
-    style: {
-      marginLeft: 'auto',
-      fontSize: '0.8rem',
-      color: 'var(--text3)',
-      fontWeight: 400
-    }
-  }, (overview?.live_sessions || []).length, " session(s)")), (overview?.live_sessions || []).length === 0 ? /*#__PURE__*/React.createElement("p", {
-    className: "text-sm text-muted"
-  }, "No live sessions right now.") : /*#__PURE__*/React.createElement("div", {
-    className: "table-wrap"
-  }, /*#__PURE__*/React.createElement("table", {
-    className: "table"
-  }, /*#__PURE__*/React.createElement("thead", null, /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("th", null, "Code"), /*#__PURE__*/React.createElement("th", null, "Teacher"), /*#__PURE__*/React.createElement("th", null, "Status"), /*#__PURE__*/React.createElement("th", null, "Students"), /*#__PURE__*/React.createElement("th", null, "Tasks Sent"), /*#__PURE__*/React.createElement("th", null, "Responses"))), /*#__PURE__*/React.createElement("tbody", null, overview.live_sessions.map(item => /*#__PURE__*/React.createElement("tr", {
-    key: item.session_code
-  }, /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("span", {
-    style: {
-      fontFamily: 'monospace',
-      fontWeight: 700,
-      color: 'var(--accent)'
-    }
-  }, item.session_code)), /*#__PURE__*/React.createElement("td", null, item.teacher_name), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("span", {
-    style: {
-      padding: '2px 8px',
-      borderRadius: 12,
-      fontSize: '0.75rem',
-      background: item.status === 'active' ? 'rgba(34,197,94,0.15)' : 'rgba(100,116,139,0.15)',
-      color: item.status === 'active' ? 'var(--green)' : 'var(--text2)'
-    }
-  }, item.status)), /*#__PURE__*/React.createElement("td", null, item.students_count), /*#__PURE__*/React.createElement("td", null, item.tasks_sent), /*#__PURE__*/React.createElement("td", null, item.responses))))))), overview?.suspicious_activity && /*#__PURE__*/React.createElement("div", {
-    className: "card",
-    style: {
-      marginBottom: 16,
-      borderColor: overview.suspicious_activity.join_spike?.enabled || overview.suspicious_activity.multiple_session_joins?.length > 0 ? 'var(--red)' : 'var(--border)'
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "card-title"
-  }, "\uD83D\uDEA8 Suspicious Activity"), /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: 'flex',
-      flexDirection: 'column',
-      gap: 12
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      padding: '10px 14px',
-      borderRadius: 8,
-      background: overview.suspicious_activity.join_spike?.enabled ? 'rgba(239,68,68,0.08)' : 'var(--surface2)'
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      fontWeight: 600,
-      fontSize: '0.875rem',
-      marginBottom: 4
-    }
-  }, overview.suspicious_activity.join_spike?.enabled ? '⚠️' : '✅', " Join Spike Detection"), /*#__PURE__*/React.createElement("div", {
-    className: "text-sm text-muted"
-  }, overview.suspicious_activity.join_spike?.count_last_minute ?? 0, " joins in last 60 s", overview.suspicious_activity.join_spike?.enabled ? ' — spike detected!' : ' — normal')), /*#__PURE__*/React.createElement("div", {
-    style: {
-      padding: '10px 14px',
-      borderRadius: 8,
-      background: 'var(--surface2)'
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      fontWeight: 600,
-      fontSize: '0.875rem',
-      marginBottom: 6
-    }
-  }, (overview.suspicious_activity.multiple_session_joins || []).length > 0 ? '⚠️' : '✅', " Multi-Session Joins", /*#__PURE__*/React.createElement("span", {
-    style: {
-      marginLeft: 8,
-      color: 'var(--text3)',
-      fontWeight: 400
-    }
-  }, "(", (overview.suspicious_activity.multiple_session_joins || []).length, " flagged)")), (overview.suspicious_activity.multiple_session_joins || []).length === 0 ? /*#__PURE__*/React.createElement("div", {
-    className: "text-sm text-muted"
-  }, "No duplicate joins detected.") : /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: 'flex',
-      flexDirection: 'column',
-      gap: 6,
-      maxHeight: 160,
-      overflowY: 'auto'
-    }
-  }, overview.suspicious_activity.multiple_session_joins.map((entry, i) => /*#__PURE__*/React.createElement("div", {
-    key: i,
-    style: {
-      padding: '6px 10px',
-      borderRadius: 6,
-      background: 'rgba(239,68,68,0.08)',
-      fontSize: '0.8rem',
-      color: 'var(--text)'
-    }
-  }, /*#__PURE__*/React.createElement("span", {
-    style: {
-      fontFamily: 'monospace',
-      color: 'var(--red)'
-    }
-  }, entry.student_key), /*#__PURE__*/React.createElement("span", {
-    style: {
-      color: 'var(--text3)',
-      marginLeft: 8
-    }
-  }, "\u2192 ", entry.sessions.join(', ')))))))), /*#__PURE__*/React.createElement("div", {
-    className: "card"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "card-title"
-  }, "\uD83D\uDCE1 Live Event Feed"), events.length === 0 ? /*#__PURE__*/React.createElement("p", {
-    className: "text-sm text-muted"
-  }, "Connect via WebSocket above to start receiving live events.") : /*#__PURE__*/React.createElement("div", {
-    style: {
-      maxHeight: 280,
-      overflowY: 'auto',
-      display: 'flex',
-      flexDirection: 'column',
-      gap: 8
-    }
-  }, events.map((event, idx) => /*#__PURE__*/React.createElement("div", {
-    key: idx,
-    style: {
-      padding: '8px 12px',
-      borderRadius: 8,
-      background: 'var(--surface2)',
-      borderLeft: `3px solid ${event.event === 'session_ended' ? 'var(--red)' : 'var(--accent)'}`
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: 'flex',
-      alignItems: 'center',
-      gap: 8,
-      marginBottom: 4
-    }
-  }, /*#__PURE__*/React.createElement("strong", {
-    style: {
-      fontSize: '0.85rem'
-    }
-  }, event.event || event.type), event.session_code && /*#__PURE__*/React.createElement("span", {
-    style: {
-      fontFamily: 'monospace',
-      fontSize: '0.75rem',
-      color: 'var(--accent)'
-    }
-  }, event.session_code)), /*#__PURE__*/React.createElement("div", {
-    className: "text-sm text-muted"
-  }, event.teacher_name && `Teacher: ${event.teacher_name}`, event.student_id && ` • Student: ${event.student_id}`)))))));
+      await apiFetch('/api/classroom-system/admin/students/transfer', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+        body: { student_id, new_classroom_id }
+      });
+      add('Student transferred successfully!', 'success');
+      loadData();
+    } catch (err) { add(err.message, 'error'); }
+  }
+
+  async function handleCalendar(date, event_name, is_holiday) {
+    try {
+      await apiFetch('/api/classroom-system/setup/academic-calendar', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+        body: { date: date.replace(/-/g, ''), event_name, is_holiday }
+      });
+      add('Calendar event added!', 'success');
+      loadData();
+    } catch (err) { add(err.message, 'error'); }
+  }
+
+  const filteredStudents = students.filter(s => 
+    s.full_name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+    s.email.toLowerCase().includes(searchQuery.toLowerCase()) || 
+    s.roll_number.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+  
+  const filteredTeachers = teachers.filter(t => 
+    t.full_name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+    t.email.toLowerCase().includes(searchQuery.toLowerCase()) || 
+    t.department.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  return React.createElement("div", { className: "page admin-page", style: { display: 'flex', minHeight: 'calc(100vh - 80px)', gap: 20 } },
+    React.createElement("div", { className: "card", style: { width: 260, padding: 16, display: 'flex', flexDirection: 'column', gap: 6, flexShrink: 0, background: 'var(--surface)' } },
+      React.createElement("div", { style: { fontSize: '1.1rem', fontWeight: 700, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 } }, 
+        React.createElement("span", null, "\uD83D\uDEE1\uFE0F"), "Admin Console"
+      ),
+      [
+        ['overview', '\uD83D\uDCCA Dashboard'],
+        ['institutions', '\uD83C\uDFEB Institutions'],
+        ['departments', '\uD83D\uDDE1\uFE0F Departments'],
+        ['courses', '\uD83D\uDCDA Courses'],
+        ['subjects', '\uD83D\uDCD6 Subjects'],
+        ['classrooms', '\uD83C\uDFEB Classrooms'],
+        ['teachers', '\uD83D\uDC68\u200D\uD83C\uDFEB Teachers'],
+        ['students', '\uD83C\uDF93 Students'],
+        ['bulk', '\uD83D\uDCE5 Bulk Import'],
+        ['ops', '\u2699\uFE0F Promotions & Transfers'],
+        ['timetable', '\uD83D\uDCC5 Timetables'],
+        ['calendar', '\uD83D\uDDD3\uFE0F Calendar'],
+        ['reports', '\uD83D\uDCCA Reports'],
+        ['settings', '\u2699\uFE0F Settings']
+      ].map(([t, label]) =>
+        React.createElement("button", {
+          key: t,
+          className: `btn btn-sm \${tab === t ? 'btn-primary' : 'btn-ghost'}`,
+          style: { justifyContent: 'flex-start', width: '100%' },
+          onClick: () => { setTab(t); setSearchQuery(''); setFormData({}); }
+        }, label)
+      )
+    ),
+
+    React.createElement("div", { style: { flex: 1, display: 'flex', flexDirection: 'column', gap: 16 } },
+      tab === 'overview' && React.createElement("div", { style: { display: 'flex', flexDirection: 'column', gap: 20 } },
+        React.createElement("div", { className: "grid grid-4", style: { gap: 16 } },
+          [
+            ['Total Students', stats?.total_students || 0, '\uD83C\uDF93', 'var(--accent)'],
+            ['Total Teachers', stats?.total_teachers || 0, '\uD83D\uDC68\u200D\uD83C\uDFEB', 'var(--accent2)'],
+            ['Total Departments', stats?.total_departments || 0, '\uD83D\uDDE1\uFE0F', 'var(--green)'],
+            ['Total Courses', stats?.total_courses || 0, '\uD83D\uDCDA', 'var(--yellow)'],
+            ['Total Subjects', stats?.total_subjects || 0, '\uD83D\uDCD6', 'var(--purple)'],
+            ['Total Classrooms', stats?.total_classrooms || 0, '\uD83C\uDFEB', 'var(--orange)'],
+            ['Active Lectures', stats?.active_lectures || 0, '\u26A1', 'var(--red)'],
+            ['Today Attendance', `\& \${stats?.today_attendance_percent || 0}%`, '\uD83D\uDCCA', 'var(--green)']
+          ].map(([label, val, icon, color]) =>
+            React.createElement("div", { className: "card", key: label, style: { display: 'flex', alignItems: 'center', gap: 16 } },
+              React.createElement("div", { style: { fontSize: '2rem', padding: 8, background: 'rgba(255,255,255,0.04)', borderRadius: 10 } }, icon),
+              React.createElement("div", null,
+                React.createElement("div", { className: "text-muted text-xs" }, label),
+                React.createElement("div", { style: { fontSize: '1.4rem', fontWeight: 700, color } }, val)
+              )
+            )
+          )
+        ),
+        React.createElement("div", { className: "grid grid-2", style: { gap: 16 } },
+          React.createElement("div", { className: "card" },
+            React.createElement("div", { className: "card-title" }, "Recent Activities"),
+            (stats?.recent_activities || []).length === 0 
+              ? React.createElement("p", { className: "text-muted text-sm" }, "No check-ins or log activities registered today.")
+              : React.createElement("div", { style: { display: 'flex', flexDirection: 'column', gap: 12 } },
+                  stats.recent_activities.map((a, idx) => React.createElement("div", { key: idx, style: { display: 'flex', justifyContent: 'space-between', padding: 10, background: 'var(--surface2)', borderRadius: 6 } },
+                    React.createElement("span", { className: "text-sm" }, a.activity),
+                    React.createElement("span", { className: "text-xs text-muted" }, a.time)
+                  ))
+                )
+          ),
+          React.createElement("div", { className: "card", style: { display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center' } },
+            React.createElement("div", { className: "card-title" }, "Database Health"),
+            React.createElement("div", { style: { fontSize: '3rem', color: 'var(--green)' } }, "\uD83D\uDFE2"),
+            React.createElement("p", { className: "text-sm text-muted", style: { marginTop: 8 } }, "MongoDB clusters synced. Roster pipelines running."),
+            React.createElement("button", { className: "btn btn-primary btn-sm", style: { marginTop: 16 }, onClick: loadData }, "Sync Statistics Now")
+          )
+        )
+      ),
+
+      tab === 'institutions' && React.createElement("div", { className: "grid grid-2", style: { gap: 16 } },
+        React.createElement("form", { className: "card", onSubmit: e => {
+          e.preventDefault();
+          if (formData.edit_id) {
+            handleUpdate('institution', formData.edit_id, { name: formData.name, code: formData.code });
+          } else {
+            handleCreate('institution', { name: formData.name, code: formData.code });
+          }
+        } },
+          React.createElement("div", { className: "card-title" }, formData.edit_id ? "Edit Institution" : "Add Institution"),
+          React.createElement("div", { className: "form-group" },
+            React.createElement("label", null, "Institution Name"),
+            React.createElement("input", { className: "form-control", required: true, value: formData.name || '', onChange: e => setFormData({ ...formData, name: e.target.value }), placeholder: "e.g. Stanford University" })
+          ),
+          React.createElement("div", { className: "form-group", style: { marginTop: 10 } },
+            React.createElement("label", null, "Short Code"),
+            React.createElement("input", { className: "form-control", required: true, value: formData.code || '', onChange: e => setFormData({ ...formData, code: e.target.value }), placeholder: "e.g. STAN" })
+          ),
+          React.createElement("div", { style: { display: 'flex', gap: 10, marginTop: 16 } },
+            React.createElement("button", { type: "submit", className: "btn btn-primary" }, "Save Institution"),
+            formData.edit_id && React.createElement("button", { type: "button", className: "btn btn-ghost", onClick: () => setFormData({}) }, "Cancel")
+          )
+        ),
+        React.createElement("div", { className: "card" },
+          React.createElement("div", { className: "card-title" }, "Institutions List"),
+          institutions.length === 0 
+            ? React.createElement("p", { className: "text-muted text-sm" }, "No institutions recorded.")
+            : React.createElement("div", { style: { display: 'flex', flexDirection: 'column', gap: 10 } },
+                institutions.map(inst => React.createElement("div", { key: inst._id, style: { padding: 12, background: 'var(--surface2)', borderRadius: 8, display: 'flex', justifyContent: 'space-between', alignItems: 'center' } },
+                  React.createElement("div", null,
+                    React.createElement("strong", null, inst.name),
+                    React.createElement("span", { className: "text-muted text-xs", style: { marginLeft: 8 } }, `(${inst.code})`)
+                  ),
+                  React.createElement("div", { style: { display: 'flex', gap: 6 } },
+                    React.createElement("button", { className: "btn btn-xs btn-ghost", onClick: () => {
+                      setFormData({ edit_id: inst._id, name: inst.name, code: inst.code });
+                    } }, "\u270F\uFE0F"),
+                    React.createElement("button", { className: "btn btn-xs btn-ghost text-error", onClick: () => handleDelete('institution', inst._id) }, "\uD83D\uDDD1\uFE0F")
+                  )
+                ))
+              )
+        )
+      ),
+
+      tab === 'departments' && React.createElement("div", { className: "grid grid-2", style: { gap: 16 } },
+        React.createElement("form", { className: "card", onSubmit: e => {
+          e.preventDefault();
+          if (formData.edit_id) {
+            handleUpdate('department', formData.edit_id, { name: formData.name, code: formData.code });
+          } else {
+            handleCreate('department', { institution_id: formData.institution_id, name: formData.name, code: formData.code });
+          }
+        } },
+          React.createElement("div", { className: "card-title" }, formData.edit_id ? "Edit Department" : "Add Department"),
+          !formData.edit_id && React.createElement("div", { className: "form-group" },
+            React.createElement("label", null, "Select Institution"),
+            React.createElement("select", { className: "form-control", required: true, value: formData.institution_id || '', onChange: e => setFormData({ ...formData, institution_id: e.target.value }) },
+              React.createElement("option", { value: "" }, "Choose Institution"),
+              institutions.map(i => React.createElement("option", { key: i._id, value: i._id }, i.name))
+            )
+          ),
+          React.createElement("div", { className: "form-group", style: { marginTop: 10 } },
+            React.createElement("label", null, "Department Name"),
+            React.createElement("input", { className: "form-control", required: true, value: formData.name || '', onChange: e => setFormData({ ...formData, name: e.target.value }), placeholder: "e.g. Computer Science" })
+          ),
+          React.createElement("div", { className: "form-group", style: { marginTop: 10 } },
+            React.createElement("label", null, "Department Code"),
+            React.createElement("input", { className: "form-control", required: true, value: formData.code || '', onChange: e => setFormData({ ...formData, code: e.target.value }), placeholder: "e.g. CS" })
+          ),
+          React.createElement("div", { style: { display: 'flex', gap: 10, marginTop: 16 } },
+            React.createElement("button", { type: "submit", className: "btn btn-primary" }, "Save Department"),
+            formData.edit_id && React.createElement("button", { type: "button", className: "btn btn-ghost", onClick: () => setFormData({}) }, "Cancel")
+          )
+        ),
+        React.createElement("div", { className: "card" },
+          React.createElement("div", { className: "card-title" }, "Departments List"),
+          departments.length === 0 
+            ? React.createElement("p", { className: "text-muted text-sm" }, "No departments recorded.")
+            : React.createElement("div", { style: { display: 'flex', flexDirection: 'column', gap: 10 } },
+                departments.map(dept => React.createElement("div", { key: dept._id, style: { padding: 12, background: 'var(--surface2)', borderRadius: 8, display: 'flex', justifyContent: 'space-between', alignItems: 'center' } },
+                  React.createElement("div", null,
+                    React.createElement("strong", null, dept.name),
+                    React.createElement("span", { className: "text-muted text-xs", style: { marginLeft: 8 } }, `(${dept.code})`)
+                  ),
+                  React.createElement("div", { style: { display: 'flex', gap: 6 } },
+                    React.createElement("button", { className: "btn btn-xs btn-ghost", onClick: () => {
+                      setFormData({ edit_id: dept._id, name: dept.name, code: dept.code });
+                    } }, "\u270F\uFE0F"),
+                    React.createElement("button", { className: "btn btn-xs btn-ghost text-error", onClick: () => handleDelete('department', dept._id) }, "\uD83D\uDDD1\uFE0F")
+                  )
+                ))
+              )
+        )
+      ),
+
+      tab === 'courses' && React.createElement("div", { className: "grid grid-2", style: { gap: 16 } },
+        React.createElement("form", { className: "card", onSubmit: e => {
+          e.preventDefault();
+          if (formData.edit_id) {
+            handleUpdate('course', formData.edit_id, { name: formData.name, code: formData.code, duration_years: parseInt(formData.duration_years) });
+          } else {
+            handleCreate('course', { department_id: formData.department_id, name: formData.name, code: formData.code, duration_years: parseInt(formData.duration_years || 4) });
+          }
+        } },
+          React.createElement("div", { className: "card-title" }, formData.edit_id ? "Edit Course" : "Add Course"),
+          !formData.edit_id && React.createElement("div", { className: "form-group" },
+            React.createElement("label", null, "Select Department"),
+            React.createElement("select", { className: "form-control", required: true, value: formData.department_id || '', onChange: e => setFormData({ ...formData, department_id: e.target.value }) },
+              React.createElement("option", { value: "" }, "Choose Department"),
+              departments.map(d => React.createElement("option", { key: d._id, value: d._id }, d.name))
+            )
+          ),
+          React.createElement("div", { className: "form-group", style: { marginTop: 10 } },
+            React.createElement("label", null, "Course Name"),
+            React.createElement("input", { className: "form-control", required: true, value: formData.name || '', onChange: e => setFormData({ ...formData, name: e.target.value }), placeholder: "e.g. B.Tech Computer Science" })
+          ),
+          React.createElement("div", { className: "form-group", style: { marginTop: 10 } },
+            React.createElement("label", null, "Course Code"),
+            React.createElement("input", { className: "form-control", required: true, value: formData.code || '', onChange: e => setFormData({ ...formData, code: e.target.value }), placeholder: "e.g. BTECH-CS" })
+          ),
+          React.createElement("div", { className: "form-group", style: { marginTop: 10 } },
+            React.createElement("label", null, "Duration (Years)"),
+            React.createElement("select", { className: "form-control", required: true, value: formData.duration_years || '4', onChange: e => setFormData({ ...formData, duration_years: e.target.value }) },
+              ['1','2','3','4','5'].map(y => React.createElement("option", { key: y, value: y }, `\${y} Years`))
+            )
+          ),
+          React.createElement("div", { style: { display: 'flex', gap: 10, marginTop: 16 } },
+            React.createElement("button", { type: "submit", className: "btn btn-primary" }, "Save Course"),
+            formData.edit_id && React.createElement("button", { type: "button", className: "btn btn-ghost", onClick: () => setFormData({}) }, "Cancel")
+          )
+        ),
+        React.createElement("div", { className: "card" },
+          React.createElement("div", { className: "card-title" }, "Courses List"),
+          courses.length === 0 
+            ? React.createElement("p", { className: "text-muted text-sm" }, "No courses recorded.")
+            : React.createElement("div", { style: { display: 'flex', flexDirection: 'column', gap: 10 } },
+                courses.map(course => React.createElement("div", { key: course._id, style: { padding: 12, background: 'var(--surface2)', borderRadius: 8, display: 'flex', justifyContent: 'space-between', alignItems: 'center' } },
+                  React.createElement("div", null,
+                    React.createElement("strong", null, course.name),
+                    React.createElement("span", { className: "text-muted text-xs", style: { marginLeft: 8 } }, `(${course.code} - ${course.duration_years} Years)`)
+                  ),
+                  React.createElement("div", { style: { display: 'flex', gap: 6 } },
+                    React.createElement("button", { className: "btn btn-xs btn-ghost", onClick: () => {
+                      setFormData({ edit_id: course._id, name: course.name, code: course.code, duration_years: course.duration_years });
+                    } }, "\u270F\uFE0F"),
+                    React.createElement("button", { className: "btn btn-xs btn-ghost text-error", onClick: () => handleDelete('course', course._id) }, "\uD83D\uDDD1\uFE0F")
+                  )
+                ))
+              )
+        )
+      ),
+
+      tab === 'subjects' && React.createElement("div", { className: "grid grid-2", style: { gap: 16 } },
+        React.createElement("form", { className: "card", onSubmit: e => {
+          e.preventDefault();
+          if (formData.edit_id) {
+            handleUpdate('subject', formData.edit_id, { name: formData.name, code: formData.code, semester: parseInt(formData.semester) });
+          } else {
+            handleCreate('subject', { course_id: formData.course_id, name: formData.name, code: formData.code, semester: parseInt(formData.semester || 1) });
+          }
+        } },
+          React.createElement("div", { className: "card-title" }, formData.edit_id ? "Edit Subject" : "Add Subject"),
+          !formData.edit_id && React.createElement("div", { className: "form-group" },
+            React.createElement("label", null, "Select Course"),
+            React.createElement("select", { className: "form-control", required: true, value: formData.course_id || '', onChange: e => setFormData({ ...formData, course_id: e.target.value }) },
+              React.createElement("option", { value: "" }, "Choose Course"),
+              courses.map(c => React.createElement("option", { key: c._id, value: c._id }, c.name))
+            )
+          ),
+          React.createElement("div", { className: "form-group", style: { marginTop: 10 } },
+            React.createElement("label", null, "Subject Name"),
+            React.createElement("input", { className: "form-control", required: true, value: formData.name || '', onChange: e => setFormData({ ...formData, name: e.target.value }), placeholder: "e.g. Deep Learning" })
+          ),
+          React.createElement("div", { className: "form-group", style: { marginTop: 10 } },
+            React.createElement("label", null, "Subject Code"),
+            React.createElement("input", { className: "form-control", required: true, value: formData.code || '', onChange: e => setFormData({ ...formData, code: e.target.value }), placeholder: "e.g. CS-402" })
+          ),
+          React.createElement("div", { className: "form-group", style: { marginTop: 10 } },
+            React.createElement("label", null, "Semester"),
+            React.createElement("select", { className: "form-control", required: true, value: formData.semester || '1', onChange: e => setFormData({ ...formData, semester: e.target.value }) },
+              ['1','2','3','4','5','6','7','8'].map(s => React.createElement("option", { key: s, value: s }, `Semester \${s}`))
+            )
+          ),
+          React.createElement("div", { style: { display: 'flex', gap: 10, marginTop: 16 } },
+            React.createElement("button", { type: "submit", className: "btn btn-primary" }, "Save Subject"),
+            formData.edit_id && React.createElement("button", { type: "button", className: "btn btn-ghost", onClick: () => setFormData({}) }, "Cancel")
+          )
+        ),
+        React.createElement("div", { className: "card" },
+          React.createElement("div", { className: "card-title" }, "Subjects List"),
+          subjects.length === 0 
+            ? React.createElement("p", { className: "text-muted text-sm" }, "No subjects recorded.")
+            : React.createElement("div", { style: { display: 'flex', flexDirection: 'column', gap: 10 } },
+                subjects.map(subj => React.createElement("div", { key: subj._id, style: { padding: 12, background: 'var(--surface2)', borderRadius: 8, display: 'flex', justifyContent: 'space-between', alignItems: 'center' } },
+                  React.createElement("div", null,
+                    React.createElement("strong", null, subj.name),
+                    React.createElement("span", { className: "text-muted text-xs", style: { marginLeft: 8 } }, `(${subj.code} - Sem ${subj.semester})`)
+                  ),
+                  React.createElement("div", { style: { display: 'flex', gap: 6 } },
+                    React.createElement("button", { className: "btn btn-xs btn-ghost", onClick: () => {
+                      setFormData({ edit_id: subj._id, name: subj.name, code: subj.code, semester: subj.semester });
+                    } }, "\u270F\uFE0F"),
+                    React.createElement("button", { className: "btn btn-xs btn-ghost text-error", onClick: () => handleDelete('subject', subj._id) }, "\uD83D\uDDD1\uFE0F")
+                  )
+                ))
+              )
+        )
+      ),
+
+      tab === 'classrooms' && React.createElement("div", { className: "grid grid-2", style: { gap: 16 } },
+        React.createElement("form", { className: "card", onSubmit: e => {
+          e.preventDefault();
+          if (formData.edit_id) {
+            handleUpdate('classroom', formData.edit_id, { semester: parseInt(formData.semester), section: formData.section, academic_year: formData.academic_year, teacher_id: formData.teacher_id });
+          } else {
+            handleCreate('classroom', { course_id: formData.course_id, semester: parseInt(formData.semester || 1), section: formData.section || 'A', academic_year: formData.academic_year });
+          }
+        } },
+          React.createElement("div", { className: "card-title" }, formData.edit_id ? "Edit Classroom" : "Create Classroom"),
+          !formData.edit_id && React.createElement("div", { className: "form-group" },
+            React.createElement("label", null, "Select Course"),
+            React.createElement("select", { className: "form-control", required: true, value: formData.course_id || '', onChange: e => setFormData({ ...formData, course_id: e.target.value }) },
+              React.createElement("option", { value: "" }, "Choose Course"),
+              courses.map(c => React.createElement("option", { key: c._id, value: c._id }, c.name))
+            )
+          ),
+          React.createElement("div", { className: "form-group", style: { marginTop: 10 } },
+            React.createElement("label", null, "Semester"),
+            React.createElement("select", { className: "form-control", required: true, value: formData.semester || '1', onChange: e => setFormData({ ...formData, semester: e.target.value }) },
+              ['1','2','3','4','5','6','7','8'].map(s => React.createElement("option", { key: s, value: s }, `Semester \${s}`))
+            )
+          ),
+          React.createElement("div", { className: "form-group", style: { marginTop: 10 } },
+            React.createElement("label", null, "Section"),
+            React.createElement("input", { className: "form-control", required: true, value: formData.section || '', onChange: e => setFormData({ ...formData, section: e.target.value.toUpperCase() }), placeholder: "e.g. A" })
+          ),
+          React.createElement("div", { className: "form-group", style: { marginTop: 10 } },
+            React.createElement("label", null, "Academic Year"),
+            React.createElement("input", { className: "form-control", required: true, value: formData.academic_year || '', onChange: e => setFormData({ ...formData, academic_year: e.target.value }), placeholder: "e.g. 2025-2026" })
+          ),
+          React.createElement("div", { style: { display: 'flex', gap: 10, marginTop: 16 } },
+            React.createElement("button", { type: "submit", className: "btn btn-primary" }, "Save Classroom"),
+            formData.edit_id && React.createElement("button", { type: "button", className: "btn btn-ghost", onClick: () => setFormData({}) }, "Cancel")
+          )
+        ),
+        React.createElement("div", { className: "card" },
+          React.createElement("div", { className: "card-title" }, "Classrooms List"),
+          classrooms.length === 0 
+            ? React.createElement("p", { className: "text-muted text-sm" }, "No classrooms recorded.")
+            : React.createElement("div", { style: { display: 'flex', flexDirection: 'column', gap: 10 } },
+                classrooms.map(cls => React.createElement("div", { key: cls._id, style: { padding: 12, background: 'var(--surface2)', borderRadius: 8, display: 'flex', justifyContent: 'space-between', alignItems: 'center' } },
+                  React.createElement("div", null,
+                    React.createElement("strong", null, courses.find(c => c._id === cls.course_id)?.name || 'Course'),
+                    React.createElement("span", { className: "text-muted text-xs", style: { marginLeft: 8 } }, `(Sem \${cls.semester} Sec \${cls.section} - \${cls.academic_year})`)
+                  ),
+                  React.createElement("div", { style: { display: 'flex', gap: 6 } },
+                    React.createElement("button", { className: "btn btn-xs btn-ghost", onClick: () => {
+                      setFormData({ edit_id: cls._id, semester: cls.semester, section: cls.section, academic_year: cls.academic_year, teacher_id: cls.teacher_id });
+                    } }, "\u270F\uFE0F"),
+                    React.createElement("button", { className: "btn btn-xs btn-ghost text-error", onClick: () => handleDelete('classroom', cls._id) }, "\uD83D\uDDD1\uFE0F")
+                  )
+                ))
+              )
+        )
+      ),
+
+      tab === 'teachers' && React.createElement("div", { className: "grid grid-2", style: { gap: 16 } },
+        React.createElement("form", { className: "card", onSubmit: e => {
+          e.preventDefault();
+          if (formData.edit_id) {
+            handleUpdate('teacher', formData.edit_id, formData);
+          } else {
+            handleCreate('teacher', formData);
+          }
+        } },
+          React.createElement("div", { className: "card-title" }, formData.edit_id ? "Edit Teacher" : "Add Teacher"),
+          React.createElement("div", { className: "form-group" },
+            React.createElement("label", null, "Email Address"),
+            React.createElement("input", { type: "email", className: "form-control", required: true, disabled: !!formData.edit_id, value: formData.email || '', onChange: e => setFormData({ ...formData, email: e.target.value }) })
+          ),
+          React.createElement("div", { className: "form-group", style: { marginTop: 10 } },
+            React.createElement("label", null, "Full Name"),
+            React.createElement("input", { className: "form-control", required: true, value: formData.full_name || '', onChange: e => setFormData({ ...formData, full_name: e.target.value }) })
+          ),
+          React.createElement("div", { className: "form-group", style: { marginTop: 10 } },
+            React.createElement("label", null, "Organization"),
+            React.createElement("input", { className: "form-control", required: true, value: formData.organization || '', onChange: e => setFormData({ ...formData, organization: e.target.value }) })
+          ),
+          React.createElement("div", { className: "form-group", style: { marginTop: 10 } },
+            React.createElement("label", null, "Designation"),
+            React.createElement("input", { className: "form-control", required: true, value: formData.designation || '', onChange: e => setFormData({ ...formData, designation: e.target.value }) })
+          ),
+          React.createElement("div", { className: "form-group", style: { marginTop: 10 } },
+            React.createElement("label", null, "Department"),
+            React.createElement("input", { className: "form-control", required: true, value: formData.department || '', onChange: e => setFormData({ ...formData, department: e.target.value }) })
+          ),
+          React.createElement("div", { style: { display: 'flex', gap: 10, marginTop: 16 } },
+            React.createElement("button", { type: "submit", className: "btn btn-primary" }, "Save Teacher"),
+            formData.edit_id && React.createElement("button", { type: "button", className: "btn btn-ghost", onClick: () => setFormData({}) }, "Cancel")
+          )
+        ),
+        React.createElement("div", { className: "card", style: { display: 'flex', flexDirection: 'column', gap: 12 } },
+          React.createElement("div", { className: "card-title" }, "Teachers List"),
+          React.createElement("input", { placeholder: "\uD83D\uDD0D Search teachers...", className: "form-control", value: searchQuery, onChange: e => setSearchQuery(e.target.value) }),
+          filteredTeachers.length === 0 
+            ? React.createElement("p", { className: "text-muted text-sm" }, "No teachers matched.")
+            : React.createElement("div", { style: { display: 'flex', flexDirection: 'column', gap: 10, maxHeight: 400, overflowY: 'auto' } },
+                filteredTeachers.map(tch => React.createElement("div", { key: tch.teacher_id, style: { padding: 12, background: 'var(--surface2)', borderRadius: 8, display: 'flex', justifyContent: 'space-between', alignItems: 'center' } },
+                  React.createElement("div", null,
+                    React.createElement("strong", null, tch.full_name),
+                    React.createElement("div", { className: "text-muted text-xs" }, `\${tch.email} - \${tch.designation} (\${tch.department})`)
+                  ),
+                  React.createElement("div", { style: { display: 'flex', gap: 6 } },
+                    React.createElement("button", { className: "btn btn-xs btn-ghost", onClick: () => {
+                      setFormData({
+                        edit_id: tch.teacher_id,
+                        email: tch.email,
+                        full_name: tch.full_name,
+                        organization: tch.organization,
+                        designation: tch.designation,
+                        department: tch.department,
+                        phone: tch.phone,
+                        bio: tch.bio
+                      });
+                    } }, "\u270F\uFE0F"),
+                    React.createElement("button", { className: "btn btn-xs btn-ghost", onClick: () => {
+                      const cid = window.prompt("Enter Classroom ID to map this teacher:");
+                      const sid = window.prompt("Enter Subject ID to map this teacher:");
+                      if (cid && sid) {
+                        handleCreate('assign-teacher', { classroom_id: cid, teacher_id: tch.teacher_id, subject_id: sid });
+                      }
+                    } }, "\uD83D\uDD17 Map Class"),
+                    React.createElement("button", { className: "btn btn-xs btn-ghost text-error", onClick: () => handleDelete('teacher', tch.teacher_id) }, "\uD83D\uDDD1\uFE0F")
+                  )
+                ))
+              )
+        )
+      ),
+
+      tab === 'students' && React.createElement("div", { className: "grid grid-2", style: { gap: 16 } },
+        React.createElement("form", { className: "card", onSubmit: e => {
+          e.preventDefault();
+          const payload = {
+            semester: 1,
+            section: 'A',
+            academic_year: '2025-2026',
+            ...formData
+          };
+          if (formData.edit_id) {
+            handleUpdate('student', formData.edit_id, payload);
+          } else {
+            handleCreate('student', payload);
+          }
+        } },
+          React.createElement("div", { className: "card-title" }, formData.edit_id ? "Edit Student" : "Add Student"),
+          React.createElement("div", { className: "form-group" },
+            React.createElement("label", null, "Email Address"),
+            React.createElement("input", { type: "email", className: "form-control", required: true, disabled: !!formData.edit_id, value: formData.email || '', onChange: e => setFormData({ ...formData, email: e.target.value }) })
+          ),
+          React.createElement("div", { className: "form-group", style: { marginTop: 10 } },
+            React.createElement("label", null, "Full Name"),
+            React.createElement("input", { className: "form-control", required: true, value: formData.full_name || '', onChange: e => setFormData({ ...formData, full_name: e.target.value }) })
+          ),
+          React.createElement("div", { className: "form-group", style: { marginTop: 10 } },
+            React.createElement("label", null, "Roll Number"),
+            React.createElement("input", { className: "form-control", required: true, value: formData.roll_number || '', onChange: e => setFormData({ ...formData, roll_number: e.target.value }) })
+          ),
+          React.createElement("div", { className: "form-group", style: { marginTop: 10 } },
+            React.createElement("label", null, "Registration Number"),
+            React.createElement("input", { className: "form-control", required: true, value: formData.registration_number || '', onChange: e => setFormData({ ...formData, registration_number: e.target.value }) })
+          ),
+          React.createElement("div", { className: "form-group", style: { marginTop: 10 } },
+            React.createElement("label", null, "Select Course"),
+            React.createElement("select", { className: "form-control", required: true, value: formData.course_id || '', onChange: e => setFormData({ ...formData, course_id: e.target.value }) },
+              React.createElement("option", { value: "" }, "Choose Course"),
+              courses.map(c => React.createElement("option", { key: c._id, value: c._id }, c.name))
+            )
+          ),
+          React.createElement("div", { className: "form-group", style: { marginTop: 10 } },
+            React.createElement("label", null, "Select Department"),
+            React.createElement("select", { className: "form-control", required: true, value: formData.department_id || '', onChange: e => setFormData({ ...formData, department_id: e.target.value }) },
+              React.createElement("option", { value: "" }, "Choose Department"),
+              departments.map(d => React.createElement("option", { key: d._id, value: d._id }, d.name))
+            )
+          ),
+          React.createElement("div", { className: "grid grid-3", style: { gap: 10, marginTop: 10 } },
+            React.createElement("div", { className: "form-group" },
+              React.createElement("label", null, "Semester"),
+              React.createElement("input", { type: "number", className: "form-control", required: true, value: formData.semester || 1, onChange: e => setFormData({ ...formData, semester: parseInt(e.target.value) }) })
+            ),
+            React.createElement("div", { className: "form-group" },
+              React.createElement("label", null, "Section"),
+              React.createElement("input", { className: "form-control", required: true, value: formData.section || 'A', onChange: e => setFormData({ ...formData, section: e.target.value.toUpperCase() }) })
+            ),
+            React.createElement("div", { className: "form-group" },
+              React.createElement("label", null, "Batch"),
+              React.createElement("input", { className: "form-control", required: true, value: formData.batch || '', onChange: e => setFormData({ ...formData, batch: e.target.value }), placeholder: "2025" })
+            )
+          ),
+          React.createElement("div", { className: "form-group", style: { marginTop: 10 } },
+            React.createElement("label", null, "Academic Year"),
+            React.createElement("input", { className: "form-control", required: true, value: formData.academic_year || '2025-2026', onChange: e => setFormData({ ...formData, academic_year: e.target.value }) })
+          ),
+          React.createElement("div", { style: { display: 'flex', gap: 10, marginTop: 16 } },
+            React.createElement("button", { type: "submit", className: "btn btn-primary" }, "Save Student"),
+            formData.edit_id && React.createElement("button", { type: "button", className: "btn btn-ghost", onClick: () => setFormData({}) }, "Cancel")
+          )
+        ),
+        React.createElement("div", { className: "card", style: { display: 'flex', flexDirection: 'column', gap: 12 } },
+          React.createElement("div", { className: "card-title" }, "Students List"),
+          React.createElement("input", { placeholder: "\uD83D\uDD0D Search students by name, email, roll...", className: "form-control", value: searchQuery, onChange: e => setSearchQuery(e.target.value) }),
+          filteredStudents.length === 0 
+            ? React.createElement("p", { className: "text-muted text-sm" }, "No students matched.")
+            : React.createElement("div", { style: { display: 'flex', flexDirection: 'column', gap: 10, maxHeight: 450, overflowY: 'auto' } },
+                filteredStudents.map(stud => React.createElement("div", { key: stud.student_id, style: { padding: 12, background: 'var(--surface2)', borderRadius: 8, display: 'flex', justifyContent: 'space-between', alignItems: 'center' } },
+                  React.createElement("div", null,
+                    React.createElement("strong", null, stud.full_name),
+                    React.createElement("div", { className: "text-muted text-xs" }, `\uD83C\uDF93 ${stud.email} | Roll: ${stud.roll_number} | Sem: ${stud.semester} Sec: ${stud.section}`)
+                  ),
+                  React.createElement("div", { style: { display: 'flex', gap: 6 } },
+                    React.createElement("button", { className: "btn btn-xs btn-ghost", onClick: () => {
+                      setFormData({
+                        edit_id: stud.student_id,
+                        email: stud.email,
+                        full_name: stud.full_name,
+                        roll_number: stud.roll_number,
+                        registration_number: stud.registration_number,
+                        course_id: stud.course_id,
+                        department_id: stud.department_id,
+                        semester: stud.semester,
+                        section: stud.section,
+                        batch: stud.batch,
+                        academic_year: stud.academic_year,
+                        university_id: stud.university_id
+                      });
+                    } }, "\u270F\uFE0F"),
+                    React.createElement("button", { className: "btn btn-xs btn-ghost", onClick: () => {
+                      const cid = window.prompt("Enter Classroom ID to map student permanently:");
+                      if (cid) {
+                        handleCreate('enroll-students', { classroom_id: cid, student_ids: [stud.student_id] });
+                      }
+                    } }, "\uD83C\uDFEB Enrol"),
+                    React.createElement("button", { className: "btn btn-xs btn-ghost text-error", onClick: () => handleDelete('student', stud.student_id) }, "\uD83D\uDDD1\uFE0F")
+                  )
+                ))
+              )
+        )
+      ),
+
+      tab === 'bulk' && React.createElement("div", { className: "grid grid-2", style: { gap: 16 } },
+        React.createElement("div", { className: "card" },
+          React.createElement("div", { className: "card-title" }, "Spreadsheet bulk enrolment"),
+          React.createElement("div", { className: "form-group" },
+            React.createElement("label", null, "Target Classroom ID"),
+            React.createElement("input", { id: "bulk-class-id", className: "form-control", placeholder: "e.g. class_abcd" })
+          ),
+          React.createElement("div", { style: { marginTop: 16, padding: '36px 16px', background: 'rgba(255,255,255,0.03)', border: '2px dashed rgba(255,255,255,0.08)', borderRadius: 10, textAlign: 'center' } },
+            React.createElement("input", { type: "file", accept: ".csv,.xlsx", id: "bulk-file-inp", style: { display: 'none' }, onChange: e => {
+              const cid = document.getElementById("bulk-class-id").value;
+              if (!cid) return add("Enter target Classroom ID first", "error");
+              handleBulkUpload(cid, e.target.files[0]);
+            } }),
+            React.createElement("button", { className: "btn btn-primary", onClick: () => document.getElementById("bulk-file-inp").click() }, "\uD83D\uDCC2 Select CSV / XLSX file"),
+            React.createElement("p", { className: "text-xs text-muted", style: { marginTop: 10 } }, "File must contain column headers: Email, Name, Roll Number, Registration Number")
+          )
+        ),
+        React.createElement("div", { className: "card" },
+          React.createElement("div", { className: "card-title" }, "Instructions"),
+          React.createElement("p", { className: "text-sm text-muted" }, "Permanent Student rosters can be initialized at the beginning of each semester using bulk imports."),
+          React.createElement("ul", { style: { paddingLeft: 20, marginTop: 8, display: 'flex', flexDirection: 'column', gap: 6 } },
+            React.createElement("li", { className: "text-xs text-muted" }, "Duplicate emails are ignored to prevent account double-creation."),
+            React.createElement("li", { className: "text-xs text-muted" }, "Default temporary passwords are set to 'TempPassword123!' for imported student users.")
+          )
+        )
+      ),
+
+      tab === 'ops' && React.createElement("div", { className: "grid grid-2", style: { gap: 16 } },
+        React.createElement("form", { className: "card", onSubmit: e => {
+          e.preventDefault();
+          handleTransfer(formData.transfer_student_id, formData.transfer_classroom_id);
+        } },
+          React.createElement("div", { className: "card-title" }, "Section Transfer"),
+          React.createElement("div", { className: "form-group" },
+            React.createElement("label", null, "Student User ID"),
+            React.createElement("input", { className: "form-control", required: true, value: formData.transfer_student_id || '', onChange: e => setFormData({ ...formData, transfer_student_id: e.target.value }) })
+          ),
+          React.createElement("div", { className: "form-group", style: { marginTop: 10 } },
+            React.createElement("label", null, "Target Classroom ID"),
+            React.createElement("input", { className: "form-control", required: true, value: formData.transfer_classroom_id || '', onChange: e => setFormData({ ...formData, transfer_classroom_id: e.target.value }) })
+          ),
+          React.createElement("button", { type: "submit", className: "btn btn-primary", style: { marginTop: 16 } }, "Execute Transfer")
+        ),
+
+        React.createElement("form", { className: "card", onSubmit: e => {
+          e.preventDefault();
+          const sids = (formData.promote_ids || '').split(',').map(s => s.trim()).filter(Boolean);
+          handlePromote(sids, parseInt(formData.promote_sem || 1), formData.promote_year);
+        } },
+          React.createElement("div", { className: "card-title" }, "Semester Promotion"),
+          React.createElement("div", { className: "form-group" },
+            React.createElement("label", null, "Student User IDs (comma-separated)"),
+            React.createElement("textarea", { className: "form-control", required: true, value: formData.promote_ids || '', onChange: e => setFormData({ ...formData, promote_ids: e.target.value }), placeholder: "u_student1, u_student2" })
+          ),
+          React.createElement("div", { className: "grid grid-2", style: { gap: 10, marginTop: 10 } },
+            React.createElement("div", { className: "form-group" },
+              React.createElement("label", null, "New Semester"),
+              React.createElement("input", { type: "number", className: "form-control", required: true, value: formData.promote_sem || 1, onChange: e => setFormData({ ...formData, promote_sem: e.target.value }) })
+            ),
+            React.createElement("div", { className: "form-group" },
+              React.createElement("label", null, "New Academic Year"),
+              React.createElement("input", { className: "form-control", required: true, value: formData.promote_year || '2026-2027', onChange: e => setFormData({ ...formData, promote_year: e.target.value }) })
+            )
+          ),
+          React.createElement("button", { type: "submit", className: "btn btn-primary", style: { marginTop: 16 } }, "Promote Cohort")
+        )
+      ),
+
+      tab === 'timetable' && React.createElement("div", { className: "grid grid-2", style: { gap: 16 } },
+        React.createElement("form", { className: "card", onSubmit: e => {
+          e.preventDefault();
+          handleCreate('timetable', {
+            classroom_id: formData.classroom_id,
+            day_of_week: parseInt(formData.day || 0),
+            start_time: formData.start_time,
+            end_time: formData.end_time,
+            subject_id: formData.subject_id,
+            teacher_id: formData.teacher_id
+          });
+        } },
+          React.createElement("div", { className: "card-title" }, "Create Timetable Entry"),
+          React.createElement("div", { className: "form-group" },
+            React.createElement("label", null, "Classroom ID"),
+            React.createElement("input", { className: "form-control", required: true, value: formData.classroom_id || '', onChange: e => setFormData({ ...formData, classroom_id: e.target.value }) })
+          ),
+          React.createElement("div", { className: "form-group", style: { marginTop: 10 } },
+            React.createElement("label", null, "Day of the Week"),
+            React.createElement("select", { className: "form-control", value: formData.day || '0', onChange: e => setFormData({ ...formData, day: e.target.value }) },
+              ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map((d, idx) => 
+                React.createElement("option", { key: idx, value: idx }, d)
+              )
+            )
+          ),
+          React.createElement("div", { className: "grid grid-2", style: { gap: 10, marginTop: 10 } },
+            React.createElement("div", { className: "form-group" },
+              React.createElement("label", null, "Start Time"),
+              React.createElement("input", { type: "time", className: "form-control", required: true, value: formData.start_time || '', onChange: e => setFormData({ ...formData, start_time: e.target.value }) })
+            ),
+            React.createElement("div", { className: "form-group" },
+              React.createElement("label", null, "End Time"),
+              React.createElement("input", { type: "time", className: "form-control", required: true, value: formData.end_time || '', onChange: e => setFormData({ ...formData, end_time: e.target.value }) })
+            )
+          ),
+          React.createElement("div", { className: "form-group", style: { marginTop: 10 } },
+            React.createElement("label", null, "Subject ID"),
+            React.createElement("input", { className: "form-control", required: true, value: formData.subject_id || '', onChange: e => setFormData({ ...formData, subject_id: e.target.value }) })
+          ),
+          React.createElement("div", { className: "form-group", style: { marginTop: 10 } },
+            React.createElement("label", null, "Teacher ID"),
+            React.createElement("input", { className: "form-control", required: true, value: formData.teacher_id || '', onChange: e => setFormData({ ...formData, teacher_id: e.target.value }) })
+          ),
+          React.createElement("button", { type: "submit", className: "btn btn-primary", style: { marginTop: 16 } }, "Save Entry")
+        ),
+        React.createElement("div", { className: "card" },
+          React.createElement("div", { className: "card-title" }, "Instructions"),
+          React.createElement("p", { className: "text-sm text-muted" }, "Timetable mappings bind subjects, classrooms, slots, and teachers together. Checked-in students must belong to these classrooms permanently to pass verification filters.")
+        )
+      ),
+
+      tab === 'calendar' && React.createElement("div", { className: "grid grid-2", style: { gap: 16 } },
+        React.createElement("form", { className: "card", onSubmit: e => {
+          e.preventDefault();
+          handleCalendar(formData.date, formData.event_name, !!formData.is_holiday);
+        } },
+          React.createElement("div", { className: "card-title" }, "Create Academic Event"),
+          React.createElement("div", { className: "form-group" },
+            React.createElement("label", null, "Event Date"),
+            React.createElement("input", { type: "date", className: "form-control", required: true, value: formData.date || '', onChange: e => setFormData({ ...formData, date: e.target.value }) })
+          ),
+          React.createElement("div", { className: "form-group", style: { marginTop: 10 } },
+            React.createElement("label", null, "Event Name"),
+            React.createElement("input", { className: "form-control", required: true, value: formData.event_name || '', onChange: e => setFormData({ ...formData, event_name: e.target.value }) })
+          ),
+          React.createElement("div", { className: "form-group", style: { marginTop: 10, display: 'flex', alignItems: 'center', gap: 8 } },
+            React.createElement("input", { type: "checkbox", checked: formData.is_holiday || false, onChange: e => setFormData({ ...formData, is_holiday: e.target.checked }), style: { width: 'auto' } }),
+            React.createElement("label", null, "Declare Holiday")
+          ),
+          React.createElement("button", { type: "submit", className: "btn btn-primary", style: { marginTop: 16 } }, "Save Event")
+        ),
+        React.createElement("div", { className: "card" },
+          React.createElement("div", { className: "card-title" }, "Academic Calendar"),
+          React.createElement("p", { className: "text-sm text-muted" }, "Events are rendered directly on the student and teacher calendar panels.")
+        )
+      ),
+
+      tab === 'reports' && React.createElement("div", { className: "card", style: { display: 'flex', flexDirection: 'column', gap: 16 } },
+        React.createElement("div", { className: "card-title" }, "System Reports"),
+        React.createElement("p", { className: "text-sm text-muted" }, "Generate CSV reports for all resources."),
+        React.createElement("div", { style: { display: 'flex', gap: 12 } },
+          React.createElement("button", { className: "btn btn-primary", onClick: () => {
+            window.open(`${API}/api/classroom-system/setup/students`);
+            add('Downloading student reports...', 'success');
+          } }, "\uD83D\uDCE5 Export Students CSV"),
+          React.createElement("button", { className: "btn btn-primary", onClick: () => {
+            window.open(`${API}/api/classroom-system/setup/teachers`);
+            add('Downloading teacher reports...', 'success');
+          } }, "\uD83D\uDCE5 Export Teachers CSV"),
+          React.createElement("button", { className: "btn btn-primary", onClick: () => {
+            window.open(`${API}/api/classroom-system/setup/classrooms`);
+            add('Downloading classrooms CSV...', 'success');
+          } }, "\uD83D\uDCE5 Export Classrooms CSV")
+        )
+      ),
+
+      tab === 'settings' && React.createElement("div", { className: "card" },
+        React.createElement("div", { className: "card-title" }, "Admin Settings"),
+        React.createElement("div", { className: "form-group" },
+          React.createElement("label", null, "Institution Name"),
+          React.createElement("input", { className: "form-control", defaultValue: "VYOM LMS University" })
+        ),
+        React.createElement("div", { className: "form-group", style: { marginTop: 10 } },
+          React.createElement("label", null, "Contact Email"),
+          React.createElement("input", { className: "form-control", defaultValue: "admin@vyom.org" })
+        ),
+        React.createElement("button", { className: "btn btn-primary", style: { marginTop: 16 }, onClick: () => add('Settings saved successfully!', 'success') }, "Save Settings")
+      )
+    )
+  );
 }
+
+
 
 // ═════════════════════════════════════════════════════════════════
 //  COMMUNICATION PAGE
@@ -22346,7 +22740,7 @@ function StudentTaskView({
       add(notif.toastText, notif.toastType || 'info');
     }
   };
-  const wsSend = useWS(wsUrl, useCallback(msg => {
+  const wsSend = useWS(wsUrl ? wsUrl : null, useCallback(msg => {
     try {
       if (msg && ['new_task', 'task', 'student_attendance_update', 'attendance_update', 'evaluation_approved', 'test_started', 'test_ended', 'coding_leaderboard_update', 'connected', 'doubt_resolved', 'doubt_submitted', 'lesson_pushed', 'lesson_sections_pushed'].includes(msg.type)) {
         fetchDashboardData();
@@ -34711,7 +35105,15 @@ function ProfileDrawer({ open, onClose, userName, role, sessionCode, updateUserP
               );
             })
           ),
-          React.createElement("button", { className: "prof-logout-btn", onClick: () => {
+          (role === 'admin' || localStorage.getItem('cm_admin_token') || (typeof userProfile !== 'undefined' && userProfile?.email === 'admin@vyom.com')) && React.createElement("button", {
+        className: "btn btn-primary btn-sm",
+        style: { width: '100%', marginBottom: 10, borderRadius: 8, height: 42, background: 'linear-gradient(135deg,var(--accent),var(--accent2))', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 },
+        onClick: () => {
+          onClose();
+          navigate('admin');
+        }
+      }, "\uD83D\uDEE1\uFE0F Go to Admin Console"),
+      React.createElement("button", { className: "prof-logout-btn", onClick: () => {
             localStorage.removeItem('cm_user');
             updateUserProfile(null);
             onClose();
@@ -34787,6 +35189,395 @@ window.addToDownloadsLibrary = function(meta) {
 
 
 // ===== 6. MAIN APP CONTROLLER =====
+
+function StudentDashboard({ navigate, studentId, updateUserProfile }) {
+  const { add } = React.useContext(AppCtx);
+  const [loading, setLoading] = React.useState(true);
+  const [data, setData] = React.useState(null);
+  const [error, setError] = React.useState('');
+  const [codeInput, setCodeInput] = React.useState('');
+  const [joining, setJoining] = React.useState(false);
+
+  async function loadData() {
+    setLoading(true);
+    setError('');
+    try {
+      const res = await apiFetch(`/api/classroom-system/dashboards/student/${studentId}/attendance`);
+      setData(res);
+    } catch (err) {
+      setError(err.message || 'Failed to load student dashboard');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  React.useEffect(() => {
+    if (studentId) {
+      loadData();
+    }
+  }, [studentId]);
+
+  async function handleJoinLecture(code) {
+    if (!code || !code.trim()) {
+      add('Please enter a lecture code', 'error');
+      return;
+    }
+    setJoining(true);
+    try {
+      const res = await apiFetch('/api/classroom-system/lectures/join-by-code', {
+        method: 'POST',
+        body: {
+          student_id: studentId,
+          lecture_code: code.trim().toUpperCase(),
+          device_info: navigator.userAgent,
+          ip_address: '127.0.0.1',
+          geo_location: { lat: 28.6139, lng: 77.2090 }
+        }
+      });
+      add('Attendance checked in successfully! Entering lecture workspace...', 'success');
+      navigate('student-waiting', {
+        sessionCode: code.trim().toUpperCase(),
+        studentId: studentId,
+        studentName: data?.student_name || 'Student'
+      });
+    } catch (err) {
+      add(err.message || 'Failed to join lecture', 'error');
+    } finally {
+      setJoining(false);
+    }
+  }
+
+  if (loading) {
+    return React.createElement('div', { className: 'page', style: { padding: 40, textAlign: 'center' } },
+      React.createElement('div', { className: 's-att-loader-spinner' }),
+      React.createElement('p', { className: 'text-muted' }, 'Loading dashboard metrics...')
+    );
+  }
+
+  if (error) {
+    return React.createElement('div', { className: 'page', style: { padding: 40, textAlign: 'center' } },
+      React.createElement('h3', { className: 'text-error' }, error),
+      React.createElement('button', { className: 'btn btn-primary', onClick: loadData, style: { marginTop: 16 } }, 'Retry')
+    );
+  }
+
+  const overall = data?.overall_attendance_percent || 0;
+  const history = data?.history || [];
+  const todayClasses = data?.today_classes || [];
+  const todayLectures = data?.today_lecture_status || [];
+  const announcements = data?.announcements || [];
+  const assignments = data?.assignments || [];
+  const quizzes = data?.quizzes || [];
+
+  return React.createElement("div", { className: "page student-dashboard-page" },
+    React.createElement("div", { className: "page-header", style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 } },
+      React.createElement("div", null,
+        React.createElement("div", { className: "page-title" }, "\uD83C\uDF93 Student Dashboard"),
+        React.createElement("div", { className: "page-subtitle" }, "Track your semester progress, attendance, and join lectures.")
+      ),
+      React.createElement("button", { className: "btn btn-ghost btn-sm", onClick: () => {
+        localStorage.removeItem('cm_user');
+        updateUserProfile(null);
+        navigate('landing');
+        add('Logged out', 'success');
+      } }, "Logout")
+    ),
+
+    React.createElement("div", { className: "grid grid-3", style: { gap: 16 } },
+      React.createElement("div", { className: "card", style: { textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' } },
+        React.createElement("div", { className: "card-title" }, "Overall Attendance"),
+        React.createElement("div", { style: { position: 'relative', width: 140, height: 140, margin: '16px auto' } },
+          React.createElement("svg", { width: 140, height: 140, viewBox: "0 0 140 140" },
+            React.createElement("circle", { cx: 70, cy: 70, r: 58, stroke: "rgba(255,255,255,0.06)", strokeWidth: 10, fill: "none" }),
+            React.createElement("circle", { cx: 70, cy: 70, r: 58, stroke: "var(--accent)", strokeWidth: 10, fill: "none",
+              strokeDasharray: 364.4, strokeDashoffset: 364.4 - (364.4 * overall) / 100,
+              strokeLinecap: "round", transform: "rotate(-90 70 70)" })
+          ),
+          React.createElement("div", { style: { position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', fontSize: '1.6rem', fontWeight: 700 } }, `${overall}%`)
+        ),
+        React.createElement("p", { className: "text-sm text-muted" }, "Semester target: 75% minimum")
+      ),
+
+      React.createElement("div", { className: "card" },
+        React.createElement("div", { className: "card-title" }, "\uD83D\uDCC5 Today's Schedule"),
+        todayClasses.length === 0 
+          ? React.createElement("p", { className: "text-muted text-sm", style: { padding: '24px 0' } }, "No lectures scheduled for today.")
+          : React.createElement("div", { style: { display: 'flex', flexDirection: 'column', gap: 10 } },
+              todayClasses.map((item, idx) => React.createElement("div", { key: idx, style: { padding: 12, background: 'var(--surface2)', borderRadius: 8 } },
+                React.createElement("div", { style: { fontWeight: 600 } }, item.subject),
+                React.createElement("div", { className: "text-sm text-muted" }, item.time)
+              ))
+            )
+      ),
+
+      React.createElement("div", { className: "card" },
+        React.createElement("div", { className: "card-title" }, "\u26A1 Join Active Lectures"),
+        React.createElement("div", { style: { display: 'flex', flexDirection: 'column', gap: 12 } },
+          todayLectures.length === 0
+            ? React.createElement("p", { className: "text-muted text-sm" }, "No active lecture sessions currently running.")
+            : todayLectures.map((lect, idx) => React.createElement("div", { key: idx, style: { padding: 12, background: 'rgba(34,197,94,0.06)', border: '1px solid rgba(34,197,94,0.15)', borderRadius: 8, display: 'flex', justifyContent: 'space-between', alignItems: 'center' } },
+                React.createElement("div", null,
+                  React.createElement("div", { style: { fontWeight: 600 } }, lect.subject),
+                  React.createElement("span", { className: "badge badge-sm badge-success", style: { marginTop: 4, display: 'inline-block' } }, "Active Now")
+                ),
+                lect.joined
+                  ? React.createElement("button", { className: "btn btn-sm btn-ghost", disabled: true }, "Checked In")
+                  : React.createElement("button", { className: "btn btn-sm btn-primary", onClick: () => {
+                      const code = window.prompt("Enter the 6-character Lecture Code displayed by the teacher:");
+                      if (code) handleJoinLecture(code);
+                    } }, "Join")
+              )),
+          React.createElement("hr", { style: { borderColor: 'rgba(255,255,255,0.06)', margin: '8px 0' } }),
+          React.createElement("div", { style: { display: 'flex', gap: 8 } },
+            React.createElement("input", { placeholder: "Enter Lecture Code (e.g. DBM472)", className: "form-control", value: codeInput, onChange: e => setCodeInput(e.target.value.toUpperCase()), style: { flex: 1 } }),
+            React.createElement("button", { className: "btn btn-primary", onClick: () => handleJoinLecture(codeInput), disabled: joining }, joining ? "..." : "Join")
+          )
+        )
+      )
+    ),
+
+    React.createElement("div", { className: "grid grid-3", style: { gap: 16, marginTop: 16 } },
+      React.createElement("div", { className: "card" },
+        React.createElement("div", { className: "card-title" }, "\uD83D\uDCDA Subject Attendance"),
+        Object.keys(data?.subject_wise_attendance || {}).length === 0
+          ? React.createElement("p", { className: "text-muted text-sm" }, "No subject metrics recorded yet.")
+          : React.createElement("div", { style: { display: 'flex', flexDirection: 'column', gap: 12 } },
+              Object.entries(data.subject_wise_attendance).map(([subj, pct], idx) => React.createElement("div", { key: idx },
+                React.createElement("div", { style: { display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', marginBottom: 4 } },
+                  React.createElement("span", null, subj),
+                  React.createElement("span", { style: { fontWeight: 600, color: pct >= 75 ? 'var(--green)' : 'var(--red)' } }, `${pct}%`)
+                ),
+                React.createElement("div", { style: { height: 6, background: 'rgba(255,255,255,0.06)', borderRadius: 3 } },
+                  React.createElement("div", { style: { height: '100%', width: `${pct}%`, background: pct >= 75 ? 'var(--green)' : 'var(--red)', borderRadius: 3 } })
+                )
+              ))
+            )
+      ),
+
+      React.createElement("div", { className: "card" },
+        React.createElement("div", { className: "card-title" }, "\uD83D\uDCE2 Announcements & Tasks"),
+        announcements.length === 0 && assignments.length === 0 && quizzes.length === 0
+          ? React.createElement("p", { className: "text-muted text-sm" }, "No announcements or deadlines posted.")
+          : React.createElement("div", { style: { display: 'flex', flexDirection: 'column', gap: 10 } },
+              announcements.map((item, idx) => React.createElement("div", { key: `an-${idx}`, style: { padding: 10, background: 'var(--surface2)', borderRadius: 6 } },
+                React.createElement("strong", { style: { fontSize: '0.8rem', color: 'var(--accent)' } }, "ANNOUNCEMENT:"),
+                React.createElement("div", { style: { fontWeight: 600 } }, item.title),
+                React.createElement("div", { className: "text-xs text-muted" }, item.content)
+              )),
+              assignments.map((item, idx) => React.createElement("div", { key: `as-${idx}`, style: { padding: 10, background: 'var(--surface2)', borderRadius: 6, borderLeft: '3px solid var(--accent)' } },
+                React.createElement("strong", { style: { fontSize: '0.8rem', color: 'var(--accent)' } }, "ASSIGNMENT:"),
+                React.createElement("div", { style: { fontWeight: 600 } }, item.title),
+                React.createElement("div", { className: "text-xs text-muted" }, `Due: ${item.due_date}`)
+              )),
+              quizzes.map((item, idx) => React.createElement("div", { key: `qz-${idx}`, style: { padding: 10, background: 'var(--surface2)', borderRadius: 6, borderLeft: '3px solid var(--accent2)' } },
+                React.createElement("strong", { style: { fontSize: '0.8rem', color: 'var(--accent2)' } }, "QUIZ:"),
+                React.createElement("div", { style: { fontWeight: 600 } }, item.title),
+                React.createElement("div", { className: "text-xs text-muted" }, `Due: ${item.due_date}`)
+              ))
+            )
+      ),
+
+      React.createElement("div", { className: "card" },
+        React.createElement("div", { className: "card-title" }, "\uD83D\uDCDC History Timeline"),
+        history.length === 0
+          ? React.createElement("p", { className: "text-muted text-sm" }, "No lecture history logged yet.")
+          : React.createElement("div", { style: { display: 'flex', flexDirection: 'column', gap: 8, maxHeight: 220, overflowY: 'auto' } },
+              history.map((h, idx) => React.createElement("div", { key: idx, style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: 8, background: 'var(--surface2)', borderRadius: 6 } },
+                React.createElement("div", null,
+                  React.createElement("div", { style: { fontWeight: 600, fontSize: '0.85rem' } }, h.subject),
+                  React.createElement("div", { className: "text-xs text-muted" }, h.date)
+                ),
+                React.createElement("span", { className: `badge badge-sm badge-\${h.status === 'present' ? 'success' : h.status === 'late' ? 'warning' : 'danger'}` }, h.status.toUpperCase())
+              ))
+            )
+      )
+    )
+  );
+}
+
+
+function TeacherHomeDashboard({ teacherProfileEmail, add, navigate, sessionControl }) {
+  const [assignedClasses, setAssignedClasses] = React.useState([]);
+  const [selectedClass, setSelectedClass] = React.useState('');
+  const [selectedSubject, setSelectedSubject] = React.useState('');
+  const [subjectsList, setSubjectsList] = React.useState([]);
+  const [loading, setLoading] = React.useState(false);
+  const [activeTab, setActiveTab] = React.useState('classes');
+  
+  const [editLectureId, setEditLectureId] = React.useState('');
+  const [editStudentId, setEditStudentId] = React.useState('');
+  const [editStatus, setEditStatus] = React.useState('present');
+  const [editDuration, setEditDuration] = React.useState('3600');
+
+  async function loadData() {
+    if (!teacherProfileEmail) return;
+    setLoading(true);
+    try {
+      const uRes = await apiFetch(`/api/user/profile?email=${encodeURIComponent(teacherProfileEmail)}`).catch(() => ({}));
+      const tid = uRes.id || uRes._id;
+      if (tid) {
+        const clsRes = await apiFetch(`/api/classroom-system/dashboards/teacher/${tid}/classes`);
+        setAssignedClasses(clsRes.classes || []);
+        if (clsRes.classes && clsRes.classes.length > 0) {
+          setSelectedClass(clsRes.classes[0].classroom_id);
+        }
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  React.useEffect(() => {
+    loadData();
+  }, [teacherProfileEmail]);
+
+  React.useEffect(() => {
+    if (selectedClass) {
+      setSubjectsList([
+        { id: 'subj_dbms', name: 'Database Management Systems' },
+        { id: 'subj_os', name: 'Operating Systems' },
+        { id: 'subj_cn', name: 'Computer Networks' }
+      ]);
+      setSelectedSubject('subj_dbms');
+    }
+  }, [selectedClass]);
+
+  async function handleStartLecture() {
+    if (!selectedClass) return add("Select a class to teach", "error");
+    try {
+      add("Starting academic lecture...", "info");
+      const res = await apiFetch('/api/classroom-system/lectures/start', {
+        method: 'POST',
+        body: {
+          classroom_id: selectedClass,
+          teacher_id: teacherProfileEmail,
+          subject_id: selectedSubject || "subj_default"
+        }
+      });
+      localStorage.setItem('cm_current_lecture_id', res.lecture._id);
+      add(`Lecture session started! Code: ${res.lecture.lecture_code}`, 'success');
+      navigate('teacher-dashboard', {
+        sessionCode: res.lecture.lecture_code,
+        sessionName: assignedClasses.find(c => c.classroom_id === selectedClass)?.name || 'Class',
+        durationMins: 60
+      });
+    } catch (err) {
+      add(err.message || 'Failed to start lecture', 'error');
+    }
+  }
+
+  async function handleEditAttendanceSubmit(e) {
+    e.preventDefault();
+    if (!editLectureId || !editStudentId) return add("Fill all edit fields", "error");
+    try {
+      await apiFetch(`/api/classroom-system/lectures/${editLectureId}/attendance/${editStudentId}`, {
+        method: 'PATCH',
+        body: { status: editStatus, duration_seconds: parseInt(editDuration) }
+      });
+      add("Attendance overridden successfully!", "success");
+      setEditLectureId(''); setEditStudentId('');
+    } catch (err) { add(err.message, 'error'); }
+  }
+
+  return React.createElement("div", { className: "page teacher-home-page" },
+    React.createElement("div", { className: "page-header", style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 } },
+      React.createElement("div", null,
+        React.createElement("div", { className: "page-title" }, "\uD83D\uDC68\u200D\uD83C\uDFEB Teacher Console"),
+        React.createElement("div", { className: "page-subtitle" }, "Manage assigned classes, view daily timetable slots, and launch lectures.")
+      ),
+      React.createElement("button", { className: "btn btn-ghost btn-sm", onClick: () => {
+        localStorage.removeItem('cm_user');
+        navigate('landing');
+        add('Logged out', 'success');
+      } }, "Logout")
+    ),
+
+    React.createElement("div", { className: "grid grid-3", style: { gap: 16 } },
+      React.createElement("div", { className: "card" },
+        React.createElement("div", { className: "card-title" }, "\u26A1 Start Active Lecture"),
+        React.createElement("div", { className: "form-group", style: { marginBottom: 12 } },
+          React.createElement("label", null, "Select Class"),
+          React.createElement("select", { className: "form-control", value: selectedClass, onChange: e => setSelectedClass(e.target.value) },
+            assignedClasses.map(c => React.createElement("option", { key: c.classroom_id, value: c.classroom_id }, c.name))
+          )
+        ),
+        React.createElement("div", { className: "form-group", style: { marginBottom: 12 } },
+          React.createElement("label", null, "Select Subject"),
+          React.createElement("select", { className: "form-control", value: selectedSubject, onChange: e => setSelectedSubject(e.target.value) },
+            subjectsList.map(s => React.createElement("option", { key: s.id, value: s.id }, s.name))
+          )
+        ),
+        React.createElement("button", { className: "btn btn-primary", style: { width: '100%' }, onClick: handleStartLecture }, "\uD83D\uDE80 Launch Lecture")
+      ),
+
+      React.createElement("div", { className: "card" },
+        React.createElement("div", { className: "card-title" }, "\uD83C\uDFEB Assigned Classes"),
+        assignedClasses.length === 0
+          ? React.createElement("p", { className: "text-sm text-muted", style: { padding: '20px 0' } }, "No classes mapped currently.")
+          : React.createElement("div", { style: { display: 'flex', flexDirection: 'column', gap: 10 } },
+              assignedClasses.map((c, idx) => React.createElement("div", { key: idx, style: { padding: 12, background: 'var(--surface2)', borderRadius: 8 } },
+                React.createElement("div", { style: { fontWeight: 600 } }, c.name),
+                React.createElement("div", { className: "text-xs text-muted" }, `ID: \${c.classroom_id}`)
+              ))
+            )
+      ),
+
+      React.createElement("div", { className: "card" },
+        React.createElement("div", { className: "card-title" }, "\uD83D\uDCC5 Timetable Slots"),
+        React.createElement("div", { style: { display: 'flex', flexDirection: 'column', gap: 10 } },
+          React.createElement("div", { style: { padding: 12, background: 'var(--surface2)', borderRadius: 8 } },
+            React.createElement("div", { style: { fontWeight: 600 } }, "Database Systems (B.Tech Sem 5 A)"),
+            React.createElement("div", { className: "text-xs text-muted" }, "Monday: 10:00 AM - 11:00 AM")
+          ),
+          React.createElement("div", { style: { padding: 12, background: 'var(--surface2)', borderRadius: 8 } },
+            React.createElement("div", { style: { fontWeight: 600 } }, "Operating Systems (B.Tech Sem 5 B)"),
+            React.createElement("div", { className: "text-xs text-muted" }, "Monday: 11:30 AM - 12:30 PM")
+          )
+        )
+      )
+    ),
+
+    React.createElement("div", { className: "grid grid-2", style: { gap: 16, marginTop: 16 } },
+      React.createElement("form", { className: "card", onSubmit: handleEditAttendanceSubmit },
+        React.createElement("div", { className: "card-title" }, "\uD83D\uDCDD Edit / Override Attendance"),
+        React.createElement("div", { className: "form-group" },
+          React.createElement("label", null, "Lecture ID"),
+          React.createElement("input", { className: "form-control", value: editLectureId, onChange: e => setEditLectureId(e.target.value), placeholder: "e.g. lect_abcd" })
+        ),
+        React.createElement("div", { className: "form-group", style: { marginTop: 10 } },
+          React.createElement("label", null, "Student User ID"),
+          React.createElement("input", { className: "form-control", value: editStudentId, onChange: e => setEditStudentId(e.target.value), placeholder: "e.g. u_abcd" })
+        ),
+        React.createElement("div", { className: "form-group", style: { marginTop: 10 } },
+          React.createElement("label", null, "Attendance Status"),
+          React.createElement("select", { className: "form-control", value: editStatus, onChange: e => setEditStatus(e.target.value) },
+            ['present', 'absent', 'late', 'excused'].map(s => React.createElement("option", { key: s, value: s }, s.toUpperCase()))
+          )
+        ),
+        React.createElement("button", { type: "submit", className: "btn btn-primary", style: { marginTop: 16 } }, "Save Override")
+      ),
+
+      React.createElement("div", { className: "card" },
+        React.createElement("div", { className: "card-title" }, "\uD83D\uDCCA Export Class Attendance Logs"),
+        React.createElement("div", { className: "form-group" },
+          React.createElement("label", null, "Classroom ID"),
+          React.createElement("input", { id: "export-class-id-inp", className: "form-control", placeholder: "e.g. class_abcd" })
+        ),
+        React.createElement("div", { style: { display: 'flex', gap: 8, marginTop: 16 } },
+          React.createElement("button", { className: "btn btn-primary", style: { flex: 1 }, onClick: () => {
+            const cid = document.getElementById("export-class-id-inp").value;
+            if (!cid) return add("Enter Classroom ID first", "error");
+            window.open(`${API}/api/classroom-system/dashboards/teacher/classroom/${cid}/attendance/export`);
+            add("Exporting attendance spreadsheet...", "success");
+          } }, "\uD83D\uE5E5 Download CSV Spreadsheet")
+        )
+      )
+    )
+  );
+}
+
 function RestrictedAdminView({
   navigate
 }) {
@@ -35030,7 +35821,12 @@ function App() {
     sessionName: params.sessionName || ''
   })), page === 'student-waiting' && /*#__PURE__*/React.createElement(StudentWaiting, _extends({}, params, {
     navigate: navigate
-  })), page === 'student-task' && /*#__PURE__*/React.createElement(StudentTaskView, _extends({}, params, {
+  })),
+  page === 'student-dashboard' && /*#__PURE__*/React.createElement(StudentDashboard, {
+    navigate: navigate,
+    studentId: userProfile?.id || params.studentId || '',
+    updateUserProfile: updateUserProfile
+  }), page === 'student-task' && /*#__PURE__*/React.createElement(StudentTaskView, _extends({}, params, {
     navigate: navigate,
     updateUserProfile: updateUserProfile
   })), page === 'landing' && userProfile && /*#__PURE__*/React.createElement(ProfileDrawer, {

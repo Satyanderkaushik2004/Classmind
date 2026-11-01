@@ -15,17 +15,8 @@ client = None
 db = None
 
 def get_db():
-    global client, db
-    if db is None:
-        try:
-            client = MongoClient(MONGO_URI, serverSelectionTimeoutMS=5000)
-            db = client[DB_NAME]
-            client.server_info()
-            log.info("Classroom DB successfully connected to MongoDB")
-        except Exception as e:
-            log.error("Classroom DB failed to connect to MongoDB: %s", e)
-            raise e
-    return db
+    import db_connection
+    return db_connection.get_db()
 
 def hash_lecture_code(code: str) -> str:
     return hashlib.sha256(code.strip().upper().encode("utf-8")).hexdigest()

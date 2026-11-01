@@ -1,7 +1,8 @@
 import json
 import os
 
-loc_dir = r"c:\Users\ADMIN\Downloads\Classmind-main\localization"
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+loc_dir = os.path.join(BASE_DIR, "localization")
 
 greetings_trans = {
     "hi": {

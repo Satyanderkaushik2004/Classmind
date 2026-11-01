@@ -39,7 +39,15 @@ def is_valid_email(email: str) -> bool:
 def validate_smtp_config() -> bool:
     """Check if SendGrid API key or standard SMTP credentials are configured."""
     has_sendgrid = bool(os.getenv("SENDGRID_API_KEY", "").strip())
-    has_smtp = bool(os.getenv("EMAIL_ADDRESS", "").strip()) and bool(os.getenv("EMAIL_PASSWORD", "").strip())
+    
+    email_addr = os.getenv("EMAIL_ADDRESS", "").strip()
+    email_pw = os.getenv("EMAIL_PASSWORD", "").strip()
+    
+    has_smtp = bool(email_addr) and bool(email_pw)
+    if "your-email" in email_addr.lower() or "your-app-password" in email_pw.lower() or "your_api_key" in os.getenv("SENDGRID_API_KEY", "").lower():
+        has_smtp = False
+        has_sendgrid = False
+        
     return has_sendgrid or has_smtp
 
 async def verify_smtp_credentials() -> Tuple[bool, str]:
@@ -1298,7 +1306,7 @@ def create_session_report_pdf(report: dict, teacher_email: str = "teacher@classm
     # 6. WeasyPrint rendering & Fallback
     # Write debug HTML to disk for verification screenshots
     try:
-        debug_html_path = "C:\\Users\\robin\\.gemini\\antigravity\\brain\\f96eef2a-3c48-4fc0-9f72-5fdc252dccd8\\sample_report.html"
+        debug_html_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "sample_report.html")
         os.makedirs(os.path.dirname(debug_html_path), exist_ok=True)
         with open(debug_html_path, "w", encoding="utf-8") as f:
             f.write(html_content)
@@ -3126,7 +3134,7 @@ def create_session_report_pdf_old(report: dict) -> bytes:
 
     # Write debug HTML to disk for verification screenshots
     try:
-        debug_html_path = "C:\\Users\\robin\\.gemini\\antigravity\\brain\\f96eef2a-3c48-4fc0-9f72-5fdc252dccd8\\sample_report.html"
+        debug_html_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "sample_report.html")
         os.makedirs(os.path.dirname(debug_html_path), exist_ok=True)
         with open(debug_html_path, "w", encoding="utf-8") as f:
             f.write(html_content)

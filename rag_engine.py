@@ -8,8 +8,10 @@ import logging
 log = logging.getLogger("vyom_rag")
 logging.basicConfig(level=logging.INFO)
 
-KB_DIR = r"c:\Users\ADMIN\Downloads\Classmind-main\knowledge_base"
-CACHE_PATH = r"c:\Users\ADMIN\Downloads\Classmind-main\data\kb_embeddings.json"
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+KB_DIR = os.path.join(BASE_DIR, "knowledge_base")
+CACHE_PATH = os.path.join(BASE_DIR, "data", "kb_embeddings.json")
+
 
 SYNONYMS = {
     "struggling": ["at-risk", "weak", "failing", "poor", "risk"],
@@ -197,8 +199,8 @@ class RagEngine:
             return []
 
         # If api_key (Gemini) is available, try semantic vector search
-        # Standard Gemini key starts with AIzaSy
-        is_gemini_key = api_key and (api_key.startswith("AIzaSy") or "generativelanguage" in api_key)
+        # Support legacy AIzaSy and current Google AI Studio AQ. keys.
+        is_gemini_key = api_key and (api_key.strip().startswith(("AIzaSy", "AQ.")) or "generativelanguage" in api_key)
         
         if is_gemini_key:
             try:

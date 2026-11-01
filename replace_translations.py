@@ -1,4 +1,7 @@
-vyom_html_path = r"c:\Users\ADMIN\Downloads\Classmind-main\vyom.html"
+import os
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+vyom_html_path = os.path.join(BASE_DIR, "vyom.html")
+
 
 with open(vyom_html_path, "r", encoding="utf-8") as f:
     content = f.read()

@@ -1,7 +1,9 @@
 import os
 
 # Create knowledge_base folder if it does not exist
-kb_dir = r"c:\Users\ADMIN\Downloads\Classmind-main\knowledge_base"
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+kb_dir = os.path.join(BASE_DIR, "knowledge_base")
+
 os.makedirs(kb_dir, exist_ok=True)
 
 docs = {

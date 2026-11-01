@@ -376,6 +376,7 @@ def new_task(d: dict) -> dict:
         "language":        str(d.get("language") or "python").strip().lower(),
         "evaluation_mode": d.get("evaluation_mode", "manual"),
         "max_marks":       d.get("max_marks", None),
+        "test_cases":      d.get("test_cases", []),
         "created_at":      now(),
     }
 

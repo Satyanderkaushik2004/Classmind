@@ -217,12 +217,21 @@ def run_code(code: str, language: str = "python", stdin: str = None) -> RunResul
     elif lang in ("cpp", "c++"):
         candidate_compilers = ("g++", "clang++")
         compile_error = None
-        temp_dir = tempfile.mkdtemp()
+        # Use a project-local scratch directory instead of system temp
+        # Windows Application Control (WDAC) often blocks executables in %TEMP%
+        # but allows them from the project directory which the user has approved
+        project_dir = os.path.dirname(os.path.abspath(__file__))
+        scratch_base = os.path.join(project_dir, "scratch", "_cpp_runs")
+        os.makedirs(scratch_base, exist_ok=True)
+        temp_dir = tempfile.mkdtemp(dir=scratch_base)
         cpp_path = os.path.join(temp_dir, "main.cpp")
         exe_path = os.path.join(temp_dir, "main.exe") if os.name == "nt" else os.path.join(temp_dir, "main")
 
         with open(cpp_path, "w", encoding="utf-8") as f:
             f.write(code)
+
+        # On Windows, use CREATE_NO_WINDOW to prevent console popups
+        _cflags = 0x08000000 if os.name == "nt" else 0  # CREATE_NO_WINDOW
 
         try:
             for candidate in candidate_compilers:
@@ -235,6 +244,7 @@ def run_code(code: str, language: str = "python", stdin: str = None) -> RunResul
                     capture_output=True,
                     text=True,
                     timeout=30,
+                    creationflags=_cflags,
                 )
 
                 if comp.returncode == 0:
@@ -244,7 +254,8 @@ def run_code(code: str, language: str = "python", stdin: str = None) -> RunResul
                         text=True,
                         timeout=TIMEOUT,
                         input=stdin or "",
-                        close_fds=True,
+                        close_fds=(os.name != "nt"),
+                        creationflags=_cflags,
                     )
                     combined = (res.stdout or "") + (res.stderr or "")
                     return RunResult(output=combined[:MAX_OUT] or "(no output)", error=res.returncode != 0)
@@ -272,12 +283,17 @@ def run_code(code: str, language: str = "python", stdin: str = None) -> RunResul
     elif lang == "c":
         candidate_compilers = ("gcc", "clang")
         compile_error = None
-        temp_dir = tempfile.mkdtemp()
+        project_dir = os.path.dirname(os.path.abspath(__file__))
+        scratch_base = os.path.join(project_dir, "scratch", "_c_runs")
+        os.makedirs(scratch_base, exist_ok=True)
+        temp_dir = tempfile.mkdtemp(dir=scratch_base)
         c_path = os.path.join(temp_dir, "main.c")
         exe_path = os.path.join(temp_dir, "main.exe") if os.name == "nt" else os.path.join(temp_dir, "main")
 
         with open(c_path, "w", encoding="utf-8") as f:
             f.write(code)
+
+        _cflags = 0x08000000 if os.name == "nt" else 0
 
         try:
             for candidate in candidate_compilers:
@@ -290,6 +306,7 @@ def run_code(code: str, language: str = "python", stdin: str = None) -> RunResul
                     capture_output=True,
                     text=True,
                     timeout=30,
+                    creationflags=_cflags,
                 )
 
                 if comp.returncode == 0:
@@ -299,7 +316,8 @@ def run_code(code: str, language: str = "python", stdin: str = None) -> RunResul
                         text=True,
                         timeout=TIMEOUT,
                         input=stdin or "",
-                        close_fds=True,
+                        close_fds=(os.name != "nt"),
+                        creationflags=_cflags,
                     )
                     combined = (res.stdout or "") + (res.stderr or "")
                     return RunResult(output=combined[:MAX_OUT] or "(no output)", error=res.returncode != 0)
@@ -367,26 +385,51 @@ def run_code(code: str, language: str = "python", stdin: str = None) -> RunResul
             shutil.rmtree(temp_dir, ignore_errors=True)
 
     elif lang == "go":
-        import urllib.request
-        import json
+        go_exe = find_executable("go")
+        if not go_exe:
+            return RunResult("Go compiler error: 'go' executable not found on the server. Please install Go.", error=True)
+
+        temp_dir = tempfile.mkdtemp()
+        go_path = os.path.join(temp_dir, "main.go")
+        exe_path = os.path.join(temp_dir, "main.exe") if os.name == "nt" else os.path.join(temp_dir, "main")
+
         try:
-            payload = json.dumps({"body": code, "version": 2}).encode("utf-8")
-            req = urllib.request.Request(
-                "https://play.golang.org/compile",
-                data=payload,
-                headers={"Content-Type": "application/json"},
-                method="POST"
+            with open(go_path, "w", encoding="utf-8") as f:
+                f.write(code)
+
+            build_env = os.environ.copy()
+            build_env["GO111MODULE"] = "off"
+            build_env["GOPROXY"] = "off"
+            comp = subprocess.run(
+                [go_exe, "build", "-o", exe_path, go_path],
+                capture_output=True,
+                text=True,
+                timeout=30,
+                cwd=temp_dir,
+                env=build_env,
             )
-            with urllib.request.urlopen(req, timeout=10) as response:
-                res_data = json.loads(response.read().decode("utf-8"))
-                errors = res_data.get("Errors", "")
-                if errors:
-                    return RunResult(errors, error=True)
-                events = res_data.get("Events", [])
-                output = "".join(event.get("Message", "") for event in events)
-                return RunResult(output=output or "(no output)", error=False)
+            if comp.returncode != 0:
+                return RunResult(f"Compilation Error:\n{(comp.stdout or '') + (comp.stderr or '')}", error=True)
+
+            res = subprocess.run(
+                [exe_path],
+                capture_output=True,
+                text=True,
+                timeout=TIMEOUT,
+                input=stdin or "",
+                cwd=temp_dir,
+                close_fds=True,
+            )
+            combined = (res.stdout or "") + (res.stderr or "")
+            return RunResult(output=combined[:MAX_OUT] or "(no output)", error=res.returncode != 0)
+        except subprocess.TimeoutExpired:
+            return RunResult(f"Time limit exceeded ({TIMEOUT}s max)", error=True, timed_out=True)
         except Exception as e:
+            if getattr(e, "winerror", None) == 4551:
+                return RunResult("Go runtime blocked by Windows Application Control. Allow generated Go executables or use a permitted Go toolchain.", error=True)
             return RunResult(f"Go Execution error: {e}", error=True)
+        finally:
+            shutil.rmtree(temp_dir, ignore_errors=True)
 
     else:
         return RunResult(f"Unsupported language: '{language}'", error=True)

@@ -6,6 +6,8 @@ data/
 .vscode/
 .idea/
 *.log
+scratch/
+test.js
 node_modules/
 
 # Duplicate directories

@@ -14,18 +14,8 @@ client = None
 db = None
 
 def get_db():
-    global client, db
-    if db is None:
-        try:
-            client = MongoClient(MONGO_URI, serverSelectionTimeoutMS=5000)
-            db = client[DB_NAME]
-            # Verify connection
-            client.server_info()
-            log.info("Successfully connected to MongoDB at %s", MONGO_URI)
-        except Exception as e:
-            log.error("Failed to connect to MongoDB: %s", e)
-            raise e
-    return db
+    import db_connection
+    return db_connection.get_db()
 
 def init_db():
     try:
@@ -70,7 +60,12 @@ def create_student_profile(user_id: str):
         "_id": user_id,
         "created_at": now_ms
     }
-    database.student_profiles.insert_one(profile_doc)
+    # Use upsert to avoid E11000 Duplicate Key Error on re-login
+    database.student_profiles.update_one(
+        {"_id": user_id},
+        {"$setOnInsert": profile_doc},
+        upsert=True
+    )
 
 def create_teacher_profile(
     user_id: str,
@@ -93,7 +88,13 @@ def create_teacher_profile(
         "is_verified_teacher": is_verified_teacher,
         "created_at": now_ms
     }
-    database.teacher_profiles.insert_one(profile_doc)
+    # Use upsert to avoid E11000 Duplicate Key Error on re-login
+    database.teacher_profiles.update_one(
+        {"_id": user_id},
+        {"$setOnInsert": profile_doc},
+        upsert=True
+    )
+
 
 def get_user_by_email(email: str) -> Optional[Dict]:
     database = get_db()

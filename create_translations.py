@@ -3,8 +3,9 @@ import re
 import json
 import sys
 
-vyom_html_path = r"c:\Users\ADMIN\Downloads\Classmind-main\vyom.html"
-loc_dir = r"c:\Users\ADMIN\Downloads\Classmind-main\localization"
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+vyom_html_path = os.path.join(BASE_DIR, "vyom.html")
+loc_dir = os.path.join(BASE_DIR, "localization")
 os.makedirs(loc_dir, exist_ok=True)
 
 with open(vyom_html_path, "r", encoding="utf-8") as f:

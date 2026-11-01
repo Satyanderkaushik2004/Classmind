@@ -23,13 +23,13 @@ if %errorlevel% neq 0 (
 echo [1/3] Checking/Installing requirements...
 "%PYTHON_CMD%" -m pip install -r requirements.txt --quiet
 
-echo [2/3] Starting Server on http://localhost:8003
+echo [2/3] Starting Server on http://localhost:8000
 echo (Keep this window open while using the app)
 echo ---------------------------------------------------
 
-set "PORT=8003"
+set "PORT=8000"
 :: Run uvicorn using the module flag to avoid PATH issues
-"%PYTHON_CMD%" -m uvicorn main:app --host 0.0.0.0 --port 8003 --reload
+"%PYTHON_CMD%" -m uvicorn main:app --host 0.0.0.0 --port 8000 --reload
 
 if %errorlevel% neq 0 (
     echo.
